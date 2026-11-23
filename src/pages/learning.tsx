@@ -241,7 +241,7 @@ export function AccessRequired({ reason }: { reason?: string }) {
         {reason ??
           "Seu plano atual não libera este conteúdo. Consulte as opções de assinatura disponíveis."}
       </p>
-      <Link to="/app/configuracoes?aba=assinatura">Ver minha assinatura</Link>
+      <Link className="text-action" to="/app/configuracoes?aba=assinatura">Ver minha assinatura</Link>
     </Notice>
   );
 }
@@ -693,7 +693,7 @@ export function MaterialList({ materials }: { materials: Material[] }) {
               Baixar
             </Action>
           ) : (
-            <Link to="/app/configuracoes?aba=assinatura">Consultar acesso</Link>
+            <Link className="text-action" to="/app/configuracoes?aba=assinatura">Consultar acesso</Link>
           )}
         </li>
       ))}

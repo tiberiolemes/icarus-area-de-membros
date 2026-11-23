@@ -1,0 +1,11 @@
+{
+  "version": "0.1.2",
+  "review_type": "source_only",
+  "result": "no_demonstrable_defect",
+  "source_manifest_sha256": "7ee0b36ec207edf62cf32db043f5a2b76c6d054b39a032204d2bc598a764ae2d",
+  "limitations": [
+    "Visual recheck is recorded separately in visual-coverage-0.1.2.json",
+    "Not a new backend, provider or production certification"
+  ],
+  "report": "visual-focused-review.md"
+}

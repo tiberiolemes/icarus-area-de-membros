@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2 · 2026-11-23
+
+- Ações de privacidade e confirmação administrativa agrupadas com espaçamento e quebra responsiva; política em linha própria.
+- Materiais com download abaixo da descrição no celular; títulos e seções de conta/comunidade separados.
+- Atalhos e disclosures com área mínima de 44px, identificação de membros sem nome e controles nativos coerentes com os temas Icarus.
+- Mensagens públicas com largura de leitura, contraste de placeholders e checkboxes alinhados; ajuda e guia atualizados.
+- Revisão visual documentada por superfície/estado e revisão independente de fonte; limites de dados, provedores e dispositivos físicos permanecem explícitos.
+
 ## 0.1.1 · 2026-11-23
 
 - Login em painel delimitado, com botão principal de largura inteira e layout conferido a 360/1280px.

@@ -39,7 +39,7 @@ export function Tickets({ admin = false }: { admin?: boolean }) {
       >
         Acompanhe suas solicitações e continue a conversa em cada ticket.
       </Heading>
-      <Link to="/ajuda">Consulte primeiro a central de ajuda</Link>
+      <Link className="text-action" to="/ajuda">Consulte primeiro a central de ajuda</Link>
       <QueryState query={query}>
         {query.data && (
           <>

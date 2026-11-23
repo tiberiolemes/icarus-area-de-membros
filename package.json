@@ -1,6 +1,6 @@
 {
   "name": "icarus-area-de-membros",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -43,7 +43,7 @@
   "engines": {
     "node": ">=24"
   },
-  "description": "Plataforma Icarus de cursos e comunidade com modera\u00e7\u00e3o manual",
+  "description": "Plataforma Icarus de cursos e comunidade com moderação manual",
   "repository": {
     "type": "git",
     "url": "https://github.com/tiberiolemes/icarus-area-de-membros.git"

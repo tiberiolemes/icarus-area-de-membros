@@ -221,38 +221,42 @@ export function OrderStatus() {
     });
   return (
     <PublicFrame>
-      <Heading title="Acompanhe seu pedido" />
-      {!session && !receipt ? (
-        <Notice>
-          Para proteger seus dados, entre com a conta vinculada à compra ou use
-          as instruções recebidas por email. O recibo desta tentativa não está
-          disponível nesta sessão. <Link to="/entrar">Entrar</Link>
-        </Notice>
-      ) : (
-        <QueryState query={query}>
-          {query.data && (
-            <>
-              <h2>{statusName(query.data.status)}</h2>
-              <p>Valor: {money(query.data.amount_cents)}</p>
-              <Notice>
-                {query.data.access_granted
-                  ? "O acesso foi confirmado pelo servidor."
-                  : query.data.status === "paid"
-                    ? "Pagamento confirmado. A liberação de acesso ou o convite ainda está em processamento."
-                    : "O pagamento ainda não confirmou o acesso. Aguarde a atualização do provedor."}
-              </Notice>
-              <button onClick={() => query.refetch()}>
-                Consultar novamente
-              </button>
-              {query.data.access_granted && (
-                <Link className="button primary" to="/app/cursos">
-                  Abrir meus cursos
-                </Link>
-              )}
-            </>
-          )}
-        </QueryState>
-      )}
+      <div className="reading">
+        <Heading title="Acompanhe seu pedido" />
+        {!session && !receipt ? (
+          <Notice>
+            Para proteger seus dados, entre com a conta vinculada à compra ou use
+            as instruções recebidas por email. O recibo desta tentativa não está
+            disponível nesta sessão. <Link to="/entrar">Entrar</Link>
+          </Notice>
+        ) : (
+          <QueryState query={query}>
+            {query.data && (
+              <>
+                <h2>{statusName(query.data.status)}</h2>
+                <p>Valor: {money(query.data.amount_cents)}</p>
+                <Notice>
+                  {query.data.access_granted
+                    ? "O acesso foi confirmado pelo servidor."
+                    : query.data.status === "paid"
+                      ? "Pagamento confirmado. A liberação de acesso ou o convite ainda está em processamento."
+                      : "O pagamento ainda não confirmou o acesso. Aguarde a atualização do provedor."}
+                </Notice>
+                <div className="actions">
+                  <button onClick={() => query.refetch()}>
+                    Consultar novamente
+                  </button>
+                  {query.data.access_granted && (
+                    <Link className="button primary" to="/app/cursos">
+                      Abrir meus cursos
+                    </Link>
+                  )}
+                </div>
+              </>
+            )}
+          </QueryState>
+        )}
+      </div>
     </PublicFrame>
   );
 }

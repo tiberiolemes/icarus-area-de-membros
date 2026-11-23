@@ -65,7 +65,7 @@ export function Certificates() {
                       `Faltam ${Math.max(0, (course.required_lessons || course.total_lessons) - course.completed_lessons)} aulas obrigatórias. A emissão depende da conclusão e das regras do curso.`}
                   </p>
                 )}
-                <Link to={"/app/cursos/" + course.slug}>Abrir curso</Link>
+                <Link className="text-action" to={"/app/cursos/" + course.slug}>Abrir curso</Link>
               </article>
             ))}
             {!query.data.items.length && !query.data.courses.length && (

@@ -19,6 +19,17 @@ afterEach(() => {
   cache.clear();
   vi.unstubAllGlobals();
 });
+it.each(["", "   "])("identifica uma ficha sem nome sem inventar dados pessoais (%j)", async (fullName) => {
+  const page = { items: [], total: 0, page: 1, page_size: 20 };
+  vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+    profile: { id: "12345678-member-id", full_name: fullName, role: "member" },
+    subscriptions: page, courses: page, orders: page, tickets: page,
+  }), { status: 200, headers: { "Content-Type": "application/json" } })));
+  render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={["/admin/membros/12345678-member-id"]}><Routes>
+    <Route path="/admin/membros/:id" element={<MemberEditor />} />
+  </Routes></MemoryRouter></QueryClientProvider>);
+  expect(await screen.findByRole("heading", { name: "Membro sem nome · 12345678" })).toBeInTheDocument();
+});
 it("a revisão local anuncia preparação em português sem chamar a mutação antes da reauth", async () => {
   const requests: string[] = [];
   const page = { items: [], total: 0, page: 1, page_size: 20 };

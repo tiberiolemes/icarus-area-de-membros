@@ -9,7 +9,7 @@
 ```
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.1.1-black)
+![Version](https://img.shields.io/badge/version-0.1.2-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)
@@ -73,7 +73,7 @@ npm run test:db
 node scripts/test-integrations.mjs --local
 ```
 
-Banco e integrações nativas exigem instalação local e fixtures próprias. Transporte simulado é identificado separadamente das provas reais de Auth, Postgres, Storage e Mailpit. O [aceite técnico 0.1.0](docs/acceptance/release-0.1.0.md) reúne as provas e limitações. Os [relatórios](docs/acceptance) não representam capacidade pública ou disponibilidade mensal.
+Banco e integrações nativas exigem instalação local e fixtures próprias. Transporte simulado é identificado separadamente das provas reais de Auth, Postgres, Storage e Mailpit. O [aceite técnico 0.1.0](docs/acceptance/release-0.1.0.md) reúne as provas e limitações. A [revisão visual 0.1.2](docs/audit/06-ux-accessibility.md) distingue capturas conferidas, herança por equivalência e estados não verificados. Os [relatórios](docs/acceptance) não representam capacidade pública ou disponibilidade mensal.
 
 O [pipeline de GitHub Actions](docs/ci/README.md) está preparado para ativação pelo proprietário. Ele ainda não está ativo: a credencial de publicação não inclui a permissão `workflow`. Os testes locais e os resultados de Actions são evidências distintas.
 

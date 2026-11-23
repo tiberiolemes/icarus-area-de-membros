@@ -547,14 +547,17 @@ export function Callback() {
   }, []);
   return (
     <PublicFrame>
-      <Heading title="Confirmando seu acesso" />
-      {error ? (
-        <Notice error>
-          {error} <Link to="/recuperar">Solicitar novo link</Link>
-        </Notice>
-      ) : (
-        <p role="status">Aguarde a confirmação da sua sessão…</p>
-      )}
+      <div className="access">
+        <Heading title="Confirmando seu acesso" />
+        {error ? (
+          <Notice error>
+            <p>{error}</p>
+            <Link className="button" to="/recuperar">Solicitar novo link</Link>
+          </Notice>
+        ) : (
+          <p role="status">Aguarde a confirmação da sua sessão…</p>
+        )}
+      </div>
     </PublicFrame>
   );
 }

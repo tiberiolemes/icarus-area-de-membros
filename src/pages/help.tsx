@@ -77,7 +77,7 @@ export const articles = [
       "Em Aparência, escolha Claro ou Escuro e salve. A preferência acompanha sua conta e não é herdada por outro membro.",
       "Em Segurança, solicite troca de email ou senha. A mudança de email exige confirmação. Configure o autenticador de dois fatores.",
       "Assinatura mostra o plano e a validade confirmados. No checkout, Pix é à vista; o cartão permite escolher de 1 a 12 parcelas, com valores e condições finais no ambiente seguro do provedor. Sem provedor configurado, o checkout informa a indisponibilidade e nenhuma cobrança é realizada.",
-      "Em Privacidade, exporte seus dados ou envie um pedido de exclusão. O pedido aguarda análise de retenção legal; não significa exclusão imediata.",
+      "Em Privacidade, use Exportar meus dados ou Solicitar exclusão. A política de privacidade fica no link abaixo dessas ações. O pedido aguarda análise de retenção legal; não significa exclusão imediata.",
     ],
   },
   {
@@ -88,7 +88,7 @@ export const articles = [
       "Em Estrutura e aulas, crie módulo, seção e aula. Use Subir e Descer para ordenar com teclado. Defina duração e aulas obrigatórias.",
       "Configure o responsável pelo certificado antes de habilitar a emissão. Use dados reais ou identifique uma demonstração.",
       "Em Materiais, crie pasta e registro do arquivo, depois envie o arquivo privado. Confira a confirmação do servidor.",
-      "Gerencie cortesia, validade, suspensão e papel na ficha do membro. Informe motivo e reautentique. Cortesia não é pagamento.",
+      "Em Membros, abra a ficha pelo nome. Cadastros sem nome mostram Membro sem nome e um identificador curto. Gerencie cortesia, validade, suspensão e papel na ficha. Informe motivo e reautentique. Cortesia não é pagamento.",
       "Na fila da comunidade, revise o conteúdo e confirme uma decisão com motivo. Na fila de suporte, responda a conversa e ajuste o estado.",
       "Em Membros e Pedidos, a exportação CSV percorre todas as páginas da busca atual, até 5.000 registros. Refine a busca acima desse limite. Uma falha interrompe a exportação sem gerar arquivo parcial; o CSV contém somente as colunas autorizadas exibidas nessas listas.",
       "Em Configurações, revise perguntas e versões legais. Secrets dos provedores são configurados apenas no servidor.",
@@ -118,28 +118,30 @@ export function Help() {
                 {session && (
                   <section>
                     <h2>Este artigo ajudou?</h2>
-                    <Action
-                      run={() =>
-                        rpc("app_help_feedback", {
-                          p_page: "/ajuda/" + article.slug,
-                          p_action: "rate",
-                          p_rating: true,
-                        })
-                      }
-                    >
-                      Sim
-                    </Action>
-                    <Action
-                      run={() =>
-                        rpc("app_help_feedback", {
-                          p_page: "/ajuda/" + article.slug,
-                          p_action: "rate",
-                          p_rating: false,
-                        })
-                      }
-                    >
-                      Não
-                    </Action>
+                    <div className="actions">
+                      <Action
+                        run={() =>
+                          rpc("app_help_feedback", {
+                            p_page: "/ajuda/" + article.slug,
+                            p_action: "rate",
+                            p_rating: true,
+                          })
+                        }
+                      >
+                        Sim
+                      </Action>
+                      <Action
+                        run={() =>
+                          rpc("app_help_feedback", {
+                            p_page: "/ajuda/" + article.slug,
+                            p_action: "rate",
+                            p_rating: false,
+                          })
+                        }
+                      >
+                        Não
+                      </Action>
+                    </div>
                   </section>
                 )}
                 <Link className="button" to="/app/suporte/novo">
@@ -147,7 +149,7 @@ export function Help() {
                 </Link>
               </>
             ) : (
-              <Link to="/ajuda">Ver todos os artigos</Link>
+              <Link className="text-action" to="/ajuda">Ver todos os artigos</Link>
             )}
           </>
         ) : (
@@ -169,7 +171,7 @@ export function Help() {
                   </Link>
                 ))}
             </div>
-            <Link to="/app/cursos">Voltar à área de membros</Link>
+            <Link className="text-action" to="/app/cursos">Voltar à área de membros</Link>
           </>
         )}
       </div>

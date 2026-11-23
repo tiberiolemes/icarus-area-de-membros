@@ -253,44 +253,46 @@ export function Settings() {
               Exporte os dados vinculados à sua conta ou solicite a exclusão. A
               equipe avaliará retenções legais antes de concluir o pedido.
             </p>
-            <Action
-              run={async () => {
-                const data = await rpc("app_export_data");
-                downloadBlob(
-                  new Blob([JSON.stringify(data, null, 2)], {
-                    type: "application/json",
-                  }),
-                  "meus-dados-icarus.json",
-                );
-              }}
-            >
-              Exportar meus dados
-            </Action>
-            <Modal
-              title="Solicitar exclusão da conta"
-              description="A solicitação será analisada pela equipe. Ela não apaga a conta imediatamente."
-              trigger={<button>Solicitar exclusão</button>}
-            >
-              <Form
-                label="Enviar solicitação"
-                onSave={async (data) => {
-                  if (value(data, "confirm") !== "EXCLUIR")
-                    throw new Error("Digite EXCLUIR para confirmar.");
-                  const result = await rpc<{ status: string }>(
-                    "app_privacy_request",
-                    { p_kind: "deletion" },
-                  );
-                  setMessage(
-                    `Solicitação registrada: ${result.status === "pending" ? "aguardando análise" : result.status}.`,
+            <div className="actions">
+              <Action
+                run={async () => {
+                  const data = await rpc("app_export_data");
+                  downloadBlob(
+                    new Blob([JSON.stringify(data, null, 2)], {
+                      type: "application/json",
+                    }),
+                    "meus-dados-icarus.json",
                   );
                 }}
               >
-                <Field label="Digite EXCLUIR para confirmar">
-                  <input name="confirm" required autoComplete="off" />
-                </Field>
-              </Form>
-            </Modal>
-            <Link to="/privacidade">Consultar a política de privacidade</Link>
+                Exportar meus dados
+              </Action>
+              <Modal
+                title="Solicitar exclusão da conta"
+                description="A solicitação será analisada pela equipe. Ela não apaga a conta imediatamente."
+                trigger={<button>Solicitar exclusão</button>}
+              >
+                <Form
+                  label="Enviar solicitação"
+                  onSave={async (data) => {
+                    if (value(data, "confirm") !== "EXCLUIR")
+                      throw new Error("Digite EXCLUIR para confirmar.");
+                    const result = await rpc<{ status: string }>(
+                      "app_privacy_request",
+                      { p_kind: "deletion" },
+                    );
+                    setMessage(
+                      `Solicitação registrada: ${result.status === "pending" ? "aguardando análise" : result.status}.`,
+                    );
+                  }}
+                >
+                  <Field label="Digite EXCLUIR para confirmar">
+                    <input name="confirm" required autoComplete="off" />
+                  </Field>
+                </Form>
+              </Modal>
+            </div>
+            <p><Link className="text-action" to="/privacidade">Consultar a política de privacidade</Link></p>
           </>
         )}
       </div>

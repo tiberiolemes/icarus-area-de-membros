@@ -53,6 +53,8 @@ type MemberDetail = {
 };
 const text = (row: Row | undefined, key: string, fallback = "") =>
   String(row?.[key] ?? fallback);
+const memberName = (member: Row) =>
+  text(member, "full_name").trim() || `Membro sem nome · ${member.id.slice(0, 8)}`;
 const num = (data: FormData, key: string) => Number(value(data, key) || 0);
 const check = (data: FormData, key: string) => data.has(key);
 async function save(
@@ -1030,7 +1032,7 @@ export function AdminMembers() {
           <div>
             <h2>
               <Link to={"/admin/membros/" + member.id}>
-                {text(member, "full_name")}
+                {memberName(member)}
               </Link>
             </h2>
             <p>
@@ -1056,7 +1058,7 @@ export function MemberEditor() {
   return (
     <>
       <Back to="/admin/membros" />
-      <Heading title={member ? text(member, "full_name") : "Ficha do membro"} />
+      <Heading title={member ? memberName(member) : "Ficha do membro"} />
       <QueryState query={members}>
         {member ? (
           <div className="reading">
@@ -1148,21 +1150,23 @@ export function MemberEditor() {
                   {change.revoke_access ? "Revogação solicitada." : ""}
                 </p>
                 <p>Motivo: {reason}</p>
-                <Reauth>
-                  {async (token) => {
-                    await rpc("app_admin_member", {
-                      p_id: id,
-                      p_data: change,
-                      p_reason: reason,
-                      p_reauth_token: token,
-                    });
-                    setChange(null);
-                    await members.refetch();
-                  }}
-                </Reauth>
-                <button onClick={() => setChange(null)}>
-                  Cancelar alteração
-                </button>
+                <div className="actions">
+                  <Reauth>
+                    {async (token) => {
+                      await rpc("app_admin_member", {
+                        p_id: id,
+                        p_data: change,
+                        p_reason: reason,
+                        p_reauth_token: token,
+                      });
+                      setChange(null);
+                      await members.refetch();
+                    }}
+                  </Reauth>
+                  <button onClick={() => setChange(null)}>
+                    Cancelar alteração
+                  </button>
+                </div>
               </section>
             )}
           </div>
@@ -1181,7 +1185,7 @@ function MemberFacts({ detail }: { detail: MemberDetail }) {
         {text(detail.profile, "plan_name", "Sem plano ativo")} · validade{" "}
         {date(text(detail.profile, "access_ends_at") || null)}
       </p>
-      <details>
+      <details className="member-concessions">
         <summary>Concessões ({detail.subscriptions.total})</summary>
         {detail.subscriptions.items.map((subscription) => (
           <article className="plan-row" key={subscription.id}>
@@ -1217,7 +1221,7 @@ function MemberFacts({ detail }: { detail: MemberDetail }) {
       <h2>Pedidos ({detail.orders.total})</h2>
       {detail.orders.items.map((order) => (
         <p key={order.id}>
-          <Link to={"/admin/pedidos/" + order.id}>
+          <Link className="text-action" to={"/admin/pedidos/" + order.id}>
             {order.id.slice(0, 8)} · {money(Number(order.amount_cents))} ·{" "}
             {statusName(text(order, "status"))}
           </Link>
@@ -1226,7 +1230,7 @@ function MemberFacts({ detail }: { detail: MemberDetail }) {
       <h2>Tickets ({detail.tickets.total})</h2>
       {detail.tickets.items.map((ticket) => (
         <p key={ticket.id}>
-          <Link to={"/admin/suporte/" + ticket.id}>
+          <Link className="text-action" to={"/admin/suporte/" + ticket.id}>
             {text(ticket, "subject")} · {statusName(text(ticket, "status"))}
           </Link>
         </p>
@@ -1466,7 +1470,7 @@ export function AdminCommunity() {
                 {date(text(reply, "created_at"))}
               </p>
               <p className="prose">{text(reply, "body")}</p>
-              <Link to={"/admin/comunidade/" + text(reply, "post_id")}>
+              <Link className="text-action" to={"/admin/comunidade/" + text(reply, "post_id")}>
                 Abrir publicação
               </Link>
               <Moderate

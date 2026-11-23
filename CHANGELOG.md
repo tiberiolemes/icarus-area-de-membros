@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6 · 2026-11-23
+
+- Autor pode arquivar e restaurar sua publicação com confirmação AJAX, preservando texto, imagem, respostas, votos e histórico.
+- Capacidades e origem do arquivamento são verificadas no servidor; a restauração própria não desfaz decisões administrativas nem aprova conteúdo pendente.
+- Arquivamento, interações e finalização de imagem passam a serializar pelo tópico; conflitos com suspensão administrativa retornam erro recuperável.
+- Ajuda e guia atualizados. Sem novas áreas principais, dependências ou ativação de integrações externas.
+
 ## 0.1.5 · 2026-11-23
 
 - Vitrine de cursos aprovada integrada ao catálogo real, com destaque, capas tipográficas quando não cadastradas e fileiras horizontais.

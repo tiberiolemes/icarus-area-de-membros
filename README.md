@@ -9,7 +9,7 @@
 ```
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.1.5-black)
+![Version](https://img.shields.io/badge/version-0.1.6-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)

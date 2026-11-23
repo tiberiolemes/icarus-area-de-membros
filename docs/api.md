@@ -24,6 +24,16 @@ Contrato de `docs/CONTRACT.md`, sem escrita direta do browser. Todas as RPCs ret
 
 `app_admin_member_detail(p_id uuid)` exige admin/AAL2 e retorna `{profile,subscriptions,courses,orders,tickets}`. Cada lista relacionada é `{items,total,page:1,page_size:20}` com ordenação no servidor e contagem real. Cursos incluem progresso/certificados relacionados ao titular; assinaturas preservam validade/fonte/status derivado; pedidos expõem montante/método/status/datas, nunca buyer_data/documento/receipt_hash/attempt_key; tickets são do próprio titular, sem mensagens/PII de terceiros. É uma única RPC da ficha, sem consultas SDK por linha. Página posterior/filtros avançados continuam fora desta assinatura.
 
+## Arquivamento próprio na comunidade
+
+`app_archive_post(p_id uuid,p_archived boolean)` → `{id,status,archived}`, apenas `authenticated`. Usa `actor()`, titularidade e acesso vigente ao espaço dentro da transação, com trava da publicação e auditoria atômica. ID/operação nulos, objeto alheio, sessão revogada, suspensão e estado inválido são negados. `true` arquiva `pending/approved/rejected`; `false` recupera exatamente o estado anterior permitido, sem aprovar conteúdo. Nenhuma exclusão física ou alteração de texto, imagem, criação, respostas ou votos.
+
+O DTO de Post inclui `can_archive` e `can_restore` booleanos do servidor; `can_edit=false` em `archived/removed`. `avatar_id`, `image_id`, contadores e demais campos são preservados. Marcadores internos `archived_by` e `archive_source` não são expostos. Origem `author` permite restauração pelo titular; `admin` e legado sem origem não permitem. O ramo posts de `app_admin_archive` mantém papel/nonce/auditoria e marca origem administrativa mesmo ao re-arquivar publicação já arquivada pelo autor, inclusive admin=autor.
+
+Repetir um arquivamento próprio ainda vigente ou sua restauração já concluída é um retorno sem nova auditoria. O último marcador do autor permanece após restaurar para reconhecer esse retry; não concede restauração de estado oculto/removido nem de arquivamento administrativo. O frontend refaz `app_post` e invalida `app_feed` após sucesso, sem status otimista. Cancelar confirmação não escreve; a ação pessoal não solicita senha nova.
+
+Arquivo é histórico legível ao autor/equipe conforme o espaço, ausente para outros membros. Votos/denúncias em posts e respostas exigem parent aprovado; respostas novas também. Essas escritas e reserva/finalização de imagem serializam com a linha do post. Upload pendente não substitui a imagem nem reabre o arquivo; acesso de leitura à imagem pronta existente continua sujeito ao gate. As demais entidades de `app_admin_archive` e demais destinos de upload mantêm o comportamento anterior.
+
 ## Enums reais
 
 | Campo | Valores |

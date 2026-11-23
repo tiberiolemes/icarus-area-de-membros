@@ -39,7 +39,7 @@ const steps = [
   {
     target: "community",
     title: "Participe com revisão humana",
-    body: "Escolha um espaço e escreva uma publicação. Ela fica em revisão até a equipe aprovar. Respostas e edições também são revisadas.",
+    body: "Escolha um espaço e escreva uma publicação. Publicações, respostas e edições passam por revisão. No detalhe, você pode arquivar sua publicação preservando o histórico e restaurar o que você mesmo arquivou, no estado anterior.",
   },
   {
     target: "support",

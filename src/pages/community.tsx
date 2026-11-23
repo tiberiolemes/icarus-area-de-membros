@@ -386,7 +386,21 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
       "app_post",
       { p_id: post },
     ),
-    data = query.data;
+    data = query.data,
+    [archiveOpen, setArchiveOpen] = useState(false),
+    [archiveAction, setArchiveAction] = useState(true),
+    [archiving, setArchiving] = useState(false),
+    [archiveNotice, setArchiveNotice] = useState(""),
+    postFocus = useRef<HTMLDivElement>(null);
+  const canArchive = !!data?.post.can_archive,
+    canRestore = !!data?.post.can_restore;
+  function closeArchive(open: boolean) {
+    if (archiving) return;
+    if (open) setArchiveAction(canArchive);
+    setArchiveOpen(open);
+    if (!open && !canArchive && !canRestore)
+      requestAnimationFrame(() => postFocus.current?.focus());
+  }
   return (
     <>
       <Back
@@ -395,13 +409,15 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
       />
       <QueryState query={query}>
         {data && (
-          <div className="reading">
+          <div className="reading" ref={postFocus} tabIndex={-1}>
             <PostMeta post={data.post} />
             <Heading title={data.post.title ?? "Publicação"} />
+            {archiveNotice && <Notice>{archiveNotice}</Notice>}
             {data.post.status !== "approved" && (
               <Notice>
-                {statusName(data.post.status)}. A publicação só fica visível aos
-                demais membros após aprovação.
+                {data.post.status === "archived"
+                  ? "Publicação arquivada. O texto, a imagem, as respostas e os votos foram preservados. Novas interações ficam desativadas."
+                  : `${statusName(data.post.status)}. A publicação não está visível aos demais membros.`}
               </Notice>
             )}
             <div className="prose">{data.post.body}</div>
@@ -423,8 +439,54 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
                   Editar publicação
                 </Link>
               )}
+              {(canArchive || canRestore || archiveOpen) && (
+                <Modal
+                  title={archiveAction ? "Arquivar publicação" : "Restaurar publicação"}
+                  open={archiveOpen}
+                  onOpenChange={closeArchive}
+                  trigger={
+                    <button disabled={!canArchive && !canRestore}>
+                      {canRestore ? "Restaurar publicação" : "Arquivar publicação"}
+                    </button>
+                  }
+                  description={!archiveAction
+                    ? "A publicação volta ao estado anterior ao arquivamento. Conteúdo pendente ou não aprovado continua nesse estado. Texto, imagem, respostas e votos são preservados."
+                    : "A publicação deixa de aparecer aos demais membros. Você e a equipe mantêm acesso ao histórico. Texto, imagem, respostas e votos são preservados; você poderá restaurar o que arquivou."}
+                >
+                  <Form
+                    label={archiveAction ? "Confirmar arquivamento" : "Confirmar restauração"}
+                    disabled={archiveAction ? !canArchive : !canRestore}
+                    secondaryAction={<button type="button" onClick={() => closeArchive(false)}>Cancelar</button>}
+                    onSave={async () => {
+                      setArchiving(true);
+                      try {
+                        const result = await rpc<{ id: string; status: string; archived: boolean }>("app_archive_post", {
+                          p_id: data.post.id,
+                          p_archived: archiveAction,
+                        });
+                        const refreshed = await query.refetch();
+                        await cache.invalidateQueries({ queryKey: ["app_feed"] });
+                        const state = refreshed.isSuccess ? refreshed.data.post.status : result.status;
+                        setArchiveNotice(result.archived
+                          ? "Publicação arquivada. Seu histórico foi preservado."
+                          : `Publicação restaurada. Estado atual: ${statusName(state)}.`);
+                        setArchiveOpen(false);
+                        if (!refreshed.data?.post.can_archive && !refreshed.data?.post.can_restore)
+                          requestAnimationFrame(() => postFocus.current?.focus());
+                      } catch (error) {
+                        await query.refetch();
+                        throw error;
+                      } finally {
+                        setArchiving(false);
+                      }
+                    }}
+                  >
+                    <p>Confirme para continuar. Nenhum conteúdo será excluído.</p>
+                  </Form>
+                </Modal>
+              )}
             </div>
-            {data.can_moderate && (
+            {data.can_moderate && data.post.status !== "archived" && (
               <Moderate
                 type="post"
                 id={data.post.id}
@@ -440,12 +502,12 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
                 <article key={reply.id}>
                   <PostMeta post={reply} />
                   <div className="prose">{reply.body}</div>
-                  <div className="actions">
+                  {data.post.status === "approved" && <div className="actions">
                     <Vote post={reply} type="reply" />
                     {reply.status === "approved" && (
                       <Report type="reply" id={reply.id} />
                     )}
-                  </div>
+                  </div>}
                   {data.can_moderate && (
                     <Moderate
                       type="reply"
@@ -483,7 +545,9 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
               </Form>
             ) : (
               <Notice>
-                Você poderá responder após a aprovação desta publicação.
+                {data.post.status === "archived"
+                  ? "Esta publicação está arquivada e mantém as respostas apenas para leitura."
+                  : "As respostas ficam disponíveis quando a publicação está aprovada."}
               </Notice>
             )}
           </div>

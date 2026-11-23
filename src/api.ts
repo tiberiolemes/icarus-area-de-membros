@@ -315,6 +315,8 @@ export type Post = {
   voted: boolean;
   reply_count?: number;
   can_edit: boolean;
+  can_archive?: boolean;
+  can_restore?: boolean;
   image_path?: string;
   image_id?: string;
 };

@@ -18,7 +18,7 @@ Module: {id,slug,title,order_index,can_access,sections:Section[]}; Section: {id,
 LessonSummary: {id,slug,title,duration_seconds,type,order_index,can_access,completed}. lesson_detail inclui body/video_id/storage_path SOMENTE quando autorizado.
 Material: {id,name,description,file_type,size_bytes,folder_id,lesson_id?,can_access}. Nunca devolver storage_path para não autorizado.
 Certificado: {id,code,student_name,course_title,duration_minutes,issued_at,revoked_at,demo}; dados públicos sem email/CPF.
-Post/Reply: {id,author_name,author_id,author_role,plan_name,title?,body,status,created_at,vote_count,voted,reply_count?,can_edit}; membro vê aprovado e próprios pendentes. Imagens seguem o gate.
+Post/Reply: {id,author_name,author_id,author_role,plan_name,title?,body,status,created_at,vote_count,voted,reply_count?,can_edit}; Post inclui can_archive e can_restore calculados pelo servidor, além de avatar_id/image_id e campos existentes. Membro vê aprovados e estados próprios conforme o gate do espaço; can_edit é falso em archived/removed. Imagens seguem o gate.
 Ticket: {id,subject,priority,status,created_at,messages:[]}; mensagem {id,author_name,body,created_at,attachments:[]}.
 
 ## RPCs do backend (frontend chama supabase.rpc)
@@ -39,6 +39,7 @@ app_ticket_reply(p_id uuid,p_body text,p_status text=null) -> {id,status}.
 app_feed(p_space_id uuid=null,p_query text='',p_page integer=1) -> {spaces,items,total,page,page_size}.
 app_post(p_id uuid) -> {post,replies,can_moderate}.
 app_save_post(p_id uuid,p_space_id uuid,p_title text,p_body text,p_image_path text=null) -> {id,status}; p_id null cria, editar reenvia para aprovação.
+app_archive_post(p_id uuid,p_archived boolean) -> {id,status,archived}; somente titular com sessão/acesso vigente ao espaço. Arquiva pending/approved/rejected; restaura apenas arquivamento próprio ao estado anterior permitido, sem nova aprovação. Marcador privado durável diferencia autor de operação administrativa, inclusive quando o admin é o autor; legado sem origem não autoriza restauração própria. Trava, escrita e auditoria são transacionais; repetição da mesma operação já concluída retorna estado sem duplicar auditoria. A operação pessoal reversível não exige nonce de reautenticação; app_admin_archive mantém o consumo existente. Arquivados preservam texto, imagem, datas originais, respostas e votos, ficam legíveis ao autor/equipe com gate e não admitem novas interações ou finalização de imagem pendente.
 app_reply(p_post_id uuid,p_body text) -> {id,status}.
 app_vote(p_target_type text,p_target_id uuid) -> {vote_count,voted}.
 app_report(p_target_type text,p_target_id uuid,p_reason text) -> {id}.

@@ -1,0 +1,592 @@
+{
+  "version": "0.1.6",
+  "scope": "own-publication archive/restore within Phase 1 and manually moderated community",
+  "frontend": {
+    "tests_passed": 76,
+    "files": 10,
+    "archive_cases": 9,
+    "controlled_transport": true,
+    "build_typecheck": "passed",
+    "known_warning": "existing chunk above 500kB"
+  },
+  "qa_upgrade": {
+    "passed": true,
+    "source_sha256": "2b3cbb45f9dbf4bcc7cb75fad968de6b644d881ea9bdd659b865317a7f0a9666",
+    "native_cli": true,
+    "migrations_before": 18,
+    "migrations_after": 20,
+    "native_history_matches_source": true,
+    "loopback": true,
+    "existing_data_unchanged": true,
+    "tables_fingerprinted": 67,
+    "tests": {
+      "passed": true,
+      "results": [
+        {
+          "file": "auth_creation.sql",
+          "exit_code": 0,
+          "assertions": 17
+        },
+        {
+          "file": "backend.sql",
+          "exit_code": 0,
+          "assertions": 109
+        },
+        {
+          "file": "followup.sql",
+          "exit_code": 0,
+          "assertions": 36
+        },
+        {
+          "file": "logout_nonce_cascade.sql",
+          "exit_code": 0,
+          "assertions": 16
+        },
+        {
+          "file": "mfa_outbox.sql",
+          "exit_code": 0,
+          "assertions": 45
+        },
+        {
+          "file": "optional_mfa.sql",
+          "exit_code": 0,
+          "assertions": 25
+        },
+        {
+          "file": "post_archive.sql",
+          "exit_code": 0,
+          "assertions": 86
+        },
+        {
+          "file": "outbox_concurrency.py",
+          "exit_code": 0,
+          "assertions": 4
+        }
+      ],
+      "checked_at": "2026-11-23T16:47:17.969Z"
+    }
+  },
+  "race_proof": {
+    "passed": true,
+    "assertions": 35,
+    "cases": 8,
+    "observed_waits": 8,
+    "cleanup": true,
+    "source_commit": "3d38b6d3c4913aed0038eb98f80a871bf63b1397",
+    "worker_log_sha256": "1aaaae4ddeef2bb3a19a35ade2b15f4e66c2eea034dd58d00b77cc2dec2565a6",
+    "guard_only_followup": "portable root/package/config check tested positive/negative; race body unchanged",
+    "not_native_auth_http": true,
+    "race_and_cleanup_body_unchanged_sha256": "6f38156384a4f0df9721a79e8e6de99c7156469dddd4892e392f94121ffa5031",
+    "guard_positive_negative_passed": true
+  },
+  "native_http": {
+    "passed": true,
+    "native_auth": true,
+    "own_archive_restore": true,
+    "other_author_denied": true,
+    "anon_denied": true,
+    "service_role_denied": true,
+    "archived_reads_and_interactions_denied": true,
+    "content_relationships_preserved": true,
+    "calls": [
+      {
+        "operation": "app_feed",
+        "status": 200
+      },
+      {
+        "operation": "app_save_post",
+        "status": 200
+      },
+      {
+        "operation": "app_moderate",
+        "status": 200
+      },
+      {
+        "operation": "app_reply",
+        "status": 200
+      },
+      {
+        "operation": "app_moderate",
+        "status": 200
+      },
+      {
+        "operation": "app_vote",
+        "status": 200
+      },
+      {
+        "operation": "app_post",
+        "status": 200
+      },
+      {
+        "operation": "app_post",
+        "status": 200
+      },
+      {
+        "operation": "app_archive_post",
+        "status": 400
+      },
+      {
+        "operation": "app_archive_post",
+        "status": 401
+      },
+      {
+        "operation": "app_archive_post",
+        "status": 403
+      },
+      {
+        "operation": "app_archive_post",
+        "status": 200
+      },
+      {
+        "operation": "app_post",
+        "status": 200
+      },
+      {
+        "operation": "app_post",
+        "status": 400
+      },
+      {
+        "operation": "app_reply",
+        "status": 400
+      },
+      {
+        "operation": "app_vote",
+        "status": 400
+      },
+      {
+        "operation": "app_report",
+        "status": 400
+      },
+      {
+        "operation": "app_archive_post",
+        "status": 200
+      },
+      {
+        "operation": "app_post",
+        "status": 200
+      }
+    ],
+    "external_providers_used": false
+  },
+  "native_browser": {
+    "passed": true,
+    "cancel_and_escape_no_write": true,
+    "archive_restore_spa": true,
+    "focus_return_both_actions": true,
+    "backend_other_actor_and_content_checks": true,
+    "http_calls": [
+      {
+        "archived": true,
+        "status": 200
+      },
+      {
+        "archived": false,
+        "status": 200
+      }
+    ],
+    "theme_restored_light": true,
+    "body_content_retained": true,
+    "physical_touch_not_verified": true
+  },
+  "native_cleanup": {
+    "passed": true,
+    "synthetic_post_removed": true,
+    "synthetic_relationships_removed": true,
+    "original_posts_untouched": true
+  },
+  "local_application": {
+    "passed": true,
+    "method": "explicit incremental SQL transaction; no migration-history fabrication",
+    "source_sha256": "2b3cbb45f9dbf4bcc7cb75fad968de6b644d881ea9bdd659b865317a7f0a9666",
+    "executed_sql_sha256": "95e1c1e6dbcab9b6f60bff6b96eb3da3a6c37888314cb362c761af552f1a40e3",
+    "preimage_functions_verified": 7,
+    "postimage_functions_verified": 8,
+    "posts_preserved": true,
+    "privileges": {
+      "rls": true,
+      "anon": false,
+      "service_role": false,
+      "authenticated": true,
+      "direct_update": false
+    },
+    "backup_restore_before": true,
+    "qa_native_history20": true
+  },
+  "post_schema_restore": {
+    "tables": 67,
+    "rows_match": true,
+    "permissions_match": true,
+    "rpc_role_checks": 342,
+    "table_role_checks": 201,
+    "policies_checked": 1,
+    "storage_binaries_match": true,
+    "binary_files": 5,
+    "checked_at": "2026-11-23T17:07:46.295Z",
+    "scope": [
+      "public",
+      "app_private",
+      "auth",
+      "storage",
+      "extensions"
+    ],
+    "excludes": [
+      "cluster roles",
+      "external services"
+    ]
+  },
+  "served_files": {
+    "passed": true,
+    "files": [
+      {
+        "file": "index.html",
+        "sha256": "1898af531e40419643a2cce6130365285cbbc6ca0a384690096944f72f096b0e"
+      },
+      {
+        "file": "assets/admin-Da07cBml.js",
+        "sha256": "b957e188d627829740f623d36a84b21b546223733b78b2b5159ec6bfb4cf7099"
+      },
+      {
+        "file": "assets/certificates-DzaPGPR_.js",
+        "sha256": "405d1c2619235a797fc61ad28c5e65573a764c842cc3e5bd3d8b6ecfb610baf3"
+      },
+      {
+        "file": "assets/checkout-Dbn0eEON.js",
+        "sha256": "83fc7ff8e9efeb90cdbeeb56f10863127ad1417058a495f7a3f39987f7a5f2eb"
+      },
+      {
+        "file": "assets/community-CkYh7wki.js",
+        "sha256": "8deaa7a531f98d4f3409fe2e2d1e0d865930699987134ce8d7ab11b242d1177a"
+      },
+      {
+        "file": "assets/index-BsCESUs2.css",
+        "sha256": "8a48bedd1bf6ccb0aef78e49ef8de93f3ddfd3e551e9ae24324552d0bd02e8c8"
+      },
+      {
+        "file": "assets/index-CzD5hDTY.js",
+        "sha256": "e5a3c187a50e56f31d61ff656d182e40e073ebfeba1b3ec3f5a774e4017ddfdf"
+      },
+      {
+        "file": "assets/learning-CVnm2wcg.css",
+        "sha256": "8f50bca47d059c8d749d0bf4fdf8f1497dd8a4d675ea53042619143468a34f43"
+      },
+      {
+        "file": "assets/learning-OzwxqO4g.js",
+        "sha256": "bd4321409288ddd343acb46ad40fe78faffc28bddb2bd47ff770a51666e0dfaa"
+      },
+      {
+        "file": "assets/media-DKSH3CaR.js",
+        "sha256": "d5c03414f3e258d41ab489cd065b492539fa33b3ace67c1f9a8d0c71087e915b"
+      },
+      {
+        "file": "assets/rich-0HX5TXaf.js",
+        "sha256": "41cbeeead601b1e3ed8fe2370314f3ab25abf28b5a57e5030b84a6870b34395c"
+      },
+      {
+        "file": "assets/settings-Ca0K9pEd.js",
+        "sha256": "863f8e97ff8988d5369dd318653817794818b9960ed31b7e0ee591f56e973220"
+      },
+      {
+        "file": "assets/support-DJeu37eP.js",
+        "sha256": "9ab7b9f591695c3b8248d69ab94ea6659d5207c4cff9b420a0f41ba6b37f1c1d"
+      },
+      {
+        "file": "assets/upload-Dsf5x48g.js",
+        "sha256": "4d5e0b664cd01bbd0585b35789c2842db63e4be656689ea5c96b712288016318"
+      }
+    ]
+  },
+  "independent_reviews": {
+    "source_initial": "SRC-01 found: profile/session lock cycle with administrative suspension",
+    "source_recheck": "SRC-01 resolved in source with KEY SHARE NOWAIT; runtime races proven separately",
+    "runner": "no demonstrated defect within reviewed guard/session/cleanup scope; coordinator reconciled executed body hash",
+    "visual": {
+      "disposition": "ship",
+      "report": "community-archive-0.1.6-review.md",
+      "report_sha256": "e86b482d49d0477cf0ef493aafc26d7d5a2aec9b99b2633b47201473a2d148d8",
+      "frames_opened": 20,
+      "manifest_inputs_verified": 13,
+      "sections": [
+        "persistence",
+        "fidelity",
+        "ceiling",
+        "material_fixes",
+        "keep"
+      ],
+      "not_executed_by_reviewer": [
+        "tests",
+        "build",
+        "browser/runtime",
+        "backend audit",
+        "DB",
+        "detector",
+        "publication"
+      ]
+    },
+    "original_report_sha256": {
+      "source-review.md": "9dc215905595b7444e35067f93105993429729c6c59660210c8e7f19c5d0b673",
+      "source-recheck.md": "8ecac538a3bcae080675cb51f9fca145f88303c623d7d0c9e07b2f8873b64ea7",
+      "runner-review.md": "5511123a93a5ffd0bf2894b5065b7fc6f06f25e5cec95f8c95b6a3f289833ca7",
+      "visual-review.md": "e86b482d49d0477cf0ef493aafc26d7d5a2aec9b99b2633b47201473a2d148d8",
+      "visual-review.json": "a234e527bb782d7401d7d62fb164703375309463bbfbb727a2e7e421f39b7b96"
+    }
+  },
+  "source_hashes": {
+    "src/pages/community.tsx": "0782f5e5cdb56c961ea6e44f228c0935b8dca48221bf5ed23324f90c2e0bbe52",
+    "src/community-archive.test.tsx": "8fcb11d863cb287ce45366e7df00c7a6c66b368dbcf758dd650ba8f729e2f770",
+    "src/ui.tsx": "33ef392d065ef89cdb99fef05e98d246d7803677b104ef5ce2c7ad0e072af4d5",
+    "src/style.css": "1ec300cc701a2f36eb835715153561711d46db354355759fd9ed59617acd9364",
+    "src/tour.tsx": "f3bac930001347e508ca421c6a3e5910f531351c46897305e485534af7d38421",
+    "supabase/tests/post_archive_concurrency.py": "48b91f36d4080f608776281438334e0903136bf6fed4083094cbf7f7498a4179",
+    "supabase/migrations/202611230020_own_post_archive.sql": "2b3cbb45f9dbf4bcc7cb75fad968de6b644d881ea9bdd659b865317a7f0a9666",
+    "DESIGN.md": "b85c5eee01cbfa7a803d7ae1e5b84c6646c0f0d1201662d0e86d6b0120937de9",
+    "PRODUCT.md": "b9d800dd25d6ba99909c3b6b16d7dce60f6db1eb5a5b462d061a6a91a3b5c6d6",
+    "docs/CONTRACT.md": "6a57d74b5922317323d8f44dd3d4a145f52476f8895164bb7f35c6f3f62562d1",
+    "docs/implementation/community-archive.md": "49eda916430ced37fc1973323c91eac47c530227caa73f557d69bad909aded1d",
+    "docs/help/README.md": "de021d4ab0ea11348850c9ac48fde2eb4fcc0799f2d7e134e311e9c4ce1b1ab8",
+    "public/brand/icarus-tokens.css": "f9f40b53fb95e600b93bf1d36eb05343cf0246f64b63ee55c9e300701d151302",
+    "supabase/tests/post_archive.sql": "639155d3712cc533b78af4695d086a58f9e26145b64679fa474b77b1ad616165",
+    "supabase/migrations/202611230019_optional_mfa.sql": "67d22427dc69fedc2429b9185962b753fd0472fdd84628e358c81f69d432a90f",
+    "package.json": "b69b6baf3815c4dd42a57723608530f875e034267e11840b3900a53a1df180ba",
+    "package-lock.json": "2516725845d31c37fbee36b1df96f0e5dd738bd3615e4057649914c0c384b0da",
+    "src/pages/help.tsx": "5e701e15fb0d039a55dbfdcdeefad4753d87f113f770ed90aba7535c06b3d86f",
+    "src/api.ts": "41cb486fb7217ad9fca22a018987087c3be6bd03ce5100c9acb85c7d98757743"
+  },
+  "captures": [
+    {
+      "file": "approved-1440-light-0.png",
+      "sha256": "bf7d06df733509bb6b943897e4973d9f587f6c4fdd0ab7686580b5b0c0547281",
+      "state": "approved",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "approved-360-dark-0.png",
+      "sha256": "1447b986c95793fd7beb445ab2079b42423664fd255cd0ab42b65e041e888887",
+      "state": "approved",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archive-confirmation-1440-light-0.png",
+      "sha256": "6084743d159abaa0ed7980af4b5daec3e23e33082bd18a12f33eb99e32047cb9",
+      "state": "archive-confirmation",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archive-confirmation-1440-dark-0.png",
+      "sha256": "b6dffa00974a4a5ada4a71d0a0c88ae9ad1c1b9551e1a642857c43398ecbcb1f",
+      "state": "archive-confirmation",
+      "width": 1440,
+      "theme": "dark",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archive-confirmation-360-light-0.png",
+      "sha256": "3befecef9f12915f4691ecef45c5e7a7a1d000a1a91403952d90462fbe43d7d5",
+      "state": "archive-confirmation",
+      "width": 360,
+      "theme": "light",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archive-confirmation-360-dark-0.png",
+      "sha256": "6bb3902c548d1bfdff3b1e752572be8afa0a76a93d4f95414fa9727d8d2bfe3b",
+      "state": "archive-confirmation",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archived-1440-light-0.png",
+      "sha256": "f1560f4ffbb41f44cd166858ba6a0cc987b66d992916da04f98b34807c5476d6",
+      "state": "archived",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archived-1440-light-144.png",
+      "sha256": "faa6b64f337a0dd25d7563d09737cbbaedaa08f9d5ee9619a273632ef0eeac2e",
+      "state": "archived",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 144,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archived-1440-dark-0.png",
+      "sha256": "5d133def9808867f6660946961958b8f0db903450c4ab3e0b95e8ad4acd36a19",
+      "state": "archived",
+      "width": 1440,
+      "theme": "dark",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archived-1440-dark-144.png",
+      "sha256": "6055fd6f623767a86613a05369920d5bfa11d7dbeb997e2b2809d5e53b2f934f",
+      "state": "archived",
+      "width": 1440,
+      "theme": "dark",
+      "scroll": 144,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archived-360-light-0.png",
+      "sha256": "63675f119eec142b71034f1ec95bad3c28b3f61120efc13f69cc1dfe39d28cc9",
+      "state": "archived",
+      "width": 360,
+      "theme": "light",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archived-360-light-525.png",
+      "sha256": "a3ae0f428161b6022c4d5372ef78dc9e2cf337d175dbdf8658e64772fae01bdb",
+      "state": "archived",
+      "width": 360,
+      "theme": "light",
+      "scroll": 525,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archived-360-dark-0.png",
+      "sha256": "4076a60a4d8adcca1a532551d61b450df35bb75e2b3b5693c44ee46cec7565be",
+      "state": "archived",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "archived-360-dark-525.png",
+      "sha256": "6fde6e8f9a9adb17aac57e0ef80fc24fbfe01ea1c9ac0e7c885440887e69c0e8",
+      "state": "archived",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 525,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "restore-confirmation-1440-light-0.png",
+      "sha256": "9031a48156c75e370f0803b47c5ce83fcf0def50076c413603cece024be7574d",
+      "state": "restore-confirmation",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "restore-confirmation-1440-dark-0.png",
+      "sha256": "f158225638c28a70314b4a5b0e64b73bcbef932e10c5a19a84148c8b7c4ac69d",
+      "state": "restore-confirmation",
+      "width": 1440,
+      "theme": "dark",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "restore-confirmation-360-light-0.png",
+      "sha256": "86bf75694611604b2f70294db3bf7c2ca4b4cca9d26da06d4d5ad14f4c45fe82",
+      "state": "restore-confirmation",
+      "width": 360,
+      "theme": "light",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "restore-confirmation-360-dark-0.png",
+      "sha256": "7ed91f951af8c8ca3aececf1a740550ea948055bb9df4dc4338e410792641fe6",
+      "state": "restore-confirmation",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "restored-1440-light-0.png",
+      "sha256": "214d920b58b71027408145353d477e1aa3d38932585308a22f135a7b20be8431",
+      "state": "restored",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    },
+    {
+      "file": "restored-360-dark-0.png",
+      "sha256": "e4baa11ddbdd92c039b6cdd62963a83059f6efc8a0d71300032d1b2ec33da743",
+      "state": "restored",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 0,
+      "kind": "viewport",
+      "overflow": false,
+      "opened_by_coordinator_and_reviewer": true
+    }
+  ],
+  "limitations": [
+    "Not global product acceptance or review of every rule/state.",
+    "No physical touch/device, screen reader, other browser engine or human-target-audience acceptance.",
+    "No external Supabase/SMTP/Asaas/Bunny homologation, charge or titular server deployment.",
+    "No GitHub Actions execution; CI remains off by explicit user choice.",
+    "First SQL fixture cleanup failed, own fixture recovered; failed log retained separately.",
+    "Previous frontend preview was found exited; only own preview restarted, cause not inferred.",
+    "Native fixture has no image; SQL races prove metadata finalization gate, not uploaded image bytes.",
+    "Archive history was captured at document start/end; restored mobile capture covers upper portion only."
+  ],
+  "design_documentation": {
+    "report_sha256": "a74141f6dff8eadce6a0e0f8184c294f2d1a7815d52720e3646d6f46f1d34105",
+    "receipt_sha256": "d18301565e90dd91b73b6f3946080e771c6f89044f4ea7fdabecce76d87d6b37",
+    "ordinary_extension": true,
+    "system_files_preserved": true
+  }
+}

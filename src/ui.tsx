@@ -353,14 +353,18 @@ export function Modal({
   trigger,
   children,
   description,
+  open,
+  onOpenChange,
 }: {
   title: string;
   trigger: ReactNode;
   children: ReactNode;
   description?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   return (
-    <Dialog.Root>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="overlay" />

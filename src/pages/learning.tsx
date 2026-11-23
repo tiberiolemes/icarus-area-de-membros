@@ -26,95 +26,10 @@ import {
   Search,
 } from "../ui";
 import { BunnyPlayer } from "../bunny";
-import { PrivateImage } from "../media";
 import { RichContent } from "../rich";
 
-export function Catalog() {
-  const [params, setParams] = useSearchParams(),
-    page = Number(params.get("page") || 1),
-    q = params.get("q") || "",
-    catalog = useRpc<Page<Course>>("app_catalog", { p_query: q, p_page: page });
-  return (
-    <>
-      <Heading title="Seus cursos">
-        Continue de onde parou ou explore os conteúdos disponíveis.
-      </Heading>
-      <Search initial={q} onSearch={(q) => setParams({ q, page: "1" })} />
-      <QueryState query={catalog}>
-        {catalog.data && (
-          <>
-            <div className="course-list" data-tour="courses">
-              {catalog.data.items.map((course) => (
-                <article key={course.id} className="course-row">
-                  {course.cover_url ? (
-                    <PrivateImage
-                      kind="course-cover"
-                      id={course.id}
-                      className="course-cover"
-                    />
-                  ) : (
-                    <div
-                      className="course-cover typographic-cover"
-                      aria-hidden="true"
-                    >
-                      <BookMark />
-                      <span>{course.title}</span>
-                    </div>
-                  )}
-                  <div>
-                    <h2>
-                      <Link to={"/app/cursos/" + course.slug}>
-                        {course.title}
-                      </Link>
-                    </h2>
-                    <p className="clamp">
-                      {course.description.replace(/<[^>]*>/g, "")}
-                    </p>
-                    <p className="meta">
-                      {course.total_lessons} aulas ·{" "}
-                      {Math.ceil(course.duration_seconds / 60)} min
-                    </p>
-                    <Progress
-                      value={course.progress_percent}
-                      done={course.completed_lessons}
-                      total={course.total_lessons}
-                    />
-                    <Link
-                      className="button primary"
-                      to={"/app/cursos/" + course.slug}
-                    >
-                      {course.can_access
-                        ? course.progress_percent > 0
-                          ? "Continuar curso"
-                          : "Conhecer curso"
-                        : "Consultar acesso"}
-                      <ArrowRight size={18} />
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-            {catalog.data.items.length === 0 && (
-              <Empty>
-                {q
-                  ? "Nenhum curso corresponde à busca. Limpe os filtros para ver os cursos publicados."
-                  : "Nenhum curso publicado para seu perfil. Os cursos liberados aparecerão aqui."}
-              </Empty>
-            )}
-            <Pager
-              page={page}
-              total={catalog.data.total}
-              onChange={(page) => setParams({ q, page: String(page) })}
-            />
-          </>
-        )}
-      </QueryState>
-    </>
-  );
-}
-function BookMark() {
-  return <span className="cover-mark">Icarus</span>;
-}
+export { Catalog } from "./catalog";
+
 export type CourseDetail = { course: Course; modules: Module[] };
 export function Curriculum({
   course,

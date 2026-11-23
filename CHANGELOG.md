@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5 · 2026-11-23
+
+- Vitrine de cursos aprovada integrada ao catálogo real, com destaque, capas tipográficas quando não cadastradas e fileiras horizontais.
+- Retomada baseada no progresso confirmado pelo servidor; busca e paginação preservadas, com indicação do recorte de cada página.
+- Acesso restrito e imagens privadas mantêm os controles existentes. Ajuda e guia acompanham a nova navegação.
+- Sem dependências novas, migração de banco ou ativação de provedores externos.
+
 ## 0.1.4 · 2026-11-23
 
 - Guia identificado e agrupado com a conta, com alvos visíveis no celular e retorno de foco ao pausar.

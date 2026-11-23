@@ -322,6 +322,8 @@ export function Search({
   initial?: string;
   onSearch: (query: string) => void;
 }) {
+  const [query, setQuery] = useState(initial);
+  useEffect(() => setQuery(initial), [initial]);
   return (
     <form
       className="search"
@@ -339,7 +341,8 @@ export function Search({
         name="q"
         placeholder="Buscar…"
         type="search"
-        defaultValue={initial}
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
       />
       <button>Buscar</button>
     </form>
@@ -421,16 +424,22 @@ const scrollPositions = new Map<string, number>();
 export function RouteFocus() {
   const { pathname, search, key, state } = useLocation(),
     navigation = useNavigationType();
+  const previousPath = useRef(pathname);
   useEffect(() => {
-    document.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
-    window.scrollTo(
+    const searching = previousPath.current === pathname && navigation !== "POP" &&
+      document.activeElement?.closest('form[role="search"]');
+    previousPath.current = pathname;
+    if (!searching) {
+      document.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
+      window.scrollTo(
       0,
       navigation === "POP"
         ? (scrollPositions.get(key) ?? 0)
         : state?.restoreScroll
           ? (scrollPositions.get(pathname + search) ?? 0)
           : 0,
-    );
+      );
+    }
     return () => {
       scrollPositions.set(key, window.scrollY);
       scrollPositions.set(pathname + search, window.scrollY);

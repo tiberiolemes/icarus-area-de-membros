@@ -14,7 +14,7 @@ const steps = [
   {
     target: "courses",
     title: "Continue seu curso",
-    body: "Abra um curso para ver os módulos e o progresso. O acesso depende do seu plano e é confirmado pelo servidor.",
+    body: "Abra o destaque ou um cartão das fileiras. Continue aprendendo usa o progresso confirmado; use as setas ou deslize no celular. A busca e a paginação consultam o catálogo, e as fileiras mostram a página atual. O acesso é confirmado pelo servidor.",
   },
   {
     target: "curriculum",

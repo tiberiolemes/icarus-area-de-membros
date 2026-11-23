@@ -1,0 +1,70 @@
+.catalog-view { min-width: 0; }
+.catalog-view .page-heading { margin-bottom: var(--ic-space-6); }
+.catalog-view .search { max-width: none; margin: var(--ic-space-8) 0 var(--ic-space-3); }
+.catalog-view .search button { flex-shrink: 0; }
+.catalog-feature { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); overflow: hidden; background: var(--ic-surface-muted); border-radius: var(--ic-radius-panel); }
+.catalog-feature-copy { min-width: 0; padding: var(--ic-space-10); align-self: center; }
+.catalog-feature h2 { font-size: clamp(28px, 3.3vw, 48px); line-height: 1.08; letter-spacing: -.035em; margin-bottom: var(--ic-space-4); overflow-wrap: anywhere; }
+.catalog-feature h2 a { text-decoration: none; }
+.catalog-feature h2 a:hover { text-decoration: underline; }
+.catalog-description { color: var(--ic-text-secondary); max-width: 43ch; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.catalog-meta { color: var(--ic-text-secondary); font-size: var(--ic-type-caption); margin-bottom: 0; overflow-wrap: anywhere; }
+.catalog-feature .catalog-meta { margin-top: var(--ic-space-5); }
+.catalog-cover-type { min-width: 0; aspect-ratio: 1.8; display: flex; flex-direction: column; justify-content: space-between; gap: var(--ic-space-4); padding: var(--ic-space-6); background: var(--ic-gray-900); color: var(--ic-white); border-radius: var(--ic-radius-card); overflow: hidden; }
+.catalog-cover-brand { font-size: var(--ic-type-caption); font-weight: 600; }
+.catalog-cover-title { font-size: 30px; font-weight: 600; line-height: 1.08; letter-spacing: -.035em; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.catalog-cover-foot { font-size: var(--ic-type-caption); display: flex; align-items: center; justify-content: space-between; gap: var(--ic-space-4); }
+.catalog-cover-featured { aspect-ratio: auto; border-radius: 0; background: var(--ic-black); padding: var(--ic-space-8); min-height: 352px; }
+.catalog-cover-featured .catalog-cover-title { font-size: clamp(36px, 4.5vw, 64px); line-height: 1.02; letter-spacing: -.04em; }
+.catalog-cover-featured .catalog-cover-brand { font-size: var(--ic-type-subtitle); }
+.catalog-cover-featured .catalog-cover-foot { border-top: 1px solid var(--ic-gray-500); padding-top: var(--ic-space-4); }
+.catalog-cover-media { min-width: 0; overflow: hidden; aspect-ratio: 1.8; border-radius: var(--ic-radius-card); background: var(--ic-surface-muted); }
+.catalog-cover-image { width: 100%; height: 100%; aspect-ratio: 1.8; object-fit: cover; display: block; }
+.catalog-feature > .catalog-cover-media { aspect-ratio: auto; border-radius: 0; min-height: 352px; }
+.catalog-feature > .catalog-cover-media .catalog-cover-image { height: 100%; min-height: 352px; }
+.catalog-view .media-error { display: block; padding: var(--ic-space-4); overflow-wrap: anywhere; }
+.catalog-view .progress { display: flex; flex-direction: column; align-items: stretch; gap: var(--ic-space-2); margin: var(--ic-space-4) 0 var(--ic-space-5); }
+.catalog-view .progress progress { width: 100%; flex: none; height: 3px; appearance: none; border: 0; border-radius: 4px; background: var(--ic-border); }
+.catalog-view .progress progress::-webkit-progress-bar { background: var(--ic-border); border-radius: 4px; }
+.catalog-view .progress progress::-webkit-progress-value { background: var(--ic-text); border-radius: 4px; }
+.catalog-view .progress progress::-moz-progress-bar { background: var(--ic-text); border-radius: 4px; }
+.catalog-view .progress span { font-size: var(--ic-type-caption); white-space: normal; overflow-wrap: anywhere; }
+.catalog-scope { font-size: var(--ic-type-caption); color: var(--ic-text-secondary); margin-bottom: 0; }
+.catalog-shelf { min-width: 0; margin-top: var(--ic-space-8); }
+.catalog-shelf-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ic-space-4); margin-bottom: var(--ic-space-4); }
+.catalog-shelf-head > div:first-child { min-width: 0; }
+.catalog-shelf-head h2 { font-size: 24px; margin: 0; overflow-wrap: anywhere; }
+.catalog-shelf-head p { margin: var(--ic-space-2) 0 0; font-size: var(--ic-type-caption); color: var(--ic-text-secondary); }
+.catalog-arrows { display: flex; gap: var(--ic-space-2); flex-shrink: 0; }
+.catalog-arrows .icon-button { width: 44px; height: 44px; padding: 0; }
+.catalog-track { display: flex; gap: var(--ic-space-5); overflow-x: auto; scroll-snap-type: x proximity; scroll-padding: 6px; padding: 6px 6px var(--ic-space-3); margin: -6px -6px 0; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--ic-border-control) transparent; }
+.catalog-card { flex: 0 0 calc((100% - 40px) / 2.65); min-width: 0; scroll-snap-align: start; }
+.catalog-card:nth-child(3n + 2) .catalog-cover-type { background: var(--ic-gray-100); color: var(--ic-black); }
+.catalog-card:nth-child(3n) .catalog-cover-type { background: var(--ic-white); color: var(--ic-black); border: 1px solid var(--ic-gray-500); }
+.catalog-card h3 { font-size: 18px; line-height: 1.35; margin: var(--ic-space-4) 0 var(--ic-space-2); overflow-wrap: anywhere; }
+.catalog-card h3 a { display: flex; align-items: center; min-height: 44px; text-decoration: none; }
+.catalog-card h3 a:hover { text-decoration: underline; }
+.catalog-card .catalog-action { justify-content: flex-start; text-align: left; max-width: 100%; }
+.catalog-action { overflow-wrap: anywhere; }
+.catalog-view .pagination { margin-top: var(--ic-space-8); }
+@media (max-width: 1100px) {
+  .catalog-feature-copy { padding: var(--ic-space-8); }
+  .catalog-card { flex-basis: calc((100% - 20px) / 2); }
+}
+@media (max-width: 620px) {
+  .catalog-feature { grid-template-columns: minmax(0, 1fr); }
+  .catalog-feature-copy { padding: var(--ic-space-6); }
+  .catalog-feature h2 { font-size: 32px; }
+  .catalog-feature > .catalog-cover-featured { display: none; }
+  .catalog-feature > .catalog-cover-media { aspect-ratio: 1.8; min-height: 0; }
+  .catalog-feature > .catalog-cover-media .catalog-cover-image { min-height: 0; aspect-ratio: 1.8; }
+  .catalog-shelf-head { gap: var(--ic-space-2); }
+  .catalog-shelf-head h2 { font-size: 22px; }
+  .catalog-shelf-head p { font-size: 12px; }
+  .catalog-arrows { gap: var(--ic-space-1); }
+  .catalog-arrows .icon-button { border: 0; }
+  .catalog-track { gap: var(--ic-space-4); }
+  .catalog-card { flex-basis: 85%; }
+  .catalog-cover-type { padding: var(--ic-space-5); }
+  .catalog-cover-title { font-size: 28px; }
+}

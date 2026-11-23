@@ -20,7 +20,8 @@ export const articles = [
     slug: "cursos",
     title: "Abra uma aula e continue de onde parou",
     steps: [
-      "Em Cursos, busque pelo título e abra o curso. Veja os módulos e as aulas na lista de conteúdo.",
+      "Em Cursos, abra o destaque ou escolha um cartão nas fileiras. Continue aprendendo reúne os cursos com atividade ainda não concluídos. As setas percorrem cada fileira; no celular, deslize os cartões.",
+      "Use Buscar para consultar o catálogo. A paginação mantém até 20 cursos por página; quando houver mais resultados, as fileiras mostram somente os cursos da página atual. Abra o curso para ver módulos e aulas.",
       "Cada curso, módulo e aula tem endereço próprio. Use esses links para retornar diretamente ao conteúdo.",
       "O cadeado indica acesso restrito. Consulte sua assinatura; o servidor decide o acesso em cada operação.",
       "No vídeo nativo, a posição é salva durante a reprodução e ao pausar. Use Salvar ponto de retomada para confirmar manualmente.",

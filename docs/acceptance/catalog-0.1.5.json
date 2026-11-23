@@ -1,0 +1,256 @@
+{
+  "version": "0.1.5",
+  "scope": "approved course showcase integrated with existing catalog",
+  "frontend_tests": {
+    "files": 9,
+    "passed": 67,
+    "catalog_cases": 17
+  },
+  "build_typecheck": "passed",
+  "known_build_warning": "existing chunk above 500kB",
+  "independent_review": {
+    "disposition": "ship",
+    "mode": "read-only source and supplied captures",
+    "captures_verified": 19,
+    "report": "catalog-0.1.5-review.md",
+    "report_sha256": "70b217a4c7819356bc1c184e29cfff745cd67be0bd8e6980d2730e83b80e34da",
+    "missing_optional_inputs": [
+      "separate QUALITY BAR card",
+      "formal five-block concept contract with seed; existing-world extension reviewed against supplied brief and proposal contract"
+    ],
+    "not_executed_by_reviewer": [
+      "tests",
+      "build",
+      "browser/runtime",
+      "detector",
+      "Auth",
+      "DB",
+      "Git mutations"
+    ]
+  },
+  "source_hashes": {
+    "src/pages/catalog.tsx": "0684286ff2af9b9c71248d32d69d50097f41e6d8e98e9b47a7625131883bf58f",
+    "src/catalog.css": "51204f8a49b81d14c9474a6711fcbea922c78ae8e671a43fe8a9c9bc423cf360",
+    "src/catalog.test.tsx": "68ae7226bcd7e2f5e9736223ebf7da90249721a180baea4475e008ea245d9114",
+    "src/pages/learning.tsx": "50366c60feb0edac03c5d4795ff5a51785c6f07e6512d5ca895165c56994e8c3",
+    "src/pages/help.tsx": "b4f97d7a2c1835ad796969fa7e7811f4ec907cea531e66f9d26b7fcfb779bd80",
+    "src/tour.tsx": "145f9f23bd5b3ca68c78dec24eac2974686090a89986fb64b93fff5eac1273da",
+    "src/style.css": "1ec300cc701a2f36eb835715153561711d46db354355759fd9ed59617acd9364",
+    "src/media.tsx": "5aed918ad0836ba390473cdc56fe8df63bcf1daa26fc3862b0bfe152565bcc5d",
+    "src/api.ts": "8c46eaeb77c10796cbbc1cc54267e873cd6affe417566f76fab98b1f0982f74f",
+    "src/ui.tsx": "405fb2f0e913c9030e67dee4e44c20b8a3baddf47f0d36e8af2f1d49872562b8",
+    "src/main.tsx": "e8a64314205697610d2c9844b367c96bbd8521f7b52790d02c5f2356715a7e8d",
+    "docs/help/README.md": "de021d4ab0ea11348850c9ac48fde2eb4fcc0799f2d7e134e311e9c4ce1b1ab8",
+    "package.json": "011f7eb4729ae13fd5490ca72afd79e08b3bdeb2286e8ced647f930a8100f7b8",
+    "package-lock.json": "bc2137a98cd6d46a767c5ad025a8351c6a6be293047fc78aca43008cd6ae7cb8"
+  },
+  "native_checks": {
+    "native_search_focus_preserved": true,
+    "native_clear_updates_input": true,
+    "native_guide_updated_copy": true,
+    "escape_returns_launch_focus": true,
+    "help_article_updated_copy": true,
+    "theme_restored_light": true,
+    "search_empty_recovery_spa": true,
+    "course_detail_and_back_spa": true,
+    "no_lesson_opened_or_progress_changed": true
+  },
+  "controlled_transport_checks": {
+    "fixture": "browser fetch override for QA_VISUAL_015 only, not backend data",
+    "courses": 9,
+    "total": 29,
+    "track_forward_and_backward": true,
+    "forward_moved": true,
+    "restored_native_fetch_and_route": true
+  },
+  "selected_capture_count": 19,
+  "captures": [
+    {
+      "file": "final-native-catalog-1440-light-0.png",
+      "sha256": "34d4663ed6c1c51e85a4120acdb9e84ff2e9bff2f783d1805e04b32cc43b7c9a",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 0,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "final-native-catalog-1440-light-605.png",
+      "sha256": "db483b5f153946da7bee3c8b518f6de217679186dcd749167bc3096a10513c37",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 605,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "final-settled-1440-dark-0.png",
+      "sha256": "738a8671214bcf4eb2b5a06300ed259b1287ed3619427f3d64000f648a9a9a16",
+      "width": 1440,
+      "theme": "dark",
+      "scroll": 0,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "final-settled-1440-dark-605.png",
+      "sha256": "9788442410b14e1a9a7f7c82d048cd14961876e9664c9bcd3b1b4e169018c5cf",
+      "width": 1440,
+      "theme": "dark",
+      "scroll": 605,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "final-settled-360-light-0.png",
+      "sha256": "26ecf6a74e3f2b532495f8099a4cebba693960938652120c6b04bb60dc10e2f0",
+      "width": 360,
+      "theme": "light",
+      "scroll": 0,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "final-settled-360-light-646.png",
+      "sha256": "cb9721e7692b356ad4a51e6d26c743209c9ae45de2127620310be774dc46a49e",
+      "width": 360,
+      "theme": "light",
+      "scroll": 646,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "final-settled-360-dark-0.png",
+      "sha256": "d7aadb1b776850764f36919b79808689e467395fc03a87312b5f691257b6f161",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 0,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "final-settled-360-dark-646.png",
+      "sha256": "3af32dce37c589d726ce002e766ae83c0b7671af3bf126beab8bb70659282b51",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 646,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "native-empty-1440-light-0.png",
+      "sha256": "4ca0891ebb32625c5484db3d998f44a9ecf22af57c1c32c93b518321d7cb536c",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 0,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "native-empty-360-dark-0.png",
+      "sha256": "c0c1a3de23aaa7fc6f91233c70a4dfc8468331b391ac620cfa85329951711636",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 0,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "native-empty-360-dark-2.png",
+      "sha256": "10e67c39dbcd57251ac748887cc4b46240f43155d9b29a53569554d0578bff7a",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 2,
+      "overflow": false,
+      "controlled_transport": false
+    },
+    {
+      "file": "controlled-nine-courses-1440-light-0.png",
+      "sha256": "586ab2927758c8ec0c450a467a7745b4730ab71f262033dcc185170fd66fa3da",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 0,
+      "overflow": false,
+      "controlled_transport": true
+    },
+    {
+      "file": "controlled-nine-courses-1440-light-1315.png",
+      "sha256": "86239418b3c7ca588275ebfb86c295fecec27e79f57401ae8d32788b683dc88a",
+      "width": 1440,
+      "theme": "light",
+      "scroll": 1315,
+      "overflow": false,
+      "controlled_transport": true
+    },
+    {
+      "file": "controlled-nine-courses-1440-dark-0.png",
+      "sha256": "6aa3a83ff6a7ee86a38d8f5216d85ea4ec9183fbd3667b7bfc746649c6a30d13",
+      "width": 1440,
+      "theme": "dark",
+      "scroll": 0,
+      "overflow": false,
+      "controlled_transport": true
+    },
+    {
+      "file": "controlled-nine-courses-1440-dark-1315.png",
+      "sha256": "fc33a728fd93f80da0dc2fed33672ed168d7587c6eefdfa9dfae50cb981d8b65",
+      "width": 1440,
+      "theme": "dark",
+      "scroll": 1315,
+      "overflow": false,
+      "controlled_transport": true
+    },
+    {
+      "file": "controlled-nine-courses-360-light-0.png",
+      "sha256": "129cf141d1036d63de1589b58c20058d359f88b10f05801ffc9b94090679ef78",
+      "width": 360,
+      "theme": "light",
+      "scroll": 0,
+      "overflow": false,
+      "controlled_transport": true
+    },
+    {
+      "file": "controlled-nine-courses-360-light-1416.png",
+      "sha256": "dad81f71282225fdd3eaacaae881ab6b55db41b96049d46b9f0ed21092d9d4da",
+      "width": 360,
+      "theme": "light",
+      "scroll": 1416,
+      "overflow": false,
+      "controlled_transport": true
+    },
+    {
+      "file": "controlled-nine-courses-360-dark-0.png",
+      "sha256": "70de0883fa0a828bd348182a8a8d63df9bbaa2ca812ac3697278007e661779fa",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 0,
+      "overflow": false,
+      "controlled_transport": true
+    },
+    {
+      "file": "controlled-nine-courses-360-dark-1416.png",
+      "sha256": "4372d54ea904a805e11bd6ba55681bf18d9f0dc287937061df9915ee64fbe9d8",
+      "width": 360,
+      "theme": "dark",
+      "scroll": 1416,
+      "overflow": false,
+      "controlled_transport": true
+    }
+  ],
+  "visual_equivalence": "Controlled multi-course and native empty captures precede final search focus adjustment; CSS unchanged. Final native catalog captured on the final build in both viewports and themes.",
+  "excluded_qa_attempts": [
+    "observation seed absent after query-cache reuse",
+    "help capture runtime timeout",
+    "native search focus before RouteFocus correction",
+    "theme-transition top frames replaced by settled captures"
+  ],
+  "backend_api_media_unchanged": true,
+  "new_dependencies": false,
+  "ci_executed": false,
+  "not_verified": [
+    "production/server deployment",
+    "external Asaas/Bunny/SMTP",
+    "all surfaces/states/roles",
+    "physical devices/screen readers/other engines"
+  ]
+}

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4 · 2026-11-23
+
+- Guia identificado e agrupado com a conta, com alvos visíveis no celular e retorno de foco ao pausar.
+- Avaliação da ajuda separada do suporte; anexos e ações de certificados agrupados.
+- Hierarquia das abas administrativas, grade de provedores, foco de editores e quebra de nomes longos corrigidos.
+- Revisão de layout por famílias e verificações locais documentadas, sem mudança de permissões ou integrações.
+
 ## 0.1.3 · 2026-11-23
 
 - Recuperação de senha junto do campo, cadastro em frase no rodapé e confirmação de email exibida somente quando o Auth indicar pendência.

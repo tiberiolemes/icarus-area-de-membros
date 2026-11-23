@@ -159,6 +159,7 @@ export function TicketPage({ admin = false }: { admin?: boolean }) {
                     {date(message.created_at)}
                   </p>
                   <div className="prose">{message.body}</div>
+                  <div className="actions">
                   {message.attachments?.map((file) => (
                     <Action
                       key={file.id}
@@ -175,12 +176,14 @@ export function TicketPage({ admin = false }: { admin?: boolean }) {
                       Baixar {file.name}
                     </Action>
                   ))}
+                  </div>
                 </article>
               ))}
             </div>
             {!!conversationFiles.length && (
               <section>
                 <h2>Arquivos da conversa</h2>
+                <div className="actions">
                 {conversationFiles.map((file) => (
                   <Action
                     key={file.id}
@@ -197,6 +200,7 @@ export function TicketPage({ admin = false }: { admin?: boolean }) {
                     Baixar {file.name}
                   </Action>
                 ))}
+                </div>
               </section>
             )}
             <Form

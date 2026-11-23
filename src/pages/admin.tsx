@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Link,
@@ -55,6 +55,19 @@ const text = (row: Row | undefined, key: string, fallback = "") =>
   String(row?.[key] ?? fallback);
 const memberName = (member: Row) =>
   text(member, "full_name").trim() || `Membro sem nome · ${member.id.slice(0, 8)}`;
+function focusEditor(node: HTMLElement | null) {
+  if (!node) return;
+  const opener = document.activeElement;
+  const title = node.querySelector<HTMLElement>("h2");
+  if (title) {
+    title.tabIndex = -1;
+    title.focus({ preventScroll: true });
+  }
+  node.scrollIntoView({ block: "start" });
+  return () => {
+    if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+  };
+}
 const num = (data: FormData, key: string) => Number(value(data, key) || 0);
 const check = (data: FormData, key: string) => data.has(key);
 async function save(
@@ -98,11 +111,13 @@ function AdminList({
   title,
   action,
   children,
+  section = false,
 }: {
   entity: string;
   title: string;
   action?: ReactNode;
   children: (item: Row) => ReactNode;
+  section?: boolean;
 }) {
   const [params, setParams] = useSearchParams(),
     q = params.get("q") ?? "",
@@ -115,7 +130,7 @@ function AdminList({
     exportEntity = entity === "profiles" || entity === "orders" ? entity : null;
   return (
     <>
-      <Heading title={title} action={action} />
+      <Heading title={title} action={action} level={section ? 2 : 1} />
       <Search initial={q} onSearch={(q) => setParams({ q, page: "1" })} />
       {exportEntity && (
         <section className="actions" data-tour="admin-export">
@@ -668,6 +683,7 @@ function Structure({ course }: { course: Row }) {
       {selected && (
         <section
           className="inline-editor"
+          ref={focusEditor}
           key={`${selected.entity}-${selected.row?.id ?? selected.parent}`}
         >
           <div className="section-heading">
@@ -880,11 +896,13 @@ export function AdminMaterials() {
       {folder !== undefined && (
         <section
           className="inline-editor reading"
+          ref={focusEditor}
           key={folder?.id ?? "new-folder"}
         >
           <h2>{folder ? "Editar pasta" : "Criar pasta"}</h2>
           <Form
             label="Salvar pasta"
+            secondaryAction={<button type="button" onClick={() => setFolder(undefined)}>Fechar editor</button>}
             onSave={async (data) => {
               await save("material_folders", folder?.id ?? null, {
                 name: value(data, "name"),
@@ -918,17 +936,18 @@ export function AdminMaterials() {
             <AccessFields row={folder ?? undefined} />
           </Form>
           {folder && <Archive entity="material_folders" row={folder} />}
-          <button onClick={() => setFolder(undefined)}>Fechar editor</button>
         </section>
       )}
       {editing !== undefined && (
         <section
           className="inline-editor reading"
+          ref={focusEditor}
           key={editing?.id ?? "new-material"}
         >
           <h2>{editing ? "Editar material" : "Criar material"}</h2>
           <Form
             label="Salvar material"
+            secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
             onSave={async (data) => {
               const result = await save("materials", editing?.id ?? null, {
                 name: value(data, "name"),
@@ -1018,7 +1037,6 @@ export function AdminMaterials() {
               <Archive entity="materials" row={editing} />
             </>
           )}
-          <button onClick={() => setEditing(undefined)}>Fechar editor</button>
         </section>
       )}
     </>
@@ -1273,10 +1291,11 @@ export function AdminPlans() {
         )}
       </AdminList>
       {editing !== undefined && (
-        <section className="inline-editor reading" key={editing?.id ?? "new"}>
+        <section className="inline-editor reading" key={editing?.id ?? "new"} ref={focusEditor}>
           <h2>{editing ? "Editar plano" : "Criar plano"}</h2>
           <Form
             label="Salvar plano"
+            secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
             onSave={async (data) => {
               await save("plans", editing?.id ?? null, {
                 name: value(data, "name"),
@@ -1347,7 +1366,6 @@ export function AdminPlans() {
               Plano ativo
             </label>
           </Form>
-          <button onClick={() => setEditing(undefined)}>Fechar editor</button>
         </section>
       )}
     </>
@@ -1437,18 +1455,18 @@ export function AdminCommunity() {
         ))}
       </nav>
       {tab === "moderacao" && (
-        <AdminList entity="posts" title="Fila de publicações">
+        <AdminList entity="posts" title="Fila de publicações" section>
           {(post) => (
             <div>
               <p className="meta">
                 {statusName(text(post, "status"))} ·{" "}
                 {date(text(post, "created_at"))}
               </p>
-              <h2>
+              <h3>
                 <Link to={"/admin/comunidade/" + post.id}>
                   {text(post, "title")}
                 </Link>
-              </h2>
+              </h3>
               <p className="clamp">{text(post, "body")}</p>
               <Moderate
                 type="post"
@@ -1462,7 +1480,7 @@ export function AdminCommunity() {
         </AdminList>
       )}
       {tab === "respostas" && (
-        <AdminList entity="replies" title="Fila de respostas">
+        <AdminList entity="replies" title="Fila de respostas" section>
           {(reply) => (
             <div>
               <p>
@@ -1485,7 +1503,7 @@ export function AdminCommunity() {
         </AdminList>
       )}
       {tab === "denuncias" && (
-        <AdminList entity="reports" title="Denúncias">
+        <AdminList entity="reports" title="Denúncias" section>
           {(report) => (
             <div>
               <p>{text(report, "reason")}</p>
@@ -1535,9 +1553,11 @@ export function AdminCommunity() {
             ))}
           </QueryState>
           {editing !== undefined && (
-            <div className="inline-editor reading" key={editing?.id ?? "new"}>
+            <div className="inline-editor reading" key={editing?.id ?? "new"} ref={focusEditor}>
+              <h2>{editing ? "Editar espaço" : "Criar espaço"}</h2>
               <Form
                 label="Salvar espaço"
+                secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
                 onSave={async (data) => {
                   await save("spaces", editing?.id ?? null, {
                     name: value(data, "name"),
@@ -1574,9 +1594,6 @@ export function AdminCommunity() {
                 <AccessFields row={editing ?? undefined} />
               </Form>
               {editing && <Archive entity="spaces" row={editing} />}
-              <button onClick={() => setEditing(undefined)}>
-                Fechar editor
-              </button>
             </div>
           )}
         </>
@@ -1625,7 +1642,7 @@ export function AdminSettings() {
             {capabilities.data && (
               <dl>
                 {Object.entries(capabilities.data).map(([key, v]) => (
-                  <div key={key}>
+                  <Fragment key={key}>
                     <dt>{key}</dt>
                     <dd>
                       {typeof v === "boolean"
@@ -1634,7 +1651,7 @@ export function AdminSettings() {
                           : "Não configurado"
                         : String(v)}
                     </dd>
-                  </div>
+                  </Fragment>
                 ))}
               </dl>
             )}
@@ -1650,14 +1667,15 @@ export function AdminSettings() {
           <AdminList
             entity="legal_versions"
             title="Documentos versionados"
+            section
             action={<button onClick={() => setLegal(null)}>Nova versão</button>}
           >
             {(doc) => (
               <>
                 <div>
-                  <h2>
+                  <h3>
                     {text(doc, "title")} · {text(doc, "version")}
-                  </h2>
+                  </h3>
                   <p>
                     {doc.published ? "Publicado" : "Não publicado"}
                     {doc.demo ? " · Demonstração" : ""}
@@ -1668,9 +1686,11 @@ export function AdminSettings() {
             )}
           </AdminList>
           {legal !== undefined && (
-            <div className="reading inline-editor" key={legal?.id ?? "new"}>
+            <div className="reading inline-editor" key={legal?.id ?? "new"} ref={focusEditor}>
+              <h2>{legal ? "Editar documento" : "Criar documento"}</h2>
               <Form
                 label="Salvar documento"
+                secondaryAction={<button type="button" onClick={() => setLegal(undefined)}>Fechar editor</button>}
                 onSave={async (data) => {
                   await save("legal_versions", legal?.id ?? null, {
                     kind: value(data, "kind"),
@@ -1736,7 +1756,6 @@ export function AdminSettings() {
                   academia.
                 </Notice>
               </Form>
-              <button onClick={() => setLegal(undefined)}>Fechar editor</button>
             </div>
           )}
         </>
@@ -1756,10 +1775,11 @@ export function AdminSettings() {
         <AdminList
           entity="privacy_requests"
           title="Solicitações de privacidade"
+          section
         >
           {(request) => (
             <div>
-              <h2>{text(request, "kind")}</h2>
+              <h3>{text(request, "kind")}</h3>
               <p>
                 {statusName(text(request, "status"))} ·{" "}
                 {date(text(request, "created_at"))}
@@ -1803,9 +1823,11 @@ function OnboardingAdmin() {
         ))}
       </QueryState>
       {selected !== undefined && (
-        <div className="reading inline-editor" key={selected?.id ?? "new"}>
+        <div className="reading inline-editor" key={selected?.id ?? "new"} ref={focusEditor}>
+          <h2>{selected ? "Editar pergunta" : "Criar pergunta"}</h2>
           <Form
             label="Salvar pergunta"
+            secondaryAction={<button type="button" onClick={() => setSelected(undefined)}>Fechar editor</button>}
             onSave={async (data) => {
               await save("onboarding_questions", selected?.id ?? null, {
                 key: value(data, "key"),
@@ -1888,7 +1910,6 @@ function OnboardingAdmin() {
               Ativa
             </label>
           </Form>
-          <button onClick={() => setSelected(undefined)}>Fechar editor</button>
         </div>
       )}
     </>

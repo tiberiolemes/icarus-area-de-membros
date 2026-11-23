@@ -297,6 +297,9 @@ progress::-moz-progress-bar {
 .page-heading > div {
   min-width: 0;
 }
+.page-heading h2 {
+  margin-bottom: 0;
+}
 .section-heading {
   display: flex;
   align-items: center;
@@ -649,13 +652,20 @@ h2 > a,
   font-size: 14px;
   color: var(--ic-text-secondary);
 }
+.topbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-left: auto;
+  min-width: 0;
+}
 .account-link {
   display: flex;
   gap: 12px;
   align-items: center;
   text-decoration: none;
   font-size: 14px;
-  min-width:0;
+  min-width:44px;
   min-height: 44px;
 }
 .account-link>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.account-link .avatar{flex-shrink:0}
@@ -861,6 +871,8 @@ h2 > a,
 }
 .curriculum h3 a {
   text-decoration: none;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .curriculum details {
   margin: 12px 0;
@@ -889,6 +901,10 @@ h2 > a,
   min-height: 44px;
   border-radius: 8px;
   font-size: 14px;
+}
+.curriculum li a > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .curriculum li a:hover,
 .curriculum li a[aria-current="page"] {
@@ -1015,6 +1031,8 @@ h2 > a,
 }
 .folder-list a > span {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .folder-list a:hover {
   background: var(--ic-surface-muted);
@@ -1028,14 +1046,27 @@ h2 > a,
   border-bottom: 1px solid var(--ic-border);
   padding: 24px 0;
   text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.resource-row > strong {
+  min-width: 0;
 }
 .resource-row > div,
 .admin-row > div {
   min-width: 0;
 }
 .resource-row h2,
-.admin-row h2 {
+.resource-row h3,
+.admin-row h2,
+.admin-row h3 {
   margin-bottom: 4px;
+}
+.course-row h2,
+.resource-row h2,
+.resource-row h3,
+.admin-row h2,
+.admin-row h3 {
+  overflow-wrap: anywhere;
 }
 .resource-row p,
 .admin-row p {
@@ -1096,6 +1127,17 @@ h2 > a,
 .plan-row {
   padding: 28px 0;
   border-top: 1px solid var(--ic-border);
+}
+.certificate-course-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.certificate-course-actions > p {
+  flex-basis: 100%;
+  margin-bottom: 0;
 }
 .moderate {
   margin-top: 24px;
@@ -1185,6 +1227,7 @@ h2 > a,
   margin-top: 40px;
   border-top: 1px solid var(--ic-border-control);
   padding-top: 24px;
+  scroll-margin-top: 24px;
 }
 .mfa {
   margin-top: 40px;
@@ -1262,12 +1305,21 @@ h2 > a,
   padding-left: 8px;
   margin-bottom: 24px;
 }
+.help-feedback,
+.help-support {
+  border-top: 1px solid var(--ic-border);
+  padding-top: 24px;
+  margin-top: 32px;
+}
+.help-support p {
+  color: var(--ic-text-secondary);
+}
 .tour-launch {
   flex-shrink:0;
 }
 .tour-launch button {
   font-size: 14px;
-  width:44px;padding:10px;
+  white-space: nowrap;
 }
 .tour-panel {
   position: fixed;
@@ -1377,14 +1429,13 @@ h2 > a,
     display: none;
   }
   .account-link {
-    margin-left: auto;
-    max-width: calc(100% - 64px);
+    flex-shrink: 0;
   }
-  .account-link > span:last-child {
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .account-link .account-details {
+    display: none;
+  }
+  .topbar-tools {
+    gap: 16px;
   }
   .page-heading {
     flex-direction: column;

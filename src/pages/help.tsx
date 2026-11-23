@@ -74,6 +74,7 @@ export const articles = [
     title: "Atualize perfil, tema, segurança e privacidade",
     steps: [
       "Abra Configurações e atualize seu nome, telefone e bio. Em Sua empresa, edite as respostas do onboarding.",
+      "O Guia desta tela fica no cabeçalho, ao lado da sua conta, também no celular. Ele destaca os elementos visíveis da página; use Pausar para fechar e voltar ao botão.",
       "Em Aparência, escolha Claro ou Escuro e salve. A preferência acompanha sua conta e não é herdada por outro membro.",
       "Em Segurança, solicite troca de email ou senha. A mudança de email exige confirmação. Configure o autenticador de dois fatores.",
       "Assinatura mostra o plano e a validade confirmados. No checkout, Pix é à vista; o cartão permite escolher de 1 a 12 parcelas, com valores e condições finais no ambiente seguro do provedor. Sem provedor configurado, o checkout informa a indisponibilidade e nenhuma cobrança é realizada.",
@@ -85,6 +86,7 @@ export const articles = [
     title: "Cadastre conteúdo e opere as filas",
     steps: [
       "Em Conteúdo, crie um curso e salve. Defina título, endereço, descrição rica e acesso.",
+      "Ao criar ou editar um item de uma lista, o editor aparece abaixo dela e recebe o foco. Fechar editor retorna ao botão que você usou para abrir a edição.",
       "Em Estrutura e aulas, crie módulo, seção e aula. Use Subir e Descer para ordenar com teclado. Defina duração e aulas obrigatórias.",
       "Configure o responsável pelo certificado antes de habilitar a emissão. Use dados reais ou identifique uma demonstração.",
       "Em Materiais, crie pasta e registro do arquivo, depois envie o arquivo privado. Confira a confirmação do servidor.",
@@ -116,8 +118,8 @@ export function Help() {
                   ))}
                 </ol>
                 {session && (
-                  <section>
-                    <h2>Este artigo ajudou?</h2>
+                  <section className="help-feedback" aria-labelledby="help-feedback-title">
+                    <h2 id="help-feedback-title">Este artigo ajudou?</h2>
                     <div className="actions">
                       <Action
                         run={() =>
@@ -144,9 +146,13 @@ export function Help() {
                     </div>
                   </section>
                 )}
-                <Link className="button" to="/app/suporte/novo">
-                  Preciso de suporte
-                </Link>
+                <section className="help-support" aria-labelledby="help-support-title">
+                  <h2 id="help-support-title">Ainda precisa de ajuda?</h2>
+                  <p>Abra uma solicitação para conversar com a equipe.</p>
+                  <Link className="button" to="/app/suporte/novo">
+                    Preciso de suporte
+                  </Link>
+                </section>
               </>
             ) : (
               <Link className="text-action" to="/ajuda">Ver todos os artigos</Link>

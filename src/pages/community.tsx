@@ -289,6 +289,19 @@ export function Composer() {
           <Form
             key={id ?? draftKey}
             label="Enviar para revisão"
+            secondaryAction={
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.removeItem(draftKey);
+                  setDraft(null);
+                  setDirty(false);
+                  navigate("/app/comunidade");
+                }}
+              >
+                Descartar e voltar
+              </button>
+            }
             onSave={async (data) => {
               const result = await rpc<{ id: string; status: string }>(
                 "app_save_post",
@@ -342,17 +355,6 @@ export function Composer() {
                 defaultValue={draft?.body ?? data?.body ?? ""}
               />
             </Field>
-            <button
-              type="button"
-              onClick={() => {
-                sessionStorage.removeItem(draftKey);
-                setDraft(null);
-                setDirty(false);
-                navigate("/app/comunidade");
-              }}
-            >
-              Descartar e voltar
-            </button>
           </Form>
         </div>
       )}

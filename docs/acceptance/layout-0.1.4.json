@@ -1,0 +1,818 @@
+{
+  "version": "0.1.4",
+  "scope": "layout and frontend interaction",
+  "frontend_tests": {
+    "files": 8,
+    "passed": 50
+  },
+  "build_typecheck": "passed",
+  "layout_detector": [],
+  "independent_source_review": "passed with scoped addenda",
+  "surfaces": [
+    {
+      "group": "final",
+      "surface": "catalog",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "materials",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "certificates",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "community",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "support",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "ticket-new",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "admin-courses",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "admin-materials",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "admin-members",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "admin-plans",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "admin-orders",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "admin-support",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "help-index",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "help-article",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "account-perfil",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "account-empresa",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "account-seguranca",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "account-assinatura",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "account-privacidade",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "community-moderacao",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "community-respostas",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "community-denuncias",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "community-espacos",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "admin-onboarding",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "admin-integracoes",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "admin-legal",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "admin-equipe",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "admin-privacidade",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "course",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "module",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "lesson",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "material-folder",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "final",
+      "surface": "post",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "post-edit-or-denied",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "final",
+      "surface": "ticket",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "course-new",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "course-editor",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "course-structure",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "module-editor",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "section-editor",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "member-detail",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "plan-editor",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "folder-editor",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "material-editor",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "space-editor",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "legal-editor",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "question-editor",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "post-new",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "lesson-editor",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "final",
+      "surface": "course-certificate",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "public",
+      "surface": "login",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "public",
+      "surface": "signup",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "public",
+      "surface": "recovery",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "public",
+      "surface": "confirmation",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "public",
+      "surface": "password-reset",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 3
+    },
+    {
+      "group": "public",
+      "surface": "callback",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "public",
+      "surface": "checkout-unavailable",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "public",
+      "surface": "order-protected",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "public",
+      "surface": "help-guest",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "public",
+      "surface": "terms",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "public",
+      "surface": "privacy",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "public",
+      "surface": "certificate",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "public",
+      "surface": "certificate-invalid",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "public",
+      "surface": "not-found",
+      "variants": [
+        "1280-light",
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "checks",
+      "surface": "guide-1280",
+      "variants": [
+        "1280-light"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "checks",
+      "surface": "guide-360",
+      "variants": [
+        "360-dark"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "checks",
+      "surface": "long-folder",
+      "variants": [
+        "360-light"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "checks",
+      "surface": "long-slug",
+      "variants": [
+        "360-light"
+      ],
+      "native_frames": 2
+    },
+    {
+      "group": "checks",
+      "surface": "header-intermediate",
+      "variants": [
+        "1024-dark",
+        "768-light"
+      ],
+      "native_frames": 4
+    },
+    {
+      "group": "checks",
+      "surface": "help-opposite-themes",
+      "variants": [
+        "1280-dark",
+        "360-light"
+      ],
+      "native_frames": 4
+    }
+  ],
+  "visual_method": "Native viewport frames inspected in contact sheets; final account-target frames inspected as header crops. No full-page capture substitution.",
+  "native_frames": 222,
+  "contact_sheets": 70,
+  "final_account_target": {
+    "variants": [
+      {
+        "width": 360,
+        "theme": "light",
+        "overflow": false,
+        "account": {
+          "width": 44,
+          "height": 44
+        },
+        "toolsGap": "16px",
+        "topbarHeight": 80,
+        "styles": [
+          "/brand/icarus-tokens.css",
+          "/assets/index-DX56ygnT.css"
+        ],
+        "sha256": "b8b5effb1542134806835562a9ed03fc9c4a01078edefed3a49a193248a8e039"
+      },
+      {
+        "width": 360,
+        "theme": "dark",
+        "overflow": false,
+        "account": {
+          "width": 44,
+          "height": 44
+        },
+        "toolsGap": "16px",
+        "topbarHeight": 80,
+        "styles": [
+          "/brand/icarus-tokens.css",
+          "/assets/index-DX56ygnT.css"
+        ],
+        "sha256": "97b0f7909d2bc6b3da0f35c5a133eafaff38b024dd99adb421943e46fd641b23"
+      },
+      {
+        "width": 768,
+        "theme": "light",
+        "overflow": false,
+        "account": {
+          "width": 214.6953125,
+          "height": 44
+        },
+        "toolsGap": "24px",
+        "topbarHeight": 80,
+        "styles": [
+          "/brand/icarus-tokens.css",
+          "/assets/index-DX56ygnT.css"
+        ],
+        "sha256": "d15789b0af879b01cbc5e72fc154c990c791a2bed39acb3f0f5c02cf5d9784f6"
+      },
+      {
+        "width": 1024,
+        "theme": "dark",
+        "overflow": false,
+        "account": {
+          "width": 214.6953125,
+          "height": 44
+        },
+        "toolsGap": "24px",
+        "topbarHeight": 88,
+        "styles": [
+          "/brand/icarus-tokens.css",
+          "/assets/index-DX56ygnT.css"
+        ],
+        "sha256": "55f97d36a3d7b6c9d51795249e927aeb75ca861cc27b20dd1fcc7f6bfde877ce"
+      },
+      {
+        "width": 1280,
+        "theme": "dark",
+        "overflow": false,
+        "account": {
+          "width": 214.6953125,
+          "height": 44
+        },
+        "toolsGap": "24px",
+        "topbarHeight": 88,
+        "styles": [
+          "/brand/icarus-tokens.css",
+          "/assets/index-DX56ygnT.css"
+        ],
+        "sha256": "9eeb1e532288c64047af4bc6432517089b35eb18cfbe99cbab19e2a9f3c5506b"
+      }
+    ],
+    "old_width": 40,
+    "new_minimum_width": 44,
+    "reverse_css_matches_prior_snapshot": true
+  },
+  "native_checks": {
+    "guide-1280": {
+      "target": "NAV",
+      "targetVisible": true,
+      "panelFocused": true,
+      "step": "Passo 1 de 2",
+      "overflow": false,
+      "timeOrigin": 1795445330854.1,
+      "closedFocused": true
+    },
+    "guide-360": {
+      "target": "BUTTON",
+      "targetVisible": true,
+      "panelFocused": true,
+      "step": "Passo 1 de 2",
+      "overflow": false,
+      "timeOrigin": 1795445339351.8,
+      "closedFocused": true
+    },
+    "editor": {
+      "focused": true,
+      "visible": true,
+      "returned": true
+    },
+    "long-folder": true,
+    "long-slug": true,
+    "help": {
+      "gap": 32,
+      "heading": true,
+      "overflow": false
+    }
+  },
+  "source_hashes": {
+    "src/auth.tsx": "bc6c73c91437766285d5282b313c76781183dacac5a1f510d0cc3bd1249ebcf9",
+    "src/tour.tsx": "27d4629198b18005319f3757315158037a847a07f74b5ac9f343c5dc51a243b9",
+    "src/shell.tsx": "b5623dcd2c257047ca11555c437e9e3795face568c3f83d913f8cd4bc4653c4c",
+    "src/main.tsx": "e8a64314205697610d2c9844b367c96bbd8521f7b52790d02c5f2356715a7e8d",
+    "src/frontend.test.tsx": "8d3228eaa965a3064f3823fe0f9a8247182cb63e0adef2e0191b8f58a76dc36d",
+    "src/support.test.tsx": "672b7496e5d26bfc9238ec8f94e2f7b4f6ad39819ea9aaee33462a5d5bf547c8",
+    "src/checkout.test.tsx": "673018010e8019b97e42106171a46ca79e5ec7a12ef148c8ecf3828dcd9dca0a",
+    "src/logout.test.ts": "7e842703283f59c704c487f4af4e65613442dc59ceae464339528c16963da2c2",
+    "src/admin-export.ts": "24c92cbc4a43602d2d56db01cf4ec78e58903480ea32711ecb5e907a47f60d29",
+    "src/rich.tsx": "8a8ca61f4cd37bbdf6a22bd0e84c03bc05bbfa3688d5c1b76504fdff29cb87cc",
+    "src/api.ts": "8c46eaeb77c10796cbbc1cc54267e873cd6affe417566f76fab98b1f0982f74f",
+    "src/bunny.tsx": "c3aeae1cd049311fc78f1219abeb8b08caeeb76b3b49a1d63d7810e3d1acd342",
+    "src/style.css": "50027a6258e2fbb6adc796020910ab98e4bd722f8ea77663baed41f0d0b134d0",
+    "src/upload.tsx": "e84478bb4a85a81ba0c217870e8438222ef3273f11eb7c4fe4f86d11adf17040",
+    "src/admin-export.test.ts": "398acf84ac15f47a271cecf0a939fc9a5f2f7b3042d239e7ba8ece6918fbadf7",
+    "src/certificate.ts": "df2ec657e636901cdf4130381f5e2ca4375d5ba889023f7e872cbc4d5d54d2de",
+    "src/login.test.tsx": "13183bd7d3c02b80194a65517ab5c94f644e7586b48b8e081bc18eb569e3e64d",
+    "src/layout.test.tsx": "ca73ea0f5e0f98556d00700e5b6b19c3f4bfd2d7e9bf42d9933f178ca5488a8e",
+    "src/admin-review.test.tsx": "a0bf125617ac59510c325c78e9f13a514431becdfe2c8ebd88181b61d3ed1637",
+    "src/media.tsx": "5aed918ad0836ba390473cdc56fe8df63bcf1daa26fc3862b0bfe152565bcc5d",
+    "src/ui.tsx": "a5025e99c7834d81ac22a1532eb0f75e3394e102098519bccc18413f93ad663c",
+    "src/pages/settings.tsx": "e9131fb8a45d6a456169df66cb5f730d24298fc0212d78c5b9c31547f7abb54e",
+    "src/pages/access.tsx": "44485b54d600214085a575c8077e9bcb060b7da72fe6c39458a2adb1b47a6212",
+    "src/pages/learning.tsx": "296d2e0c7940e61931116a763772c0f8d411fa6798fd011307af5edf49848d4f",
+    "src/pages/support.tsx": "a401f75854134e03d59d0b8da6fff8d9b8361538e2515387bf09c10fb71c3635",
+    "src/pages/checkout.tsx": "50e2972c824ef570a4e9f07b39aaeac990cd633cc4dd5aeb93ecee3d1888fc91",
+    "src/pages/community.tsx": "dbb01376d71a293682f725162826a5e60d66d3e09330bd05cf6acaf40efeff67",
+    "src/pages/certificates.tsx": "48de20f704318fb2e518fb2e831213b2723339c6a4d1330f6bae86a67b37b602",
+    "src/pages/help.tsx": "dd4bc5edfd896aa1176d599ab298968a1869094686428412b50efd6156e9ef28",
+    "src/pages/admin.tsx": "276aa5981cc2e18eafdf8eae28082347b75076a1a2efff5cf2d266ee1c162bd2",
+    "public/brand/Inter-OFL.txt": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
+    "public/brand/InterVariable.woff2": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3",
+    "public/brand/icarus-horizontal-preto.svg": "1fd3c5a3c820d9b3074e4b3343af8e1f823fc87f56b710bf207e6683f3514b7d",
+    "public/brand/icarus-tokens.css": "f9f40b53fb95e600b93bf1d36eb05343cf0246f64b63ee55c9e300701d151302",
+    "package.json": "50343e56c1b620fded0f33bc92e74b05b1e01ea536334cbd9a5920f669981c57",
+    "package-lock.json": "fcbc74eca23035408526b7ec526fe2476d69b409b03944406ce2cf6bd1083b38"
+  },
+  "equivalence": {
+    "after_main": [
+      "Form secondaryAction and its explicit consumers; default absent unchanged",
+      "CSS identical before final account target"
+    ],
+    "final_css_delta": "account-link min-width0 to44px only; final rendered header checked across five variants"
+  },
+  "excluded_qa_attempts": [
+    "first administrative selector chose creation route",
+    "lesson/certificate series did not reach requested state; replaced only affected series",
+    "early close-focus probe before async settle; complete native phase later passed"
+  ],
+  "not_verified": [
+    "All state/role/data/browser combinations",
+    "Physical device and screen reader",
+    "New external provider or mail delivery",
+    "New operational or financial homologation",
+    "CI execution"
+  ]
+}

@@ -45,6 +45,7 @@ export function Certificates() {
                   done={course.completed_lessons}
                   total={course.required_lessons || course.total_lessons}
                 />
+                <div className="certificate-course-actions">
                 {course.can_issue ? (
                   <Action
                     run={async () => {
@@ -66,6 +67,7 @@ export function Certificates() {
                   </p>
                 )}
                 <Link className="text-action" to={"/app/cursos/" + course.slug}>Abrir curso</Link>
+                </div>
               </article>
             ))}
             {!query.data.items.length && !query.data.courses.length && (

@@ -117,6 +117,7 @@ export function Shell() {
             <Dialog.Trigger
               className="icon-button mobile-menu"
               aria-label="Abrir navegação"
+              data-tour="navigation"
             >
               <Menu />
             </Dialog.Trigger>
@@ -140,16 +141,18 @@ export function Shell() {
           <span className="top-context">
             {admin ? "Administração" : "Seu espaço de aprendizado"}
           </span>
-          <Tour />
-          <Link className="account-link" to="/app/configuracoes">
+          <div className="topbar-tools">
+            <Tour />
+          <Link className="account-link" to="/app/configuracoes" aria-label={`Sua conta: ${profile.full_name || "Membro"}`}>
             <span className="avatar" aria-hidden="true">
               {profile.full_name?.slice(0, 1) || "I"}
             </span>
-            <span>
+            <span className="account-details">
               {profile.full_name}
               <small>{profile.plan_name || "Sem plano ativo"}</small>
             </span>
           </Link>
+          </div>
         </header>
         <main id="main" className="content">
           <RouteFocus />

@@ -18,15 +18,18 @@ export function Heading({
   title,
   children,
   action,
+  level = 1,
 }: {
   title: string;
   children?: ReactNode;
   action?: ReactNode;
+  level?: 1 | 2;
 }) {
+  const Title = level === 1 ? "h1" : "h2";
   return (
     <header className="page-heading">
       <div>
-        <h1 tabIndex={-1}>{title}</h1>
+        <Title tabIndex={-1}>{title}</Title>
         {children && <p>{children}</p>}
       </div>
       {action}
@@ -180,6 +183,7 @@ export function Form({
   onDone,
   successMessage = "Salvo com sucesso.",
   disabled = false,
+  secondaryAction,
 }: {
   children: ReactNode;
   onSave: (data: FormData, form: HTMLFormElement) => Promise<unknown>;
@@ -188,6 +192,7 @@ export function Form({
   onDone?: () => void;
   successMessage?: string;
   disabled?: boolean;
+  secondaryAction?: ReactNode;
 }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -261,6 +266,7 @@ export function Form({
               <button className="primary" type="submit" disabled={busy || disabled}>
                 {busy ? "Enviando…" : label}
               </button>
+              {secondaryAction}
               {saved && successMessage && (
                 <span role="status">
                   <Check size={18} aria-hidden="true" /> {successMessage}
@@ -374,11 +380,13 @@ export function Action({
   run,
   confirm,
   disabled = false,
+  primary = false,
 }: {
   children: ReactNode;
   run: () => Promise<unknown>;
   confirm?: string;
   disabled?: boolean;
+  primary?: boolean;
 }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -386,6 +394,7 @@ export function Action({
   return (
     <span className="action">
       <button
+        className={primary ? "primary" : undefined}
         disabled={busy || disabled}
         onClick={async () => {
           if (lock.current || (confirm && !window.confirm(confirm))) return;

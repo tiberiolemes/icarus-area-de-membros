@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { HelpCircle } from "lucide-react";
 import { rpc } from "./api";
 import { useAuth } from "./auth";
-import { Action, Notice } from "./ui";
+import { Action } from "./ui";
 
 const steps = [
   {
@@ -62,16 +62,19 @@ const steps = [
     body: "Em Membros e Pedidos, o CSV inclui todas as páginas da busca atual, até 5.000 registros. Refine a busca quando ultrapassar o limite. Uma falha impede a geração de um arquivo parcial.",
   },
 ];
+function visibleTarget(target: string) {
+  return [...document.querySelectorAll<HTMLElement>(`[data-tour="${target}"]`)]
+    .find((element) => element.getClientRects().length > 0);
+}
 export function Tour() {
   const { pathname } = useLocation(),
     { session } = useAuth(),
     [active, setActive] = useState(false),
     [index, setIndex] = useState(0),
     [done, setDone] = useState(false),
-    available = steps.filter((step) =>
-      document.querySelector(`[data-tour="${step.target}"]`),
-    ),
+    [available, setAvailable] = useState<typeof steps>([]),
     step = available[Math.min(index, available.length - 1)];
+  const launch = useRef<HTMLDivElement>(null), panel = useRef<HTMLElement>(null);
   useEffect(() => {
     setActive(false);
     setDone(false);
@@ -79,11 +82,19 @@ export function Tour() {
   }, [pathname, session?.user.id]);
   useEffect(() => {
     if (!active || !step) return;
-    const element = document.querySelector(`[data-tour="${step.target}"]`);
+    const element = visibleTarget(step.target);
     element?.classList.add("tour-target");
     element?.scrollIntoView({ block: "center", behavior: "instant" });
     return () => element?.classList.remove("tour-target");
   }, [active, step?.target]);
+  useEffect(() => {
+    if (active || done) panel.current?.focus({ preventScroll: true });
+  }, [active, done]);
+  function close() {
+    setActive(false);
+    setDone(false);
+    requestAnimationFrame(() => launch.current?.querySelector("button")?.focus());
+  }
   async function track(action: string, rating: boolean | null = null) {
     await rpc("app_help_feedback", {
       p_page: pathname,
@@ -91,30 +102,33 @@ export function Tour() {
       p_rating: rating,
     });
   }
-  if (!active && !done)
-    return (
-      <div className="tour-launch">
+  return (
+    <>
+      <div className="tour-launch" ref={launch}>
         <Action
+          disabled={active || done}
           run={async () => {
             await track("start");
+            setAvailable(steps.filter((step) => visibleTarget(step.target)));
             setIndex(0);
             setActive(true);
           }}
         >
-          <HelpCircle size={18} />
-          <span className="sr-only">Guia desta tela</span>
+          <HelpCircle size={18} aria-hidden="true" />
+          <span>Guia desta tela</span>
         </Action>
       </div>
-    );
-  return (
-    <aside className="tour-panel" aria-label="Guia desta tela">
+      {(active || done) && (
+    <aside className="tour-panel" aria-label="Guia desta tela" ref={panel} tabIndex={-1} onKeyDown={(event) => {
+      if (event.key === "Escape") { event.stopPropagation(); close(); }
+    }}>
       <h2>{done ? "O guia ajudou?" : (step?.title ?? "Conheça esta tela")}</h2>
       {done ? (
         <div className="actions">
           <Action
             run={async () => {
               await track("rate", true);
-              setDone(false);
+              close();
             }}
           >
             Sim
@@ -122,7 +136,7 @@ export function Tour() {
           <Action
             run={async () => {
               await track("rate", false);
-              setDone(false);
+              close();
             }}
           >
             Não
@@ -139,6 +153,7 @@ export function Tour() {
           </p>
           <div className="actions">
             <Action
+              primary
               run={async () => {
                 if (index + 1 >= available.length) {
                   await track("complete");
@@ -152,7 +167,7 @@ export function Tour() {
             <Action
               run={async () => {
                 await track("pause");
-                setActive(false);
+                close();
               }}
             >
               Pausar
@@ -160,7 +175,7 @@ export function Tour() {
             <Action
               run={async () => {
                 await track("skip");
-                setActive(false);
+                close();
               }}
             >
               Pular guia
@@ -168,7 +183,9 @@ export function Tour() {
           </div>
         </>
       )}
-      <Link to="/ajuda">Ajuda completa</Link>
+      <Link className="text-action" to="/ajuda">Ajuda completa</Link>
     </aside>
+      )}
+    </>
   );
 }

@@ -488,6 +488,7 @@ export function LessonPage() {
                               </span>
                             ) : (
                               <Action
+                                primary
                                 run={async () => {
                                   const result = await rpc<{
                                     certificate_code?: string;

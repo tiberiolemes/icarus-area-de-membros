@@ -1,0 +1,8 @@
+# Icarus novo
+Ponytail full obrigatório: ler skill, reaproveitar componentes, menor implementação completa. Português brasileiro. Este projeto foi refeito do zero em React/TypeScript/Vite/Supabase; não trazer código, dependências, containers ou overlays do projeto descartado.
+Escopo: PRODUCT.md, docs/analysis/quality.md, docs/analysis/design.md e docs/CONTRACT.md. Cliente não é autoridade para plano, papel, acesso, pagamento, certificado ou moderação.
+RLS e grants mínimos em toda tabela/RPC; funções anon só com motivo explícito; teste de papéis reais. Secrets somente servidor/.local ignorado; nenhuma cobrança real ou recurso cloud pago. Nada de Oracle nesta tarefa.
+UI usa DS Icarus, Inter e tokens oficiais. AJAX, validação/foco/erros/entradas preservados, alvo44px, input16px, teclado, 360px e dois temas. Alteração de tela acompanha ajuda/tour. Não inventar conteúdo, preços ou provas.
+Workers implementam em worktrees próprias; propriedade por pasta e contrato comum antes de editar. Não editar arquivo de outra frente sem coordenar; não executar build/runtime global concorrente nem publicar. Scripts e package/config da raiz pertencem ao coordenador/integração.
+Antes de PR: impacto/consumidores/risco, verificação local proporcional e orçamento CI. Manter cobertura necessária de segurança/integridade/dinheiro. Revisão final independente. Commit Conventional Commit lógico só seus caminhos.
+Sem recriar toda infraestrutura para diagnosticar erro pequeno. Sem testes espelho. Não declarar provedor externo homologado, venda, e-mail entregue, capacidade pública ou aceite humano sem prova.

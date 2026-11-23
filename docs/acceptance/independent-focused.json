@@ -1,0 +1,222 @@
+{
+  "date": "2026-11-23",
+  "status": "completed_no_new_demonstrable_defect_in_scoped_deltas",
+  "initial_head": "d57e4c6452b60bdd2aa0b8dbc0993a298e4fd9d3",
+  "final_inspected_head": "83980b7e37d7fe3470cd200ecc6e1b1306b20f9d",
+  "named_delta_commits": {
+    "integration": "d57e4c6",
+    "checkout_ui_root": "6827672",
+    "checkout_ui_source_reported_by_coordinator": "4d99b75",
+    "ops_root": "83980b7",
+    "ops_source_reported_by_coordinator": "3ada0ce"
+  },
+  "scope": "R1..R4 e consumidores; URL Storage pública; nonce/logout; CSV administrativo; status preparado no Form; nove handlers verify_jwt manual; conexão parcelamento 1..12/Pix1; defeito nomeado de ACL no backup",
+  "new_findings": [],
+  "previous_findings": [
+    {
+      "id": "R1",
+      "status": "RESOLVED",
+      "evidence_level": "fonte e testes frontend executados; SQL focado inspecionado, não reexecutado por este reviewer",
+      "locations": [
+        "supabase/migrations/202611230016_member_mfa.sql:2",
+        "supabase/migrations/202611230016_member_mfa.sql:13",
+        "supabase/migrations/202611230016_member_mfa.sql:21",
+        "src/auth.tsx:175"
+      ],
+      "reason": "requires_aal2 inclui fator verificado de membro; actor exige JWT e sessão nativa aal2 nos caminhos protegidos; service_session aplica a mesma exigência. Exceções setup/bootstrap/touch não concedem conteúdo. AccountAssurance inclui membro com nextLevel aal2."
+    },
+    {
+      "id": "R2",
+      "status": "RESOLVED",
+      "evidence_level": "fonte, 34 contratos executados e recibo nativo HTTP sanitizado inspecionado; nativo não reexecutado por este reviewer",
+      "locations": [
+        "supabase/functions/asaas-webhook/index.ts:14",
+        "supabase/functions/_shared/payment.ts:55",
+        "supabase/functions/process-invites/index.ts:4",
+        "supabase/migrations/202611230017_payment_invitation_outbox.sql:16"
+      ],
+      "reason": "Webhook persiste antes de iniciar deliverPaidInvite em waitUntil. Claim/lease bloqueiam concorrência; sent não significa conta confirmada; falha definitiva fica pending com backoff, ambígua uncertain sem reenvio automático. Consumidor service-only processa lote devido. Recibo agora comprova o encadeamento HTTP ao Mailpit e retry nativo, não apenas password-setup isolado."
+    },
+    {
+      "id": "R3",
+      "status": "RESOLVED",
+      "evidence_level": "fonte, teste de contrato executado e roteador conectado",
+      "locations": [
+        "supabase/functions/checkout/index.ts:20",
+        "src/main.tsx:171"
+      ],
+      "reason": "Callback usa /pedido/{id}, correspondente a OrderStatus; o teste de contrato verifica a URL emitida."
+    },
+    {
+      "id": "R4",
+      "status": "RESOLVED",
+      "evidence_level": "fonte e teste de contrato executado",
+      "locations": [
+        "supabase/functions/checkout/index.ts:12",
+        "src/pages/checkout.tsx:147"
+      ],
+      "reason": "Celular vazio/ausente segue como string vazia no DTO e é omitido do payload Asaas; validação de formato só para valor presente, alinhada à UI opcional."
+    }
+  ],
+  "connected_delta_checks": [
+    {
+      "delta": "verify_jwt manual",
+      "result": "sem defeito novo demonstrado",
+      "details": "Config declara false para nove handlers. capabilities retorna somente flags públicas; checkout/order-status chamam actor opcional e têm suas próprias verificações; webhook exige token dedicado; process-invites compara bearer à chave de serviço; media/upload/reauthenticate/password-setup exigem actor, Auth/session e gates SQL. Não confundir gateway sem verificação automática com handler sem autorização."
+    },
+    {
+      "delta": "URL assinada Storage interna para pública",
+      "result": "sem defeito novo demonstrado",
+      "details": "publicStorageUrl exige origem igual ao SUPABASE_URL e prefixo privado de URL assinada; destino vem da configuração, sem userinfo/path/query/hash e com HTTPS, salvo loopbacks locais exatos. Mantém path/query e token; consumidor media usa o helper após gate. Contrato positivo/negativo passou."
+    },
+    {
+      "delta": "nonce FK e logout",
+      "result": "sem defeito novo demonstrado",
+      "details": "018 faz cascade somente do nonce efêmero para app_sessions, já dependente da sessão Auth; não toca auditoria. signOut só limpa cache após sucesso e rejeita erro nativo. Recibo sanitizado registra global logout204 em dois casos com nonce removido, auditoria e outra sessão preservadas."
+    },
+    {
+      "delta": "CSV das duas listas",
+      "result": "sem defeito novo demonstrado",
+      "details": "Somente profiles/orders expõem ação; leitura usa app_admin_list existente e seus gates. Colunas whitelist excluem documentos/tokens, células neutralizam prefixos de fórmula e aspas, paginação verifica total/IDs e falha sem entregar arquivo parcial; limite5000 explícito. Testes cobrem múltiplas páginas e falha intermediária."
+    },
+    {
+      "delta": "Form preparado e erro de logout",
+      "result": "sem defeito novo demonstrado",
+      "details": "Revisar alteração usa successMessage de preparação; mutação continua dependente de confirmação server-side. Logout com500 não declara sucesso nem descarta sessão, conforme teste focado."
+    },
+    {
+      "delta": "parcelamento UI para Edge",
+      "result": "sem defeito novo demonstrado",
+      "details": "Cartão oferece1..12; serialização Pix força1 mesmo após selecionar12 no cartão. Edge mantém integer1..12 e Pix1, envia INSTALLMENT com máximo selecionado apenas quando >1. Três testes atuais passaram; nenhuma captura local de cartão ou simulação de taxa inventada."
+    },
+    {
+      "delta": "backup ACL nomeado pelo coordenador",
+      "result": "RESOLVED",
+      "details": "pg_dump/restore normais preservam owners/ACLs, sem --no-owner/--no-privileges; flag de omitir ACL é exclusiva do ensaio negativo. protections compara EXECUTE efetivo por assinatura/role, tabela/role e owner/RLS/forceRLS, policies e ACLs padrão dos schemas selecionados. Recibos positivo e negativo conferidos; não reexecutei restore."
+    }
+  ],
+  "executed_tests": [
+    {
+      "command": "node scripts/test-integrations.mjs",
+      "result": "34 passed, 0 failed",
+      "head_at_execution": "d57e4c6452b60bdd2aa0b8dbc0993a298e4fd9d3",
+      "scope": "transporte simulado sem rede/DB; hashes das fontes/teste envolvidos inalterados no HEAD final"
+    },
+    {
+      "command": "npx vitest run src/admin-export.test.ts src/logout.test.ts src/frontend.test.tsx",
+      "result": "26 passed, 0 failed",
+      "head_at_execution": "d57e4c6452b60bdd2aa0b8dbc0993a298e4fd9d3",
+      "scope": "frontend focado; hashes correspondentes inalterados no HEAD final"
+    },
+    {
+      "command": "npx vitest run src/checkout.test.tsx",
+      "result": "3 passed, 0 failed",
+      "head_at_execution": "83980b7e37d7fe3470cd200ecc6e1b1306b20f9d",
+      "scope": "cartão2x/12x e troca cartão12x para Pix1"
+    }
+  ],
+  "sanitized_receipts": {
+    "restore": {
+      "path": ".local/backups/restore-evidence.json",
+      "tables": 67,
+      "rows_match": true,
+      "permissions_match": true,
+      "storage_binaries_match": true,
+      "rpc_role_checks": 339,
+      "table_role_checks": 201,
+      "policies_checked": 1,
+      "binary_files": 5,
+      "checked_at": "2026-11-23T05:04:50.462Z"
+    },
+    "restore_negative_acl": {
+      "path": ".local/backups/restore-negative-acl.json",
+      "rows_match": true,
+      "permissions_match": false,
+      "storage_binaries_match": true,
+      "checked_at": "2026-11-23T05:05:28.857Z",
+      "interpretation": "Negativo demonstra distinção entre recuperar linhas/binários e recuperar permissões; saída1 documentada em docs/acceptance/integrations.md e coerente com guard do script."
+    },
+    "R2": {
+      "path": ".local/http-outbox-evidence.json",
+      "passed": true,
+      "native_http_paid_to_mailpit": true,
+      "webhook_duplicate_no_resend": true,
+      "durable_retry_native_worker": true,
+      "retry_attempts": 2,
+      "no_extra_charge": true,
+      "checked_at": "2026-11-23T05:11:14.757Z"
+    },
+    "logout": {
+      "path": ".local/native-logout-evidence.json",
+      "passed": true,
+      "cases": [
+        {
+          "global_logout_http": 204,
+          "nonce_removed": true,
+          "audit_preserved": true,
+          "other_session_intact": true
+        },
+        {
+          "global_logout_http": 204,
+          "nonce_removed": true,
+          "audit_preserved": true,
+          "other_session_intact": true
+        }
+      ]
+    }
+  },
+  "limits": [
+    "Recibos nativos lidos por whitelist de booleanos/contagens; não foram lidos dumps, senhas, tokens ou hashes Auth. Recibos não trazem hash de fonte no próprio JSON; atribuição é à execução registrada pelos caminhos, não prova de identidade binária do runtime com todo o HEAD.",
+    "Não executei SQL/DB mutante, runtime/start/build global, envio/cobrança externa, deploy ou publicação.",
+    "UAT visual/nativa de MFA Pro ainda em finalização pela frente própria; este recheck não a transforma em aprovada.",
+    "Recibo HTTP R2 é financeiro sintético + Auth/Mailpit nativos locais. Não homologa Asaas real, SMTP externo, credenciais de produção ou primeira venda.",
+    "Retenção/cópia fora da máquina e ativação operacional de worker continuam preparação operacional própria; não reabrir escopo de produto por esses itens.",
+    "Fonte final inspecionada 83980b7, nenhuma conclusão sobre mudanças posteriores."
+  ],
+  "files_sha256": {
+    "supabase/migrations/202611230016_member_mfa.sql": "acdb233cef1a8d150f1b07baae8c5d91ae2a1c547141973676b1ffa5004c339a",
+    "supabase/migrations/202611230017_payment_invitation_outbox.sql": "ba716c919583be5653d30cb653ffe9bf7b4d5b7ee0fba0436b97b2feb66d84d7",
+    "supabase/migrations/202611230018_reauth_nonce_session_cascade.sql": "9f112efbec953dd97e48371753c462e1b06e89727b42ffad2aedea4745dff954",
+    "supabase/functions/_shared/client.ts": "be0f3592166b04227b22944ccd9a2218dee1ca61f006ef68a08977d0b94f8b9f",
+    "supabase/functions/_shared/payment.ts": "83c2c3cb2a33c885ffda35bf43f0a0d82a5a7b32452ab33165d536915905baad",
+    "supabase/functions/_shared/storage.ts": "86b015b45bf5dac688152adb69be9056152fc529e27e851884951e164667e23c",
+    "supabase/functions/_shared/http.ts": "0786fd2e0f8c33ed43f10aa56075e8fc54e2dbd4d33bfdfaa38d62db01d87540",
+    "supabase/functions/asaas-webhook/index.ts": "5ea873f67f857839e855824a61f3abd0c91a4bbbbf63724196e52453e517985f",
+    "supabase/functions/process-invites/index.ts": "d11539dd73d8cf286da1410571978c786ed152c3380ca2c033b4b8b1a9b06a50",
+    "supabase/functions/checkout/index.ts": "40d4f426140b3f52474972059eb96d62f7c616bf8347a15003b4caaac0e8432e",
+    "supabase/functions/order-status/index.ts": "9bda58d2b97166d0755830749531a4e3d7cb43112304cba8d1b8771ec78bc355",
+    "supabase/functions/capabilities/index.ts": "8ecf1aea1e9fa61333b8c4c446043fe2dccd18d5d5e73eef34e2a49656f22883",
+    "supabase/functions/media/index.ts": "ad6cbd1939dfedc6adc6dcef5c37f51738e6c6ad63de04035656fc32d230c416",
+    "supabase/functions/upload/index.ts": "2acb22825d88fa9d412badabb27e0d4821dc7b6e7f516370002c2e1cbd03f12e",
+    "supabase/functions/reauthenticate/index.ts": "7f62f942ccf93e7136b9a6691a928708a337879e8ff39f9afcd2604e6f91f39f",
+    "supabase/functions/password-setup/index.ts": "5d21c7548b089d611702358fe689153a3d5e172662f04cf5ad3db3f3bb15d21b",
+    "supabase/config.toml": "b3346c69432be1850f9522f680d06dfc8cf3b8e5a925d1231a509fbad37af311",
+    "supabase/tests/mfa_outbox.sql": "61a851e1be4a387f0e80068c40c88609b0890831b119e303ef71bf2d92fe8ba5",
+    "supabase/tests/logout_nonce_cascade.sql": "1b2446bd3fadd69ef57dee9f07fb5a9eced3c1fa600d6dbea4b9c56859997514",
+    "tests/integration/edge_test.ts": "7b555b4e155d336e0afdae2ad5bd68f1b5ebfd50743cd1c6fa4142d85e982591",
+    "src/auth.tsx": "1fa8091bce5b14462679d5a005790b6fdd85a2f73c1912fb507edcc769145575",
+    "src/api.ts": "8c46eaeb77c10796cbbc1cc54267e873cd6affe417566f76fab98b1f0982f74f",
+    "src/main.tsx": "e8a64314205697610d2c9844b367c96bbd8521f7b52790d02c5f2356715a7e8d",
+    "src/shell.tsx": "92151f5f1af405ea789ea9b52df9c893a0f937b445ef5db0d9ba1dd8b85860ab",
+    "src/ui.tsx": "e5768a725b2d54bf87578e20cbe95141cc16bfe52d4b9927fc74334c365c034e",
+    "src/pages/access.tsx": "91ef7daa08ec0b8a6fef77c670512179a28391e71e5fab8e4543e1944f5981df",
+    "src/pages/settings.tsx": "60990b8b4bd498dd6eca234f2aec5a59f8d111d824cc6cd89241e3e15e1656d8",
+    "src/pages/admin.tsx": "a6d2ae2b013afa8a38b0bf38e893e2899af85163eed53e7e0d89de3db8bee8bb",
+    "src/pages/checkout.tsx": "8db0ac432646f044d367dbac9cbd9a75a39282972dcc7639c3b58ca7099ee517",
+    "src/admin-export.ts": "24c92cbc4a43602d2d56db01cf4ec78e58903480ea32711ecb5e907a47f60d29",
+    "src/admin-export.test.ts": "398acf84ac15f47a271cecf0a939fc9a5f2f7b3042d239e7ba8ece6918fbadf7",
+    "src/logout.test.ts": "7e842703283f59c704c487f4af4e65613442dc59ceae464339528c16963da2c2",
+    "src/frontend.test.tsx": "0fa4c906b9570838c71382dfa82aaa58ec2e7465cfde3c25fabe12b1b5e9c45b",
+    "scripts/backup.mjs": "404e905250df12edd6e613a0224be8814d9424405f6d31216861935f15cefd83",
+    "scripts/process-invites.mjs": "d60684213419b76364401d0081566d8c69a7cfdc50b0d1dddd42a449ac918c36",
+    "scripts/recover-invites.ts": "ac5ea704035e76e220fb89ee6ffca0753ed255ccc53f3fe62a4601b43a682b3c",
+    "scripts/local.mjs": "edaf343eefacae118b4bfd1934d1b388d7760455eb267374f6082ae8d00ae607",
+    "tests/integration/outbox_http_test.ts": "99b02a45fcd62aeb5fe230cd701e3fd89b01017928640bec105cefe6da39f63c",
+    "src/checkout.test.tsx": "673018010e8019b97e42106171a46ca79e5ec7a12ef148c8ecf3828dcd9dca0a"
+  },
+  "source_mutations_by_reviewer": 0,
+  "outputs": [
+    "artefatos privados da validação/final-focused-review.md",
+    "artefatos privados da validação/final-focused-review.json"
+  ]
+}

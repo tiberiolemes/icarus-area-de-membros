@@ -1,0 +1,326 @@
+{
+  "date": "2026-11-23",
+  "status": "analysis_only_complete",
+  "implementation_authorized_here": false,
+  "sources": {
+    "prd": "PRD fornecido pelo responsável",
+    "rules": "inventário de padrões fornecido na análise",
+    "legacy_locator_only": "matriz histórica usada somente como localização"
+  },
+  "inventory": {
+    "active_rules": 294,
+    "unapproved_PP": 7,
+    "legacy_acceptances_reused": 0,
+    "product_tests_run": 0
+  },
+  "decisions": [
+    "Recomeço React + TypeScript + Vite, Supabase Postgres/Auth/Storage/RLS/Edge Functions e DS Icarus; uma academia, sem academy_id, sem código/overlays Frappe.",
+    "Entrega = Fase 1 + comunidade com moderação humana prévia; integrações preparadas e testáveis localmente, desligadas para cobrança real.",
+    "Limpeza integral Frappe é pré-condição da implementação coordenada; este worker não remove arquivos nem executa runtime."
+  ],
+  "conflicts": [
+    {
+      "ref": "§6 versus §1/§9",
+      "issue": "academy_id preventivo contradiz academia única e multi-tenant posterior.",
+      "resolution": "Não incluir tenancy nem abstração por cliente."
+    },
+    {
+      "ref": "RF-NV-04 versus VI-05",
+      "issue": "PRD pede escuro padrão; regra pétrea pede claro.",
+      "resolution": "Claro padrão; escuro opcional salvo por usuário; medir AA em ambos."
+    },
+    {
+      "ref": "RF-CM-09/15, IA-06 versus decisão atual",
+      "issue": "Título por IA e ocultação por contagem de denúncias contradizem ausência de IA e moderação manual.",
+      "resolution": "Título digitado; post/resposta/edição entram pendentes até aprovação humana; denúncia abre fila, não condena nem bane automaticamente."
+    },
+    {
+      "ref": "RNF-03",
+      "issue": "Assinatura genérica de webhook não descreve o mecanismo do Asaas.",
+      "resolution": "Validar authToken via asaas-access-token, não HMAC de Stripe; autenticação precede persistência/processamento."
+    },
+    {
+      "ref": "§6, RF-CT-02",
+      "issue": "100% sobre aulas publicadas mistura requisitos, conteúdo privado inacessível e denominador zero; trigger genérico não assegura emissão válida.",
+      "resolution": "Currículo obrigatório versionado, total > 0, conclusão autorizada de todos os requisitos e emissão no servidor; detalhado no contrato."
+    },
+    {
+      "ref": "RF-CT-03 e rota observada",
+      "issue": "Slug do curso não identifica certificado de cada aluno.",
+      "resolution": "Código único opaco por emissão, URL pública por código; nunca listar alunos/certificados publicamente."
+    },
+    {
+      "ref": "RF-AC-04/06",
+      "issue": "Pix imediato pode parecer liberação no retorno do checkout; mesmo email não prova titularidade.",
+      "resolution": "Somente pagamento confirmado e vinculação segura liberam; retorno exibe pendente até confirmação."
+    },
+    {
+      "ref": "§9 e grupos RF",
+      "issue": "Escopo original coloca comunidade na fase 2; melhorias Novo aparecem no meio do MVP; feed 45 versus RNF 20.",
+      "resolution": "Decisão atual antecipa só comunidade básica; feed 20 por página; demais fases permanecem fora."
+    },
+    {
+      "ref": "RF-PL-01, RF-AC-07, questões em aberto",
+      "issue": "N planos, recorrência e nota fiscal inferida não definem oferta real nem configuração fiscal.",
+      "resolution": "Community + oferta anual configurável no mínimo; sem copiar preços/benefícios; sem renovação automática ou emissão fiscal fingida. Validar capacidade fiscal/credenciais antes de vender."
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "ausente",
+      "ids": "FO-01..06, FO-17..18",
+      "prd": "Formulários citados sem contrato de interação.",
+      "minimum": "SPA sem reload; loading e duplo clique; erro por campo/resumo/foco; preservar entrada em rede/401; rascunhos só de conteúdo seguro por usuário e limpar no logout."
+    },
+    {
+      "kind": "parcial",
+      "ids": "SE-01..04, SE-07..10, SE-16..17",
+      "prd": "RF-AC-09/CF-04 têm login/reset/confirmação; faltam força de senha, vazamentos, antienumeração, idle e 2FA.",
+      "minimum": "Política real do Auth refletida na UI, reset completo, limitação de tentativas, aviso 60 s e revogação; MFA completo para administração, sem declarar recuperação/dispositivo confiável se não implementados."
+    },
+    {
+      "kind": "ausente",
+      "ids": "MO-01..05",
+      "prd": "RF-AD-14/20 dizem excluir/suspender; audit_logs é só entidade.",
+      "minimum": "Confirmar destruição, arquivar/restaurar, reautenticar ação crítica no servidor e registrar ator/autorizador/alvo/motivo/data; histórico preservado."
+    },
+    {
+      "kind": "parcial",
+      "ids": "LI-02..07, LI-09..11, BD-01",
+      "prd": "Há busca/filtros localizados e feed paginado; sem padrão de listas/admin/export.",
+      "minimum": "Listas do escopo com paginação, busca/filtros/ordem úteis e contagem real; export administrativo quando necessário em Excel/CSV/PDF, conjunto filtrado completo, CSV sem fórmulas executáveis."
+    },
+    {
+      "kind": "ausente",
+      "ids": "ON-03, ON-06",
+      "prd": "RF-SP-06 é FAQ futuro, não tour nem central pública.",
+      "minimum": "Tour único e ajuda pública dos fluxos entregues, artigos alinhados à tela, feedback e acompanhamento por usuário/página; sem dimensões por empresa ou IA."
+    },
+    {
+      "kind": "parcial",
+      "ids": "SG-02..05, SG-08..11, BD-04..06",
+      "prd": "RNF-03 cita RLS; §6 cita função de acesso; não há grants/EXECUTE/ownership/revogação.",
+      "minimum": "RLS mais privilégios SQL, RPC fechada por padrão, identidade do token, teste real de papéis e dois usuários; URL não substitui autorização."
+    },
+    {
+      "kind": "parcial",
+      "ids": "PR-04, PR-11..12, SG-16",
+      "prd": "RF-AC-06 prevê webhook, RF-PL-04 expiração; sem idempotência/ordenação/estorno seguro.",
+      "minimum": "Checkout no servidor, evento único e transações, reconciliação, expiração/reembolso/chargeback/suspensão negam novas leituras e assinaturas."
+    },
+    {
+      "kind": "parcial",
+      "ids": "FE-01..13, NA-04..05, NA-09..11, VI-01..11",
+      "prd": "RNF-02/06 pedem responsividade/AA e RF-NV-07 URLs, sem estados/foco/recuperação completos.",
+      "minimum": "DS Icarus, vazio/loading/erro/bloqueio/retentativa, teclado/foco e 360/1920; sucesso só após persistência."
+    },
+    {
+      "kind": "parcial",
+      "ids": "SG-12..13, CO-01..05, KP-06..08",
+      "prd": "RNF-05 menciona LGPD; emails transacionais previstos; sem operação verificável.",
+      "minimum": "Consentimento versionado separado de marketing, minimização, export/exclusão com retenção justificada, emails com marca e teste de recebimento; exemplos rotulados."
+    },
+    {
+      "kind": "parcial",
+      "ids": "EN-13, VE-01..05, VE-09..12, EN-01/03/07",
+      "prd": "RNF-07/08 citam logs, 99,5% e backup diário/7 dias; faltam alerta de backup, ensaio restore e prova servida.",
+      "minimum": "Configuração operacional e evidências próprias; 99,5% exige janela mensal, backup exige execução/alarme/restore. Build/mock local não provam venda, envio, streaming ou deploy."
+    }
+  ],
+  "scope": {
+    "member": [
+      "Cadastro/login/reset/logout e confirmação de email; onboarding simples editável, perfil, tema e assinatura/validade.",
+      "Catálogo, curso/módulo/seção/aula de vídeo, deep link, preview e bloqueio por plano; conclusão manual autorizada, progresso e Continuar.",
+      "Pastas e materiais vinculados à aula com download autorizado; certificados emitidos/verificáveis e PDF baseado na emissão.",
+      "Resumo de checkout próprio com Pix/cartão até limite configurado e estados pendente/pago/falhou/expirou; criação no servidor. Preferir pagamento hospedado Asaas para não trafegar cartão; adaptação explícita a RF-AC-04/05, não fingir checkout integral embutido.",
+      "Tickets do titular com thread, anexo privado, status e reabertura; contato WhatsApp configurado sem prometer SLA sem equipe.",
+      "Comunidade independente das aulas: espaços, título/corpo/imagem, post, resposta, voto único, denúncia, editar/arquivar próprio, feed recente paginado e filtro por espaço; publicação e edição dependem de aprovação manual."
+    ],
+    "admin": [
+      "CRUD/publicação/arquivamento/restauração de curso, módulo, seção, aula e material; ordem simples com alternativa de teclado, preview e regras de acesso.",
+      "Membros, papel e vigência/cortesia com motivo/auditoria; pedidos e eventos, estado fiscal honesto, reconciliação/reenvio seguro; plano/oferta anual configurável.",
+      "Espaços/permissões, fila humana de posts/respostas/edições/denúncias, aprovar/rejeitar/ocultar/restaurar, suspensão com motivo; fila de tickets e anexos; auditoria paginada.",
+      "Termos/privacidade versionados, configurações necessárias da marca Icarus e integrações via ambiente seguro; sem construtor genérico de plataforma. Tours/ajuda dos fluxos reais."
+    ],
+    "out": [
+      "Ranking/pontos/prêmios/conquistas, diretório avançado e DM, podcasts, encontros/RSVP, IA/tutor/triagem/títulos, automações/n8n, push/WhatsApp automático, resumo semanal/campanhas.",
+      "Notificações completas da fase 2 e suas preferências, feedback in-app, listas de espera, drip/pré-requisitos, quiz/tarefa, comentários por aula, auto-conclusão/autoplay/notas pessoais.",
+      "Editor de questionário/segmentação, cupons/order bump, importação CSV, impersonação, analytics/funil sofisticado, editor de menu, N planos/renovação automática e multi-tenant. Não criar tabelas/SDKs/telas vazias para esses itens."
+    ]
+  },
+  "groups": [
+    {
+      "group": "FO/FE",
+      "ids": "FO-01..10,12..18,20..23,25..26; FE-01..13",
+      "action": "Contrato reutilizável dos formulários existentes; FO-07 disponibilidade só no admin autorizado, sem enumerar emails/CPF no login público. CEP só se endereço fiscal exigido; sem cadastro auxiliar fictício."
+    },
+    {
+      "group": "SE",
+      "ids": "SE-01..10,14..17",
+      "action": "Auth completo; SE-06/MO-02 só ações críticas. SE-11 layout segue DS; SE-12 senha de página não cria auth paralelo; Google SE-13 posterior, PIN/app SE-18 fora."
+    },
+    {
+      "group": "LI/DT/KP",
+      "ids": "LI-01..11,13; DT-06,08..11,15; KP-01..08",
+      "action": "Listas/indicadores reais apenas; não construir calendário/período/comparativo/export em todo card. Importação LI-12 fica fora enquanto import não existir."
+    },
+    {
+      "group": "MO/SG/BD",
+      "ids": "MO-01..08; SG-01..16; BD-01..10,13",
+      "action": "Segurança/integridade adaptadas a titular/papel, não empresa. BD-11/12 condicionais a produção/massa; não executar agora."
+    },
+    {
+      "group": "NA/VI/IM/TX",
+      "ids": "NA-01..05,07..11; VI-01..15; IM-01..07; TX-01..10,12",
+      "action": "Qualidade das telas entregues, DS/brand reais, pt-BR; sem landing/site menu hover, TV ou conteúdo inventado."
+    },
+    {
+      "group": "ON/CO",
+      "ids": "ON-01..06; CO-01..05,07..08",
+      "action": "Tour/ajuda e mensagens transacionais; ON-08 trata instalador de catraca, não demanda instalador novo. Comunicados/notificações só se entregues, CO-10 exclusivo Fitius fora."
+    },
+    {
+      "group": "PR/IA",
+      "ids": "PR-02..07,11..12; IA-06 adaptada",
+      "action": "Primeiro núcleo e cobrança desligada; moderação prévia humana substitui IA por decisão explícita. Demais IA e regra de multiempresa não entram."
+    },
+    {
+      "group": "PF/VE/EN/AG",
+      "ids": "PF-01..02,04..06; VE-01..12; EN-01,03..05,07..13; AG-02..11,14..17",
+      "action": "Processo/evidência, não backlog de features. Sem deploy/PR nesta tarefa; EN-06 apenas se recriar Compose/env_file; EN-08 impede implementadores concorrentes. Nenhuma delegação aqui."
+    },
+    {
+      "group": "SI/HT",
+      "ids": "SI-01..02,06,12; HT-05,07,09",
+      "action": "Só páginas públicas pertinentes, ajuda, DS e documento/PDF produzido; área interna noindex. Marketing, captação, blog, relatório HTML, Instagram e vídeo não entram por tabela; preço no checkout é necessário, sem aplicar SI-07 para escondê-lo."
+    },
+    {
+      "group": "PP",
+      "ids": "PP-01..07",
+      "action": "Propostas não aprovadas: nenhuma obrigação ou aceite derivado. Os 294 IDs vigentes não são 294 features nem conformidade já obtida."
+    }
+  ],
+  "security": [
+    "Identidade = JWT validado + auth.uid(); planos/papéis/vigência em fonte autoritativa não editável pelo membro. Função por operação e titular por objeto: A não lê nem altera perfil privado, progresso, pedido, ticket, anexo ou rascunho de B. Catálogo vende metadados permitidos; conteúdo oculto/rascunho não vaza.",
+    "Cada tabela exposta: RLS habilitada e grants mínimos; anon sem acesso direto ao privado; authenticated sem DML genérico sensível. Funções públicas revogam EXECUTE de PUBLIC/anon e concedem só chamadores necessários. Preferir invoker; definer apenas justificada, search_path seguro, nomes qualificados, checagem interna e sem service_role no browser. Views/Storage obedecem a mesma fronteira.",
+    "Checkout Edge recebe oferta e dados mínimos, recalcula preço em centavos/validade/parcelas e cria pedido vinculado; nunca aceita preço, role, user_id ou status pago do cliente. Chave de tentativa única e tratamento de timeout evitam cobrança duplicada; não presumir suporte a header de idempotência não confirmado do provedor. Credenciais ausentes = indisponível, nunca pagamento simulado apresentado como real.",
+    "Webhook Asaas: token dedicado no header asaas-access-token validado antes de gravar; evento único por id; persistência durável antes do HTTP 200 e processamento transacional idempotente. Conferir pedido, gateway_id, valor, método e titular; estados fora de ordem não reativam estorno. Reconciliação consulta estado autoritativo em divergência; erro fica pendente/visível e permite reprocessar, sem liberar por otimismo.",
+    "Assinatura expirada/revogada, chargeback, estorno, suspensão e papel removido são verificados em cada consulta/RPC/emissão de URL; não confiar em UI/JWT antigo de papel. Cancelar renovação não deve cortar período já pago; reembolso retira o direito correspondente. Preservar progresso e certificados já emitidos, salvo revogação explícita justificada. Logout/idle invalidam sessão conforme capacidade validada, não apenas redirecionam.",
+    "Arquivo privado e anexo: bucket privado, tamanho/tipo/extensão e permissão no servidor, caminho gerado; links curtos após gate, nunca URL permanente ou só filtro de interface. Vídeo Bunny assinado no servidor e domínio autorizado; assinatura do embed não prova fechamento de downloads/originais/CDN. Revogação bloqueia novas URLs imediatamente; URLs já emitidas têm janela residual até expirar, sem prometer revogação instantânea de bearer URL.",
+    "Certificado: servidor verifica currículo obrigatório publicado/versionado, total > 0, todos os requisitos realmente concluídos com autorização, curso certificável e elegibilidade vigente na emissão. Preview gratuito 1/1 não certifica curso com 15 aulas obrigatórias; aulas privadas inacessíveis não viram concluídas nem reduzem artificialmente o total. Conteúdo opcional privado só fica fora se explicitamente opcional no currículo. Uma emissão por usuário/curso/versão, transação e código imprevisível.",
+    "Emissão guarda nome/curso/carga/data e versão curricular; verificação pública mínima por código, sem CPF/email nem listagem, com limite de abuso e estado de revogação. PDF no cliente só renderiza emissão recuperada do servidor; parâmetros locais não emitem certificado. Arquivar/restaurar curso/aula não inventa completed_at, progresso retroativo ou nova emissão; preservar eventos e retrato da emissão.",
+    "Comunidade: pendente -> aprovado/rejeitado, aprovação somente moderador/admin; edição de publicado entra em revisão e não expõe versão não aprovada. Autor vê pendências próprias, outro membro não; respostas/imagens seguem gate do espaço/plano e suspensão. Voto único por alvo, denúncia sem auto punição, motivo e auditoria em moderação; rich text sanitizado e rate limit servidor.",
+    "Suporte: membro só próprios tickets e anexos; suporte só atendimento permitido, moderador não ganha financeiro/tickets por acidente; admin separado. Reauth para papel/cortesia/suspensão/exclusão/reembolso; logs sem credenciais/cartão/conteúdo pessoal desnecessário. Consentimento e termos versionados; export/exclusão não apagam trilha fiscal obrigatória, nem expõem dados de terceiros."
+  ],
+  "acceptance": [
+    {
+      "id": "A01",
+      "priority": "P0",
+      "case": "RLS/grants/RPC/Storage com anon, membro A/B, suporte, moderador e admin: positivos e negativos em SQL/API reais locais; forjar owner/role/plan não altera privilégio; teste falha ao retirar proteção."
+    },
+    {
+      "id": "A02",
+      "priority": "P0",
+      "case": "Preview/membro gratuito, Pro válido/expirado/suspenso, draft/hidden, mídia e material por URL direta: mesmo gate; URLs antigas só até TTL e novas negadas após revogação."
+    },
+    {
+      "id": "A03",
+      "priority": "P0",
+      "case": "Checkout falso no cliente, token webhook ausente/errado, duplicação/concorrência, timeout, valor/titular divergentes, eventos reordenados, estorno/chargeback: zero cobrança duplicada simulada e nenhum acesso indevido; reprocessamento seguro."
+    },
+    {
+      "id": "A04",
+      "priority": "P0",
+      "case": "Novo comprador e conta existente: webhook só concede ao titular verificado; nunca vincular por email fornecido na UI; estado pendente sobrevive retorno/callback e falha de convite tem recuperação."
+    },
+    {
+      "id": "A05",
+      "priority": "P0",
+      "case": "Certificado com zero aulas, só previews, aula inacessível, incompleto, curso inelegível e dupla conclusão; todos negam emissão indevida. Conclusão válida emite uma vez, PDF usa registro e código verifica snapshot/revogação."
+    },
+    {
+      "id": "A06",
+      "priority": "P0",
+      "case": "Arquivar e restaurar curso/aula/post mantém datas/histórico/progresso/certificado; cancelar não escreve; reauth errada e chamada direta não autorizada são negadas."
+    },
+    {
+      "id": "A07",
+      "priority": "P0",
+      "case": "Post/resposta/edição/imagem pendente não aparece a B; moderador aprova/rejeita; revogar plano/espaço/suspender corta acesso; XSS, spam e voto duplicado bloqueados; denúncias não auto banem."
+    },
+    {
+      "id": "A08",
+      "priority": "P0",
+      "case": "Ticket/thread/anexo de A não acessível por B nem papel indevido; suporte responde e reabre, auditoria não contém segredo; export/exclusão respeitam titularidade."
+    },
+    {
+      "id": "A09",
+      "priority": "P1",
+      "case": "Cadastro/reset/email/logout, política de senha e consulta de vazamento sem exposição; antienumeração/rate limit; idle avisa e encerra; MFA administração exige segundo fator e comprova recuperação configurada."
+    },
+    {
+      "id": "A10",
+      "priority": "P1",
+      "case": "Jornada aluno e admin no navegador: 360/1920, teclado/foco, AA nos dois temas, deep link e retorno; 401/422/500/offline preservam texto seguro, bloqueiam duplo envio e nunca dão falso sucesso."
+    },
+    {
+      "id": "A11",
+      "priority": "P1",
+      "case": "Listas 0/1/21+ registros: paginação e busca/filtros/ordem/contadores; export completo autorizado sem fórmula CSV; progresso/Continuar e validade iguais em todas as telas."
+    },
+    {
+      "id": "A12",
+      "priority": "P1",
+      "case": "Tour/ajuda de curso, checkout, certificado, suporte, comunidade/admin: alvos visíveis desktop/mobile, pausar/pular/concluir/avaliar por usuário; artigos acompanham telas e não concedem acesso acadêmico."
+    },
+    {
+      "id": "A13",
+      "priority": "P1",
+      "case": "Migração do zero em Supabase local, fixtures sintéticas, lint/TypeScript/build e regressões de autorização/dinheiro/progresso; configuração ausente fecha checkout/streaming com mensagem útil, sem chamadas cobradas."
+    },
+    {
+      "id": "A14",
+      "priority": "externo",
+      "case": "Com credenciais futuras: Asaas Sandbox Pix/cartão/webhook/estorno/convite, Bunny reprodução e proteção efetiva, email recebido/aberto, Supabase remoto grants/RLS/Storage e notas fiscais homologadas; ainda não executado."
+    },
+    {
+      "id": "A15",
+      "priority": "operacional",
+      "case": "Antes de produção: prova do artefato servido, observabilidade/alertas, backup diário com retenção 7 dias e restore ensaiado; 99,5% só medido em janela mensal. Primeira venda e conclusão reais são gate posterior, não teste local."
+    }
+  ],
+  "stop_condition": "Suíte finita A01..A13 aprovada encerra a construção local; revisar somente falhas/mudanças reais, sem reauditar indefinidamente as 294 regras. A14/A15 ficam explicitamente pendentes até infraestrutura/credenciais/operação. Sem aprovação local falsa por mocks ou superusuário.",
+  "external_gaps": [
+    "Contas e credenciais Supabase/Asaas/Bunny e email inexistentes; sem validação externa nem primeira venda.",
+    "Oferta/preços/conteúdo/assinatura/legendas/logo e termos definitivos precisam de insumos reais, não copiar a referência.",
+    "Emissão fiscal, recorrência e cancelamento dependem da modalidade contratada e homologação; não presumir nota fiscal automática pelo gateway.",
+    "LCP 2,5s 4G é meta a medir sob perfil e artefato definidos; uptime/SLA/backup não são comprováveis só com teste local.",
+    "CI futuro: um PR coerente, testes locais antes; autenticação/dinheiro/RLS requerem cobertura ampla pertinente. Não estimar runner sem workflow real; nenhuma execução de CI nesta análise."
+  ],
+  "official_sources": [
+    {
+      "title": "Asaas: recebimento de webhooks",
+      "url": "https://docs.asaas.com/docs/receba-eventos-do-asaas-no-seu-endpoint-de-webhook"
+    },
+    {
+      "title": "Asaas: checkout hospedado",
+      "url": "https://docs.asaas.com/docs/asaas-checkout"
+    },
+    {
+      "title": "Asaas: PCI-DSS",
+      "url": "https://docs.asaas.com/docs/pci-dss"
+    },
+    {
+      "title": "Supabase: RLS",
+      "url": "https://supabase.com/docs/guides/database/postgres/row-level-security"
+    },
+    {
+      "title": "Supabase: funções e privilégios",
+      "url": "https://supabase.com/docs/guides/database/functions"
+    },
+    {
+      "title": "Bunny: biblioteca e controles do player",
+      "url": "https://docs.bunny.net/reference/videolibrarypublic_update"
+    }
+  ]
+}

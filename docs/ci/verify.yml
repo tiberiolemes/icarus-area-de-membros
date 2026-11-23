@@ -1,0 +1,79 @@
+name: Verify Icarus
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '**.md', 'LICENSE']
+  pull_request:
+    paths-ignore: ['docs/**', '**.md', 'LICENSE']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Determine affected scope
+        id: scope
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          FORCE_FULL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          node --input-type=module -e '
+          import {execFileSync} from "node:child_process";
+          import {appendFileSync} from "node:fs";
+          let files=[];
+          try {
+            if(!/^[a-f0-9]{40}$/.test(process.env.BASE||"")||/^0+$/.test(process.env.BASE)) throw Error();
+            execFileSync("git",["fetch","--depth=1","origin",process.env.BASE],{stdio:"ignore"});
+            files=execFileSync("git",["diff","--name-only",process.env.BASE,process.env.GITHUB_SHA],{encoding:"utf8"}).trim().split("\n");
+          } catch { files=["supabase/"]; }
+          const full=process.env.FORCE_FULL==="true"||files.some(p=>/^(supabase\/|scripts\/|tests\/|src\/|package(?:-lock)?\.json|\.github\/)/.test(p));
+          appendFileSync(process.env.GITHUB_OUTPUT,`full=${full}\n`);
+          console.log(full?"Application/security scope: native checks required":"Asset/config scope: frontend checks");'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2
+        if: steps.scope.outputs.full == 'true'
+        with:
+          deno-version: v2.x
+      - name: Integration contracts
+        if: steps.scope.outputs.full == 'true'
+        run: node scripts/test-integrations.mjs
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1
+        if: steps.scope.outputs.full == 'true'
+        with:
+          version: 2.109.1
+      - name: Local native prerequisites
+        if: steps.scope.outputs.full == 'true'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg postgresql-client
+      - name: Native clean install
+        if: steps.scope.outputs.full == 'true'
+        run: npm run local:start
+      - name: SQL authorization and integrity
+        if: steps.scope.outputs.full == 'true'
+        run: npm run test:db
+      - name: Synthetic local fixtures and native integration
+        if: steps.scope.outputs.full == 'true'
+        run: |
+          node scripts/bootstrap.mjs --demo
+          node scripts/test-integrations.mjs --local
+      - name: Stop only this project's local services
+        if: always() && steps.scope.outputs.full == 'true'
+        run: npm run local:stop

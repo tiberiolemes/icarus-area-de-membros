@@ -1,30 +1,11 @@
 # Contribuindo / Contributing
 
-Envie mudanças para main. Descreva problema, comportamento resultante e validação. Preserve avisos do upstream e identificadores técnicos de pacote, DocType e patches.
+Abra um issue com cenário, resultado esperado e observado. Não publique credenciais, dados de alunos, URLs privadas assinadas ou pagamentos reais.
 
-Leia o fluxo, consumidores, curso/turma, desktop/mobile e perfis. Reuse frappe-ui e validações de controller. Mantenha autorização no servidor, ações AJAX, foco, erros e entradas. Mudança de tela deve acompanhar tour e artigo público.
+Leia `PRODUCT.md`, `DESIGN.md`, `docs/CONTRACT.md` e os consumidores da API. Prefira a menor mudança completa, preservando RLS, grants, validação, acessibilidade, erros e moderação manual.
 
-Antes de PR/CI, analise risco, estime espera/minutos de runner e valide localmente. Segurança, privacidade, integridade, concorrência, schema e dependências exigem cobertura pertinente. Não afrouxe proteções ou asserções.
+Execute typecheck, testes e build localmente. Autenticação, permissão, pagamento, banco e arquivos exigem também SQL e integrações nativas afetadas. UI requer desktop/mobile, teclado, temas e ajuda correspondente. Não use o GitHub como diagnóstico de teste local ausente.
 
-Na estrutura bench preparada com as dependências de local/Dockerfile, execute:
+Use Conventional Commits e uma mudança coerente por PR. Descreva impacto, consumidores, risco e verificações. CI deve ser proporcional ao risco, sem reduzir proteções para economizar minutos.
 
-    cd frontend
-    yarn test --maxWorkers=1
-
-Backend, no bench e em site sintético separado:
-
-    bench --site <test-site> run-tests --app lms
-
-Nunca rode testes destrutivos no site de uso. Não envie .local, .env, bancos, backups, uploads, logs, tokens ou senhas. Use Conventional Commits; alterações visuais incluem capturas dos estados afetados.
-
-Workflows upstream são referência. A CI própria deve revisar dependências, ações, permissões, escopo e custo antes de ativação. Resultados locais não são checks remotos.
-
-## English
-
-Target main with the problem, behavior and validation. Preserve inherited notices and technical identifiers. Read callers and sibling flows; reuse frappe-ui/controller checks, server authorization, AJAX, accessible focus and input/error preservation. Update tours and public help with screen changes.
-
-Estimate runner cost/wait and validate locally before PR/CI. Preserve relevant security, privacy, integrity, concurrency, schema and dependency coverage. Do not weaken assertions.
-
-Use the commands above in a prepared bench and separate synthetic site. Never test destructively on a live site. Submit no credentials, databases, backups, uploads, logs or private environment state. Use Conventional Commits and affected visual captures.
-
-Archived upstream workflows require deliberate adaptation before activation. Local results are not remote checks.
+Original contributions are accepted under MIT. Do not submit third-party code without compatible rights and attribution. Review does not authorize merging, deployment or provider charges.

@@ -1,0 +1,133 @@
+{
+  "date": "2026-11-23",
+  "status": "completed_no_demonstrable_defect_in_named_helper_deltas",
+  "inspected_head": "337a582043ecd00b9e9d2a6d96d158afeb806bd5",
+  "inspected_commits": [
+    "d05a46f5e9a5352210b4c6e2a36d74efd2403587",
+    "337a582043ecd00b9e9d2a6d96d158afeb806bd5"
+  ],
+  "reported_source_commits": [
+    "df4b8c5",
+    "b0865fb"
+  ],
+  "src_tree": "8b313f1f7f9c3a385e0d0d29651847740d179316",
+  "scope": "APENAS scripts/local.mjs, scripts/local.test.mjs, export protections em backup.mjs e consumidor Docker finalize em local-bindings.mjs",
+  "findings": [],
+  "checks": [
+    {
+      "flow": "PID/TERM",
+      "locations": [
+        "scripts/local.mjs:9",
+        "scripts/local.mjs:14",
+        "scripts/local.mjs:18"
+      ],
+      "result": "Antes de sinalizar, confere comando/fonte do PID registrado; após SIGTERM e espera, só ESRCH autoriza considerar encerrado. Se continua vivo ou há erro de permissão, não apaga registro nem anuncia encerramento. Sem SIGKILL novo."
+    },
+    {
+      "flow": "Log",
+      "locations": [
+        "scripts/local.mjs:37"
+      ],
+      "result": "Arquivo existente não é truncado; abertura append e chmod600 mantêm diagnóstico anterior privado. Não li conteúdo do log ou env."
+    },
+    {
+      "flow": "Journal/Docker",
+      "locations": [
+        "scripts/local.mjs:124",
+        "scripts/local.mjs:129",
+        "scripts/local-bindings.mjs:90",
+        "scripts/local-bindings.mjs:103"
+      ],
+      "result": "Start aguarda saúde global e EdgeHTTP200 antes do finalize. Guard limita journal não vazio a no máximo três nomes únicos DB/kong/inbucket do projeto exato. Consumidor revalida allowlist, configuração profunda da substituição e ID/nome/estado parado do original; DELETE por ID com v=false, sem remoção de volume/imagem. Journal é arquivado privado e removido após finalize."
+    },
+    {
+      "flow": "Readiness",
+      "locations": [
+        "scripts/local.mjs:48",
+        "scripts/local.mjs:56"
+      ],
+      "result": "Orçamento de sondagem Edge aumentado de30 para90segundos; requisições têm timeout5s e resultado registra duração/PID/fonte. Última resposta em curso pode atravessar marginalmente o deadline de sondagem; não equivale a timeout global rígido de todo o start. Não há novo cold90 comprovado nesta revisão."
+    },
+    {
+      "flow": "Export protections",
+      "locations": [
+        "scripts/backup.mjs:16"
+      ],
+      "result": "Delta apenas exporta a função existente; assinatura/corpo SQL permanecem iguais. Importar backup.mjs não executa main por causa do guard de entrypoint. Sem alteração de concessões/restore neste delta."
+    }
+  ],
+  "executed_tests": [
+    {
+      "command": "node --test scripts/local.test.mjs",
+      "result": "1 passed, 0 failed",
+      "duration_ms": 3233,
+      "scope": "processo filho pertencente ao próprio teste e pasta temporária; sem Docker, serviços reais, DB ou UI",
+      "measured_scenario": "processo ignoraSIGTERM, stopFunctions rejeita e preserva conteúdo do registro/PID vivo; finally encerra apenas esse filho e remove fixture"
+    }
+  ],
+  "receipts_inspected": {
+    "cold_cycle": {
+      "path": ".local/cold-cycle-evidence.json",
+      "passed": true,
+      "interpretation": "passed descreve preservação e recuperação posterior, não a primeira tentativa fria",
+      "initial_cold_start_passed": false,
+      "recovered_without_another_stop": true,
+      "unchanged_tables": 67,
+      "changed_tables": [],
+      "binaries_match": true,
+      "protections_match": true,
+      "changed_container_configs": [],
+      "journal_absent": true,
+      "capabilities_http": 200,
+      "unconfigured_webhook_http": 503,
+      "providers_off": true,
+      "edge_source_root": true,
+      "protected_containers": 6,
+      "normal_bind_backups_remaining": 0
+    },
+    "cold_observation": {
+      "path": ".local/cold-edge-observed.json",
+      "source_root": true,
+      "first_successful_capabilities_observed_after_ms": 33685.776123046875,
+      "old_budget_ms": 30000,
+      "new_budget_ms": 90000,
+      "same_pid_no_second_cold": true,
+      "initial_exit": 1,
+      "final_http": 200
+    },
+    "readiness": {
+      "path": ".local/edge-readiness.json",
+      "ready": true,
+      "elapsed_ms": 16,
+      "budget_ms": 90000,
+      "same_pid_as_cold_observation": true,
+      "interpretation": "sondagem da continuação UP, não ensaio de novo cold90"
+    }
+  },
+  "limits": [
+    "Primeiro cold composto permanece FAIL/exit1; o stderr genérico não reconstrói sua causa e a observação33,69s não prova que essa causa foi timeout. HTTP200 posterior no mesmoPID e continuaçãoUP não apagam a falha.",
+    "Não executei novo cold/stop/start, ciclo90s, reset/drop, testeDB, suíte de contratos/UI ou publicação. Não há RootDropDataset inferido.",
+    "Recibos sanitizados foram lidos por campos booleanos/contagens/duração; não li logs privados completos, env, tokens, dumps ou hashesAuth.",
+    "QA separada ativa58622 e episódio137/recuperação foram contexto informado pelo coordenador, fora desta verificação; não atesto estacionamento nem repito SQL/race. Core/UI e seus relatórios não foram reabertos.",
+    "Veredito vale somente para os deltas nomeados na fonte337a582, sem garantia de comportamento futuro ou homologação externa."
+  ],
+  "files_sha256": {
+    "scripts/local.mjs": "674b0708f779a7e5daf9c657f9896b20ba743d10ff9c83400db9dd79a3bdb784",
+    "scripts/local.test.mjs": "1cde87aa00b2316946c44ed0311add2d41edc6fe6e4793e218c39d97f53c7ac6",
+    "scripts/backup.mjs": "68319d0b083695ca8d7f7b13dfb0e2f95aa0841a369116deedbfed5050e3641b",
+    "scripts/local-bindings.mjs": "379f0aa31a322e5ec10bb70710331b4774ad837e2e165b45db14f6d829bd9552"
+  },
+  "reviewer_mutations": {
+    "source": 0,
+    "runtime": 0,
+    "db": 0,
+    "test_fixture_only": true
+  },
+  "existing_untracked_paths_preserved": [
+    "docs/acceptance/browser-member.md",
+    "docs/acceptance/browser-staff.md",
+    "docs/acceptance/independent-focused.json",
+    "docs/acceptance/independent-focused.md",
+    "docs/acceptance/independent-initial.md"
+  ]
+}

@@ -1,34 +1,54 @@
 {
-	"name": "frappe_lms",
-	"version": "1.0.0",
-	"description": "Easy to use, open-source, Learning Management System",
-	"type": "module",
-	"scripts": {
-		"test-local": "playwright test --ui",
-		"postinstall": "cd frontend && yarn install --check-files",
-		"dev": "cd frontend && yarn dev",
-		"build": "cd frontend && yarn build"
-	},
-	"private": true,
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/frappe/lms.git"
-	},
-	"author": "Frappe",
-	"license": "AGPL-3.0-or-later",
-	"bugs": {
-		"url": "https://github.com/frappe/lms/issues"
-	},
-	"homepage": "https://github.com/frappe/lms#readme",
-	"engines": {
-		"node": ">=22"
-	},
-	"devDependencies": {
-		"@playwright/test": "^1.56.0",
-		"@semantic-release/exec": "^7.1.0",
-		"@semantic-release/git": "^10.0.1"
-	},
-	"dependencies": {
-		"pre-commit": "^1.2.2"
-	}
+  "name": "icarus-area-de-membros",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 8088 --strictPort",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 8088 --strictPort",
+    "test": "vitest run",
+    "typecheck": "tsc -b --pretty false",
+    "local:start": "node scripts/local.mjs start",
+    "local:stop": "node scripts/local.mjs stop",
+    "local:status": "node scripts/local.mjs status",
+    "test:db": "node scripts/test-db.mjs"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "1.3.1",
+    "@supabase/supabase-js": "2.119.2",
+    "@tanstack/react-query": "5.108.3",
+    "@tiptap/extension-link": "3.20.4",
+    "@tiptap/react": "3.20.4",
+    "@tiptap/starter-kit": "3.20.4",
+    "dompurify": "3.5.0",
+    "lucide-react": "1.77.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router-dom": "7.18.6"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "jsdom": "^27.0.0",
+    "typescript": "~5.9.3",
+    "vite": "8.3.8",
+    "vitest": "5.1.1"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "description": "Plataforma Icarus de cursos e comunidade com moderação manual",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tiberiolemes/icarus-area-de-membros.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tiberiolemes/icarus-area-de-membros/issues"
+  }
 }

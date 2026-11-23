@@ -1,0 +1,70 @@
+/* Gerado por scripts/build-icarus-ds.py a partir de tokens.json. */
+:root {
+  --ic-black: #000000;
+  --ic-gray-900: #1F1F1F;
+  --ic-gray-500: #8A8A8A;
+  --ic-gray-100: #EAEAEA;
+  --ic-white: #FFFFFF;
+  --ic-space-1: 4px;
+  --ic-space-2: 8px;
+  --ic-space-3: 12px;
+  --ic-space-4: 16px;
+  --ic-space-5: 20px;
+  --ic-space-6: 24px;
+  --ic-space-8: 32px;
+  --ic-space-10: 40px;
+  --ic-space-12: 48px;
+  --ic-space-16: 64px;
+  --ic-space-20: 80px;
+  --ic-radius-control: 8px;
+  --ic-radius-card: 12px;
+  --ic-radius-panel: 20px;
+  --ic-radius-feature: 28px;
+  --ic-type-caption: 0.875rem;
+  --ic-type-body: 1rem;
+  --ic-type-subtitle: 1.25rem;
+  --ic-type-title: 1.75rem;
+  --ic-type-heading: 2.5rem;
+  --ic-type-display: 4rem;
+  --ic-font-family: Inter, Arial, sans-serif;
+  --ic-line-body: 1.6;
+  --ic-line-heading: 1.12;
+  --ic-layout-content-max: 1200px;
+  --ic-layout-reading-max: 70ch;
+  --ic-layout-rail: 248px;
+  --ic-elevation-rest: none;
+  --ic-elevation-overlay: 0 16px 48px rgb(0 0 0 / 0.18);
+  --ic-motion-fast: 160ms;
+  --ic-motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ic-motion-reduced: none;
+  --ic-accessibility-target-min: 44px;
+  --ic-accessibility-input-min: 16px;
+  --ic-accessibility-focus-width: 2px;
+  --ic-accessibility-focus-offset: 3px;
+}
+
+:root, [data-theme="light"] {
+  --ic-background: var(--ic-white);
+  --ic-surface: var(--ic-white);
+  --ic-surface-muted: var(--ic-gray-100);
+  --ic-text: var(--ic-black);
+  --ic-text-secondary: var(--ic-gray-900);
+  --ic-border: var(--ic-gray-100);
+  --ic-border-control: var(--ic-gray-500);
+  --ic-action: var(--ic-black);
+  --ic-on-action: var(--ic-white);
+  --ic-focus: var(--ic-black);
+}
+
+[data-theme="dark"] {
+  --ic-background: var(--ic-black);
+  --ic-surface: var(--ic-gray-900);
+  --ic-surface-muted: var(--ic-gray-900);
+  --ic-text: var(--ic-white);
+  --ic-text-secondary: var(--ic-gray-100);
+  --ic-border: var(--ic-gray-500);
+  --ic-border-control: var(--ic-gray-500);
+  --ic-action: var(--ic-white);
+  --ic-on-action: var(--ic-black);
+  --ic-focus: var(--ic-white);
+}

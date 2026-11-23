@@ -1,0 +1,14 @@
+{
+  "kind": "legacy_removal_before_new_implementation",
+  "authorization": "User explicitly requested full replacement and reiterated cleaning all legacy application before starting new code.",
+  "project_containers_removed": 157,
+  "owned_volumes_removed": 98,
+  "owned_networks_removed": 45,
+  "project_images_removed_initial": 18,
+  "additional_old_images_removed": 3,
+  "other_containers_preserved": 77,
+  "root_empty_except_git_before_scaffold": true,
+  "git_history_preserved": true,
+  "new_work_not_inherited_from_legacy": true,
+  "current_implementation_acceptance": false
+}

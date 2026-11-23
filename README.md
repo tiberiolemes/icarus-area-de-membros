@@ -1,96 +1,104 @@
-<pre>
-+----------------------------------------------------------+
-|                         ICARUS                           |
-|                     ÁREA DE MEMBROS                      |
-+----------------------------------------------------------+
-</pre>
+# Icarus · Área de Membros
 
-# Icarus Área de Membros
+```text
+ ___
+|_ _|  ___ __ _ _ __ _   _ ___
+ | |  / __/ _` | '__| | | / __|
+ | | | (_| (_| | |  | |_| \__ \
+|___| \___\__,_|_|   \__,_|___/
+```
 
-[![Fonte r23](https://img.shields.io/badge/fonte-r23-111111)](CHANGELOG.md)
-[![Projeto MIT](https://img.shields.io/badge/projeto-MIT-333333)](LICENSE)
-[![Base LMS AGPL](https://img.shields.io/badge/base_LMS-AGPL--3.0--or--later-555555)](license.txt)
+[![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
+![Version](https://img.shields.io/badge/version-0.1.0-black)
+![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
-**Português brasileiro · [English](#english)**
+**Português brasileiro** · [English](#english)
 
-Área de membros com cursos, capítulos, aulas, turmas, progresso e comunidade anual com moderação manual. Usa Vue 3, frappe-ui e Frappe Framework, com o [Design System Icarus](https://tiberiolemes.com.br/icarus/ds/) e localização PT-BR.
+Uma plataforma de cursos para uma academia, com materiais privados, certificados, suporte e comunidade com moderação humana. Interface com o **Design System Icarus**, Inter auto-hospedada, tema claro inicial e preferência escura por usuário.
 
-Fonte da versão **r23**, integrada e revisada localmente. [Changelog](CHANGELOG.md) · [Proveniência e validação](docs/releases/r23.md) · [Licenças](NOTICE.md).
+Aplicação nova em React, TypeScript, Vite e Supabase. A árvore desta versão foi criada do zero; não usa Frappe nem depende da instalação anterior. O histórico Git continua preservado.
 
-## Recursos e escopo
+## Incluído
 
-- Editor de cursos/aulas, avaliações e arquivos privados.
-- Arquivo/restauração de cursos, capítulos e aulas com histórico preservado.
-- Comunidade anual independente, concessões administrativas e aprovação manual.
-- Discussões paginadas, contagens agregadas e disponibilidade de categoria ao digitar.
-- Sessões, senhas, 2FA, privacidade, ajuda pública e tours contextuais.
-- Indicadores, períodos e exportação CSV/XLSX/PDF/PNG nos recortes documentados.
+- Acesso, confirmação de email, primeira senha por convite, recuperação, onboarding, perfil e autenticação de dois fatores. Equipe exige MFA; membro que ativa MFA também deve concluir o desafio.
+- Cursos, módulos, seções, aulas de texto/vídeo/áudio, prévias, restrições por plano, retomada e conclusão autorizada no servidor.
+- Arquivos privados, uploads controlados, certificados com retrato da emissão, verificação pública por código e exportação PDF/PNG.
+- Comunidade com espaços, publicações, respostas, votos, denúncias e aprovação manual de publicações e edições.
+- Tickets com conversa e anexos privados; administração de conteúdo, membros, planos, pedidos e documentos legais.
+- Checkout hospedado Asaas preparado para Sandbox e mídia Bunny configurável. Dados de cartão não passam pela aplicação.
+- Ajuda pública e guias dos fluxos, sem conceder acesso ou progresso acadêmico.
 
-Homologação humana e conteúdo jurídico do responsável continuam pendentes. Cadastro público permanece bloqueado com política em rascunho. Checkout está adiado e moderação é manual. Integrações externas, capacidade pública e dispositivo físico não compõem o aceite local.
+Papéis de equipe e direitos de assinatura são independentes. O servidor valida identidade, sessão, plano, titularidade e estado atual de cada recurso.
 
-## Reproduzir o ambiente local
+## Começar localmente
 
-Requisitos: Git, Python 3, Docker com Compose >= 2.30 e recursos para compilar o framework e suas SPAs. A homologação usou VM com aproximadamente 8 GiB RAM. A receita usa amd64; ARM exige emulação. Dependências e digests são fixados.
+Pré-requisitos: Node.js 24+, npm, Docker, Supabase CLI e Deno 2; `ffmpeg` para o vídeo sintético de demonstração.
 
-    git clone https://github.com/tiberiolemes/icarus-area-de-membros.git
-    cd icarus-area-de-membros
-    python3 local/prepare.py
-    docker build --platform linux/amd64 -f local/Dockerfile -t icarus-local:r23 .
-    TIBERIO_LOCAL_IMAGE=icarus-local:r23 python3 local/manage.py start
-    TIBERIO_LOCAL_IMAGE=icarus-local:r23 python3 local/manage.py status
+```sh
+git clone --depth 1 https://github.com/tiberiolemes/icarus-area-de-membros.git
+cd icarus-area-de-membros
+npm ci
+npm run local:start
+node scripts/bootstrap.mjs --demo
+npm run dev
+```
 
-Abra http://tiberio.localhost:8088/lms. O launcher gera credenciais exclusivas em .local/ACESSOS.md, permissão 0600. A pasta .local é ignorada pelo Git. Não existe senha compartilhada neste repositório.
+Abra **http://127.0.0.1:8088**. Os acessos sintéticos são gerados em `.local/ACESSOS.md`, com permissão privada. Não há senha pública padrão. A demonstração é rotulada e não habilita venda ou cadastro com documentos jurídicos fictícios.
 
-A receita reproduz o site de avaliação tiberio.localhost, com a personalização e os exemplos sintéticos identificados. lms/tiberio_i18n.py delimita essa personalização. Hospedagem pública exige configuração própria de domínio, TLS, e-mail, marca e políticas. Não há imagem r23 publicada em registry.
+API, banco e caixa de email local usam `58521`, `58522` e `58524`. Os scripts operam apenas `icarus-courses-local`, verificam loopback e preservam volumes de outros projetos.
 
-Para parar preservando os volumes:
+```sh
+npm run local:status
+npm run local:stop
+```
 
-    TIBERIO_LOCAL_IMAGE=icarus-local:r23 python3 local/manage.py stop
+Leia [operação e instalação](docs/operations.md) para a sequência completa, primeiro administrador, Edge Functions, backup e configuração de uma cópia própria. O servidor frontend precisa de fallback de rotas para `index.html`.
 
-Proteja banco, arquivos e configuração e comprove restauração antes de migrar. Nunca remova volumes para atualizar. Retornar uma imagem não desfaz schema.
+## Configuração e segurança
 
-## Fonte e validação
+`.env.example` contém somente URL e chave pública do Supabase. Chave `service_role`, Asaas e Bunny pertencem ao ambiente **servidor** das Edge Functions. Nunca os coloque em variáveis `VITE_*`, no Git ou no navegador.
 
-Base: Frappe LMS 16.4.0, commit 3375b24109b8a8cf64f71c3ebc4870605d1cac89, Framework 16.60.2 e Payments fixados na receita. Identificadores técnicos lms foram preservados.
+Antes de abrir uma instalação ao público, configure Supabase, HTTPS, URLs de retorno, SMTP, MFA, backup, oferta e textos jurídicos aprovados. Homologue Asaas Sandbox e Bunny nessa instalação. Esta entrega não cria infraestrutura cloud nem atesta operação externa. Cobrança em produção permanece bloqueada até homologação correspondente.
 
-O build local r23 passou **2.656 testes frontend**, com gates e provas afetadas no [registro da versão](docs/releases/r23.md). Isso não equivale a CI neste GitHub, suíte global do framework verde ou aceite universal de estados visuais.
+Consulte [contrato](docs/CONTRACT.md), [API](docs/api.md), [integrações](docs/acceptance/integrations.md) e [escopo](docs/ROADMAP.md). URLs privadas já emitidas podem continuar válidas até seu curto prazo de expiração.
 
-Workflows upstream estão preservados em .github/upstream-workflows como referência. Eles dependem de serviços, branches e permissões do projeto original. Este envio não configura jobs automáticos. Consulte [CONTRIBUTING.md](CONTRIBUTING.md) antes de adaptar CI.
+## Verificações
 
-## Licenças
+```sh
+npm run typecheck
+npm test
+npm run build
+node scripts/test-integrations.mjs
+npm run test:db
+node scripts/test-integrations.mjs --local
+```
 
-O [LICENSE MIT](LICENSE) já existente foi preservado. Código herdado do LMS conserva [license.txt AGPL](license.txt), avisos e metadados. MIT não substitui os termos dos componentes herdados. Consulte [NOTICE.md](NOTICE.md) e cada dependência.
+Banco e integrações nativas exigem instalação local e fixtures próprias. Transporte simulado é identificado separadamente das provas reais de Auth, Postgres, Storage e Mailpit. O [aceite técnico 0.1.0](docs/acceptance/release-0.1.0.md) reúne as provas e limitações. Os [relatórios](docs/acceptance) não representam capacidade pública ou disponibilidade mensal.
 
----
+O [pipeline de GitHub Actions](docs/ci/README.md) está preparado para ativação pelo proprietário. Ele ainda não está ativo: a credencial de publicação não inclui a permissão `workflow`. Os testes locais e os resultados de Actions são evidências distintas.
+
+## Limites
+
+Escopo: Fase 1 mais comunidade manual. Ranking, mensagens diretas, podcasts, encontros, automações, IA, quizzes e multi-tenant ficam fora desta versão. Integrações externas, emissão fiscal, SMTP externo, testes com pessoas e instalação no servidor são etapas posteriores com configuração do responsável.
+
+## Licença e colaboração
+
+[MIT](LICENSE). Fontes, ícones, SDKs e código de terceiros mantêm suas licenças: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). A licença do código não concede direitos sobre marcas ou conteúdo carregado por operadores e alunos.
+
+Veja [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) e [CHANGELOG.md](CHANGELOG.md).
 
 ## English
 
-**Icarus Members Area** provides courses, chapters, lessons, batches, progress and an independent annual community with manual moderation. It uses Vue 3, frappe-ui and Frappe Framework, with the [Icarus design system](https://tiberiolemes.com.br/icarus/ds/) and Brazilian Portuguese localization.
+Icarus is a single-academy course delivery app with private learning materials, certificates, support tickets and a manually moderated community. It uses React, TypeScript, Vite and Supabase, with the official Icarus Design System, self-hosted Inter and per-user light/dark preferences.
 
-This is the source of locally integrated and independently reviewed **r23**. See the [changelog](CHANGELOG.md), [validation record](docs/releases/r23.md) and [notices](NOTICE.md).
+This release is a fresh implementation; it does not use Frappe. Git history is preserved. Staff roles and subscription entitlements are separate. Server-side authorization is required for every protected operation.
 
-### Features and boundaries
+Requirements: Node.js 24+, npm, Docker, Supabase CLI and Deno 2; `ffmpeg` for the optional local demo video. Run the commands above and open `http://127.0.0.1:8088`. Generated demo credentials remain in the private, ignored `.local/ACESSOS.md` file. There is no shared default password.
 
-Course/lesson editing, assessments, private files, reversible archiving, annual administrative grants, manual approval, bounded discussions, category availability checks, sessions, passwords, 2FA, privacy controls, help/tours, metrics and filtered exports are included within documented scopes.
+Read [operations](docs/operations.md) and [API documentation](docs/api.md) before installation. Configure server secrets, HTTPS, redirects, email, MFA, backups and approved legal content before opening registration. Never expose a service-role or provider secret through a `VITE_*` variable.
 
-Human acceptance and owner legal content remain pending. Public registration stays blocked with draft policies. Checkout is deferred; moderation is manual. External integrations, public capacity and physical devices are outside local acceptance.
+Asaas checkout is prepared for Sandbox acceptance; production billing remains disabled. Bunny, external email, tax documents and hosted deployment have not been certified by local tests. No real payment is made by the test suite. Future phases, AI and multi-tenancy are outside this release.
 
-### Local setup
+Original application code is MIT licensed. Third-party assets retain their licenses. Contributions must preserve authorization, privacy, accessibility, local verification and the Icarus visual system.
 
-Run the same commands above. Requirements are Git, Python 3, Docker with Compose >= 2.30 and resources to compile the framework/SPAs. The tested VM had approximately 8 GiB RAM. The pinned recipe uses amd64; ARM requires emulation.
-
-Open http://tiberio.localhost:8088/lms. The launcher generates unique credentials in Git-ignored .local/ACESSOS.md, mode 0600. No shared password is distributed.
-
-The recipe reproduces the named evaluation site, customization and synthetic examples. lms/tiberio_i18n.py scopes the customization. Public hosting needs its own domain, TLS, email, branding and policies. No r23 registry image is published.
-
-The stop command preserves volumes. Back up database, files and configuration and prove restoration before migrations. Image rollback alone does not reverse schema.
-
-### Validation, contribution and licensing
-
-Based on LMS 16.4.0, commit 3375b24109b8a8cf64f71c3ebc4870605d1cac89, with pinned Framework 16.60.2 and Payments. Technical lms identifiers remain unchanged.
-
-The local r23 build passed **2,656 frontend tests**, with scoped gates and affected evidence in the release record. This is not remote GitHub CI, a globally green framework suite or exhaustive visual acceptance.
-
-Original workflows are archived in .github/upstream-workflows for reference; they rely on upstream infrastructure and permissions. This upload configures no automatic jobs. Read [CONTRIBUTING.md](CONTRIBUTING.md) before adapting CI.
-
-The existing MIT LICENSE is preserved. Inherited LMS code retains its AGPL license.txt, notices and metadata. MIT does not replace inherited component terms. See [NOTICE.md](NOTICE.md) and dependency licenses.
+The [GitHub Actions pipeline](docs/ci/README.md) is supplied as an activation template. It is not active because the publication credential lacks the `workflow` scope. Local test results are not presented as a successful Actions run.

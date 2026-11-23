@@ -1,2 +1,0 @@
-argon2-cffi==25.1.0 --hash=sha256:fdc8b074db390fccb6eb4a3604ae7231f219aa669a2652e0f20e16ba513d5741
-argon2-cffi-bindings==25.1.0 --hash=sha256:d3e924cfc503018a714f94a49a149fdc0b644eaead5d1f089330399134fa028a

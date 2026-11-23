@@ -1,0 +1,14 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<article class="container my-5" style="max-width:72ch; overflow-wrap:anywhere">
+  <h1>{{ _("Seus dados") }}</h1>
+  <p>{{ _("Você pode pedir uma cópia dos seus dados ou a exclusão dos dados pessoais da sua conta. O pedido usa o mecanismo nativo da instalação e exige acesso ao endereço de e-mail informado. Não envie senha ou código de acesso ao administrador.") }}</p>
+  <ol>
+    <li><a href="/request-data">{{ _("Pedir uma cópia dos meus dados") }}</a>. {{ _("O arquivo privado é enviado por e-mail. A cópia automática contém os campos pessoais selecionados; o administrador deve revisar pedidos adicionais de conteúdo em texto livre e anexos, sem expor outras pessoas.") }}</li>
+    <li><a href="/request-for-account-deletion">{{ _("Pedir exclusão dos meus dados pessoais") }}</a>. {{ _("Confirme o pedido recebido por e-mail. Depois, a administração revisa dependências e retenção antes de executar qualquer anonimização. Confirmar o e-mail não apaga automaticamente o conteúdo.") }}</li>
+    <li>{{ _("Se você é instrutor, as aulas e o histórico dos alunos precisam ser preservados e a responsabilidade transferida. Arquivos e backups passam por revisão própria. O procedimento não promete apagar imediatamente toda menção em texto livre nem eliminar registros sujeitos à retenção definida pelo responsável.") }}</li>
+  </ol>
+  {% if not policy_ready %}<p role="status">{{ _("A política desta instalação ainda está em preparação. Pedidos podem ser registrados; a execução administrativa depende da informação aprovada, da verificação do titular e da revisão do impacto. O envio de e-mail precisa estar configurado para receber as confirmações.") }}</p>{% endif %}
+  <p><a href="/privacy">{{ _("Privacidade") }}</a> · <a href="/help#privacidade">{{ _("Ajuda passo a passo") }}</a></p>
+</article>
+{% endblock %}

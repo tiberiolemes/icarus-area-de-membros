@@ -1,0 +1,91 @@
+name: tiberio-frappe-local
+x-app: &app
+  image: ${TIBERIO_LOCAL_IMAGE:-sha256:c818ab0aa9212eb4df27cc4a8e2fe0c926386f2e928245d99ae85e0c5438d0ce}
+  platform: linux/amd64
+  entrypoint: []
+  init: true
+  restart: unless-stopped
+  volumes:
+    - sites:/home/frappe/frappe-bench/sites
+  logging:
+    driver: json-file
+    options:
+      max-size: 5m
+      max-file: '2'
+services:
+  db:
+    image: mariadb:11.8.5@sha256:345fa26d595e8c7fe298e0c4098ed400356f502458769c8902229b3437d6da2b
+    restart: unless-stopped
+    env_file:
+      - path: ../.local/db.env
+        format: raw
+    command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    volumes:
+      - database:/var/lib/mysql
+    healthcheck:
+      # A senha aleatória nativa pode conter aspas não escapadas no arquivo .cnf.
+      test: [CMD-SHELL, 'MYSQL_PWD="$$MARIADB_ROOT_PASSWORD" exec healthcheck.sh --no-defaults --connect --innodb_initialized']
+      interval: 5s
+      retries: 30
+  redis:
+    image: redis:7@sha256:b2b95679e3b46fb51864949ed25ea976fc3a6bcc00a40a1bc00d568cb2822e50
+    restart: unless-stopped
+    command: [redis-server, --appendonly, 'yes']
+    volumes:
+      - redis:/data
+  setup:
+    <<: *app
+    restart: 'no'
+    entrypoint: [python, /home/frappe/frappe-bench/apps/lms/local/bootstrap.py]
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - .:/opt/local:ro
+      - ../.local:/run/tiberio:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+  backend:
+    <<: *app
+    command: [/home/frappe/frappe-bench/env/bin/python, /home/frappe/frappe-bench/apps/lms/local/quality/integration08/safe_process.py, backend]
+    environment:
+      GUNICORN_WORKERS: '2'
+      GUNICORN_THREADS: '2'
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+  websocket:
+    <<: *app
+    command: [node, /home/frappe/frappe-bench/apps/frappe/socketio.js]
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+  worker:
+    <<: *app
+    command: [bench, worker, --queue, 'short,default,long']
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+  scheduler:
+    <<: *app
+    command: [bench, schedule]
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+  frontend:
+    <<: *app
+    command: [/home/frappe/frappe-bench/env/bin/python, /home/frappe/frappe-bench/apps/lms/local/quality/integration08/safe_process.py, nginx]
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: tiberio.localhost
+      NGINX_LISTEN_PORT: '8080'
+      CLIENT_MAX_BODY_SIZE: 50m
+    ports:
+      - '127.0.0.1:8088:8080'
+    depends_on: [backend, websocket]
+volumes:
+  sites:
+  database:
+  redis:

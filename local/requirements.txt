@@ -1,0 +1,11 @@
+# Added Python packages resolved and verified for the pinned image.
+braintree==4.20.0
+cairocffi==1.5.1
+fuzzywuzzy==0.18.0
+gocardless-pro==1.22.0
+paytmchecksum==1.7.0
+pycryptodome==3.24.1
+razorpay==2.0.1
+setuptools==84.2.1
+stripe==10.12.1
+websocket-client==1.6.4

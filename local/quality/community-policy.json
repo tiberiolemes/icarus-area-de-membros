@@ -1,0 +1,19 @@
+{
+  "community_key": "geracao-vaibe",
+  "title": "Geração vAIbe",
+  "annual_price_brl": 497,
+  "annual_term_months": 12,
+  "course_included_months": 12,
+  "moderation": "manual",
+  "checkout_stage": "server_only",
+  "provider": null,
+  "active_webhook": false,
+  "access_source": "explicit_administrative_grants",
+  "automatic_course_enrollment_grant": false,
+  "renewal": "explicit_start_and_end_or_configured_term",
+  "refund": "administrative_revocation_of_the_specific_grant",
+  "grant_storage_timezone": "UTC",
+  "grant_input_timezone": "site_timezone_unless_explicit_offset",
+  "display_timezone": "America/Sao_Paulo",
+  "interval": "starts_on <= now < ends_on"
+}

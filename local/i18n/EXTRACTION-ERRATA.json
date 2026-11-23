@@ -1,0 +1,94 @@
+{
+  "historical_core_input": {
+    "keys": 2528,
+    "missing": 2527,
+    "same": 1,
+    "characters": 90040
+  },
+  "historical_apps": {
+    "frappe": {
+      "native": {
+        "upstream": 5201,
+        "complemented": 1303,
+        "same": 1,
+        "missing": 2527,
+        "allowlisted": 102,
+        "source_pt": 3
+      },
+      "fixed_candidates": 14
+    },
+    "payments": {
+      "native": {
+        "upstream": 9,
+        "complemented": 138,
+        "same": 1,
+        "missing": 0,
+        "allowlisted": 3,
+        "source_pt": 0
+      },
+      "fixed_candidates": 0
+    },
+    "lms": {
+      "native": {
+        "upstream": 5,
+        "complemented": 1319,
+        "same": 0,
+        "missing": 0,
+        "allowlisted": 14,
+        "source_pt": 0
+      },
+      "fixed_candidates": 0
+    },
+    "frappe_studio": {
+      "native": {
+        "upstream": 0,
+        "complemented": 0,
+        "same": 0,
+        "missing": 0,
+        "allowlisted": 0,
+        "source_pt": 0
+      },
+      "fixed_candidates": 181
+    },
+    "frappe_ui": {
+      "native": {
+        "upstream": 5,
+        "complemented": 29,
+        "same": 0,
+        "missing": 140,
+        "allowlisted": 1,
+        "source_pt": 0
+      },
+      "fixed_candidates": 133
+    },
+    "frappe_flow": {
+      "native": {
+        "upstream": 28,
+        "complemented": 97,
+        "same": 0,
+        "missing": 639,
+        "allowlisted": 4,
+        "source_pt": 0
+      },
+      "fixed_candidates": 7
+    }
+  },
+  "artifacts": [
+    "Couldn\\",
+    "Google sign-in isn\\",
+    "That isn\\",
+    "The Gmail or Google Workspace email ID you\\",
+    "{0} sign-in isn\\",
+    "document.F=Object"
+  ],
+  "reason": "Five regex matches were inside escaped embedded Vue source strings in the Studio bundle; the complete source files are now parsed with Babel/Vue. document.F=Object calls a locally bound minifier function named __, not a translation function. These six entries are quarantined only at merge, never deleted from immutable worker inputs/catalogs.",
+  "corrected_sources": {
+    "Couldn't connect {0}": "Não foi possível conectar {0}",
+    "Couldn't connect the mailbox": "Não foi possível conectar a caixa de e-mail",
+    "Couldn't load email accounts": "Não foi possível carregar as contas de e-mail",
+    "Google sign-in isn't available right now": "O login com Google está indisponível no momento",
+    "That isn't the address you entered. Sign in with {0}, or set up manually.": "Esse não é o endereço informado. Entre com {0} ou configure manualmente.",
+    "The Gmail or Google Workspace email ID you're connecting.": "O endereço de e-mail do Gmail ou do Google Workspace que você está conectando.",
+    "{0} sign-in isn't available right now": "O acesso com {0} não está disponível no momento"
+  }
+}

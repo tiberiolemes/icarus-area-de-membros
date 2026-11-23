@@ -1,0 +1,43 @@
+{
+  "files": [
+    "studio/frontend/src/components/StudioLeftPanel.vue",
+    "studio/frontend/src/components/StudioRightPanel.vue",
+    "studio/frontend/src/components/StudioCanvas.vue",
+    "ui/src/components/FileUpload/ImageCropper.vue",
+    "ui/src/components/Fields/GeolocationField.vue",
+    "studio/frontend/src/components/AIChatController.ts"
+  ],
+  "invariant": "Stable left-panel IDs, crop preset IDs, device IDs, routes and user-authored titles remain unchanged; only display is localized.",
+  "regression": "Native Studio panel selection/crop preset functions executed against translated presentation; fresh native Studio page default and explicit authored title tested on isolated site.",
+  "native_page_default": "My Page is translated only when absent on insert; existing titles are untouched.",
+  "populated_studio_followup": {
+    "presentation_only": [
+      "section headings",
+      "command/menu groups",
+      "relative time using native VueUse messages and Intl pt-BR",
+      "viewport label",
+      "select option labels"
+    ],
+    "technical_values_preserved": [
+      "String",
+      "Number",
+      "Boolean",
+      "Object",
+      "Document List",
+      "Document",
+      "API Resource",
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "ASC",
+      "DESC",
+      "subtle",
+      "outline",
+      "desktop",
+      "tablet",
+      "mobile"
+    ],
+    "sample_data_and_component_family_ids_untouched": true
+  }
+}

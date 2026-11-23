@@ -1,0 +1,18 @@
+{
+  "framework_version": "16.4.0",
+  "version_file": "lms/__init__.py",
+  "purpose": "Exact06 input and integrated08 output; historical manifest preserved in integration08/frontend-context-pre08.json; contexts retain final precedence.",
+  "patches": [
+    {
+      "path": "frontend/src/translationMessages.js",
+      "before_sha256": "7e412819e6f51cb9e90d38fa09d4b1add5a4c3c990474daca85d71ec5b928768",
+      "after_sha256": "4410719e5e8b1ef2efafe80c7812100e470c08641ae1741d47a731d1508cf7e4",
+      "replacements": [
+        [
+          "import qualityMessages from '../../local/i18n/quality-pt-BR.json'\nimport communityMessages from '../../local/i18n/community-pt-BR.json'\nimport portugueseMessages from '../../local/i18n/lms-pt-BR.json'\nimport contextualMessages from '../../local/i18n/context-overrides-pt-BR.json'\n\nexport const isPortuguese = () =>\n\t/^pt(?:[-_]br)?$/i.test(window.lang || document.documentElement.lang)\n\nfunction fill(message, args) {\n\treturn message.replace(/{(\\d+)}/g, (match, number) =>\n\t\ttypeof args[number] !== 'undefined' ? args[number] : match\n\t)\n}\n\n// Shared with dependency source adaptations; no resource or UI imports here.\nexport function translate(message, replace) {\n\tconst lookup = (messages) =>\n\t\tObject.hasOwn(messages, message) &&\n\t\ttypeof messages[message] === 'string'\n\t\t\t? messages[message]\n\t\t\t: undefined\n\tconst translatedMessage =\n\t\t(isPortuguese() &&\n\t\t\t(lookup(communityMessages) ||\n\t\t\t\tlookup(contextualMessages) ||\n\t\t\t\tlookup(qualityMessages) ||\n\t\t\t\tlookup(portugueseMessages))) ||\n\t\tlookup(window.translatedMessages || {}) ||\n\t\tmessage\n\tif (Array.isArray(replace)) return fill(translatedMessage, replace)\n\tif (!/{\\d+}/.test(message)) return translatedMessage\n\treturn { format: (...args) => fill(translatedMessage, args) }\n}\n",
+          "import qualityMessages from '../../local/i18n/quality-pt-BR.json'\nimport communityMessages from '../../local/i18n/community-pt-BR.json'\nimport portugueseMessages from '../../local/i18n/lms-pt-BR.json'\nimport contextualMessages from '../../local/i18n/context-overrides-pt-BR.json'\nimport authMessages from '../../local/quality/auth/pt-BR.json'\nimport privacyMessages from '../../local/i18n/privacy07-pt-BR.json'\nimport formMessages from '../../docs/audit/quality/evidence/02-new-messages.json'\nimport childMessages from '../../docs/audit/quality/evidence/11-child-content-pt-BR.json'\nimport integratedMessages from '../../local/i18n/integration08-pt-BR.json'\n\nexport const isPortuguese = () =>\n\t/^pt(?:[-_]br)?$/i.test(window.lang || document.documentElement.lang)\n\nfunction fill(message, args) {\n\treturn message.replace(/{(\\d+)}/g, (match, number) =>\n\t\ttypeof args[number] !== 'undefined' ? args[number] : match\n\t)\n}\n\n// Shared with dependency source adaptations; no resource or UI imports here.\nexport function translate(message, replace) {\n\tconst lookup = (messages) =>\n\t\tObject.hasOwn(messages, message) &&\n\t\ttypeof messages[message] === 'string'\n\t\t\t? messages[message]\n\t\t\t: undefined\n\tconst translatedMessage =\n\t\t(isPortuguese() &&\n\t\t\t(lookup(contextualMessages) ||\n\t\t\t\tlookup(privacyMessages) ||\n\t\t\t\tlookup(authMessages) ||\n\t\t\t\tlookup(childMessages) ||\n\t\t\t\tlookup(formMessages) ||\n\t\t\t\tlookup(communityMessages) ||\n\t\t\t\tlookup(qualityMessages) ||\n\t\t\t\tlookup(integratedMessages) ||\n\t\t\t\tlookup(portugueseMessages))) ||\n\t\tlookup(window.translatedMessages || {}) ||\n\t\tmessage\n\tif (Array.isArray(replace)) return fill(translatedMessage, replace)\n\tif (!/{\\d+}/.test(message)) return translatedMessage\n\treturn { format: (...args) => fill(translatedMessage, args) }\n}\n"
+        ]
+      ]
+    }
+  ]
+}

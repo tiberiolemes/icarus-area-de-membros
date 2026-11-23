@@ -1,0 +1,4913 @@
+{
+  "criterion": "Historical raw HTML candidates reviewed individually against AST source records, production entry points, and preserved executable samples. Stories/cypress are developer fixtures outside production imports, not waived English UI.",
+  "initial_counts": {
+    "frappe": {
+      "native": {
+        "upstream": 5201,
+        "complemented": 1303,
+        "same": 1,
+        "missing": 2527,
+        "allowlisted": 102,
+        "source_pt": 3
+      },
+      "fixed_candidates": 14
+    },
+    "payments": {
+      "native": {
+        "upstream": 9,
+        "complemented": 138,
+        "same": 1,
+        "missing": 0,
+        "allowlisted": 3,
+        "source_pt": 0
+      },
+      "fixed_candidates": 0
+    },
+    "lms": {
+      "native": {
+        "upstream": 5,
+        "complemented": 1319,
+        "same": 0,
+        "missing": 0,
+        "allowlisted": 14,
+        "source_pt": 0
+      },
+      "fixed_candidates": 0
+    },
+    "frappe_studio": {
+      "native": {
+        "upstream": 0,
+        "complemented": 0,
+        "same": 0,
+        "missing": 0,
+        "allowlisted": 0,
+        "source_pt": 0
+      },
+      "fixed_candidates": 181
+    },
+    "frappe_ui": {
+      "native": {
+        "upstream": 5,
+        "complemented": 29,
+        "same": 0,
+        "missing": 140,
+        "allowlisted": 1,
+        "source_pt": 0
+      },
+      "fixed_candidates": 133
+    },
+    "frappe_flow": {
+      "native": {
+        "upstream": 28,
+        "complemented": 97,
+        "same": 0,
+        "missing": 639,
+        "allowlisted": 4,
+        "source_pt": 0
+      },
+      "fixed_candidates": 7
+    }
+  },
+  "entries": [
+    {
+      "source": "Compiled successfully",
+      "path": "public/js/frappe/build_events/BuildSuccess.vue",
+      "app": "frappe",
+      "decision": "patched",
+      "evidence": "Native __ calls added in framework-overlay.json."
+    },
+    {
+      "source": "Refresh",
+      "path": "public/js/frappe/build_events/BuildSuccess.vue",
+      "app": "frappe",
+      "decision": "patched",
+      "evidence": "Native __ calls added in framework-overlay.json."
+    },
+    {
+      "source": "row.fieldname",
+      "path": "public/js/print_format_builder/components/inspector/TableFieldInspector.vue",
+      "app": "frappe",
+      "decision": "technical_example",
+      "evidence": "Literal <code>row.fieldname</code> is the executable API field path; preceding help prose is translated natively."
+    },
+    {
+      "source": "Tibério Lemes — editor",
+      "path": "public/studio/index.html",
+      "app": "frappe",
+      "decision": "source_pt",
+      "evidence": "Own platform branding already applied in native template."
+    },
+    {
+      "source": "id=\"page-\" data-path=\"\" source-type=\"Generator\" data-doctype=\"\" source-content-type=\"\"",
+      "path": "templates/doc.html",
+      "app": "frappe",
+      "decision": "extractor_false_positive",
+      "evidence": "HTMLParser read leftover attributes/frontmatter after removing Jinja tags; this is markup/CSS/code, not a text node. Exact path/source retained here."
+    },
+    {
+      "source": "class=\"text-right\"",
+      "path": "templates/emails/auto_email_report.html",
+      "app": "frappe",
+      "decision": "extractor_false_positive",
+      "evidence": "HTMLParser read leftover attributes/frontmatter after removing Jinja tags; this is markup/CSS/code, not a text node. Exact path/source retained here."
+    },
+    {
+      "source": "Tibério Lemes",
+      "path": "templates/includes/footer/footer_powered.html",
+      "app": "frappe",
+      "decision": "source_pt",
+      "evidence": "Own platform branding already applied in native template."
+    },
+    {
+      "source": "style='text-align: right'",
+      "path": "templates/includes/print_table.html",
+      "app": "frappe",
+      "decision": "extractor_false_positive",
+      "evidence": "HTMLParser read leftover attributes/frontmatter after removing Jinja tags; this is markup/CSS/code, not a text node. Exact path/source retained here."
+    },
+    {
+      "source": "data-fieldname=\"\" data-fieldtype=\"\" padding:px; border-color: !important --pfb-radius:px; --pfb-header-bg:; height:px;--pfb-foot-height:100%;",
+      "path": "templates/print_format/macros.html",
+      "app": "frappe",
+      "decision": "extractor_false_positive",
+      "evidence": "HTMLParser read leftover attributes/frontmatter after removing Jinja tags; this is markup/CSS/code, not a text node. Exact path/source retained here."
+    },
+    {
+      "source": "data-fieldname=\"\" data-fieldtype=\"\"",
+      "path": "templates/print_formats/standard_macros.html",
+      "app": "frappe",
+      "decision": "extractor_false_positive",
+      "evidence": "HTMLParser read leftover attributes/frontmatter after removing Jinja tags; this is markup/CSS/code, not a text node. Exact path/source retained here."
+    },
+    {
+      "source": "px px px",
+      "path": "templates/print_formats/standard_macros.html",
+      "app": "frappe",
+      "decision": "extractor_false_positive",
+      "evidence": "HTMLParser read leftover attributes/frontmatter after removing Jinja tags; this is markup/CSS/code, not a text node. Exact path/source retained here."
+    },
+    {
+      "source": "id=\"page-\" data-path=\"\" source-type=\"Generator\" data-doctype=\"\" source-content-type=\"\"",
+      "path": "templates/web.html",
+      "app": "frappe",
+      "decision": "extractor_false_positive",
+      "evidence": "HTMLParser read leftover attributes/frontmatter after removing Jinja tags; this is markup/CSS/code, not a text node. Exact path/source retained here."
+    },
+    {
+      "source": "--- no_cache: 1 ---",
+      "path": "www/printpreview.html",
+      "app": "frappe",
+      "decision": "extractor_false_positive",
+      "evidence": "HTMLParser read leftover attributes/frontmatter after removing Jinja tags; this is markup/CSS/code, not a text node. Exact path/source retained here."
+    },
+    {
+      "source": "Tibério Lemes — editor",
+      "path": "www/studio.html",
+      "app": "frappe",
+      "decision": "source_pt",
+      "evidence": "Own platform branding already applied in native template."
+    },
+    {
+      "source": "Studio Components App",
+      "path": "frontend/cypress/support/component-index.html",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/cypress/support/component-index.html",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Tibério Lemes — editor",
+      "path": "frontend/index.html",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/index.html",
+      "decision": "patched_entry_point",
+      "evidence": "Pinned HTML overlay changes title, language and favicon."
+    },
+    {
+      "source": "Session persists for this page",
+      "path": "frontend/src/components/AIChatPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/AIChatPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 6,
+          "source": "Session persists for this page",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Clear",
+      "path": "frontend/src/components/AIChatPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/AIChatPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 11,
+          "source": "Clear",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Add an AI API key in Settings to use the AI assistant.",
+      "path": "frontend/src/components/AIChatPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/AIChatPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 17,
+          "source": "Add an AI API key in Settings to use the AI assistant.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Chat to create or edit this page",
+      "path": "frontend/src/components/AIChatPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/AIChatPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 27,
+          "source": "Chat to create or edit this page",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 154,
+          "source": "Chat to create or edit this page...",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Data",
+      "path": "frontend/src/components/AIChatPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/AIChatPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 57,
+          "source": "Data",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Layout",
+      "path": "frontend/src/components/AIChatPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/AIChatPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 69,
+          "source": "Layout",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Palette:",
+      "path": "frontend/src/components/AIChatPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/AIChatPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 80,
+          "source": "Palette:",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Editing:",
+      "path": "frontend/src/components/AIChatPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/AIChatPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 124,
+          "source": "Editing:",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 217,
+          "source": "Edit",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Save",
+      "path": "frontend/src/components/Code.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Code.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 42,
+          "source": "Save",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Command Palette",
+      "path": "frontend/src/components/CommandPalette/CommandPalette.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/CommandPalette/CommandPalette.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 3,
+          "source": "Command Palette",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Search for a command and press Enter to run it.",
+      "path": "frontend/src/components/CommandPalette/CommandPalette.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/CommandPalette/CommandPalette.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 4,
+          "source": "Search for a command and press Enter to run it.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "esc",
+      "path": "frontend/src/components/CommandPalette/CommandPalette.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/CommandPalette/CommandPalette.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 33,
+          "source": "esc",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "Searching...",
+      "path": "frontend/src/components/CommandPalette/CommandPalette.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/CommandPalette/CommandPalette.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 74,
+          "source": "Searching...",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No results for \"\"",
+      "path": "frontend/src/components/CommandPalette/CommandPalette.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/CommandPalette/CommandPalette.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 75,
+          "source": "No results for \"",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Navigate",
+      "path": "frontend/src/components/CommandPalette/CommandPalette.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/CommandPalette/CommandPalette.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 91,
+          "source": "Navigate",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Select",
+      "path": "frontend/src/components/CommandPalette/CommandPalette.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/CommandPalette/CommandPalette.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 97,
+          "source": "Select",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Edit",
+      "path": "frontend/src/components/ComponentEditor.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentEditor.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 23,
+          "source": "Edit component",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 26,
+          "source": "Edit",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Add Event",
+      "path": "frontend/src/components/ComponentEvents.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentEvents.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 17,
+          "source": "Add Event",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 36,
+          "source": "Event",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Use \"\"",
+      "path": "frontend/src/components/ComponentEvents.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentEvents.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 40,
+          "source": "Use \"",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "On Success",
+      "path": "frontend/src/components/ComponentEvents.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentEvents.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 56,
+          "source": "On Success",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "On Failure",
+      "path": "frontend/src/components/ComponentEvents.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentEvents.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 93,
+          "source": "On Failure",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Editing",
+      "path": "frontend/src/components/ComponentPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 146,
+          "source": "Editing",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 279,
+          "source": "Edit",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Create Component",
+      "path": "frontend/src/components/ComponentPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 161,
+          "source": "Create Component",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Add \"\"",
+      "path": "frontend/src/components/ComponentProperties.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentProperties.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 24,
+          "source": "Add \"",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "A component script is a Vue component without a template. The component's blocks are its template.",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 3,
+          "source": "A component script is a Vue component without a template. The component's blocks are its template.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Export a default object with",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "Export a default object with",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 49,
+          "source": "or",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "props",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 7,
+          "source": "props",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 14,
+          "source": "Blocks read the props as",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 16,
+          "source": "{{ props.title }}",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 25,
+          "source": "import { ref, computed } from \"vue\" export default { props: { title: { type: String, required: true }, step: { type: Number, default: 1 }, }, emits: [\"change\"], setup(props, { emit }) { const count = ref(0) const label = computed(() => `${props.title}: ${count.value}`) function add() { count.value += props.step emit(\"change\", count.value) } return { count, label, add } }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 47,
+          "source": "returns in props and events, e.g.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "emits",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "emits",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 21,
+          "source": "emits",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 25,
+          "source": "import { ref, computed } from \"vue\" export default { props: { title: { type: String, required: true }, step: { type: Number, default: 1 }, }, emits: [\"change\"], setup(props, { emit }) { const count = ref(0) const label = computed(() => `${props.title}: ${count.value}`) function add() { count.value += props.step emit(\"change\", count.value) } return { count, label, add } }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "and",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "and",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 19,
+          "source": "A page that uses the component can handle the events in",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 47,
+          "source": "returns in props and events, e.g.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "setup",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 11,
+          "source": "setup",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 25,
+          "source": "import { ref, computed } from \"vue\" export default { props: { title: { type: String, required: true }, step: { type: Number, default: 1 }, }, emits: [\"change\"], setup(props, { emit }) { const count = ref(0) const label = computed(() => `${props.title}: ${count.value}`) function add() { count.value += props.step emit(\"change\", count.value) } return { count, label, add } }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 47,
+          "source": "setup",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": ". Each one is optional.",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 11,
+          "source": ". Each one is optional.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Blocks read the props as",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 7,
+          "source": "props",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 14,
+          "source": "Blocks read the props as",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "A page that uses the component can handle the events in",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "and",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 19,
+          "source": "A page that uses the component can handle the events in",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "emits",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "emits",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 21,
+          "source": "emits",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 25,
+          "source": "import { ref, computed } from \"vue\" export default { props: { title: { type: String, required: true }, step: { type: Number, default: 1 }, }, emits: [\"change\"], setup(props, { emit }) { const count = ref(0) const label = computed(() => `${props.title}: ${count.value}`) function add() { count.value += props.step emit(\"change\", count.value) } return { count, label, add } }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "import { ref, computed } from \"vue\" export default { props: { title: { type: String, required: true }, step: { type: Number, default: 1 }, }, emits: [\"change\"], setup(props, { emit }) { const count = ref(0) const label = computed(() => `${props.title}: ${count.value}`) function add() { count.value += props.step emit(\"change\", count.value) } return { count, label, add } }, }",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 7,
+          "source": "props",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 9,
+          "source": "emits",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 11,
+          "source": "setup",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 21,
+          "source": "emits",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 25,
+          "source": "import { ref, computed } from \"vue\" export default { props: { title: { type: String, required: true }, step: { type: Number, default: 1 }, }, emits: [\"change\"], setup(props, { emit }) { const count = ref(0) const label = computed(() => `${props.title}: ${count.value}`) function add() { count.value += props.step emit(\"change\", count.value) } return { count, label, add } }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 47,
+          "source": "setup",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 49,
+          "source": "or",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 51,
+          "source": "add()",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "Reference what",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 45,
+          "source": "Reference what",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "setup",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 11,
+          "source": "setup",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 25,
+          "source": "import { ref, computed } from \"vue\" export default { props: { title: { type: String, required: true }, step: { type: Number, default: 1 }, }, emits: [\"change\"], setup(props, { emit }) { const count = ref(0) const label = computed(() => `${props.title}: ${count.value}`) function add() { count.value += props.step emit(\"change\", count.value) } return { count, label, add } }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 47,
+          "source": "setup",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "returns in props and events, e.g.",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 7,
+          "source": "props",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 9,
+          "source": "and",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 47,
+          "source": "returns in props and events, e.g.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "or",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "Export a default object with",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 25,
+          "source": "import { ref, computed } from \"vue\" export default { props: { title: { type: String, required: true }, step: { type: Number, default: 1 }, }, emits: [\"change\"], setup(props, { emit }) { const count = ref(0) const label = computed(() => `${props.title}: ${count.value}`) function add() { count.value += props.step emit(\"change\", count.value) } return { count, label, add } }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 49,
+          "source": "or",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 51,
+          "source": ". To choose the control for a prop, add",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "add()",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 25,
+          "source": "import { ref, computed } from \"vue\" export default { props: { title: { type: String, required: true }, step: { type: Number, default: 1 }, }, emits: [\"change\"], setup(props, { emit }) { const count = ref(0) const label = computed(() => `${props.title}: ${count.value}`) function add() { count.value += props.step emit(\"change\", count.value) } return { count, label, add } }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 51,
+          "source": "add()",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": ". To choose the control for a prop, add",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 49,
+          "source": "or",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 51,
+          "source": ". To choose the control for a prop, add",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "meta: { control: \"select\", options: [\"sm\", \"md\"] }",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 53,
+          "source": "meta: { control: \"select\", options: [\"sm\", \"md\"] }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "to it.",
+      "path": "frontend/src/components/ComponentScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 55,
+          "source": "to it.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Open script",
+      "path": "frontend/src/components/ComponentSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 35,
+          "source": "Open script",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Save",
+      "path": "frontend/src/components/ComponentSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 141,
+          "source": "Save",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 148,
+          "source": "S",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "Cancel",
+      "path": "frontend/src/components/ComponentSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 142,
+          "source": "Cancel",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Press",
+      "path": "frontend/src/components/ComponentSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 144,
+          "source": "Press",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "to save",
+      "path": "frontend/src/components/ComponentSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 148,
+          "source": "to save",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Preview values",
+      "path": "frontend/src/components/ComponentSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 166,
+          "source": "Preview values",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Values for this preview only. They are not saved.",
+      "path": "frontend/src/components/ComponentSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 170,
+          "source": "Values for this preview only. They are not saved.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Global component",
+      "path": "frontend/src/components/ComponentSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 197,
+          "source": "Global component",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 199,
+          "source": "Global component",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "All apps can use it.",
+      "path": "frontend/src/components/ComponentSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ComponentSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 205,
+          "source": "All apps can use it.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No components found",
+      "path": "frontend/src/components/ContextMenu.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ContextMenu.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 64,
+          "source": "No components found",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Add Data Source",
+      "path": "frontend/src/components/DataPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/DataPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 27,
+          "source": "Add Data Source",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 128,
+          "source": "Add",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Add Variable",
+      "path": "frontend/src/components/DataPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/DataPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 69,
+          "source": "Add Variable",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 72,
+          "source": "Add Variable",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 128,
+          "source": "Add",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Remove all",
+      "path": "frontend/src/components/DeprecatedProps.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/DeprecatedProps.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 20,
+          "source": "Remove all",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Set Dynamic Value",
+      "path": "frontend/src/components/DynamicStyleSetter.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/DynamicStyleSetter.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "Set Dynamic Value",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 23,
+          "source": "Set Dynamic Value",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 37,
+          "source": "Set",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Set",
+      "path": "frontend/src/components/DynamicStyleSetter.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/DynamicStyleSetter.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "Set Dynamic Value",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 23,
+          "source": "Set Dynamic Value",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 37,
+          "source": "Set",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "/studio",
+      "path": "frontend/src/components/FileExplorer.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/FileExplorer.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 6,
+          "source": "/studio",
+          "decision": "technical",
+          "reason": "Literal route, filename, account/server example or model/module ID; presentation example retained, never used as an invented contact."
+        }
+      ]
+    },
+    {
+      "source": "Editing",
+      "path": "frontend/src/components/FileExplorer.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/FileExplorer.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 41,
+          "source": "Editing",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 61,
+          "source": "Editing",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Editing",
+      "path": "frontend/src/components/FileExplorer.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/FileExplorer.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 41,
+          "source": "Editing",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 61,
+          "source": "Editing",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "read-only",
+      "path": "frontend/src/components/FileExplorer.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/FileExplorer.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 178,
+          "source": "read-only",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Save",
+      "path": "frontend/src/components/FileExplorer.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/FileExplorer.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 192,
+          "source": "Save",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 460,
+          "source": "Saved",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Empty - Choose a field to filter by",
+      "path": "frontend/src/components/Filters.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Filters.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 71,
+          "source": "Empty - Choose a field to filter by",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No.",
+      "path": "frontend/src/components/Grid.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Grid.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 19,
+          "source": "No.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No Data",
+      "path": "frontend/src/components/Grid.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Grid.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 85,
+          "source": "No Data",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Loading…",
+      "path": "frontend/src/components/IconPicker.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/IconPicker.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 31,
+          "source": "Loading…",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No icons found",
+      "path": "frontend/src/components/IconPicker.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/IconPicker.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 32,
+          "source": "No icons found",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Component Missing:",
+      "path": "frontend/src/components/MissingComponent.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/MissingComponent.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "Component Missing:",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Add",
+      "path": "frontend/src/components/MoreStylesPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/MoreStylesPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 33,
+          "source": "Add CSS property",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 54,
+          "source": "Add",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 194,
+          "source": "Add property",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Set",
+      "path": "frontend/src/components/MoreStylesPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/MoreStylesPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 62,
+          "source": "Set",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 202,
+          "source": "Set declaration",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Overlays ·",
+      "path": "frontend/src/components/OverlayList.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/OverlayList.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 3,
+          "source": "Overlays ·",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Edit",
+      "path": "frontend/src/components/OverlayList.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/OverlayList.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 28,
+          "source": "Edit",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Use a different tab title",
+      "path": "frontend/src/components/PageOptions.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageOptions.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 34,
+          "source": "Use a different tab title",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "A page script is a module. Import what you use, and return the values and handlers this page's bindings and events need.",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 3,
+          "source": "A page script is a module. Import what you use, and return the values and handlers this page's bindings and events need.",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 25,
+          "source": "and",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Export a default",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 8,
+          "source": "Export a default",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "setup(context)",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 10,
+          "source": "setup(context)",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 23,
+          "source": "context",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 31,
+          "source": "import { ref, computed } from \"vue\" export default function setup(context) { const count = ref(0) const doubled = computed(() => count.value * 2) const rows = computed(() => context.todos.data || []) return { count, doubled, rows } }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "function.",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 10,
+          "source": "function.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Import from",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 13,
+          "source": "Import from",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "vue",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 15,
+          "source": "vue",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 31,
+          "source": "import { ref, computed } from \"vue\" export default function setup(context) { const count = ref(0) const doubled = computed(() => count.value * 2) const rows = computed(() => context.todos.data || []) return { count, doubled, rows } }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "frappe-ui",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 17,
+          "source": "frappe-ui",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": ", or this app's own files with",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 17,
+          "source": ", or this app's own files with",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "@app/…",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 19,
+          "source": "@app/…",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "context",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 10,
+          "source": "setup(context)",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 23,
+          "source": "context",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 31,
+          "source": "import { ref, computed } from \"vue\" export default function setup(context) { const count = ref(0) const doubled = computed(() => count.value * 2) const rows = computed(() => context.todos.data || []) return { count, doubled, rows } }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "holds this page's data sources and variables, plus",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 23,
+          "source": "holds this page's data sources and variables, plus",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 25,
+          "source": "and",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "route",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 25,
+          "source": "route",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 27,
+          "source": "router",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "and",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 3,
+          "source": "A page script is a module. Import what you use, and return the values and handlers this page's bindings and events need.",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 23,
+          "source": "holds this page's data sources and variables, plus",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 25,
+          "source": "and",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "router",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 25,
+          "source": "route",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 27,
+          "source": "router",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "import { ref, computed } from \"vue\" export default function setup(context) { const count = ref(0) const doubled = computed(() => count.value * 2) const rows = computed(() => context.todos.data || []) return { count, doubled, rows } }",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 10,
+          "source": "setup(context)",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 15,
+          "source": "vue",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 23,
+          "source": "context",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 31,
+          "source": "import { ref, computed } from \"vue\" export default function setup(context) { const count = ref(0) const doubled = computed(() => count.value * 2) const rows = computed(() => context.todos.data || []) return { count, doubled, rows } }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "Reference them in props, e.g.",
+      "path": "frontend/src/components/PageScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PageScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 42,
+          "source": "Reference them in props, e.g.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Home",
+      "path": "frontend/src/components/PagesPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PagesPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 23,
+          "source": "App Home",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 24,
+          "source": "Home",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 84,
+          "source": "Set as App Home",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "New Page",
+      "path": "frontend/src/components/PagesPanel.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PagesPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 51,
+          "source": "New Page",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "The pasted blocks include items that already exist on this page with different definitions. Choose which version to keep.",
+      "path": "frontend/src/components/PasteConflictDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PasteConflictDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 11,
+          "source": "The pasted blocks include items that already exist on this page with different definitions. Choose which version to keep.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Name",
+      "path": "frontend/src/components/PasteConflictDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PasteConflictDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 24,
+          "source": "Name",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Type",
+      "path": "frontend/src/components/PasteConflictDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PasteConflictDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 25,
+          "source": "Type",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Version",
+      "path": "frontend/src/components/PasteConflictDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PasteConflictDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 26,
+          "source": "Version",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 42,
+          "source": "Version to use for {0}",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "\"Use copied\" overwrites a shared component and can affect blocks on other pages.",
+      "path": "frontend/src/components/PasteConflictDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PasteConflictDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 65,
+          "source": "\"Use copied\" overwrites a shared component and can affect blocks on other pages.",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 169,
+          "source": "Use copied",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Page script wasn't copied",
+      "path": "frontend/src/components/PasteWarningToast.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PasteWarningToast.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 4,
+          "source": "Page script wasn't copied",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "These blocks may use page-level functions or variables from the source page. Add required references from the source manually or revert the pasted blocks.",
+      "path": "frontend/src/components/PasteWarningToast.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PasteWarningToast.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "These blocks may use page-level functions or variables from the source page. Add required references from the source manually or revert the pasted blocks.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Revert pasted blocks",
+      "path": "frontend/src/components/PasteWarningToast.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PasteWarningToast.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 13,
+          "source": "Revert pasted blocks",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Add Tab",
+      "path": "frontend/src/components/PropEditors/SettingsTabsEditor.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PropEditors/SettingsTabsEditor.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 43,
+          "source": "Add Tab",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No editable properties yet. Add inputs inside the",
+      "path": "frontend/src/components/PropsEditor.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PropsEditor.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 4,
+          "source": "No editable properties yet. Add inputs inside the",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "component editor",
+      "path": "frontend/src/components/PropsEditor.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/PropsEditor.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 6,
+          "source": "component editor",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Missing Field",
+      "path": "frontend/src/components/ResourceDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ResourceDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 86,
+          "source": "Missing Field",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "on .",
+      "path": "frontend/src/components/ResourceDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ResourceDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 95,
+          "source": "on",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Remove",
+      "path": "frontend/src/components/ResourceDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ResourceDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 97,
+          "source": "Remove",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Save",
+      "path": "frontend/src/components/RouterScript.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScript.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 36,
+          "source": "Save",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 142,
+          "source": "Saved the router script",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Router script",
+      "path": "frontend/src/components/RouterScriptButton.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptButton.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "Router script",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Add navigation guards, redirect old paths, track page views and more.",
+      "path": "frontend/src/components/RouterScriptButton.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptButton.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 10,
+          "source": "Add navigation guards, redirect old paths, track page views and more.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Control navigation between your app's pages with Vue Router. Studio creates the page routes for you. Write a JavaScript object with any of these optional fields:",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 3,
+          "source": "Control navigation between your app's pages with Vue Router. Studio creates the page routes for you. Write a JavaScript object with any of these optional fields:",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "routerOptions",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "routerOptions",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 35,
+          "source": "{ routerOptions: { scrollBehavior: () => ({ top: 0 }), }, extendRoute(route) { if (route.name === \"Tasks\") route.alias = \"/todo\" }, setup(router) { router.beforeEach((to) => { if ( boot.onboarding_complete === false && to.name !== 'Onboarding' ) { return { name: 'Onboarding' } } }) }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "- passed to",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "- passed to",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "createRouter",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 11,
+          "source": "createRouter",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "scrollBehavior",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 13,
+          "source": "scrollBehavior",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 35,
+          "source": "{ routerOptions: { scrollBehavior: () => ({ top: 0 }), }, extendRoute(route) { if (route.name === \"Tasks\") route.alias = \"/todo\" }, setup(router) { router.beforeEach((to) => { if ( boot.onboarding_complete === false && to.name !== 'Onboarding' ) { return { name: 'Onboarding' } } }) }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "extendRoute(route)",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 17,
+          "source": "extendRoute(route)",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 35,
+          "source": "{ routerOptions: { scrollBehavior: () => ({ top: 0 }), }, extendRoute(route) { if (route.name === \"Tasks\") route.alias = \"/todo\" }, setup(router) { router.beforeEach((to) => { if ( boot.onboarding_complete === false && to.name !== 'Onboarding' ) { return { name: 'Onboarding' } } }) }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "- runs once per page route, before the router is created: add an",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 17,
+          "source": "- runs once per page route, before the router is created: add an",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "alias",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 19,
+          "source": "alias",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 35,
+          "source": "{ routerOptions: { scrollBehavior: () => ({ top: 0 }), }, extendRoute(route) { if (route.name === \"Tasks\") route.alias = \"/todo\" }, setup(router) { router.beforeEach((to) => { if ( boot.onboarding_complete === false && to.name !== 'Onboarding' ) { return { name: 'Onboarding' } } }) }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": ", set",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 19,
+          "source": ", set",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 35,
+          "source": "{ routerOptions: { scrollBehavior: () => ({ top: 0 }), }, extendRoute(route) { if (route.name === \"Tasks\") route.alias = \"/todo\" }, setup(router) { router.beforeEach((to) => { if ( boot.onboarding_complete === false && to.name !== 'Onboarding' ) { return { name: 'Onboarding' } } }) }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "meta",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 21,
+          "source": "meta",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "or check access with",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 21,
+          "source": "or check access with",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "beforeEnter",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 23,
+          "source": "beforeEnter",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "setup(router)",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 27,
+          "source": "setup(router)",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 35,
+          "source": "{ routerOptions: { scrollBehavior: () => ({ top: 0 }), }, extendRoute(route) { if (route.name === \"Tasks\") route.alias = \"/todo\" }, setup(router) { router.beforeEach((to) => { if ( boot.onboarding_complete === false && to.name !== 'Onboarding' ) { return { name: 'Onboarding' } } }) }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "- runs once after the router is created, before the first navigation. Register guards like",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 27,
+          "source": "- runs once after the router is created, before the first navigation. Register guards like",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "router.beforeEach",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 29,
+          "source": "router.beforeEach",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 35,
+          "source": "{ routerOptions: { scrollBehavior: () => ({ top: 0 }), }, extendRoute(route) { if (route.name === \"Tasks\") route.alias = \"/todo\" }, setup(router) { router.beforeEach((to) => { if ( boot.onboarding_complete === false && to.name !== 'Onboarding' ) { return { name: 'Onboarding' } } }) }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "router.afterEach",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 31,
+          "source": "router.afterEach",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "{ routerOptions: { scrollBehavior: () => ({ top: 0 }), }, extendRoute(route) { if (route.name === \"Tasks\") route.alias = \"/todo\" }, setup(router) { router.beforeEach((to) => { if ( boot.onboarding_complete === false && to.name !== 'Onboarding' ) { return { name: 'Onboarding' } } }) }, }",
+      "path": "frontend/src/components/RouterScriptHelp.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/RouterScriptHelp.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "routerOptions",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 13,
+          "source": "scrollBehavior",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 17,
+          "source": "extendRoute(route)",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 19,
+          "source": "alias",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 19,
+          "source": ", set",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 27,
+          "source": "setup(router)",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 29,
+          "source": "router.beforeEach",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        },
+        {
+          "line": 35,
+          "source": "{ routerOptions: { scrollBehavior: () => ({ top: 0 }), }, extendRoute(route) { if (route.name === \"Tasks\") route.alias = \"/todo\" }, setup(router) { router.beforeEach((to) => { if ( boot.onboarding_complete === false && to.name !== 'Onboarding' ) { return { name: 'Onboarding' } } }) }, }",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "Add Script",
+      "path": "frontend/src/components/ScriptSection.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/ScriptSection.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 24,
+          "source": "Add Script",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Filter search results by:",
+      "path": "frontend/src/components/SearchBlock.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/SearchBlock.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 48,
+          "source": "Filter search results by:",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Clear all filters",
+      "path": "frontend/src/components/SearchBlock.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/SearchBlock.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 64,
+          "source": "Clear all filters",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Replace All ( matches)",
+      "path": "frontend/src/components/SearchBlock.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/SearchBlock.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 101,
+          "source": "Replace All (",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 102,
+          "source": "matches)",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 138,
+          "source": "Replace",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "replacements made",
+      "path": "frontend/src/components/SearchBlock.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/SearchBlock.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 105,
+          "source": "replacements made",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 375,
+          "source": "No replacements made",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 397,
+          "source": "No replacements made",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Search your blocks",
+      "path": "frontend/src/components/SearchBlock.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/SearchBlock.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 114,
+          "source": "Search your blocks",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Replace",
+      "path": "frontend/src/components/SearchBlock.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/SearchBlock.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 85,
+          "source": "Replace with...",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 101,
+          "source": "Replace All (",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 138,
+          "source": "Replace",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 373,
+          "source": "Replaced in {0}",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No results found",
+      "path": "frontend/src/components/SearchBlock.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/SearchBlock.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 149,
+          "source": "No results found",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Try different keywords or adjust your filters",
+      "path": "frontend/src/components/SearchBlock.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/SearchBlock.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 150,
+          "source": "Try different keywords or adjust your filters",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Get an API key from",
+      "path": "frontend/src/components/Settings/AISettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/AISettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 11,
+          "source": "Get an API key from",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "openrouter.ai/keys",
+      "path": "frontend/src/components/Settings/AISettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/AISettings.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 13,
+          "source": "openrouter.ai/keys",
+          "decision": "technical",
+          "reason": "Literal route, filename, account/server example or model/module ID; presentation example retained, never used as an invented contact."
+        }
+      ]
+    },
+    {
+      "source": "— supports Claude, Gemini, GPT and more under one key.",
+      "path": "frontend/src/components/Settings/AISettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/AISettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 15,
+          "source": "— supports Claude, Gemini, GPT and more under one key.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Favicon",
+      "path": "frontend/src/components/Settings/AppSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/AppSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 32,
+          "source": "Favicon",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 37,
+          "source": "App Favicon",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Remove",
+      "path": "frontend/src/components/Settings/AppSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/AppSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 53,
+          "source": "Remove",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Appears in the browser tab and as the app's icon on the desktop. Use a square PNG or SVG",
+      "path": "frontend/src/components/Settings/AppSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/AppSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 57,
+          "source": "Appears in the browser tab and as the app's icon on the desktop. Use a square PNG or SVG",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Export",
+      "path": "frontend/src/components/Settings/AppSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/AppSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 68,
+          "source": "Export",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 69,
+          "source": "Exported to",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Exported to",
+      "path": "frontend/src/components/Settings/AppSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/AppSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 68,
+          "source": "Export",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 69,
+          "source": "Exported to",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Not exported to any Frappe App",
+      "path": "frontend/src/components/Settings/AppSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/AppSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 73,
+          "source": "Not exported to any Frappe App",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Title",
+      "path": "frontend/src/components/Settings/PagesSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/PagesSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "Title",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Route",
+      "path": "frontend/src/components/Settings/PagesSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/PagesSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 10,
+          "source": "Route",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Guest Access",
+      "path": "frontend/src/components/Settings/PagesSettings.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/PagesSettings.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 11,
+          "source": "Guest Access",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Settings",
+      "path": "frontend/src/components/Settings/SettingsDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/SettingsDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 4,
+          "source": "Settings",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 8,
+          "source": "Settings",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Configure this app, its pages and the AI assistant.",
+      "path": "frontend/src/components/Settings/SettingsDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/SettingsDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "Configure this app, its pages and the AI assistant.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Settings",
+      "path": "frontend/src/components/Settings/SettingsDialog.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/Settings/SettingsDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 4,
+          "source": "Settings",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 8,
+          "source": "Settings",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Search Block",
+      "path": "frontend/src/components/StudioCanvas.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/StudioCanvas.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 120,
+          "source": "Search Block",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "An error occurred while rendering :",
+      "path": "frontend/src/components/StudioComponent.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/StudioComponent.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 7,
+          "source": "An error occurred while rendering",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Beta",
+      "path": "frontend/src/components/StudioToolbar.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/StudioToolbar.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 79,
+          "source": "Beta",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Loading...",
+      "path": "frontend/src/components/StudioToolbar.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/StudioToolbar.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 119,
+          "source": "Loading...",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Preview",
+      "path": "frontend/src/components/StudioToolbar.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/StudioToolbar.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 178,
+          "source": "Preview",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Add option",
+      "path": "frontend/src/components/VariantOptionsEditor.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/VariantOptionsEditor.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 65,
+          "source": "Add option",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Keep",
+      "path": "frontend/src/components/VariantRows.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/VariantRows.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 32,
+          "source": "Keep the shown option and delete the others",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 33,
+          "source": "Keep {0} for {1}",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 35,
+          "source": "Keep",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Variants",
+      "path": "frontend/src/components/VariantsEditorPill.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/VariantsEditorPill.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "Variants",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Variants",
+      "path": "frontend/src/components/VariantsViewerPill.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/components/VariantsViewerPill.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 23,
+          "source": "Variants",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 29,
+          "source": "Variants",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Something went wrong",
+      "path": "frontend/src/pages/ErrorPage.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/ErrorPage.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 4,
+          "source": "Something went wrong",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "This app could not start. Please try again later.",
+      "path": "frontend/src/pages/ErrorPage.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/ErrorPage.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "This app could not start. Please try again later.",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 17,
+          "source": "at",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "at",
+      "path": "frontend/src/pages/ErrorPage.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/ErrorPage.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "This app could not start. Please try again later.",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 17,
+          "source": "at",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "Studio",
+      "path": "frontend/src/pages/Home.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/Home.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 20,
+          "source": "Studio",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Beta",
+      "path": "frontend/src/pages/Home.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/Home.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 21,
+          "source": "Beta",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "New App",
+      "path": "frontend/src/pages/Home.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/Home.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 30,
+          "source": "New App",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 67,
+          "source": "You don't have any apps yet. Click on the \"+ New App\" button to create a new app",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Apps",
+      "path": "frontend/src/pages/Home.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/Home.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 35,
+          "source": "Apps",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "You don't have any apps yet. Click on the \"+ New App\" button to create a new app",
+      "path": "frontend/src/pages/Home.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/Home.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 30,
+          "source": "New App",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 67,
+          "source": "You don't have any apps yet. Click on the \"+ New App\" button to create a new app",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No matching apps found",
+      "path": "frontend/src/pages/Home.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/Home.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 72,
+          "source": "No matching apps found",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Created",
+      "path": "frontend/src/pages/Home.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/Home.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 121,
+          "source": "Created",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Not Editable",
+      "path": "frontend/src/pages/NotEditable.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/NotEditable.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "Not Editable",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "is a standard app and can only be edited in developer mode",
+      "path": "frontend/src/pages/NotEditable.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/NotEditable.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 7,
+          "source": "is a standard app and can only be edited in developer mode",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "The page you are looking for does not exist.",
+      "path": "frontend/src/pages/NotFound.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/NotFound.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "The page you are looking for does not exist.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Back to Home",
+      "path": "frontend/src/pages/NotFound.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/NotFound.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 6,
+          "source": "Back to Home",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "403: Permission Denied",
+      "path": "frontend/src/pages/NotPermitted.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/NotPermitted.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 4,
+          "source": "403: Permission Denied",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "You don't have permission to access this page. Make sure you have the right roles & permissions.",
+      "path": "frontend/src/pages/NotPermitted.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/NotPermitted.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 5,
+          "source": "You don't have permission to access this page. Make sure you have the right roles & permissions.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Back to Home",
+      "path": "frontend/src/pages/NotPermitted.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/NotPermitted.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 8,
+          "source": "Back to Home",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "· used in",
+      "path": "frontend/src/pages/StudioPage.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/StudioPage.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 67,
+          "source": "· used in",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Settings",
+      "path": "frontend/src/pages/StudioPage.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/StudioPage.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 84,
+          "source": "Settings",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Script",
+      "path": "frontend/src/pages/StudioPage.vue",
+      "app": "frappe_studio",
+      "source_path": "studio/frontend/src/pages/StudioPage.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 93,
+          "source": "Script",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No activity yet",
+      "path": "src/components/ActivityTimeline/ActivityTimeline.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ActivityTimeline/ActivityTimeline.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 21,
+          "source": "No activity yet",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Couldn't load this file:",
+      "path": "src/components/ActivityTimeline/AttachmentChip.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ActivityTimeline/AttachmentChip.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 35,
+          "source": "Couldn't load this file:",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Subject:",
+      "path": "src/components/ActivityTimeline/EmailItem.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ActivityTimeline/EmailItem.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 56,
+          "source": "Subject:",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "made",
+      "path": "src/components/ActivityTimeline/VersionItem.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ActivityTimeline/VersionItem.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 14,
+          "source": "made",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "changes",
+      "path": "src/components/ActivityTimeline/VersionItem.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ActivityTimeline/VersionItem.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 16,
+          "source": "changes",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "over",
+      "path": "src/components/ActivityTimeline/VersionItem.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ActivityTimeline/VersionItem.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 17,
+          "source": "over",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "ActivityTimeline",
+      "path": "src/components/ActivityTimeline/stories/ActivityTimeline.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ActivityTimeline/stories/ActivityTimeline.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Feedback — ★ /5 ·",
+      "path": "src/components/ActivityTimeline/stories/ActivityTimeline.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ActivityTimeline/stories/ActivityTimeline.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Doctype",
+      "path": "src/components/ColumnSettings/stories/ColumnSettings.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ColumnSettings/stories/ColumnSettings.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Hide label",
+      "path": "src/components/ColumnSettings/stories/ColumnSettings.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ColumnSettings/stories/ColumnSettings.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Column[] =",
+      "path": "src/components/ColumnSettings/stories/ColumnSettings.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ColumnSettings/stories/ColumnSettings.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "wire columns =",
+      "path": "src/components/ColumnSettings/stories/ColumnSettings.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ColumnSettings/stories/ColumnSettings.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Composers",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Two standalone, inline message composers.",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "EmailComposer",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "stacks email header rows (From/Subject/To/Cc/Bcc, per the",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "show*",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "props) plus an optional quoted reply above the editor;",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "CommentComposer",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "is the editor alone, with @-mentions, for internal notes. Both are transport-agnostic:",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "submit",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "hands back a payload and the host performs the send, then calls the exposed",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "reset()",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": ". Each scene below is a real host pattern, built from a few lines around the inline composer.",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Ticket reply",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "A support thread with an Email/Comment switcher. The quoted customer message rides",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "v-model:quoted",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "and is appended on send; both drafts survive tab switches because the composers stay mounted (",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "v-show",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": ", not",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "v-if",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "). The whole reply section lives in frappe-ui's",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "FloatingWindow",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": ": docked it renders in-flow, and its title bar pops it out to a draggable window; the same instance moves, so no draft is lost.",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Docked compose window",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "A Gmail-style compose window: frappe-ui's",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "FloatingWindow",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "around the inline composer (FP1: the composer stays out of the window business). Pop it out and drag it, or minimize it to the tray;",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "show-from",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "and",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "show-subject",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "turn on the full header.",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Comment thread",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "An activity feed with",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "CommentComposer",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "pinned underneath. Type",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "to mention a teammate. Submitted comments join the feed and the host calls",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "reset()",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Quick reply, custom header",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "A body-only reply under a message.",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "#header",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "replaces the built-in rows wholesale, here a \"Replying to\" pill, while the host seeds",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "v-model:to",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "so the payload still carries the recipient.",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Custom utilities",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Host utilities in the",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "#actions",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "slot: a canned replies menu beside the built-in attach button, inserting through the exposed",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "editor",
+      "path": "src/components/Composer/stories/Composer.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/Composer.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Sent ✓",
+      "path": "src/components/Composer/stories/CustomUtility.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/CustomUtility.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Sent “” ✓",
+      "path": "src/components/Composer/stories/DockedCompose.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/DockedCompose.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Grace Hopper",
+      "path": "src/components/Composer/stories/QuickReply.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/QuickReply.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "10 minutes ago",
+      "path": "src/components/Composer/stories/QuickReply.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/QuickReply.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Thanks for the fix! Could you resend last month's usage report?",
+      "path": "src/components/Composer/stories/QuickReply.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/QuickReply.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Replying to",
+      "path": "src/components/Composer/stories/QuickReply.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/QuickReply.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Grace Hopper",
+      "path": "src/components/Composer/stories/QuickReply.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/QuickReply.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Reply sent to grace@example.com ✓",
+      "path": "src/components/Composer/stories/QuickReply.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/QuickReply.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Cannot access my invoices after the update",
+      "path": "src/components/Composer/stories/TicketReply.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/TicketReply.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "TICKET-1042 · grace@example.com",
+      "path": "src/components/Composer/stories/TicketReply.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Composer/stories/TicketReply.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "(required)",
+      "path": "src/components/ConditionBuilder/ConditionBuilder.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ConditionBuilder/ConditionBuilder.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 18,
+          "source": "(required)",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Doctype",
+      "path": "src/components/ConditionBuilder/stories/Doctype.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ConditionBuilder/stories/Doctype.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Saved to the backend as:",
+      "path": "src/components/ConditionBuilder/stories/FrappeFormat.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ConditionBuilder/stories/FrappeFormat.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Read back from a legacy record:",
+      "path": "src/components/ConditionBuilder/stories/FrappeFormat.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ConditionBuilder/stories/FrappeFormat.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Adding blocked by the host",
+      "path": "src/components/ConditionBuilder/stories/States.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ConditionBuilder/stories/States.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "No image",
+      "path": "src/components/Fields/ImageField.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Fields/ImageField.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 28,
+          "source": "No image",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No attachments yet.",
+      "path": "src/components/FileUpload/AttachmentsList.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/AttachmentsList.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 47,
+          "source": "No attachments yet.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Web link",
+      "path": "src/components/FileUpload/FileUploadDialog.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/FileUploadDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 57,
+          "source": "Web link",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Add more",
+      "path": "src/components/FileUpload/FileUploadDialog.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/FileUploadDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 183,
+          "source": "Add",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 207,
+          "source": "Add more",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "or drop files to upload",
+      "path": "src/components/FileUpload/FileUploadDialog.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/FileUploadDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 235,
+          "source": "or drop files to upload",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Drop files here",
+      "path": "src/components/FileUpload/FileUploadDialog.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/FileUploadDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 261,
+          "source": "Drop files here",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Failed",
+      "path": "src/components/FileUpload/UploadTray.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/UploadTray.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 66,
+          "source": "Failed",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Upload primitive — standalone",
+      "path": "src/components/FileUpload/stories/FileUpload.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/stories/FileUpload.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Multi-file dialog (inline progress)",
+      "path": "src/components/FileUpload/stories/FileUpload.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/stories/FileUpload.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Multi-file dialog (tray — survives close)",
+      "path": "src/components/FileUpload/stories/FileUpload.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/stories/FileUpload.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Image dialog with crop + compress",
+      "path": "src/components/FileUpload/stories/FileUpload.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/stories/FileUpload.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Attachments list (array of results)",
+      "path": "src/components/FileUpload/stories/FileUpload.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/stories/FileUpload.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "committed =",
+      "path": "src/components/FileUpload/stories/FileUpload.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/stories/FileUpload.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "side",
+      "path": "src/components/FileUpload/stories/FileUpload.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FileUpload/stories/FileUpload.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Empty - Choose a field to filter by",
+      "path": "src/components/Filter/Filter.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Filter/Filter.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 113,
+          "source": "Empty - Choose a field to filter by",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Doctype",
+      "path": "src/components/Filter/stories/Filter.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Filter/stories/Filter.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "FilterCondition[] =",
+      "path": "src/components/Filter/stories/Filter.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Filter/stories/Filter.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "filters =",
+      "path": "src/components/Filter/stories/Filter.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Filter/stories/Filter.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "doc =",
+      "path": "src/components/FormLayout/stories/StaticSchema.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/FormLayout/stories/StaticSchema.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "No rows",
+      "path": "src/components/Grid/Grid.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Grid/Grid.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 195,
+          "source": "No rows",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No columns to display",
+      "path": "src/components/Grid/Grid.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Grid/Grid.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 201,
+          "source": "No columns to display",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Doctype",
+      "path": "src/components/GroupBy/stories/GroupBy.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/GroupBy/stories/GroupBy.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Hide label",
+      "path": "src/components/GroupBy/stories/GroupBy.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/GroupBy/stories/GroupBy.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "GroupBySettings =",
+      "path": "src/components/GroupBy/stories/GroupBy.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/GroupBy/stories/GroupBy.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "get_list args =",
+      "path": "src/components/GroupBy/stories/GroupBy.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/GroupBy/stories/GroupBy.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Send invites",
+      "path": "src/components/InviteUser/InviteUser.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/InviteUser/InviteUser.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 83,
+          "source": "Send invites",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "InviteUser",
+      "path": "src/components/InviteUser/stories/InviteUser.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/InviteUser/stories/InviteUser.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "emailProps / rolesProps",
+      "path": "src/components/InviteUser/stories/InviteUser.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/InviteUser/stories/InviteUser.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Create",
+      "path": "src/components/Link/Link.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Link/Link.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 66,
+          "source": "Create",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 121,
+          "source": "Create New",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Loading meta…",
+      "path": "src/components/ListView/ListViewShell.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ListView/ListViewShell.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 33,
+          "source": "Loading meta…",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "fields in meta",
+      "path": "src/components/ListView/ListViewShell.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ListView/ListViewShell.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 47,
+          "source": "fields in meta",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "order_by = \"\"",
+      "path": "src/components/ListView/stories/ListViewToolbar.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ListView/stories/ListViewToolbar.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "filters =",
+      "path": "src/components/ListView/stories/ListViewToolbar.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ListView/stories/ListViewToolbar.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "columns =",
+      "path": "src/components/ListView/stories/ListViewToolbar.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ListView/stories/ListViewToolbar.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Doctype",
+      "path": "src/components/ListView/stories/Shell.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ListView/stories/Shell.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Synthetic column",
+      "path": "src/components/ListView/stories/Shell.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/ListView/stories/Shell.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Unread",
+      "path": "src/components/Notifications/NotificationItem.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Notifications/NotificationItem.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 51,
+          "source": "Unread",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Couldn't load notifications",
+      "path": "src/components/Notifications/NotificationPanel.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Notifications/NotificationPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 173,
+          "source": "Couldn't load notifications",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No notifications to show",
+      "path": "src/components/Notifications/NotificationPanel.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Notifications/NotificationPanel.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 181,
+          "source": "No notifications to show",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "NotificationPanel",
+      "path": "src/components/Notifications/stories/Notifications.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Notifications/stories/Notifications.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "All articles",
+      "path": "src/components/Onboarding/HelpCenter.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Onboarding/HelpCenter.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 16,
+          "source": "All articles",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Your browser does not support the video tag.",
+      "path": "src/components/Onboarding/IntermediateStepModal.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Onboarding/IntermediateStepModal.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 16,
+          "source": "Your browser does not support the video tag.",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Pasting a full international number (\"+442079460958\") into the input flips the country too.",
+      "path": "src/components/Phone/stories/CountryDetect.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Phone/stories/CountryDetect.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "v-model:",
+      "path": "src/components/Phone/stories/Default.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/Phone/stories/Default.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Doctype",
+      "path": "src/components/QuickFilter/stories/QuickFilter.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/QuickFilter/stories/QuickFilter.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Customize",
+      "path": "src/components/QuickFilter/stories/QuickFilter.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/QuickFilter/stories/QuickFilter.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "FilterCondition[] =",
+      "path": "src/components/QuickFilter/stories/QuickFilter.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/QuickFilter/stories/QuickFilter.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "filters =",
+      "path": "src/components/QuickFilter/stories/QuickFilter.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/QuickFilter/stories/QuickFilter.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Loved the demo?",
+      "path": "src/components/SignupBanner/SignupBanner.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/SignupBanner/SignupBanner.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 9,
+          "source": "Loved the demo?",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Empty - Choose a field to sort by",
+      "path": "src/components/SortBy/SortBy.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/SortBy/SortBy.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 115,
+          "source": "Empty - Choose a field to sort by",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Doctype",
+      "path": "src/components/SortBy/stories/SortBy.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/SortBy/stories/SortBy.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Hide label",
+      "path": "src/components/SortBy/stories/SortBy.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/SortBy/stories/SortBy.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Sort[] =",
+      "path": "src/components/SortBy/stories/SortBy.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/SortBy/stories/SortBy.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "order_by = \"\"",
+      "path": "src/components/SortBy/stories/SortBy.story.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/SortBy/stories/SortBy.story.vue",
+      "decision": "development_fixture",
+      "evidence": "Only imported by story/test entry points; no import of stories/ or cypress/ in the 1720 production sources. Literal sample/code is not platform UI."
+    },
+    {
+      "source": "Create \"\"",
+      "path": "src/components/TableMultiSelect/TableMultiSelect.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/TableMultiSelect/TableMultiSelect.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 70,
+          "source": "Create \"",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Clear All",
+      "path": "src/components/TableMultiSelect/TableMultiSelect.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/components/TableMultiSelect/TableMultiSelect.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 79,
+          "source": "Clear All",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "No records",
+      "path": "src/experimental/List/List.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/experimental/List/List.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 113,
+          "source": "No records",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "selected",
+      "path": "src/experimental/List/ListBulkBar.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/experimental/List/ListBulkBar.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 14,
+          "source": "selected",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "of",
+      "path": "src/experimental/List/ListFooter.vue",
+      "app": "frappe_ui",
+      "source_path": "ui/src/experimental/List/ListFooter.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 21,
+          "source": "of",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Flow",
+      "path": "harness/ui/app/index.html",
+      "app": "frappe_flow",
+      "source_path": "flow/harness/ui/app/index.html",
+      "decision": "patched_entry_point",
+      "evidence": "Pinned HTML overlay changes title, language and favicon."
+    },
+    {
+      "source": "ollama/llama3.2",
+      "path": "harness/ui/core/src/components/ProvidersDialog.vue",
+      "app": "frappe_flow",
+      "source_path": "flow/harness/ui/core/src/components/ProvidersDialog.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 104,
+          "source": "ollama/llama3.2\nollama/qwen2.5",
+          "decision": "technical",
+          "reason": "Individually reviewed product/protocol/type, CSS token, code-format example, person example or valid Portuguese (Banana); see exact path/line."
+        },
+        {
+          "line": 107,
+          "source": "ollama/llama3.2",
+          "decision": "technical",
+          "reason": "Executable example, API identifier or keyboard key inside code/pre/kbd; retain original code."
+        }
+      ]
+    },
+    {
+      "source": "Flow",
+      "path": "harness/ui/core/src/components/SessionSidebar.vue",
+      "app": "frappe_flow",
+      "source_path": "flow/harness/ui/core/src/components/SessionSidebar.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 34,
+          "source": "Flow",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 43,
+          "source": "Flow",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "Flow",
+      "path": "harness/ui/core/src/components/SessionSidebar.vue",
+      "app": "frappe_flow",
+      "source_path": "flow/harness/ui/core/src/components/SessionSidebar.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 34,
+          "source": "Flow",
+          "decision": "translated",
+          "reason": null
+        },
+        {
+          "line": 43,
+          "source": "Flow",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "px",
+      "path": "harness/ui/core/src/components/SettingsAppearance.vue",
+      "app": "frappe_flow",
+      "source_path": "flow/harness/ui/core/src/components/SettingsAppearance.vue",
+      "decision": "technical_example",
+      "evidence": [
+        {
+          "line": 40,
+          "source": "px",
+          "decision": "technical",
+          "reason": "Individually reviewed product/protocol/type, CSS token, code-format example, person example or valid Portuguese (Banana); see exact path/line."
+        }
+      ]
+    },
+    {
+      "source": "Flow",
+      "path": "harness/ui/core/src/components/SidebarPeek.vue",
+      "app": "frappe_flow",
+      "source_path": "flow/harness/ui/core/src/components/SidebarPeek.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 19,
+          "source": "Flow",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "source": "JSON",
+      "path": "harness/ui/core/src/components/TranscriptDialog.vue",
+      "app": "frappe_flow",
+      "source_path": "flow/harness/ui/core/src/components/TranscriptDialog.vue",
+      "decision": "patched",
+      "evidence": [
+        {
+          "line": 151,
+          "source": "JSON",
+          "decision": "translated",
+          "reason": null
+        }
+      ]
+    }
+  ]
+}

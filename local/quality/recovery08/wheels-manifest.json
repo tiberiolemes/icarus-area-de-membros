@@ -1,0 +1,47 @@
+{
+  "base_image_id": "sha256:81045a6d8e1db3c49fd7aca81c5d145bdbd9715b4f2454ef4612b66fbaa3ed2c",
+  "reference_r21_image_id": "sha256:7cd0855226f08aa8b75f424ae6e41823cfe67648cb460b9ffb4faea5b0e73d69",
+  "wheels": {
+    "argon2_cffi-25.1.0-py3-none-any.whl": {
+      "sha256": "fdc8b074db390fccb6eb4a3604ae7231f219aa669a2652e0f20e16ba513d5741",
+      "bytes": 14657,
+      "requires_dist": [
+        "argon2-cffi-bindings"
+      ],
+      "R21_package_file_hashes_match": 12,
+      "files_sha256": {
+        "argon2/__init__.py": "3784b72ef475cb75acb72b0e6f00d0b05e32b7c369128b7cb86026cbf319e5fc",
+        "argon2/__main__.py": "6c28b5ac9921301a620d97b75be31f0b60c51f9c18247e110e6c922dc2ff2708",
+        "argon2/_legacy.py": "7887e4ed25ae210406673dc563cd185b85d04009eb8f31607b2445828d8ab42a",
+        "argon2/_password_hasher.py": "a498126a9e02d9ecbbe0850389f6db47f11eabe19e5ef9779d165cd50cefde32",
+        "argon2/_utils.py": "637264ae86118a84875d0e44dd26afec2725a806640972a8d5c6ec262c2a8199",
+        "argon2/exceptions.py": "b00ea4f139e5a9c7b9b8634d6ce406d8f82057dd4415dd99136748881e07ea75",
+        "argon2/low_level.py": "40c4b13f05103cf6a718aa89a8b131521e20b6ac34bb8f503c4aa3cf59cd9583",
+        "argon2/profiles.py": "9cadbeee8605b86b43c5ebfd834e746c566c876d78ab09445f7a9e8f039010c6",
+        "argon2/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "argon2_cffi-25.1.0.dist-info/METADATA": "e90851075b68261faccf407b29430f45e6a5b1a0759a0d50b8d93101b0de2179",
+        "argon2_cffi-25.1.0.dist-info/WHEEL": "aad0b0a12256807936d52d4a6f88a1773236ae527564a688bab4e3fe780e8724",
+        "argon2_cffi-25.1.0.dist-info/licenses/LICENSE": "b6944d386e87ccf49d9632da083685a4b7624733e686a7fe283dd2d428341d77"
+      }
+    },
+    "argon2_cffi_bindings-25.1.0-cp39-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl": {
+      "sha256": "d3e924cfc503018a714f94a49a149fdc0b644eaead5d1f089330399134fa028a",
+      "bytes": 87126,
+      "requires_dist": [
+        "cffi>=1.0.1; python_version < \"3.14\"",
+        "cffi>=2.0.0b1; python_version >= \"3.14\""
+      ],
+      "R21_package_file_hashes_match": 7,
+      "files_sha256": {
+        "_argon2_cffi_bindings/__init__.py": "6fa0daebf442b0c5ca6c0f50cb32a6786aa6f5c6228e6b64009a8d395d95e746",
+        "_argon2_cffi_bindings/_ffi.abi3.so": "a0875c874d8e027c9373df6bc254072a549c59ac78a744d950ae034e53868196",
+        "_argon2_cffi_bindings/_ffi_build.py": "aa16541de11e8dfb13ab10e02709a6b6ba161b765c7d717fe482ad8073829cee",
+        "argon2_cffi_bindings-25.1.0.dist-info/METADATA": "2e8ecd88b836481ff2a0fcd3206ce14969689f1d382c5277ddd6d7240f129f0f",
+        "argon2_cffi_bindings-25.1.0.dist-info/WHEEL": "8756980ab81b7ab7fccca45d4e9f40d150a706043e5169a4e1e5abd92a757b53",
+        "argon2_cffi_bindings-25.1.0.dist-info/top_level.txt": "5b2449cf1bc8bf9f1ccaf4f27b602c573e742f0d210f151806e087d6b51bfed8",
+        "argon2_cffi_bindings-25.1.0.dist-info/licenses/LICENSE": "9c158d4f433627f48ac24b6b4d37970afe4172514673c5318014d7cca157c6df"
+      }
+    }
+  },
+  "dependency_resolution": false
+}

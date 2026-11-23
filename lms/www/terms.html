@@ -1,0 +1,14 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<article class="container my-5" style="max-width:72ch; overflow-wrap:anywhere">
+  <h1>{{ _("Termos de uso") }}</h1>
+  {% if policy_ready %}
+    <div>{{ policy.terms }}</div>
+    <p>{{ _("Revisão da informação") }}: {{ policy_revision | e }}</p>
+    <p>{{ _("Aceitar estes termos não equivale a consentir com todo tratamento de dados. Consulte as finalidades e bases informadas na página de privacidade.") }}</p>
+  {% else %}
+    <p role="status">{{ _("Os termos desta instalação estão em preparação. O cadastro público permanece indisponível até a configuração e aprovação pelo responsável.") }}</p>
+  {% endif %}
+  <p><a href="/privacy">{{ _("Privacidade") }}</a> · <a href="/your-data">{{ _("Seus dados") }}</a> · <a href="/help">{{ _("Ajuda") }}</a></p>
+</article>
+{% endblock %}

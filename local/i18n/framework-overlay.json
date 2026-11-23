@@ -1,0 +1,638 @@
+{
+  "framework_version": "16.60.2",
+  "lms_version": "16.4.0",
+  "patches": [
+    {
+      "path": "app.py",
+      "before_sha256": "32619d8c38c580c013d2cd6c6fe36a1b72983a4b4e0ba8009424a6526f3779e0",
+      "after_sha256": "ad55f2bc14c4ff1883d34262fa6b3019dd2bf28451d208a3a134f726b85b7374",
+      "replacements": [
+        [
+          "\tfinally:\n\t\tfrappe.local.request = request\n\t\trequest.after_response = CallbackManager()\n\n",
+          "\tfinally:\n\t\tfrappe.local.request = request\n\t\tif site == \"tiberio.localhost\":\n\t\t\tfrappe.local.lang = \"pt-BR\"\n\t\trequest.after_response = CallbackManager()\n\n"
+        ],
+        [
+          "\t\tresponse = e.get_response(request.environ) if isinstance(e, HTTPException) else handle_exception(e)\n",
+          "\t\tresponse = e.get_response(request.environ) if isinstance(e, HTTPException) else handle_exception(e)\n\t\t# Local file denial uses the same native translated website error renderer.\n\t\t# Permission checks above and the 403 status remain unchanged.\n\t\tif (isinstance(e, HTTPException) and e.code == 403\n\t\t\tand getattr(frappe.local, \"site\", None) == \"tiberio.localhost\"\n\t\t\tand request.path.startswith(\"/private/files/\")\n\t\t\tand \"text/html\" in (request.headers.get(\"Accept\") or \"\")):\n\t\t\tresponse = ErrorPage(http_status_code=403, title=_(\"Not Permitted\"),\n\t\t\t\tmessage=_(\"You don't have permission to access this file\")).render()\n"
+        ]
+      ]
+    },
+    {
+      "path": "auth.py",
+      "before_sha256": "0c348553a7c0a4cf89b14e774acb94565e02d751958b27b8b31f2d16cc0f5d1d",
+      "after_sha256": "b3b67d15f58de6e3a22b33cdee862e3176d04b564a34c3bbe18bf4392821d809",
+      "replacements": [
+        [
+          "\tdef fail(self, message, user=None):\n\t\tif not user:\n\t\t\tuser = _(\"Unknown User\")\n\t\tfrappe.local.response[\"message\"] = message\n\t\tadd_authentication_log(message, user, status=\"Failed\")\n\t\tfrappe.db.commit()\n\t\traise frappe.AuthenticationError\n\n",
+          "\tdef fail(self, message, user=None):\n\t\tif not user:\n\t\t\tuser = _(\"Unknown User\")\n\t\tfrappe.local.response[\"message\"] = _(message)\n\t\tadd_authentication_log(message, user, status=\"Failed\")\n\t\tfrappe.db.commit()\n\t\traise frappe.AuthenticationError\n\n"
+        ]
+      ]
+    },
+    {
+      "path": "core/doctype/audit_trail/audit_trail.html",
+      "before_sha256": "9ec6f94b05d306c48dae5e1380c46b6eceee993eef5b59cd5ece3f4df2a5fecb",
+      "after_sha256": "9413d9aaf64fd5e8e554978d310ece28a01a20f076da40129679db80c57062a2",
+      "replacements": [
+        [
+          "    <div class=\"p-2\">\n        {% if documents.length > 1 %}\n            <p>Documents to Compare : <b>{{ documents.length }}</b></p>\n        {% else %}\n            <p>Documents to Compare : <b>{{ documents.length - 1 }}</b></p>\n        {% endif %}\n    </div>\n",
+          "    <div class=\"p-2\">\n        {% if documents.length > 1 %}\n            <p>{{ __(\"Documents to Compare :\") }} <b>{{ documents.length }}</b></p>\n        {% else %}\n            <p>{{ __(\"Documents to Compare :\") }} <b>{{ documents.length - 1 }}</b></p>\n        {% endif %}\n    </div>\n"
+        ],
+        [
+          "    {% if field_keys.length > 0 %}\n    <div class=\"p-2\">\n        <h5><b>Fields Changed</b></h5>\n        <table class=\"table table-bordered\">\n            <thead>\n                <th> Fields </th>\n                {% for doc in documents %}\n                    <th>{{ frappe.utils.escape_html(doc) }}</th>\n",
+          "    {% if field_keys.length > 0 %}\n    <div class=\"p-2\">\n        <h5><b>{{ __(\"Fields Changed\") }}</b></h5>\n        <table class=\"table table-bordered\">\n            <thead>\n                <th> {{ __(\"Fields\") }} </th>\n                {% for doc in documents %}\n                    <th>{{ frappe.utils.escape_html(doc) }}</th>\n"
+        ],
+        [
+          "    {% if tables.length > 0 %}\n        <div class=\"p-2\">\n            <h5><b>Rows Updated</b></h5>\n            <table class=\"table table-bordered\">\n                <thead>\n                    <th> Fields </th>\n                </thead>\n                <tbody>\n",
+          "    {% if tables.length > 0 %}\n        <div class=\"p-2\">\n            <h5><b>{{ __(\"Rows Updated\") }}</b></h5>\n            <table class=\"table table-bordered\">\n                <thead>\n                    <th> {{ __(\"Fields\") }} </th>\n                </thead>\n                <tbody>\n"
+        ],
+        [
+          "                        {% var rows = Object.keys(row_changed[table]).sort(); %}\n                        {% for idx in rows %}\n                            <tr><td><b>idx : {{ frappe.utils.escape_html(idx) }}</b></td></tr>\n                            {% var fields = Object.keys(row_changed[table][idx]).sort(); %}\n                            {% for field in fields %}\n",
+          "                        {% var rows = Object.keys(row_changed[table]).sort(); %}\n                        {% for idx in rows %}\n                            <tr><td><b>{{ __(\"idx :\") }} {{ frappe.utils.escape_html(idx) }}</b></td></tr>\n                            {% var fields = Object.keys(row_changed[table][idx]).sort(); %}\n                            {% for field in fields %}\n"
+        ]
+      ]
+    },
+    {
+      "path": "core/doctype/server_script/server_script.js",
+      "before_sha256": "4ed704d1ecfe32e7ba3be5c4ef8f68fc5bd856cbcb75b29440c1f5dff9c9ef51",
+      "after_sha256": "22f0ad50f1a676ebd2b011f1896508a30f67e4234a603e70c856bf5e862a454f",
+      "replacements": [
+        [
+          "\t\tconst help_field = frm.get_field(\"help_html\");\n\t\thelp_field.html(`\n<h4>DocType Event</h4>\n<p>Add logic for standard doctype events like Before Insert, After Submit, etc.</p>\n<pre><code class=\"language-python\">\n# set property\n",
+          "\t\tconst help_field = frm.get_field(\"help_html\");\n\t\thelp_field.html(`\n<h4>${__(\"DocType Event\")}</h4>\n<p>${__(\"Add logic for standard doctype events like Before Insert, After Submit, etc.\")}</p>\n<pre><code class=\"language-python\">\n# set property\n"
+        ],
+        [
+          "</code></pre>\n\n<h5>Payment processing</h5>\n<p>Payment processing events have a special state. See the <a href=\"https://github.com/frappe/payments/blob/develop/payments/controllers/payment_controller.py\">PaymentController in Frappe Payments</a> for details.</p>\n<pre><code class=\"language-python\">\n# retreive payment session state\n",
+          "</code></pre>\n\n<h5>${__(\"Payment processing\")}</h5>\n<p>${__(\"Payment processing events have a special state. See the <a href=\\\"https://github.com/frappe/payments/blob/develop/payments/controllers/payment_controller.py\\\">PaymentController in Frappe Payments</a> for details.\")}</p>\n<pre><code class=\"language-python\">\n# retreive payment session state\n"
+        ],
+        [
+          "</code></pre>\n\n<p>The <i>On Payment Failed</i> (<code>on_payment_failed</code>) event only transports the error message which the controller implementation had extracted from the transaction.</p>\n\n<pre><code class=\"language-python\">\n",
+          "</code></pre>\n\n<p>${__(\"The <i>On Payment Failed</i> (<code>on_payment_failed</code>) event only transports the error message which the controller implementation had extracted from the transaction.\")}</p>\n\n<pre><code class=\"language-python\">\n"
+        ],
+        [
+          "<hr>\n\n<h4>API Call</h4>\n<p>Respond to <code>/api/method/&lt;method-name&gt;</code> calls, just like whitelisted methods</p>\n<pre><code class=\"language-python\">\n# respond to API\n",
+          "<hr>\n\n<h4>${__(\"API Call\")}</h4>\n<p>${__(\"Respond to <code>/api/method/&lt;method-name&gt;</code> calls, just like whitelisted methods\")}</p>\n<pre><code class=\"language-python\">\n# respond to API\n"
+        ],
+        [
+          "<hr>\n\n<h4>Permission Query</h4>\n<p>Add conditions to the where clause of list queries.</p>\n<p>Generate dynamic conditions and set it in the conditions variable:</p>\n\n<pre><code class=\"language-python\">\n",
+          "<hr>\n\n<h4>${__(\"Permission Query\")}</h4>\n<p>${__(\"Add conditions to the where clause of list queries.\")}</p>\n<p>${__(\"Generate dynamic conditions and set it in the conditions variable:\")}</p>\n\n<pre><code class=\"language-python\">\n"
+        ],
+        [
+          "</code></pre>\n\n<p>The resulting select query is:</p>\n\n<pre><code class=\"language-sql\">\n",
+          "</code></pre>\n\n<p>${__(\"The resulting select query is:\")}</p>\n\n<pre><code class=\"language-sql\">\n"
+        ],
+        [
+          "<hr>\n\n<h4>Workflow Task</h4>\n<p>Execute when a particular <a href=\"/desk/workflow-action-master\">Workflow Action Master</a> is executed.</p>\n<p>Gets the document which the action is being applied on in the <code>doc</code> variable.</p>\n<pre><code class=\"language-python\">\n# create a customer with the same name as the given document\n",
+          "<hr>\n\n<h4>${__(\"Workflow Task\")}</h4>\n<p>${__(\"Execute when a particular <a href=\\\"/desk/workflow-action-master\\\">Workflow Action Master</a> is executed.\")}</p>\n<p>${__(\"Gets the document which the action is being applied on in the <code>doc</code> variable.\")}</p>\n<pre><code class=\"language-python\">\n# create a customer with the same name as the given document\n"
+        ]
+      ]
+    },
+    {
+      "path": "core/page/component_explorer/component_explorer.js",
+      "before_sha256": "fc8d795c5dc56530a3523be15dcd400230f5dc8a26b017588c8565c265cc9199",
+      "after_sha256": "8d27e037f4f350d3dfb99bbefcc32b1857792fa5c197d84796aec005db045f9d",
+      "replacements": [
+        [
+          "\t\t\t\t\t\t\tplaceholder: __(\"Long values\"),\n\t\t\t\t\t\t\tfilters: [\n\t\t\t\t\t\t\t\t\"Company: Frappe Technologies Private Limited (Mumbai Head Office and Regional Branches)\",\n\t\t\t\t\t\t\t\t\"Cost Center: Main - Frappe Technologies Private Limited - Mumbai - FT\",\n\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\toptions: [\"Acme Industries\", \"Pacific Traders\"],\n",
+          "\t\t\t\t\t\t\tplaceholder: __(\"Long values\"),\n\t\t\t\t\t\t\tfilters: [\n\t\t\t\t\t\t\t\t\"Empresa: Empresa de exemplo (matriz e filiais)\",\n\t\t\t\t\t\t\t\t\"Centro de custo: Principal — Empresa de exemplo\",\n\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\toptions: [\"Acme Industries\", \"Pacific Traders\"],\n"
+        ],
+        [
+          "\t\t\t\t\t\t\tplaceholder: __(\"Select company\"),\n\t\t\t\t\t\t\thide_search: true,\n\t\t\t\t\t\t\tvalue: \"Frappe Technologies\",\n\t\t\t\t\t\t\toptions: [\"Frappe Technologies\", \"Frappe Cloud LLC\", \"Frappe UK Ltd\"],\n\t\t\t\t\t\t},\n\t\t\t\t\t],\n",
+          "\t\t\t\t\t\t\tplaceholder: __(\"Select company\"),\n\t\t\t\t\t\t\thide_search: true,\n\t\t\t\t\t\t\tvalue: \"Empresa de exemplo\",\n\t\t\t\t\t\t\toptions: [\"Empresa de exemplo\", \"Empresa de exemplo 2\", \"Empresa de exemplo 3\"],\n\t\t\t\t\t\t},\n\t\t\t\t\t],\n"
+        ]
+      ]
+    },
+    {
+      "path": "desk/page/desktop/desktop.html",
+      "before_sha256": "ea402fa8cbcc24d87b4f60733b965942d106ecdd5200b46774f5dc0f5dcaafeb",
+      "after_sha256": "befb0b3a31feac7ba15c492c41a3029ce8944153c1556761ddbb887b729a1add",
+      "replacements": [
+        [
+          "title=\"Search\"",
+          "title=\"{{ _(\"Search\") |e }}\""
+        ]
+      ]
+    },
+    {
+      "path": "desk/page/desktop/desktop.js",
+      "before_sha256": "3b842bfae0c5c1a777392f92ea78c436bf2c1308c5bd24e6a6a05b332c87eaa1",
+      "after_sha256": "d5980393e5e66cff1c3af09c707329e1b58d3b979d0d7c30b9f53316751f451d",
+      "replacements": [
+        [
+          "\t\t\t\torder: 30,\n\t\t\t},\n\t\t\t{\n\t\t\t\ticon: \"life-buoy\",\n\t\t\t\tlabel: \"Frappe Support\",\n\t\t\t\tonclick: function () {\n\t\t\t\t\twindow.open(\"https://support.frappe.io/help\", \"_blank\");\n\t\t\t\t},\n\t\t\t\torder: 40,\n\t\t\t},\n\t\t];\n\t\t// sort() is stable, so items sharing an `order` keep the order they were added in.\n",
+          "\t\t\t\torder: 30,\n\t\t\t},\n\t\t];\n\t\t// sort() is stable, so items sharing an `order` keep the order they were added in.\n"
+        ],
+        [
+          "title: \"Desktop\",",
+          "title: __(\"Desktop\"),"
+        ]
+      ]
+    },
+    {
+      "path": "desk/page/desktop/desktop_icons.html",
+      "before_sha256": "4fb13a85c94360fe8985f2acc7ae850c6d88411f8f036c4f36a18ed015c3d96c",
+      "after_sha256": "69c8d6afb13fa35bc759ed952a368de4579ca676a93236cdda633accd5d3461e",
+      "replacements": [
+        [
+          "title=\"Search\"",
+          "title=\"{{ _(\"Search\") |e }}\""
+        ]
+      ]
+    },
+    {
+      "path": "email/doctype/email_account/email_account.py",
+      "before_sha256": "e80876ebd9b6ddeba9925ac6c27f4d9a894c1552d85528f8ab8f8d6cbec2accd",
+      "after_sha256": "4b03e5d023bf47b6e8ffa7bca346695de2fe49cee5c42fd6ada2995218eeffac",
+      "replacements": [
+        [
+          "\t\t\t\t\"default\": 0,\n\t\t\t},\n\t\t\t\"name\": {\"conf_names\": (\"email_sender_name\",), \"default\": \"Frappe\"},\n\t\t\t\"auth_method\": {\"conf_names\": (\"auth_method\"), \"default\": \"Basic\"},\n\t\t\t\"from_site_config\": {\"default\": True},\n",
+          "\t\t\t\t\"default\": 0,\n\t\t\t},\n\t\t\t\"name\": {\"conf_names\": (\"email_sender_name\",), \"default\": \"Tibério Lemes\"},\n\t\t\t\"auth_method\": {\"conf_names\": (\"auth_method\"), \"default\": \"Basic\"},\n\t\t\t\"from_site_config\": {\"default\": True},\n"
+        ]
+      ]
+    },
+    {
+      "path": "email/doctype/email_account/email_account_list.js",
+      "before_sha256": "406db964bc44e99a1dcd24d77c39818fb7620e84eb598108a79b28daa35885e8",
+      "after_sha256": "431577123e074ec81665264a21ef1e2de9382f60aedf06bb2be199a3c423304f",
+      "replacements": [
+        [
+          "\t\tGMail: [\"Gmail\", \"gmail.png\"],\n\t\t\"Outlook.com\": [\"Outlook\", \"outlook.png\"],\n\t\t\"Frappe Mail\": [\"Frappe Mail\", \"frappe-mail.svg\"],\n\t\t\"Yahoo Mail\": [\"Yahoo\", \"yahoo.png\"],\n\t\t\"Yandex.Mail\": [\"Yandex\", \"yandex.png\"],\n",
+          "\t\tGMail: [\"Gmail\", \"gmail.png\"],\n\t\t\"Outlook.com\": [\"Outlook\", \"outlook.png\"],\n\t\t\"Frappe Mail\": [__(\"Platform mail\"), \"/assets/lms/images/assinatura-tiberio.svg\"],\n\t\t\"Yahoo Mail\": [\"Yahoo\", \"yahoo.png\"],\n\t\t\"Yandex.Mail\": [\"Yandex\", \"yandex.png\"],\n"
+        ],
+        [
+          "\t\t\t\t.find(\".es-button__label\")\n\t\t\t\t.before(\n\t\t\t\t\t$(\"<img alt=''>\").attr(\"src\", `/assets/frappe/images/email-providers/${logo}`)\n\t\t\t\t);\n\t\t}\n",
+          "\t\t\t\t.find(\".es-button__label\")\n\t\t\t\t.before(\n\t\t\t\t\t$(\"<img alt=''>\").attr(\"src\", logo.startsWith(\"/\") ? logo : `/assets/frappe/images/email-providers/${logo}`)\n\t\t\t\t);\n\t\t}\n"
+        ]
+      ]
+    },
+    {
+      "path": "email/doctype/notification/templates/error_log/error_log.html",
+      "before_sha256": "71a20d17c0f99df877d65497ca8eb9935b79ba8b821c0ef5bbfcf82727a0083d",
+      "after_sha256": "bd940d79a8996e968550527f76ef6e308f1f367439d0c043c01d25f9e8237dea",
+      "replacements": [
+        [
+          "        <td>\n            <h1 class=\"email-header-title\">\n                Error Log\n            </h1>\n        </td>\n",
+          "        <td>\n            <h1 class=\"email-header-title\">\n                {{ _(\"Error Log\") }}\n            </h1>\n        </td>\n"
+        ],
+        [
+          "<table class=\"table table-bordered\" width=\"100%\">\n    <tr>\n        <td class=\"text-bold\" style=\"background: #f8f8f8; width: 120px;\">Site</td>\n        <td><a href=\"{{ frappe.utils.get_url() }}\">{{ frappe.utils.get_url() }}</a></td>\n    </tr>\n    <tr>\n        <td class=\"text-bold\" style=\"background: #f8f8f8;\">Error ID</td>\n        <td>{{ frappe.utils.get_link_to_form(\"Error Log\", doc.name, doc.name) }}</td>\n    </tr>\n    <tr>\n        <td class=\"text-bold\" style=\"background: #f8f8f8;\">Title</td>\n        <td>{{ doc.method or \"N/A\" }}</td>\n    </tr>\n    <tr>\n        <td class=\"text-bold\" style=\"background: #f8f8f8;\">Logged At</td>\n        <td>{{ frappe.utils.format_datetime(doc.creation) }}</td>\n    </tr>\n    {% if doc.reference_doctype and doc.reference_name %}\n    <tr>\n        <td class=\"text-bold\" style=\"background: #f8f8f8;\">Reference</td>\n        <td>{{ frappe.utils.get_link_to_form(doc.reference_doctype, doc.reference_name) }}</td>\n    </tr>\n",
+          "<table class=\"table table-bordered\" width=\"100%\">\n    <tr>\n        <td class=\"text-bold\" style=\"background: #f8f8f8; width: 120px;\">{{ _(\"Site\") }}</td>\n        <td><a href=\"{{ frappe.utils.get_url() }}\">{{ frappe.utils.get_url() }}</a></td>\n    </tr>\n    <tr>\n        <td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Error ID\") }}</td>\n        <td>{{ frappe.utils.get_link_to_form(\"Error Log\", doc.name, doc.name) }}</td>\n    </tr>\n    <tr>\n        <td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Title\") }}</td>\n        <td>{{ doc.method or \"N/A\" }}</td>\n    </tr>\n    <tr>\n        <td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Logged At\") }}</td>\n        <td>{{ frappe.utils.format_datetime(doc.creation) }}</td>\n    </tr>\n    {% if doc.reference_doctype and doc.reference_name %}\n    <tr>\n        <td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Reference\") }}</td>\n        <td>{{ frappe.utils.get_link_to_form(doc.reference_doctype, doc.reference_name) }}</td>\n    </tr>\n"
+        ],
+        [
+          "<div style=\"margin-top: 20px;\">\n    <div class=\"text-medium text-bold\">\n        Error Details\n        {% if needs_truncation %}\n        <span class=\"text-muted\" style=\"font-weight: normal;\"> ({{ max_lines }} of {{ total_lines }} lines)</span>\n        {% endif %}\n    </div>\n",
+          "<div style=\"margin-top: 20px;\">\n    <div class=\"text-medium text-bold\">\n        {{ _(\"Error Details\") }}\n        {% if needs_truncation %}\n        <span class=\"text-muted\" style=\"font-weight: normal;\"> {{ _(\"({0} of {1} lines)\").format(max_lines, total_lines) }}</span>\n        {% endif %}\n    </div>\n"
+        ],
+        [
+          "        <pre class=\"text-small\" style=\"margin: 0; white-space: pre-wrap; word-wrap: break-word;\">{% if needs_truncation %}{{ error_lines[:first_lines] | join('\\n') }}\n\n<span class=\"text-muted\" style=\"font-style: italic;\">... {{ total_lines - max_lines }} lines omitted ...</span>\n\n{{ error_lines[-last_lines:] | join('\\n') }}{% else %}{{ error_lines | join('\\n') }}{% endif %}</pre>\n",
+          "        <pre class=\"text-small\" style=\"margin: 0; white-space: pre-wrap; word-wrap: break-word;\">{% if needs_truncation %}{{ error_lines[:first_lines] | join('\\n') }}\n\n<span class=\"text-muted\" style=\"font-style: italic;\">{{ _(\"... {0} lines omitted ...\").format(total_lines - max_lines) }}</span>\n\n{{ error_lines[-last_lines:] | join('\\n') }}{% else %}{{ error_lines | join('\\n') }}{% endif %}</pre>\n"
+        ],
+        [
+          "\n<div class=\"more-info\">\n    <a href=\"{{ frappe.utils.get_url_to_form('Error Log', doc.name) }}\" class=\"btn btn-primary\">View Error Log</a>\n</div>\n\n<p class=\"text-muted text-small\" style=\"margin-top: 20px;\">\n    This is an automated notification from {{ frappe.utils.get_host_name() }}.\n</p>",
+          "\n<div class=\"more-info\">\n    <a href=\"{{ frappe.utils.get_url_to_form('Error Log', doc.name) }}\" class=\"btn btn-primary\">{{ _(\"View Error Log\") }}</a>\n</div>\n\n<p class=\"text-muted text-small\" style=\"margin-top: 20px;\">\n    {{ _(\"This is an automated notification from {0}.\").format(frappe.utils.get_host_name()) }}\n</p>"
+        ]
+      ]
+    },
+    {
+      "path": "email/doctype/notification/templates/integration_request/integration_request.html",
+      "before_sha256": "91a23545c1755729d4d5dd00aed06fab75a0bf5ffac1361587267e1324aa7b0f",
+      "after_sha256": "0b1b809e337a51a18a2085ea85b382cdec2c5350021f16ab889d3d790d8d924e",
+      "replacements": [
+        [
+          "\t\t<td>\n\t\t\t<h1 class=\"email-header-title\">\n\t\t\t\tIntegration Request\n\t\t\t</h1>\n\t\t</td>\n",
+          "\t\t<td>\n\t\t\t<h1 class=\"email-header-title\">\n\t\t\t\t{{ _(\"Integration Request\") }}\n\t\t\t</h1>\n\t\t</td>\n"
+        ],
+        [
+          "<table class=\"table table-bordered\" style=\"width: 100%;\">\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8; width: 120px\">Site</td>\n\t\t<td><a href=\"{{ frappe.utils.get_url() }}\">{{ frappe.utils.get_url() }}</a></td>\n\t</tr>\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">Request ID</td>\n\t\t<td>{{ frappe.utils.get_link_to_form(\"Integration Request\", doc.name, doc.request_id or\n\t\t\tdoc.name) }}</td>\n\t</tr>\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">Service</td>\n\t\t<td>{{ doc.integration_request_service or \"N/A\" }}</td>\n\t</tr>\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">Status</td>\n\t\t<td>{{ doc.status }}</td>\n\t</tr>\n\t{% if doc.request_description %}\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">Description</td>\n\t\t<td>{{ doc.request_description }}</td>\n\t</tr>\n\t{% endif %}\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">Logged At</td>\n\t\t<td>{{ frappe.utils.format_datetime(doc.creation) }}</td>\n\t</tr>\n\t{% if doc.url %}\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">Endpoint URL</td>\n\t\t<td class=\"text-small\" style=\"word-break: break-all;\"><a href=\"{{ doc.url }}\">{{ doc.url}}</a></td>\n\t</tr>\n",
+          "<table class=\"table table-bordered\" style=\"width: 100%;\">\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8; width: 120px\">{{ _(\"Site\") }}</td>\n\t\t<td><a href=\"{{ frappe.utils.get_url() }}\">{{ frappe.utils.get_url() }}</a></td>\n\t</tr>\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Request ID\") }}</td>\n\t\t<td>{{ frappe.utils.get_link_to_form(\"Integration Request\", doc.name, doc.request_id or\n\t\t\tdoc.name) }}</td>\n\t</tr>\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Service\") }}</td>\n\t\t<td>{{ doc.integration_request_service or \"N/A\" }}</td>\n\t</tr>\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Status\") }}</td>\n\t\t<td>{{ doc.status }}</td>\n\t</tr>\n\t{% if doc.request_description %}\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Description\") }}</td>\n\t\t<td>{{ doc.request_description }}</td>\n\t</tr>\n\t{% endif %}\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Logged At\") }}</td>\n\t\t<td>{{ frappe.utils.format_datetime(doc.creation) }}</td>\n\t</tr>\n\t{% if doc.url %}\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Endpoint URL\") }}</td>\n\t\t<td class=\"text-small\" style=\"word-break: break-all;\"><a href=\"{{ doc.url }}\">{{ doc.url}}</a></td>\n\t</tr>\n"
+        ],
+        [
+          "\t{% if doc.reference_doctype and doc.reference_docname %}\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">Reference</td>\n\t\t<td>\n\t\t\t<a\n",
+          "\t{% if doc.reference_doctype and doc.reference_docname %}\n\t<tr>\n\t\t<td class=\"text-bold\" style=\"background: #f8f8f8;\">{{ _(\"Reference\") }}</td>\n\t\t<td>\n\t\t\t<a\n"
+        ],
+        [
+          "<div style=\"margin-top: 20px;\">\n\t<div class=\"text-medium text-bold\">\n\t\tError Details\n\t\t{% if error_needs_truncation %}\n\t\t<span class=\"text-muted\" style=\"font-weight: normal;\"> ({{ max_lines }} of {{\n\t\t\ttotal_error_lines }} lines)</span>\n\t\t{% endif %}\n\t</div>\n",
+          "<div style=\"margin-top: 20px;\">\n\t<div class=\"text-medium text-bold\">\n\t\t{{ _(\"Error Details\") }}\n\t\t{% if error_needs_truncation %}\n\t\t<span class=\"text-muted\" style=\"font-weight: normal;\"> {{ _(\"({0} of {1} lines)\").format(max_lines, total_error_lines) }}</span>\n\t\t{% endif %}\n\t</div>\n"
+        ],
+        [
+          "\t\t\tstyle=\"margin: 0; white-space: pre-wrap; word-wrap: break-word;\">{% if error_needs_truncation %}{{ error_lines[:first_lines] | join('\\n') }}\n\n<span class=\"text-muted\" style=\"font-style: italic;\">... {{ total_error_lines - max_lines }} lines omitted ...</span>\n\n{{ error_lines[-last_lines:] | join('\\n') }}{% else %}{{ error_lines | join('\\n') }}{% endif %}</pre>\n",
+          "\t\t\tstyle=\"margin: 0; white-space: pre-wrap; word-wrap: break-word;\">{% if error_needs_truncation %}{{ error_lines[:first_lines] | join('\\n') }}\n\n<span class=\"text-muted\" style=\"font-style: italic;\">{{ _(\"... {0} lines omitted ...\").format(total_error_lines - max_lines) }}</span>\n\n{{ error_lines[-last_lines:] | join('\\n') }}{% else %}{{ error_lines | join('\\n') }}{% endif %}</pre>\n"
+        ],
+        [
+          "<div style=\"margin-top: 20px;\">\n\t<div class=\"text-medium text-bold\">\n\t\tResponse Output\n\t\t{% if output_needs_truncation %}\n\t\t<span class=\"text-muted\" style=\"font-weight: normal;\"> ({{ max_lines }} of {{\n\t\t\ttotal_output_lines }} lines)</span>\n\t\t{% endif %}\n\t</div>\n",
+          "<div style=\"margin-top: 20px;\">\n\t<div class=\"text-medium text-bold\">\n\t\t{{ _(\"Response Output\") }}\n\t\t{% if output_needs_truncation %}\n\t\t<span class=\"text-muted\" style=\"font-weight: normal;\"> {{ _(\"({0} of {1} lines)\").format(max_lines, total_output_lines) }}</span>\n\t\t{% endif %}\n\t</div>\n"
+        ],
+        [
+          "\t\t\tstyle=\"margin: 0; white-space: pre-wrap; word-wrap: break-word;\">{% if output_needs_truncation %}{{ output_lines[:first_lines] | join('\\n') }}\n\n<span class=\"text-muted\" style=\"font-style: italic;\">... {{ total_output_lines - max_lines }} lines omitted ...</span>\n\n{{ output_lines[-last_lines:] | join('\\n') }}{% else %}{{ output_lines | join('\\n') }}{% endif %}</pre>\n",
+          "\t\t\tstyle=\"margin: 0; white-space: pre-wrap; word-wrap: break-word;\">{% if output_needs_truncation %}{{ output_lines[:first_lines] | join('\\n') }}\n\n<span class=\"text-muted\" style=\"font-style: italic;\">{{ _(\"... {0} lines omitted ...\").format(total_output_lines - max_lines) }}</span>\n\n{{ output_lines[-last_lines:] | join('\\n') }}{% else %}{{ output_lines | join('\\n') }}{% endif %}</pre>\n"
+        ],
+        [
+          "\t<a class=\"btn btn-primary\"\n\t\thref=\"{{ frappe.utils.get_url_to_form('Integration Request', doc.name) }}\">\n\t\tView Integration Request\n\t</a>\n</div>\n\n<p class=\"text-muted text-small\" style=\"margin-top: 20px;\">\n\tThis is an automated notification from {{ frappe.utils.get_host_name() }}.\n</p>",
+          "\t<a class=\"btn btn-primary\"\n\t\thref=\"{{ frappe.utils.get_url_to_form('Integration Request', doc.name) }}\">\n\t\t{{ _(\"View Integration Request\") }}\n\t</a>\n</div>\n\n<p class=\"text-muted text-small\" style=\"margin-top: 20px;\">\n\t{{ _(\"This is an automated notification from {0}.\").format(frappe.utils.get_host_name()) }}\n</p>"
+        ]
+      ]
+    },
+    {
+      "path": "hooks.py",
+      "before_sha256": "240e0f3b12588d1013ccb751382d1613f30276b37ce3ef380b971ec9d3fbefb6",
+      "after_sha256": "2ac892be99f3a4287b6ce44f9475ee24abd8176775cfe2908e9aa84053de0c1f",
+      "replacements": [
+        [
+          "\napp_name = \"frappe\"\napp_title = \"Frappe Framework\"\napp_publisher = \"Frappe Technologies\"\napp_description = \"Full stack web framework with Python, Javascript, MariaDB, Redis, Node\"\napp_license = \"MIT\"\napp_logo_url = \"/assets/frappe/images/frappe-framework-logo.svg\"\ndevelop_version = \"15.x.x-develop\"\napp_home = \"/desk/build\"\n",
+          "\napp_name = \"frappe\"\napp_title = \"Núcleo da plataforma\"\napp_publisher = \"Frappe Technologies\"\napp_description = \"Full stack web framework with Python, Javascript, MariaDB, Redis, Node\"\napp_license = \"MIT\"\napp_logo_url = \"/assets/lms/images/assinatura-tiberio.svg\"\ndevelop_version = \"15.x.x-develop\"\napp_home = \"/desk/build\"\n"
+        ],
+        [
+          "\t\t\"is_standard\": 1,\n\t},\n\t{\n\t\t\"item_label\": \"Frappe Support\",\n\t\t\"item_type\": \"Route\",\n\t\t\"route\": \"https://frappe.io/support\",\n\t\t\"is_standard\": 1,\n\t},\n]\n\n",
+          "\t\t\"is_standard\": 1,\n\t},\n]\n\n"
+        ]
+      ]
+    },
+    {
+      "path": "public/js/flow_launcher.bundle.js",
+      "before_sha256": "2b6556da00a7f16d67fbcb9f3122f4587ef2da00e67c243712c41401e75e2614",
+      "after_sha256": "b3e3cc9e95b7413034dfeeac3be631e8663339acb074847a591185ba99a5b5bf",
+      "replacements": [
+        [
+          "// A relative path, because this branch's esbuild predates `alias`.\nimport { mountIsland } from \"../../../ui/island/host.js\";\n\nconst STORE_KEY = \"flow_launcher\";\n",
+          "// A relative path, because this branch's esbuild predates `alias`.\nimport { mountIsland } from \"../../../ui/island/host.js\";\n\nimport localMessages from \"../../../../lms/local/i18n/merged-pt-BR.json\";\nconst __pt = (message) => localMessages[message] || window.__?.(message) || message;\n\nconst STORE_KEY = \"flow_launcher\";\n"
+        ],
+        [
+          "\t\tconst root = this.host.attachShadow({ mode: \"open\" });\n\t\troot.innerHTML = `<style>${STYLE}</style>\n\t\t\t<div class=\"panel\" role=\"dialog\" aria-label=\"Flow\" inert>\n\t\t\t\t<div class=\"window\"><slot></slot>${SKELETON}${FAILED}</div>\n\t\t\t\t<div class=\"shield\"></div>\n",
+          "\t\tconst root = this.host.attachShadow({ mode: \"open\" });\n\t\troot.innerHTML = `<style>${STYLE}</style>\n\t\t\t<div class=\"panel\" role=\"dialog\" aria-label=\"${__pt(\"AI Assistant\")}\" inert hidden>\n\t\t\t\t<div class=\"window\"><slot></slot>${SKELETON}${FAILED}</div>\n\t\t\t\t<div class=\"shield\"></div>\n"
+        ],
+        [
+          "\t\tthis.chat = document.createElement(\"div\");\n\t\tthis.chat.inert = true;\n\t\tthis.host.append(this.chat);\n\t\tdocument.body.append(this.host);\n",
+          "\t\tthis.chat = document.createElement(\"div\");\n\t\tthis.chat.inert = true;\n\t\tthis.chat.hidden = true;\n\t\tthis.host.append(this.chat);\n\t\tdocument.body.append(this.host);\n"
+        ],
+        [
+          "\t\tif (!this.island) this.make_island();\n\t\tthis.panel.inert = this.chat.inert = false;\n\t\tthis.place();\n\t\tthis.save();\n",
+          "\t\tif (!this.island) this.make_island();\n\t\tthis.panel.inert = this.chat.inert = false;\n\t\tthis.panel.hidden = this.chat.hidden = false;\n\t\tthis.place();\n\t\tthis.save();\n"
+        ],
+        [
+          "\t\tthis.state.open = false;\n\t\tthis.panel.inert = this.chat.inert = true;\n\t\tthis.squeeze();\n\t\tif (focused) this.focus_page();\n",
+          "\t\tthis.state.open = false;\n\t\tthis.panel.inert = this.chat.inert = true;\n\t\tthis.panel.hidden = this.chat.hidden = true;\n\t\tthis.squeeze();\n\t\tif (focused) this.focus_page();\n"
+        ],
+        [
+          "// in the skeleton's place when the chat's files could not load\nconst FAILED = `<div class=\"failed\" role=\"alert\">\n\t<p>Flow could not start.</p>\n\t<div><button class=\"reload\">Reload page</button><button class=\"close\">Close</button></div>\n</div>`;\n\n",
+          "// in the skeleton's place when the chat's files could not load\nconst FAILED = `<div class=\"failed\" role=\"alert\">\n\t<p>${__pt(\"Flow could not start.\")}</p>\n\t<div><button class=\"reload\">${__pt(\"Reload page\")}</button><button class=\"close\">${__pt(\"Close\")}</button></div>\n</div>`;\n\n"
+        ]
+      ]
+    },
+    {
+      "path": "public/js/frappe/build_events/BuildSuccess.vue",
+      "before_sha256": "c94d5e5796e6de949b24f2ac940efad0a4c808ad8c71ad00cdf11647a244ceeb",
+      "after_sha256": "f00252c3ee0867144b2099e695cd764a20f42e233f3b445c11948a90cecbab83",
+      "replacements": [
+        [
+          "<template>\n\t<div v-if=\"is_shown\" class=\"flex justify-between build-success-message align-center\">\n\t\tCompiled successfully\n\t\t<a v-if=\"!live_reload\" class=\"ml-4 text-white underline\" href=\"/\" @click.prevent=\"reload\">\n\t\t\tRefresh\n\t\t</a>\n\t</div>\n",
+          "<template>\n\t<div v-if=\"is_shown\" class=\"flex justify-between build-success-message align-center\">\n\t\t{{ __(\"Compiled successfully\") }}\n\t\t<a v-if=\"!live_reload\" class=\"ml-4 text-white underline\" href=\"/\" @click.prevent=\"reload\">\n\t\t\t{{ __(\"Refresh\") }}\n\t\t</a>\n\t</div>\n"
+        ]
+      ]
+    },
+    {
+      "path": "public/js/frappe/ui/toolbar/about.js",
+      "before_sha256": "8d0f7f576bcf5aaeec8f47eec97159252eb0fcd900b629d9865064b0d764e03a",
+      "after_sha256": "075a31764d4a9860137d80f0e0fa47fb72fe17226296658518555ad2efcaae89",
+      "replacements": [
+        [
+          "\t\t\t<div class=\"about-frappe-section flex flex-col items-center gap-3 py-3 w-full\">\n\t\t\t\t<div class=\"about-frappe-header flex flex-col justify-center items-center gap-1.5\">\n\t\t\t\t\t<img src=\"/assets/frappe/images/frappe-comp-logo.svg\" alt=\"Frappe\" class=\"about-frappe-wordmark\">\n\t\t\t\t\t<p class=\"about-tagline text-p-sm text-ink-gray-5 m-0\">${__(\n\t\t\t\t\t\t\"Open Source applications for the web.\"\n\t\t\t\t\t)}</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"about-social-btns flex gap-1\">\n\t\t\t\t\t<a href=\"https://frappe.io/\" target=\"_blank\" class=\"es-button\" data-variant=\"ghost\"\n\t\t\t\t\t\tdata-icon-button=\"true\" title=\"${__(\"Website\")}\" aria-label=\"${__(\"Website\")}\">\n\t\t\t\t\t\t${frappe.utils.icon(\"globe\", \"sm\", \"\", \"\", \"\", true)}\n\t\t\t\t\t</a>\n\t\t\t\t\t<a href=\"https://github.com/frappe\" target=\"_blank\" class=\"es-button\" data-variant=\"ghost\"\n\t\t\t\t\t\tdata-icon-button=\"true\" title=\"${__(\"Source Code\")}\" aria-label=\"${__(\"Source Code\")}\">\n\t\t\t\t\t\t${frappe.utils.icon(\"github\", \"sm\", \"\", \"\", \"\", true)}\n\t\t\t\t\t</a>\n\t\t\t\t\t<a href=\"https://discuss.frappe.io\" target=\"_blank\" class=\"es-button\" data-variant=\"ghost\"\n\t\t\t\t\t\tdata-icon-button=\"true\" title=\"${__(\"Forum\")}\" aria-label=\"${__(\"Forum\")}\">\n\t\t\t\t\t\t${frappe.utils.icon(\"message-circle\", \"sm\", \"\", \"\", \"\", true)}\n\t\t\t\t\t</a>\n\t\t\t\t</div>\n\t\t\t</div>\n\n",
+          "\t\t\t<div class=\"about-frappe-section flex flex-col items-center gap-3 py-3 w-full\">\n\t\t\t\t<div class=\"about-frappe-header flex flex-col justify-center items-center gap-1.5\">\n\t\t\t\t\t<img src=\"/assets/lms/images/assinatura-tiberio.svg\" alt=\"Tibério Lemes\" class=\"about-frappe-wordmark\">\n\t\t\t\t\t<p class=\"about-tagline text-p-sm text-ink-gray-5 m-0\">${__(\n\t\t\t\t\t\t\"Plataforma de aprendizagem de Tibério Lemes\"\n\t\t\t\t\t)}</p>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"about-social-btns flex gap-1\">\n                    <a href=\"https://github.com/frappe/frappe\" target=\"_blank\" rel=\"noopener noreferrer\"\n                        class=\"es-button\" data-variant=\"ghost\" title=\"${__(\"Source Code\")}\" aria-label=\"${__(\"Source Code\")}\">\n                        ${frappe.utils.icon(\"github\", \"sm\", \"\", \"\", \"\", true)}\n                    </a>\n                </div>\n\t\t\t</div>\n\n"
+        ],
+        [
+          "\t\t\t\t\t<div class=\"about-info-content flex flex-col gap-1\">\n\t\t\t\t\t\t<div class=\"about-info-title inline-flex items-center gap-1 text-base-semibold text-ink-gray-8\">${__(\n\t\t\t\t\t\t\t\"Frappe Framework Version\"\n\t\t\t\t\t\t)}</div>\n\t\t\t\t\t\t<div class=\"about-info-sub text-p-sm text-ink-gray-5\" id=\"about-framework-version\">\n",
+          "\t\t\t\t\t<div class=\"about-info-content flex flex-col gap-1\">\n\t\t\t\t\t\t<div class=\"about-info-title inline-flex items-center gap-1 text-base-semibold text-ink-gray-8\">${__(\n\t\t\t\t\t\t\t\"Versão da plataforma\"\n\t\t\t\t\t\t)}</div>\n\t\t\t\t\t\t<div class=\"about-info-sub text-p-sm text-ink-gray-5\" id=\"about-framework-version\">\n"
+        ],
+        [
+          "\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t${\n\t\t\t\t\tfrappe.boot.is_fc_site\n\t\t\t\t\t\t? `<div class=\"about-info-row flex items-center justify-between\">\n\t\t\t\t\t<div class=\"about-info-content flex flex-col gap-1\">\n\t\t\t\t\t\t<a href=\"https://frappecloud.com/support\" target=\"_blank\" class=\"about-info-title inline-flex items-center gap-1 about-info-title-link text-base-semibold text-ink-gray-8 no-underline\">\n\t\t\t\t\t\t\t${__(\"Frappe Support\")}\n\t\t\t\t\t\t\t${frappe.utils.icon(\"external-link\", \"xs\")}\n\t\t\t\t\t\t</a>\n\t\t\t\t\t\t<div class=\"about-info-sub text-p-sm text-ink-gray-5\">\n\t\t\t\t\t\t\t${__(\"Visit Frappe Support Portal\")}\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>`\n\t\t\t\t\t\t: \"\"\n\t\t\t\t}\n\t\t\t</div>\n\n",
+          "\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\n"
+        ],
+        [
+          "\tconst show_versions = function (versions) {\n\t\tif (versions.frappe) {\n\t\t\t$(\"#about-framework-version\").text(`frappe: ${get_version_text(versions.frappe)}`);\n\t\t}\n\n\t\t// Show update button on Frappe Cloud sites when updates are available\n\t\tconst $version_row = $(\"#about-framework-version\").closest(\".about-info-row\");\n\t\t$version_row.find(\".about-update-indicator\").remove();\n\t\tif (frappe.boot.has_app_updates && frappe.boot.is_fc_site) {\n\t\t\t$(`<a href=\"https://frappecloud.com/dashboard/sites/${window.location.hostname}\"\n\t\t\t\t\ttarget=\"_blank\"\n\t\t\t\t\tclass=\"es-button no-underline about-update-indicator\">\n\t\t\t\t\t${__(\"Update Available\")}\n\t\t\t\t</a>`).appendTo($version_row);\n\t\t}\n\n",
+          "\tconst show_versions = function (versions) {\n\t\tif (versions.frappe) {\n\t\t\t$(\"#about-framework-version\").text(`Tibério Lemes: ${get_version_text(versions.frappe)}`);\n\t\t}\n\n"
+        ],
+        [
+          "\t\t\t\t\t<div class=\"about-app-info flex-1 min-w-0\">\n\t\t\t\t\t\t<div class=\"about-app-name text-base-semibold text-ink-gray-8\">${__(app.title)}</div>\n\t\t\t\t\t\t<div class=\"about-app-version text-sm text-ink-gray-5\">${app_name}: ${version_text}</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>`).appendTo($wrap);\n",
+          "\t\t\t\t\t<div class=\"about-app-info flex-1 min-w-0\">\n\t\t\t\t\t\t<div class=\"about-app-name text-base-semibold text-ink-gray-8\">${__(app.title)}</div>\n\t\t\t\t\t\t<div class=\"about-app-version text-sm text-ink-gray-5\">${__(app.title)}: ${version_text}</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>`).appendTo($wrap);\n"
+        ]
+      ]
+    },
+    {
+      "path": "public/studio/index.html",
+      "before_sha256": "59aca53466c7e63cff7c19fc2ecc3ea2261ed9068302788463d7be2db0b1967a",
+      "after_sha256": "605529294abb876752172618501ffe12b0d208958dd51f47da0b02a3518e90e0",
+      "replacements": [
+        [
+          "<!DOCTYPE html>\n<html lang=\"en\">\n\t<head>\n\t\t<meta charset=\"UTF-8\" />\n\t\t<link rel=\"icon\" href=\"/assets/frappe/studio/favicon.png\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n\t\t<title>Frappe Studio</title>\n\t\t<script type=\"module\" crossorigin src=\"/assets/frappe/studio/assets/studio-Cl26yHZa.js\"></script>\n\t\t<link rel=\"modulepreload\" crossorigin href=\"/assets/frappe/studio/assets/globals-TDaHLpqN.js\">\n",
+          "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n\t<head>\n\t\t<meta charset=\"UTF-8\" />\n\t\t<link rel=\"icon\" href=\"/assets/lms/images/assinatura-tiberio.svg\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n\t\t<title>Tibério Lemes — editor</title>\n\t\t<script type=\"module\" crossorigin src=\"/assets/frappe/studio/assets/studio-Cl26yHZa.js\"></script>\n\t\t<link rel=\"modulepreload\" crossorigin href=\"/assets/frappe/studio/assets/globals-TDaHLpqN.js\">\n"
+        ]
+      ]
+    },
+    {
+      "path": "studio/doctype/studio_page/studio_page.py",
+      "before_sha256": "d924e3c6d2599c4f3ee8ef0ff72c312d8f13af5af24f4c4863fe8b0293385456",
+      "after_sha256": "6cc22c277f8cf8c63bbc93c1408faf70673df4b30ead8a3e397e660e9fa1b280",
+      "replacements": [
+        [
+          "self.page_title = \"My Page\"",
+          "self.page_title = _(\"My Page\")"
+        ]
+      ]
+    },
+    {
+      "path": "templates/doc.html",
+      "before_sha256": "ae5f56720d10c18572ae13ebd3b4138f85bda8b0e8eb368bd045be9227a30411",
+      "after_sha256": "812e2e2c1278782c5d939b4f96a0105ffe8cb7c2de78b2e8d6a89deee85a01ca",
+      "replacements": [
+        [
+          "\t\t\t{% if page_toc_html %}\n\t\t\t<div>\n\t\t\t\t<h5>On this page</h5>\n\t\t\t\t{{ page_toc_html }}\n\t\t\t</div>\n",
+          "\t\t\t{% if page_toc_html %}\n\t\t\t<div>\n\t\t\t\t<h5>{{ _(\"On this page\") }}</h5>\n\t\t\t\t{{ page_toc_html }}\n\t\t\t</div>\n"
+        ]
+      ]
+    },
+    {
+      "path": "templates/emails/auth_email.html",
+      "before_sha256": "ec19cc9e9230e3f09872f7e4cceb5abee5df8061df649cde812a836844a84f7b",
+      "after_sha256": "da0fd1d66bc222b109ef16584759efa6a22f637ec823b76101f49014e1b0d42f",
+      "replacements": [
+        [
+          "\t\t\t\t\t<div class=\"email-divider\"></div>\n\t\t\t\t\t<div class=\"email-footer\">\n\t\t\t\t\t\t<a href=\"{{ site_url or 'https://frappe.io' }}\">\n\t\t\t\t\t\t\t{% if brand_logo %}\n\t\t\t\t\t\t\t<img class=\"email-brand-logo\" src=\"{{ brand_logo }}\" alt=\"{{ brand_name or 'Frappe' }}\" />\n\t\t\t\t\t\t\t{% elif brand_name and brand_name != \"Frappe\" %}\n\t\t\t\t\t\t\t<span class=\"email-brand-name\">{{ brand_name }}</span>\n\t\t\t\t\t\t\t{% else %}\n\t\t\t\t\t\t\t<img class=\"email-brand-logo\" src=\"/assets/frappe/images/frappe-wordmark.png\" alt=\"Frappe\" />\n\t\t\t\t\t\t\t{% endif %}\n\t\t\t\t\t\t</a>\n",
+          "\t\t\t\t\t<div class=\"email-divider\"></div>\n\t\t\t\t\t<div class=\"email-footer\">\n\t\t\t\t\t\t<a href=\"{{ site_url or '/' }}\">\n\t\t\t\t\t\t\t{% if brand_logo %}\n\t\t\t\t\t\t\t<img class=\"email-brand-logo\" src=\"{{ brand_logo }}\" alt=\"{{ brand_name or 'Tibério Lemes' }}\" />\n\t\t\t\t\t\t\t{% elif brand_name %}\n\t\t\t\t\t\t\t<span class=\"email-brand-name\">{{ brand_name }}</span>\n\t\t\t\t\t\t\t{% else %}\n\t\t\t\t\t\t\t<img class=\"email-brand-logo\" src=\"/assets/lms/images/assinatura-tiberio.svg\" alt=\"Tibério Lemes\" />\n\t\t\t\t\t\t\t{% endif %}\n\t\t\t\t\t\t</a>\n"
+        ]
+      ]
+    },
+    {
+      "path": "templates/emails/document_follow.html",
+      "before_sha256": "4f4530f5aa14ea3c0f289064dde0fe472d9aecd2122e9bd15d73c47e1180f256",
+      "after_sha256": "384934996717e39f55eaadd6aa38ac72d498349b5112e584ee08565b893d4bba",
+      "replacements": [
+        [
+          "<h3>Document Follow Notification</h3>\n{% for doc in docinfo %}\n<div class=\"gray-container follow-panel\">\n",
+          "<h3>{{ _(\"Document Follow Notification\") }}</h3>\n{% for doc in docinfo %}\n<div class=\"gray-container follow-panel\">\n"
+        ],
+        [
+          "\t\t\t\t\t<li>\n\t\t\t\t\t\t<span class=\"text-muted\">{{data.data.time}}:</span>\n\t\t\t\t\t\tRow Added to Table Field\n\t\t\t\t\t\t<b>{{data.data.to}}</b>\n\t\t\t\t\t\tBy:\n\t\t\t\t\t\t<b>{{data.by}}</b>\n\t\t\t\t\t</li>\n",
+          "\t\t\t\t\t<li>\n\t\t\t\t\t\t<span class=\"text-muted\">{{data.data.time}}:</span>\n\t\t\t\t\t\t{{ _(\"Row Added to Table Field\") }}\n\t\t\t\t\t\t<b>{{data.data.to}}</b>\n\t\t\t\t\t\t{{ _(\"By:\") }}\n\t\t\t\t\t\t<b>{{data.by}}</b>\n\t\t\t\t\t</li>\n"
+        ],
+        [
+          "\t\t\t\t\t<li>\n\t\t\t\t\t\t<span class=\"text-muted\">{{data.data.time}}:</span>\n\t\t\t\t\t\tField:\n\t\t\t\t\t\t<b>\"{{data.data.field}}\"</b>\n\t\t\t\t\t\tchanged from\n\t\t\t\t\t\t<b>\"{{data.data.from}}\"</b>\n\t\t\t\t\t\tto\n\t\t\t\t\t\t<b>\"{{data.data.to}}\"</b>\n\t\t\t\t\t\tBy:\n\t\t\t\t\t\t<b>{{data.by}}</b>\n\t\t\t\t\t</li>\n",
+          "\t\t\t\t\t<li>\n\t\t\t\t\t\t<span class=\"text-muted\">{{data.data.time}}:</span>\n\t\t\t\t\t\t{{ _(\"Field:\") }}\n\t\t\t\t\t\t<b>\"{{data.data.field}}\"</b>\n\t\t\t\t\t\t{{ _(\"changed from\") }}\n\t\t\t\t\t\t<b>\"{{data.data.from}}\"</b>\n\t\t\t\t\t\t{{ _(\"to\") }}\n\t\t\t\t\t\t<b>\"{{data.data.to}}\"</b>\n\t\t\t\t\t\t{{ _(\"By:\") }}\n\t\t\t\t\t\t<b>{{data.by}}</b>\n\t\t\t\t\t</li>\n"
+        ],
+        [
+          "\t\t\t\t\t<li>\n\t\t\t\t\t\t<span class=\"text-muted\">{{data.data.time}}:</span>\n\t\t\t\t\t\tTable Field:\n\t\t\t\t\t\t<b>\"{{data.data.table_field}}\"</b>\n\t\t\t\t\t\tRow# {{data.data.row}} Field:\n\t\t\t\t\t\t<b>\"{{data.data.field}}\"</b>\n\t\t\t\t\t\tchanged from\n\t\t\t\t\t\t<b>\"{{data.data.from}}\"</b>\n\t\t\t\t\t\tto <b>\"{{data.data.to}}\"</b>\n\t\t\t\t\t\tBy:\n\t\t\t\t\t\t<b>{{data.by}}</b>\n\t\t\t\t\t</li>\n",
+          "\t\t\t\t\t<li>\n\t\t\t\t\t\t<span class=\"text-muted\">{{data.data.time}}:</span>\n\t\t\t\t\t\t{{ _(\"Table Field:\") }}\n\t\t\t\t\t\t<b>\"{{data.data.table_field}}\"</b>\n\t\t\t\t\t\t{{ _(\"Row {0}, field:\").format(data.data.row) }}\n\t\t\t\t\t\t<b>\"{{data.data.field}}\"</b>\n\t\t\t\t\t\t{{ _(\"changed from\") }}\n\t\t\t\t\t\t<b>\"{{data.data.from}}\"</b>\n\t\t\t\t\t\t{{ _(\"to\") }} <b>\"{{data.data.to}}\"</b>\n\t\t\t\t\t\t{{ _(\"By:\") }}\n\t\t\t\t\t\t<b>{{data.by}}</b>\n\t\t\t\t\t</li>\n"
+        ]
+      ]
+    },
+    {
+      "path": "templates/emails/standard.html",
+      "before_sha256": "fd3e883de26cc12aa10f723e36bdc5ab9ebae160fcaa91fd62913a8c4f0ddf88",
+      "after_sha256": "811481f00e55ab1659fd7fb4aae57a9cd45e98d42c8df8f649f3b0964f3ac61f",
+      "replacements": [
+        [
+          "\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td align=\"left\" valign=\"middle\" class=\"email-masthead\">\n\t\t\t\t\t\t\t<a href=\"{{ site_url or 'https://frappeframework.com' }}\">\n\t\t\t\t\t\t\t\t{% if brand_logo %}\n\t\t\t\t\t\t\t\t<img\n\t\t\t\t\t\t\t\t\tsrc=\"{{ brand_logo or '/assets/frappe/images/frappe-framework-logo.svg' }}\"\n\t\t\t\t\t\t\t\t\theight=\"28\"\n\t\t\t\t\t\t\t\t\tclass=\"brand-logo\"\n",
+          "\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td align=\"left\" valign=\"middle\" class=\"email-masthead\">\n\t\t\t\t\t\t\t<a href=\"{{ site_url or '/' }}\">\n\t\t\t\t\t\t\t\t{% if brand_logo %}\n\t\t\t\t\t\t\t\t<img\n\t\t\t\t\t\t\t\t\tsrc=\"{{ brand_logo or '/assets/lms/images/assinatura-tiberio.svg' }}\"\n\t\t\t\t\t\t\t\t\theight=\"28\"\n\t\t\t\t\t\t\t\t\tclass=\"brand-logo\"\n"
+        ]
+      ]
+    },
+    {
+      "path": "templates/generators/app_renderer.html",
+      "before_sha256": "08c39907a89de1619ae61dd04ebdd77776b63271b6f3dcd2706d825667c4f079",
+      "after_sha256": "86020b291fcc425474c8be452bd7bb8283b05da75bb46741ac9c1c4504e59460",
+      "replacements": [
+        [
+          "<!DOCTYPE html>\n<!-- Built with Frappe Studio -->\n<html lang=\"en\" class=\"h-full\">\n\t<head>\n\t\t<meta charset=\"UTF-8\" />\n\t\t<link rel=\"icon\" href=\"{{ favicon or '/assets/frappe/studio/favicon.png' }}\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n\t\t<title>{{ app_title }}</title>\n",
+          "<!DOCTYPE html>\n<!-- Built with Frappe Studio -->\n<html lang=\"{{ frappe.lang }}\" class=\"h-full\">\n\t<head>\n\t\t<meta charset=\"UTF-8\" />\n\t\t<link rel=\"icon\" href=\"{{ favicon or '/assets/lms/images/assinatura-tiberio.svg' }}\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n\t\t<title>{{ app_title }}</title>\n"
+        ],
+        [
+          "\t\t<div id=\"popovers\"></div>\n\t\t<script>\n\t\t\twindow.boot = {{ boot|tojson }};\n\t\t\twindow.csrf_token = \"{{ csrf_token }}\";\n",
+          "\t\t<div id=\"popovers\"></div>\n\t\t<script>\n\t\t\twindow.translatedMessages = {{ (translated_messages or {}) | tojson }};\n\t\t\twindow.boot = {{ boot|tojson }};\n\t\t\twindow.csrf_token = \"{{ csrf_token }}\";\n"
+        ]
+      ]
+    },
+    {
+      "path": "templates/generators/studio_renderer.html",
+      "before_sha256": "d5be7a7507c4f5794f25fa0cbfe37a5c53ff9fc6cadb70111073764e732d20ab",
+      "after_sha256": "610cb93cc97063dbf3ca490a8c0e763d7827cc72b9871ca88169e27eb36c9446",
+      "replacements": [
+        [
+          "<!DOCTYPE html>\n<!-- Built with Frappe Studio -->\n<html lang=\"en\" class=\"h-full\">\n\t<head>\n\t\t<meta charset=\"UTF-8\" />\n\t\t<link rel=\"icon\" href=\"{{ favicon or '/assets/frappe/studio/favicon.png' }}\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n\t\t<title>{{ app_title }}</title>\n",
+          "<!DOCTYPE html>\n<!-- Built with Frappe Studio -->\n<html lang=\"{{ frappe.lang }}\" class=\"h-full\">\n\t<head>\n\t\t<meta charset=\"UTF-8\" />\n\t\t<link rel=\"icon\" href=\"{{ favicon or '/assets/lms/images/assinatura-tiberio.svg' }}\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n\t\t<title>{{ app_title }}</title>\n"
+        ],
+        [
+          "\t\t<div id=\"popovers\"></div>\n\t\t<script>\n\t\t\twindow.boot = {{ boot|tojson }};\n\t\t\twindow.csrf_token = \"{{ csrf_token }}\";\n",
+          "\t\t<div id=\"popovers\"></div>\n\t\t<script>\n\t\t\twindow.translatedMessages = {{ (translated_messages or {}) | tojson }};\n\t\t\twindow.boot = {{ boot|tojson }};\n\t\t\twindow.csrf_token = \"{{ csrf_token }}\";\n"
+        ],
+        [
+          "\t\t{% elif not assets %}\n\t\t\t<script>\n\t\t\t\tconsole.error(\"The Studio renderer is not built. Run `bench build --app frappe`.\")\n\t\t\t</script>\n\t\t{% endif %}\n",
+          "\t\t{% elif not assets %}\n\t\t\t<script>\n\t\t\t\tconsole.error({{ _(\"The Studio renderer is not built. Run {0}.\").format(\"bench build --app frappe\") | tojson }})\n\t\t\t</script>\n\t\t{% endif %}\n"
+        ],
+        [
+          "\t\t{% if assets_not_found %}\n\t\t<script>\n\t\t\tconsole.error(\"Could not find app assets for Studio App. Currently, using the default renderer as a fallback. Please publish the app again to generate assets.\")\n\t\t</script>\n\t\t{% endif %}\n",
+          "\t\t{% if assets_not_found %}\n\t\t<script>\n\t\t\tconsole.error({{ _(\"Could not find app assets for Studio App. Currently, using the default renderer as a fallback. Please publish the app again to generate assets.\") | tojson }})\n\t\t</script>\n\t\t{% endif %}\n"
+        ]
+      ]
+    },
+    {
+      "path": "templates/includes/footer/footer_powered.html",
+      "before_sha256": "1ab468b3a89ee821083792f034650655c7f1dc3bfc0e3d5ec51a1f90ba9bbf1b",
+      "after_sha256": "37d1f3a19aabd7a4be7dcff61b2a5c301463472dc724fcb7377428ae7319d9a6",
+      "replacements": [
+        [
+          "{{ _(\"Built on {0}\").format('<a href=\"https://frappeframework.com?source=website_footer\" target=\"_blank\" class=\"text-muted\">Frappe</a>') }}\n",
+          "Tibério Lemes\n"
+        ]
+      ]
+    },
+    {
+      "path": "templates/includes/list/filters.html",
+      "before_sha256": "572aaf01268d04a0d7112aeed4b3ada463751fed8283db565d93306fa3587be4",
+      "after_sha256": "0f8fc9617455e30a51f3d2edaf0008e820629c99c1ed9d6cb1d3ba911224b862",
+      "replacements": [
+        [
+          "\t\t\t\t<div class=\"input-group\">\n\t\t\t\t\t<input class=\"form-control\" doctype=\"text\" name=\"txt\"\n\t\t\t\t\t\tplaceholder=\"Search...\" value=\"{{ (txt or '') | e }}\">\n\t\t\t\t\t<div class=\"input-group-append\">\n\t\t\t\t\t\t<button class=\"btn btn-light\" type=\"submit\">\n",
+          "\t\t\t\t<div class=\"input-group\">\n\t\t\t\t\t<input class=\"form-control\" doctype=\"text\" name=\"txt\"\n\t\t\t\t\t\tplaceholder=\"{{ _('Search...') }}\" value=\"{{ (txt or '') | e }}\">\n\t\t\t\t\t<div class=\"input-group-append\">\n\t\t\t\t\t\t<button class=\"btn btn-light\" type=\"submit\">\n"
+        ],
+        [
+          "\t{% if txt %}\n\t\t<div class=\"filter-message small text-muted\">\n\t\t\tResults filtered by <b>{{ txt | e }}</b>.\n\t\t</div>\n\t{% endif %}\n",
+          "\t{% if txt %}\n\t\t<div class=\"filter-message small text-muted\">\n\t\t\t{{ _(\"Results filtered by\") }} <b>{{ txt | e }}</b>.\n\t\t</div>\n\t{% endif %}\n"
+        ]
+      ]
+    },
+    {
+      "path": "templates/includes/navbar/navbar.html",
+      "before_sha256": "0d962812197e5e3ea760833bfa24a839ecd38583c4173a23e960956a02201b67",
+      "after_sha256": "85685896ef743f92fc2088e13be11d0e9260ac115e0a933d151c9cb6875c5425",
+      "replacements": [
+        [
+          "\t\t\taria-controls=\"navbarSupportedContent\"\n\t\t\taria-expanded=\"false\"\n\t\t\taria-label=\"Toggle navigation\">\n\t\t\t<span>\n\t\t\t\t<svg class=\"icon icon-lg\">\n",
+          "\t\t\taria-controls=\"navbarSupportedContent\"\n\t\t\taria-expanded=\"false\"\n\t\t\taria-label=\"{{ _('Toggle navigation') }}\">\n\t\t\t<span>\n\t\t\t\t<svg class=\"icon icon-lg\">\n"
+        ]
+      ]
+    },
+    {
+      "path": "translate.py",
+      "before_sha256": "65c81403eef185913627cc6bfeb46133733cbe94e1972998f775550ef6554631",
+      "after_sha256": "19fd93f195d77d3d6b7430952fcb8ad6f61d4731ea787d0c29a8506d274f9d5c",
+      "replacements": [
+        [
+          "\t5. System Settings => language\n\t\"\"\"\n\tis_logged_in = frappe.session.user != \"Guest\"\n\n",
+          "\t5. System Settings => language\n\t\"\"\"\n\tif frappe.local.site == \"tiberio.localhost\":\n\t\treturn \"pt-BR\"\n\n\tis_logged_in = frappe.session.user != \"Guest\"\n\n"
+        ]
+      ]
+    },
+    {
+      "path": "website/doctype/help_article/templates/help_article.html",
+      "before_sha256": "01025fe0c230360b3e34d8a7c9c5ccb38d90ed339a4d5215d1279c740f47ff6d",
+      "after_sha256": "24f6ee0755dfe7d97cbcf7e07dcbebb821fb957697803ab27a46de1adef7e960",
+      "replacements": [
+        [
+          "<article itemscope itemtype=\"http://schema.org/BlogPosting\">\n\t<div>\n\t\t<h6 class='text-muted'>By {{ author }} on {{ frappe.format_date(creation) }}</h6>\n\t\t<span class=\"indicator {{ level_class }}\">{{ level }}</span>\n\t</div>\n",
+          "<article itemscope itemtype=\"http://schema.org/BlogPosting\">\n\t<div>\n\t\t<h6 class='text-muted'>{{ _(\"By\") }} {{ author }} {{ _(\"on\") }} {{ frappe.format_date(creation) }}</h6>\n\t\t<span class=\"indicator {{ level_class }}\">{{ level }}</span>\n\t</div>\n"
+        ],
+        [
+          "\n<div>\n\t<h5>Comments</h5>\n\t{% include 'templates/includes/comments/comments.html' %}\n</div>\n",
+          "\n<div>\n\t<h5>{{ _(\"Comments\") }}</h5>\n\t{% include 'templates/includes/comments/comments.html' %}\n</div>\n"
+        ]
+      ]
+    },
+    {
+      "path": "website/doctype/web_page/templates/web_page.html",
+      "before_sha256": "ca357a911d42870254aa8b54db7be5b43c11fcd6a6e21db92ad30cf4ea03d669",
+      "after_sha256": "d67f6824af4c577ded3b4edabdf4ecc3d21f20a086957013e20b1cebf7573200",
+      "replacements": [
+        [
+          "\t{% if enable_comments -%}\n\t<hr class=\"my-5\">\n\t<h5>Discuss</h5>\n\t{% include 'templates/includes/comments/comments.html' %}\n\t{%- endif %}\n",
+          "\t{% if enable_comments -%}\n\t<hr class=\"my-5\">\n\t<h5>{{ _(\"Discuss\") }}</h5>\n\t{% include 'templates/includes/comments/comments.html' %}\n\t{%- endif %}\n"
+        ]
+      ]
+    },
+    {
+      "path": "website/doctype/website_settings/website_settings.py",
+      "before_sha256": "9f02f52571c08e7818ef88e6eb6fa5fab82753d296a0dd063360f6b1657fc59a",
+      "after_sha256": "c1aa49d832a924c2f646a1043a2ed3d29f49e53f7cef6a6186633b16f78a8688",
+      "replacements": [
+        [
+          "\n\tif not context.get(\"favicon\"):\n\t\tcontext[\"favicon\"] = \"/assets/frappe/images/frappe-favicon.svg\"\n\n\tif settings.favicon and settings.favicon != \"attach_files:\":\n",
+          "\n\tif not context.get(\"favicon\"):\n\t\tcontext[\"favicon\"] = \"/assets/lms/images/assinatura-tiberio.svg\"\n\n\tif settings.favicon and settings.favicon != \"attach_files:\":\n"
+        ]
+      ]
+    },
+    {
+      "path": "www/confirm_workflow_action.html",
+      "before_sha256": "b64ccfc723cd105fd13d486f154a340322c86f7a9318a2c42e53320931149463",
+      "after_sha256": "be9ef4535f297948dba1b9f64adb956341bb9b0fc270fffd9613b6305df9f8f6",
+      "replacements": [
+        [
+          "  <a href=\"{{ action_link }}\" class=\"btn btn-primary btn-action\">{{ action }}</a>\n  {% endif %}\n  <a href=\"/\" class=\"btn btn-secondary btn-action\">Cancel</a>\n{% endblock %}",
+          "  <a href=\"{{ action_link }}\" class=\"btn btn-primary btn-action\">{{ action }}</a>\n  {% endif %}\n  <a href=\"/\" class=\"btn btn-secondary btn-action\">{{ _(\"Cancel\") }}</a>\n{% endblock %}"
+        ]
+      ]
+    },
+    {
+      "path": "www/desk.py",
+      "before_sha256": "f1af2f92f0d7c68a65344244661c80cffac2c28ef72c0ae96ef960fd2de4eea3",
+      "after_sha256": "b88088f0ddcdc37b7e53e7ac33cd57fd3e436598b67f57da0b719f760dede8bb",
+      "replacements": [
+        [
+          "\t\t\t\"google_analytics_anonymize_ip\": frappe.conf.get(\"google_analytics_anonymize_ip\"),\n\t\t\t\"app_name\": (\n\t\t\t\tfrappe.get_website_settings(\"app_name\") or frappe.get_system_settings(\"app_name\") or \"Frappe\"\n\t\t\t),\n\t\t}\n",
+          "\t\t\t\"google_analytics_anonymize_ip\": frappe.conf.get(\"google_analytics_anonymize_ip\"),\n\t\t\t\"app_name\": (\n\t\t\t\tfrappe.get_website_settings(\"app_name\") or frappe.get_system_settings(\"app_name\") or \"Tibério Lemes\"\n\t\t\t),\n\t\t}\n"
+        ]
+      ]
+    },
+    {
+      "path": "www/error.html",
+      "before_sha256": "a2a6f79bcf4db681f022a4ebf3351e633ee7c35281974af475f0b69b10e5640b",
+      "after_sha256": "8a731d2a5dd630c34b290404be90884b36619fd561b8ed89191397008c2ac07d",
+      "replacements": [
+        [
+          "{% extends \"templates/web.html\" %}\n\n{% block title %}Error{% endblock %}\n\n{%- block head_include %}\n",
+          "{% extends \"templates/web.html\" %}\n\n{% block title %}{{ _(\"Error\") }}{% endblock %}\n\n{%- block head_include %}\n"
+        ]
+      ]
+    },
+    {
+      "path": "www/flow/index.html",
+      "before_sha256": "e3775aacdf796efd8f965e9e769187d3f7a8258409ec66c9854dd20abd739cb9",
+      "after_sha256": "102a5fe326954ab73d7064f2fa257a45a8af1444a1e0a4ed461e4bf7bab30aee",
+      "replacements": [
+        [
+          "\t\t<link rel=\"stylesheet\" href=\"/assets/frappe/css/fonts/inter/inter.css\" />\n\t\t<link rel=\"icon\" type=\"image/png\" href=\"/assets/frappe/images/flow.png\" />\n\t\t<title>Flow</title>\n\t\t<style>\n\t\t\thtml,\n",
+          "\t\t<link rel=\"stylesheet\" href=\"/assets/frappe/css/fonts/inter/inter.css\" />\n\t\t<link rel=\"icon\" type=\"image/svg+xml\" href=\"/assets/lms/images/assinatura-tiberio.svg\" />\n\t\t<title>{{ _(\"Flow\") }}</title>\n\t\t<style>\n\t\t\thtml,\n"
+        ]
+      ]
+    },
+    {
+      "path": "www/login.py",
+      "before_sha256": "0dc0478a4244ee1f219231929287b74b53b15b5fc9eca36c428e7cbc8ddad7b2",
+      "after_sha256": "c9f421bea510b6cacba85a694ec18a316a2fe38e71935ffa6d9b2e775fdbcff4",
+      "replacements": [
+        [
+          "\tcontext[\"logo\"] = get_app_logo()\n\tcontext[\"app_name\"] = (\n\t\tfrappe.get_website_settings(\"app_name\") or frappe.get_system_settings(\"app_name\") or _(\"Frappe\")\n\t)\n\n",
+          "\tcontext[\"logo\"] = get_app_logo()\n\tcontext[\"app_name\"] = (\n\t\tfrappe.get_website_settings(\"app_name\") or frappe.get_system_settings(\"app_name\") or _(\"Tibério Lemes\")\n\t)\n\n"
+        ],
+        [
+          "\n\t\ticon = None\n\t\tif provider.icon:\n\t\t\tif provider.provider_name == \"Custom\":\n\t\t\t\ticon = get_icon_html(provider.icon, small=True)\n",
+          "\n\t\ticon = None\n\t\tif provider.provider_name == \"Frappe\":\n\t\t\ticon = '<img src=\"/assets/lms/images/assinatura-tiberio.svg\" alt=\"Tibério Lemes\">'\n\t\telif provider.icon:\n\t\t\tif provider.provider_name == \"Custom\":\n\t\t\t\ticon = get_icon_html(provider.icon, small=True)\n"
+        ],
+        [
+          "\t\t\t\t{\n\t\t\t\t\t\"name\": provider.name,\n\t\t\t\t\t\"provider_name\": provider.provider_name,\n\t\t\t\t\t\"auth_url\": get_oauth2_authorize_url(provider.name, redirect_to),\n\t\t\t\t\t\"icon\": icon,\n",
+          "\t\t\t\t{\n\t\t\t\t\t\"name\": provider.name,\n\t\t\t\t\t\"provider_name\": _(\"Platform account\") if provider.provider_name == \"Frappe\" else provider.provider_name,\n\t\t\t\t\t\"auth_url\": get_oauth2_authorize_url(provider.name, redirect_to),\n\t\t\t\t\t\"icon\": icon,\n"
+        ],
+        [
+          "\n\t\tapp_name = (\n\t\t\tfrappe.get_website_settings(\"app_name\") or frappe.get_system_settings(\"app_name\") or _(\"Frappe\")\n\t\t)\n\n",
+          "\n\t\tapp_name = (\n\t\t\tfrappe.get_website_settings(\"app_name\") or frappe.get_system_settings(\"app_name\") or _(\"Tibério Lemes\")\n\t\t)\n\n"
+        ],
+        [
+          "\tcontext[\"title\"] = \"Login\"",
+          "\tcontext[\"title\"] = _(\"Login\")"
+        ]
+      ]
+    },
+    {
+      "path": "www/qrcode.html",
+      "before_sha256": "b8a6431c270517fefd1bd081a0b0f2f0f78b0510aaaaf940b4f476bc625ae925",
+      "after_sha256": "3eb5a2fb27faa9d254e2ed6f586dcd2bb4d56383858ce1dbf6a9ab95f9dc3824",
+      "replacements": [
+        [
+          "\t\t<br>\n\t\t<p class='text-muted small'>{{ _(\"Authentication Apps you can use are:\") }}\n\t\t\tFreeOTP, Google Authenticator, Lastpass Authenticator, Authy and Duo Mobile.\n\t\t</p>\n\t</div>\n",
+          "\t\t<br>\n\t\t<p class='text-muted small'>{{ _(\"Authentication Apps you can use are:\") }}\n\t\t\t{{ _(\"FreeOTP, Google Authenticator, Lastpass Authenticator, Authy and Duo Mobile.\") }}\n\t\t</p>\n\t</div>\n"
+        ]
+      ]
+    },
+    {
+      "path": "www/studio.html",
+      "before_sha256": "7d2359568e0b7a3f9b9484bcd3febe016b284e17df762faecc3721b9f4ad5d71",
+      "after_sha256": "6df33f6469d9b872a1d8c154b476c34e0f6ae85c85398bd6a0bdb716bc0a357d",
+      "replacements": [
+        [
+          "<!DOCTYPE html>\n<html lang=\"en\">\n\t<head>\n\t\t<meta charset=\"UTF-8\" />\n\t\t<link rel=\"icon\" href=\"/assets/frappe/studio/favicon.png\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n\t\t<title>Frappe Studio</title>\n\t\t{% if assets %}\n\t\t\t<script type=\"module\" crossorigin src=\"{{ assets.script }}\"></script>\n",
+          "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n\t<head>\n\t\t<meta charset=\"UTF-8\" />\n\t\t<link rel=\"icon\" href=\"/assets/lms/images/assinatura-tiberio.svg\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n\t\t<title>Tibério Lemes — editor</title>\n\t\t{% if assets %}\n\t\t\t<script type=\"module\" crossorigin src=\"{{ assets.script }}\"></script>\n"
+        ],
+        [
+          "\n\t\t<script>\n\t\t\twindow.csrf_token = \"{{ csrf_token }}\"\n\t\t\twindow.site_url = \"{{ site_url }}\"\n",
+          "\n\t\t<script>\n\t\t\twindow.translatedMessages = {{ translated_messages | tojson }}\n\t\t\twindow.csrf_token = \"{{ csrf_token }}\"\n\t\t\twindow.site_url = \"{{ site_url }}\"\n"
+        ]
+      ]
+    },
+    {
+      "path": "www/studio.py",
+      "before_sha256": "523535af9a9ccc2a802b49bcdefa86991ceaa493fce513cd380f39a045cf4da4",
+      "after_sha256": "712fd20e512840289d6031f30123f12b3ef029c1cc7fe84d3285752d6ccec016",
+      "replacements": [
+        [
+          "\tcontext.is_developer_mode = cint(frappe.conf.developer_mode)\n\tcontext.assets = get_editor_assets(\"index.html\")\n\n\n",
+          "\tcontext.is_developer_mode = cint(frappe.conf.developer_mode)\n\tcontext.assets = get_editor_assets(\"index.html\")\n\tfrom frappe.translate import get_messages_for_boot\n\tcontext.translated_messages = get_messages_for_boot()\n\n\n"
+        ]
+      ]
+    },
+    {
+      "path": "www/third_party_apps.html",
+      "before_sha256": "901e1cac5f3b8a76bffc2c0a8969ea0dbec84a17ecdcff363d0b2590f80b5636",
+      "after_sha256": "a8b8dd5bf9dc86b19fe3c04a1478572e5af24800d21d1676fbcc0cc0b4944a27",
+      "replacements": [
+        [
+          "\t\t\t\t\t\t<div class=\"padding\"></div>\n\t\t\t\t\t\t<div class=\"text-right\">\n\t\t\t\t\t\t\t<button class=\"btn btn-default\" onclick=\"location.href = '/third_party_apps';\">Cancel</button>\n\t\t\t\t\t\t\t<button class=\"btn btn-danger btn-delete-app\" data-client_id=\"{{ app.client_id }}\">Revoke</button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n",
+          "\t\t\t\t\t\t<div class=\"padding\"></div>\n\t\t\t\t\t\t<div class=\"text-right\">\n\t\t\t\t\t\t\t<button class=\"btn btn-default\" onclick=\"location.href = '/third_party_apps';\">{{ _(\"Cancel\") }}</button>\n\t\t\t\t\t\t\t<button class=\"btn btn-danger btn-delete-app\" data-client_id=\"{{ app.client_id }}\">{{ _(\"Revoke\") }}</button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n"
+        ]
+      ]
+    }
+  ]
+}

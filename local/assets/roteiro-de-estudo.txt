@@ -1,0 +1,12 @@
+Roteiro inicial de estudo — material provisório
+
+1. Defina uma necessidade real e um resultado verificável.
+2. Leia o fluxo existente e quem depende dele.
+3. Escolha a menor alteração que resolve todo o pedido.
+4. Confira acesso permitido, acesso recusado e erros de entrada.
+5. Registre o que foi verificado e as pendências concretas.
+
+Referência pública:
+https://tiberiolemes.com.br/estudo-padrao-dev-metodo-tiberio/
+
+Este roteiro não substitui as futuras aulas gravadas de Tibério Lemes.

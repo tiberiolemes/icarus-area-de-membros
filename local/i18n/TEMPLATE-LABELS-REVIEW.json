@@ -1,0 +1,502 @@
+{
+  "criterion": "Babel AST of presentation properties inside Vue directive expressions; labels only, value/fieldname/type/route remain untouched.",
+  "files": [
+    "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+    "studio/frontend/src/components/ComponentEvents.vue",
+    "studio/frontend/src/components/StudioToolbar.vue",
+    "studio/frontend/src/components/FormDialog.vue",
+    "studio/frontend/src/components/ResourceDialog.vue",
+    "studio/frontend/src/components/PublishButton.vue",
+    "studio/frontend/src/components/BlockGridLayoutHandler.vue",
+    "studio/frontend/src/components/SearchBlock.vue",
+    "studio/frontend/src/components/BlockPositionHandler.vue",
+    "studio/frontend/src/components/DimensionInput.vue",
+    "studio/frontend/src/components/ComponentPanel.vue",
+    "studio/frontend/src/components/ColorPicker.vue",
+    "studio/frontend/src/pages/Home.vue"
+  ],
+  "occurrences": 60,
+  "records": [
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "Horizontal",
+      "start": 157,
+      "end": 169,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "Vertical",
+      "start": 244,
+      "end": 254,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "Space Between",
+      "start": 830,
+      "end": 845,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "Space Around",
+      "start": 885,
+      "end": 899,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "Space Evenly",
+      "start": 938,
+      "end": 952,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "No Wrap",
+      "start": 1497,
+      "end": 1506,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "Wrap",
+      "start": 1539,
+      "end": 1545,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "Yes",
+      "start": 2189,
+      "end": 2194,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "No",
+      "start": 2221,
+      "end": 2225,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "Yes",
+      "start": 2496,
+      "end": 2501,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockFlexLayoutHandler.vue",
+      "source": "No",
+      "start": 2528,
+      "end": 2532,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/ComponentEvents.vue",
+      "source": "Message",
+      "start": 2306,
+      "end": 2315,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/ComponentEvents.vue",
+      "source": "Script",
+      "start": 2357,
+      "end": 2365,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/ComponentEvents.vue",
+      "source": "Message",
+      "start": 3603,
+      "end": 3612,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/ComponentEvents.vue",
+      "source": "Script",
+      "start": 3654,
+      "end": 3662,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/StudioToolbar.vue",
+      "source": "Back to Dashboard",
+      "start": 321,
+      "end": 340,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/StudioToolbar.vue",
+      "source": "View App in Desk",
+      "start": 551,
+      "end": 569,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/StudioToolbar.vue",
+      "source": "View Page in Desk",
+      "start": 700,
+      "end": 719,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/StudioToolbar.vue",
+      "source": "Settings",
+      "start": 993,
+      "end": 1003,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/StudioToolbar.vue",
+      "source": "Keyboard Shortcuts",
+      "start": 1122,
+      "end": 1142,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/StudioToolbar.vue",
+      "source": "Toggle Theme",
+      "start": 1269,
+      "end": 1283,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/StudioToolbar.vue",
+      "source": "Delete App",
+      "start": 1509,
+      "end": 1521,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/StudioToolbar.vue",
+      "source": "Logout",
+      "start": 1777,
+      "end": 1785,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/StudioToolbar.vue",
+      "source": "Select (v)",
+      "start": 2616,
+      "end": 2628,
+      "attr": "for"
+    },
+    {
+      "path": "studio/frontend/src/components/StudioToolbar.vue",
+      "source": "Container (c)",
+      "start": 2695,
+      "end": 2710,
+      "attr": "for"
+    },
+    {
+      "path": "studio/frontend/src/components/FormDialog.vue",
+      "source": "Label",
+      "start": 1052,
+      "end": 1059,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/FormDialog.vue",
+      "source": "Fieldname",
+      "start": 1117,
+      "end": 1128,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/FormDialog.vue",
+      "source": "Fieldtype",
+      "start": 1197,
+      "end": 1208,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/FormDialog.vue",
+      "source": "Component Name",
+      "start": 1598,
+      "end": 1614,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/FormDialog.vue",
+      "source": "Component Type",
+      "start": 1760,
+      "end": 1776,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/ResourceDialog.vue",
+      "source": "Key",
+      "start": 1414,
+      "end": 1419,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/ResourceDialog.vue",
+      "source": "Value",
+      "start": 1476,
+      "end": 1483,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/PublishButton.vue",
+      "source": "Revert Changes",
+      "start": 544,
+      "end": 560,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/PublishButton.vue",
+      "source": "Publish App",
+      "start": 860,
+      "end": 873,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/PublishButton.vue",
+      "source": "Unpublish Page",
+      "start": 1058,
+      "end": 1074,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/PublishButton.vue",
+      "source": "Unpublish App",
+      "start": 1247,
+      "end": 1262,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockGridLayoutHandler.vue",
+      "source": "Fixed",
+      "start": 252,
+      "end": 259,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockGridLayoutHandler.vue",
+      "source": "Auto",
+      "start": 291,
+      "end": 297,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/SearchBlock.vue",
+      "source": "Search",
+      "start": 237,
+      "end": 245,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/SearchBlock.vue",
+      "source": "Find & Replace",
+      "start": 307,
+      "end": 323,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockPositionHandler.vue",
+      "source": "Auto",
+      "start": 285,
+      "end": 291,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockPositionHandler.vue",
+      "source": "Free",
+      "start": 325,
+      "end": 331,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockPositionHandler.vue",
+      "source": "Relative",
+      "start": 367,
+      "end": 377,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockPositionHandler.vue",
+      "source": "Fixed",
+      "start": 413,
+      "end": 420,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/BlockPositionHandler.vue",
+      "source": "Sticky",
+      "start": 453,
+      "end": 461,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/DimensionInput.vue",
+      "source": "Auto",
+      "start": 149,
+      "end": 155,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/DimensionInput.vue",
+      "source": "Fit Content",
+      "start": 198,
+      "end": 211,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/DimensionInput.vue",
+      "source": "Stretch",
+      "start": 261,
+      "end": 270,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/ComponentPanel.vue",
+      "source": "Standard",
+      "start": 456,
+      "end": 466,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/ComponentPanel.vue",
+      "source": "Custom",
+      "start": 503,
+      "end": 511,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/ColorPicker.vue",
+      "source": "Custom",
+      "start": 453,
+      "end": 461,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/components/ColorPicker.vue",
+      "source": "Tokens",
+      "start": 497,
+      "end": 505,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/pages/Home.vue",
+      "source": "Toggle Theme",
+      "start": 277,
+      "end": 291,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/pages/Home.vue",
+      "source": "Logout",
+      "start": 414,
+      "end": 422,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/pages/Home.vue",
+      "source": "All",
+      "start": 1604,
+      "end": 1609,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/pages/Home.vue",
+      "source": "Standard",
+      "start": 1643,
+      "end": 1653,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/pages/Home.vue",
+      "source": "Custom",
+      "start": 1692,
+      "end": 1700,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/pages/Home.vue",
+      "source": "Edit",
+      "start": 3282,
+      "end": 3288,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/pages/Home.vue",
+      "source": "View in Desk",
+      "start": 3513,
+      "end": 3527,
+      "attr": "bind"
+    },
+    {
+      "path": "studio/frontend/src/pages/Home.vue",
+      "source": "Delete",
+      "start": 3660,
+      "end": 3668,
+      "attr": "bind"
+    }
+  ],
+  "contexts": {
+    "Free": "Free positioning",
+    "Tokens": "Style Tokens"
+  },
+  "visual_validation_complete": false,
+  "expression_parser_followup": {
+    "reason": "Object literals must be parsed as expressions rather than statement blocks.",
+    "production_labels": 3,
+    "review": [
+      {
+        "path": "studio/frontend/src/components/PropsEditor.vue",
+        "source": "Expand",
+        "start": 1632,
+        "end": 1640,
+        "attr": "bind"
+      },
+      {
+        "path": "studio/frontend/src/components/PropsEditor.vue",
+        "source": "Expand",
+        "start": 2921,
+        "end": 2929,
+        "attr": "bind"
+      },
+      {
+        "path": "studio/frontend/src/pages/Home.vue",
+        "source": "App Options",
+        "start": 4075,
+        "end": 4088,
+        "attr": "bind"
+      },
+      {
+        "path": "ui/src/components/InviteUser/stories/InviteUser.story.vue",
+        "source": "Teammate emails",
+        "start": 1499,
+        "end": 1516,
+        "attr": "bind"
+      },
+      {
+        "path": "ui/src/components/InviteUser/stories/InviteUser.story.vue",
+        "source": "Custom label supplied via emailProps.",
+        "start": 1536,
+        "end": 1575,
+        "attr": "bind"
+      },
+      {
+        "path": "ui/src/components/InviteUser/stories/InviteUser.story.vue",
+        "source": "name@company.com",
+        "start": 1595,
+        "end": 1613,
+        "attr": "bind"
+      },
+      {
+        "path": "ui/src/components/InviteUser/stories/InviteUser.story.vue",
+        "source": "Access level",
+        "start": 1649,
+        "end": 1663,
+        "attr": "bind"
+      }
+    ],
+    "stories_excluded": true
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "base_image": "ghcr.io/frappe/lms@sha256:a8dff54c23458bdf8b0b5fa8acdcb07912203e52774aabe206c6ed02f6fa8bd5",
+  "origin": "System files read from immutable r8; its recipe did not alter these base-image paths",
+  "patches": [
+    {
+      "path": "usr/local/bin/nginx-entrypoint.sh",
+      "before_sha256": "3588cc6cdaa4dbabebca5f7cd3233f506ca53cfdec4e7f780cb95bcbe577fcc5",
+      "after_sha256": "df0d8b2cff6ebefcfef27d10e141d2db10ed6179771d0ccc3fd08ff3e6d47007",
+      "replacements": [
+        [
+          "nginx -g 'daemon off;'",
+          "exec nginx -g 'daemon off;'",
+          1
+        ]
+      ]
+    },
+    {
+      "path": "usr/local/bin/start.sh",
+      "before_sha256": "194a7225d6fb0a49dc0591d1ac450e3ff8060b93ee4a47be503ef40e61bbb48a",
+      "after_sha256": "aa72d71347cb77e804dea017f379fdf429739a0093f8ad43a30fea8eff42e6ae",
+      "replacements": [
+        [
+          "  --preload \\\n",
+          "  --preload \\\n  --access-logfile=- \\\n  --error-logfile=- \\\n  --access-logformat='%(t)s pid=%(p)s request_id=%({x-request-id}i)s method=%(m)s uri=%(U)s status=%(s)s request_time=%(L)s' \\\n",
+          1
+        ]
+      ]
+    },
+    {
+      "path": "templates/nginx/frappe.conf.template",
+      "before_sha256": "44333d43c35edf6520fb7b8993c7292d7964c5783b5f31849296bfda5d3cfc33",
+      "after_sha256": "d78bcebbae26d38c8c230945049849643a2963d550014d46feacfe948234963f",
+      "replacements": [
+        [
+          "upstream backend-server {",
+          "log_format tiberio_safe escape=json '$time_iso8601 request_id=$request_id connection=$connection request_sequence=$connection_requests method=$request_method uri=$uri status=$status bytes=$body_bytes_sent request_time=$request_time upstream_status=$upstream_status upstream_time=$upstream_response_time';\n\nupstream backend-server {",
+          1
+        ],
+        [
+          "\troot /home/frappe/frappe-bench/sites;",
+          "\troot /home/frappe/frappe-bench/sites;\n\taccess_log /var/log/nginx/access.log tiberio_safe;",
+          1
+        ],
+        [
+          "\t\tproxy_set_header Host $host;",
+          "\t\tproxy_set_header Host $host;\n\t\tproxy_set_header X-Request-ID $request_id;",
+          2
+        ]
+      ]
+    }
+  ]
+}

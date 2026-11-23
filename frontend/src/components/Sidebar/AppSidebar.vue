@@ -1,0 +1,686 @@
+<template>
+	<div
+		class="flex h-full flex-col justify-between transition-all duration-300 ease-in-out border-e bg-surface-sidebar overflow-x-hidden"
+		:class="sidebarStore.isSidebarCollapsed ? 'w-14' : 'w-56'"
+	>
+		<ScrollArea class="min-h-0 flex-1">
+			<div
+				class="flex flex-col"
+				:class="sidebarStore.isSidebarCollapsed ? 'items-center' : ''"
+			>
+				<UserDropdown :isCollapsed="sidebarStore.isSidebarCollapsed" />
+				<div class="flex flex-col" v-if="sidebarSettings.data">
+					<div v-for="link in sidebarLinks" class="mx-2 my-2.5">
+						<div
+							v-if="!link.hideLabel"
+							class="mb-2 mt-3 flex cursor-pointer gap-1.5 px-1 text-p-base-medium text-ink-gray-6 transition-all duration-300 ease-in-out"
+						>
+							<span>{{ __(link.label) }}</span>
+						</div>
+						<nav class="space-y-1">
+							<div v-for="item in link.items">
+								<SidebarLink
+									:link="item"
+									:isCollapsed="sidebarStore.isSidebarCollapsed"
+								/>
+							</div>
+						</nav>
+					</div>
+				</div>
+				<div
+					v-if="sidebarSettings.data?.web_pages?.length || isModerator"
+					class="mt-4"
+				>
+					<div
+						class="flex items-center gap-1 px-1"
+						:class="
+							sidebarStore.isSidebarCollapsed ? 'flex-col' : 'justify-between'
+						"
+					>
+						<Button
+							v-if="sidebarSettings.data?.web_pages?.length"
+							type="button"
+							variant="ghost"
+							class="!min-h-11 !min-w-11 focus-visible:ring-2 focus-visible:ring-outline-gray-5"
+							:aria-label="__('More')"
+							:aria-expanded="!sidebarStore.isWebpagesCollapsed"
+							aria-controls="sidebar-web-pages"
+							@click="toggleWebPages"
+						>
+							<span
+								aria-hidden="true"
+								class="lucide-chevron-right size-4 text-ink-gray-9 transition-all duration-300 ease-in-out"
+								:class="{
+									'rotate-90': !sidebarStore.isWebpagesCollapsed,
+									'rtl:rotate-180': sidebarStore.isWebpagesCollapsed,
+								}"
+							/>
+							<span
+								:class="sidebarStore.isSidebarCollapsed ? 'sr-only' : 'ms-2'"
+								>{{ __('More') }}</span
+							>
+						</Button>
+						<span
+							v-else-if="!sidebarStore.isSidebarCollapsed"
+							class="ps-3 text-ink-gray-6"
+							>{{ __('More') }}</span
+						>
+						<Button
+							v-if="isModerator && !readOnlyMode"
+							type="button"
+							variant="ghost"
+							class="!min-h-11 !min-w-11 focus-visible:ring-2 focus-visible:ring-outline-gray-5"
+							:aria-label="__('New Page')"
+							@click="openPageModal()"
+						>
+							<template #icon
+								><span
+									aria-hidden="true"
+									class="lucide-plus size-4 text-ink-gray-7"
+							/></template>
+						</Button>
+					</div>
+					<div
+						v-if="sidebarSettings.data?.web_pages?.length"
+						id="sidebar-web-pages"
+						class="flex flex-col transition-all duration-300 ease-in-out"
+						:class="!sidebarStore.isWebpagesCollapsed ? 'block' : 'hidden'"
+					>
+						<div
+							v-for="link in sidebarSettings.data.web_pages"
+							class="mx-2 my-0.5"
+						>
+							<SidebarLink
+								:link="link"
+								:isCollapsed="sidebarStore.isSidebarCollapsed"
+								:showControls="isModerator ? true : false"
+								@openModal="openPageModal"
+								@deletePage="deletePage"
+							/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</ScrollArea>
+		<div class="m-2 flex flex-col gap-1">
+			<div
+				v-if="readOnlyMode && !sidebarStore.isSidebarCollapsed"
+				class="z-10 m-2 bg-surface-elevation-2 py-2.5 px-3 text-p-xs text-ink-gray-7 rounded-5"
+			>
+				{{ readOnlyNotice }}
+			</div>
+			<div
+				v-if="
+					isStudent && !profileIsComplete && !sidebarStore.isSidebarCollapsed
+				"
+				class="flex flex-col gap-3 text-ink-gray-9 py-2.5 px-3 bg-surface-base shadow-sm rounded-5"
+			>
+				<div class="flex flex-col text-p-sm gap-1">
+					<div class="inline-flex gap-1">
+						<span class="lucide-user h-4 my-0.5 shrink-0" />
+						<div class="font-medium">
+							{{ __('Complete your profile') }}
+						</div>
+					</div>
+					<div class="text-ink-gray-7">
+						{{ __('Highlight what makes you unique and show your skills.') }}
+					</div>
+				</div>
+				<router-link
+					:to="{
+						name: 'Profile',
+						params: {
+							username: userResource.data?.username,
+						},
+					}"
+				>
+					<Button :label="__('My Profile')" class="w-full">
+						<template #prefix>
+							<span class="lucide-chevrons-right h-4 w-4 text-ink-gray-7" />
+						</template>
+					</Button>
+				</router-link>
+			</div>
+			<Tooltip
+				v-if="
+					isStudent && !profileIsComplete && sidebarStore.isSidebarCollapsed
+				"
+				:text="__('Complete your profile')"
+			>
+				<router-link
+					:to="{
+						name: 'Profile',
+						params: {
+							username: userResource.data?.username,
+						},
+					}"
+					class="flex items-center justify-center"
+				>
+					<span class="lucide-user size-4 text-ink-gray-7 cursor-pointer" />
+				</router-link>
+			</Tooltip>
+			<GettingStartedBanner
+				v-if="showOnboarding && !isOnboardingStepsCompleted"
+				:isSidebarCollapsed="sidebarStore.isSidebarCollapsed"
+				appName="learning"
+			/>
+
+			<div
+				class="flex items-center mt-4"
+				:class="
+					sidebarStore.isSidebarCollapsed ? 'flex-col space-y-3' : 'flex-row'
+				"
+			>
+				<div
+					class="flex items-center flex-1 gap-3"
+					:class="sidebarStore.isSidebarCollapsed ? 'flex-col' : 'flex-row'"
+				>
+					<template v-if="readOnlyMode && sidebarStore.isSidebarCollapsed">
+						<Tooltip>
+							<span
+								class="lucide-circle-alert size-4 text-ink-gray-7 cursor-pointer"
+								aria-hidden="true"
+							/>
+							<template #content>
+								<div class="max-w-[30ch] text-center text-p-xs">
+									{{ readOnlyNotice }}
+								</div>
+							</template>
+						</Tooltip>
+						<span class="sr-only">{{ readOnlyNotice }}</span>
+					</template>
+					<Tooltip v-if="showOnboarding" :text="__('Help')">
+						<button
+							type="button"
+							class="flex"
+							:aria-label="__('Help')"
+							@click="toggleHelp"
+						>
+							<span
+								class="lucide-circle-help size-4 text-ink-gray-7 cursor-pointer"
+								aria-hidden="true"
+							/>
+						</button>
+					</Tooltip>
+				</div>
+				<Tooltip
+					:text="
+						sidebarStore.isSidebarCollapsed ? __('Expand') : __('Collapse')
+					"
+				>
+					<Button
+						type="button"
+						variant="ghost"
+						class="!min-h-11 !min-w-11 focus-visible:ring-2 focus-visible:ring-outline-gray-5"
+						:aria-label="
+							sidebarStore.isSidebarCollapsed ? __('Expand') : __('Collapse')
+						"
+						:aria-expanded="!sidebarStore.isSidebarCollapsed"
+						@click="toggleSidebar()"
+					>
+						<CollapseSidebar
+							aria-hidden="true"
+							class="size-4 text-ink-gray-7 duration-300 stroke-1.5 ease-in-out"
+							:style="{
+								transform:
+									isRtl !== sidebarStore.isSidebarCollapsed
+										? 'rotateY(180deg)'
+										: '',
+							}"
+						/>
+					</Button>
+				</Tooltip>
+			</div>
+		</div>
+		<HelpModal
+			class="getting-started"
+			data-testid="onboarding-help-modal"
+			v-if="showOnboarding && showHelpModal"
+			v-model="showHelpModal"
+			v-model:articles="articles"
+			appName="learning"
+			:title="__('Frappe Learning')"
+			:logo="LMSLogo"
+			:afterSkip="(step) => capture('onboarding_step_skipped_' + step)"
+			:afterSkipAll="() => capture('onboarding_steps_skipped')"
+			:afterReset="(step) => capture('onboarding_step_reset_' + step)"
+			:afterResetAll="() => capture('onboarding_steps_reset')"
+			docsLink="https://docs.frappe.io/learning"
+		/>
+		<IntermediateStepModal
+			v-model="showIntermediateModal"
+			:currentStep="currentStep"
+		/>
+	</div>
+	<CommandPalette v-model="settingsStore.isCommandPaletteOpen" />
+	<PageModal
+		v-model="showPageModal"
+		v-model:reloadSidebar="sidebarSettings"
+		:page="pageToEdit"
+	/>
+</template>
+
+<script setup>
+import { getSidebarLinks } from '@/utils'
+import { usersStore } from '@/stores/user'
+import { seesOnboarding } from '@/utils/onboarding'
+import { useSidebar } from '@/stores/sidebar'
+import { useSettings } from '@/stores/settings'
+import { Button, call, ScrollArea, Tooltip, toast } from 'frappe-ui'
+import PageModal from '@/components/Modals/PageModal.vue'
+import LMSLogo from '@/components/Icons/LMSLogo.vue'
+import { useRouter } from 'vue-router'
+import { openFormRoute } from '@/composables/useFormRoute'
+import {
+	ref,
+	onMounted,
+	inject,
+	watch,
+	reactive,
+	markRaw,
+	h,
+	onUnmounted,
+	computed,
+} from 'vue'
+import { BookOpen, FileText, Globe, Users } from 'lucide-vue-next'
+import {
+	HelpModal,
+	GettingStartedBanner,
+	useOnboarding,
+	showHelpModal,
+	minimize,
+	IntermediateStepModal,
+} from '@framework/ui/components/Onboarding/index'
+import { useTelemetry } from '@framework/ui/telemetry/index'
+import { setFormSource } from '@/composables/formTracking'
+import InviteIcon from '@/components/Icons/InviteIcon.vue'
+import UserDropdown from '@/components/Sidebar/UserDropdown.vue'
+import { pushSettingsHash } from '@/composables/useSettingsHash'
+import CollapseSidebar from '@/components/Icons/CollapseSidebar.vue'
+import SidebarLink from '@/components/Sidebar/SidebarLink.vue'
+import CommandPalette from '@/components/CommandPalette/CommandPalette.vue'
+import {
+	loadUnreadCount,
+	unreadCount,
+	unreadNotifications,
+} from '@/stores/notifications'
+
+const { userResource } = usersStore()
+let sidebarStore = useSidebar()
+const socket = inject('$socket')
+const sidebarLinks = ref(null)
+const { capture } = useTelemetry()
+const showPageModal = ref(false)
+const isModerator = ref(false)
+const isInstructor = ref(false)
+const pageToEdit = ref(null)
+const { sidebarSettings, programs, loadSidebarSettings } = useSettings()
+const settingsStore = useSettings()
+const showOnboarding = ref(false)
+const showIntermediateModal = ref(false)
+const currentStep = ref({})
+const router = useRouter()
+let onboardingDetails
+let isOnboardingStepsCompleted = false
+const readOnlyMode = window.read_only_mode
+const isRtl = document.documentElement.dir === 'rtl'
+const readOnlyNotice = __(
+	'This site is being updated. You will not be able to make any changes. Full access will be restored shortly.'
+)
+const openCourseForm = () => {
+	// The native dialog restores focus to this still-visible checklist action.
+	minimize.value = false
+	setFormSource('onboarding')
+	openFormRoute(router, { name: 'NewCourse' })
+}
+
+// Opens the help panel, or brings it back when it was minimized.
+const toggleHelp = () => {
+	showHelpModal.value = minimize.value ? true : !showHelpModal.value
+	minimize.value = !showHelpModal.value
+	if (showHelpModal.value) {
+		capture('onboarding_help_opened', {
+			role: userResource.data?.is_system_manager
+				? 'system_manager'
+				: 'moderator',
+		})
+	}
+}
+const iconProps = {
+	strokeWidth: 1.5,
+	width: 16,
+	height: 16,
+}
+
+onMounted(() => {
+	setUpOnboarding()
+	addKeyboardShortcut()
+	updateSidebarLinks()
+	loadUnreadCount()
+	socket.on('publish_lms_notifications', () => {
+		unreadNotifications.reload()
+	})
+})
+
+// The count lives in stores/notifications now, so the badge follows it rather
+// than being written from the resource's onSuccess.
+watch(unreadCount, () => updateUnreadCount())
+
+const updateSidebarLinksVisibility = () => {
+	loadSidebarSettings().then(() => {
+		const data = sidebarSettings.data
+		if (!data) return
+		Object.keys(data).forEach((key) => {
+			if (!parseInt(data[key])) {
+				sidebarLinks.value.forEach((link) => {
+					link.items = link.items.filter(
+						(item) => item.label.toLowerCase().split(' ').join('_') !== key
+					)
+				})
+			}
+		})
+	})
+}
+
+const onKeyboardShortcut = (e) => {
+	if (
+		e.key === 'k' &&
+		(e.ctrlKey || e.metaKey) &&
+		!e.repeat &&
+		!e.target.classList.contains('ProseMirror')
+	) {
+		toggleCommandPalette()
+		e.preventDefault()
+	}
+}
+
+const addKeyboardShortcut = () => {
+	window.addEventListener('keydown', onKeyboardShortcut)
+}
+
+const toggleCommandPalette = () => {
+	settingsStore.isCommandPaletteOpen = !settingsStore.isCommandPaletteOpen
+}
+
+const updateUnreadCount = () => {
+	sidebarLinks.value?.forEach((link) => {
+		link.items.forEach((item) => {
+			if (item.label === 'Notifications') {
+				item.count = unreadCount.value || 0
+			}
+		})
+	})
+}
+
+const openPageModal = (link) => {
+	showPageModal.value = true
+	pageToEdit.value = link
+}
+
+const deletePage = (link) => {
+	call('lms.lms.api.delete_documents', {
+		doctype: 'LMS Sidebar Item',
+		documents: [link.name],
+	}).then(() => {
+		loadSidebarSettings(true)
+		toast.success(__('Page deleted successfully'))
+	})
+}
+
+const toggleSidebar = () => {
+	sidebarStore.isSidebarCollapsed = !sidebarStore.isSidebarCollapsed
+	localStorage.setItem(
+		'isSidebarCollapsed',
+		JSON.stringify(sidebarStore.isSidebarCollapsed)
+	)
+}
+
+const toggleWebPages = () => {
+	sidebarStore.isWebpagesCollapsed = !sidebarStore.isWebpagesCollapsed
+	localStorage.setItem(
+		'isWebpagesCollapsed',
+		JSON.stringify(sidebarStore.isWebpagesCollapsed)
+	)
+}
+
+const getFirstCourse = async () => {
+	let firstCourse = localStorage.getItem('firstCourse')
+	if (firstCourse) return firstCourse
+	return await call('lms.lms.onboarding.get_first_course')
+}
+
+// Five steps, in the order of the goal picked in setup: a course first for most,
+// a batch first for someone bringing their learners in.
+const allSteps = [
+	{
+		name: 'create_first_course',
+		title: __('Create your first course'),
+		icon: markRaw(h(BookOpen, iconProps)),
+		completed: false,
+		onClick: () => {
+			// Opens the form itself: sent to the course list instead, nothing
+			// happened when the list was already open.
+			openCourseForm()
+		},
+	},
+	{
+		name: 'create_first_lesson',
+		title: __('Add your first lesson'),
+		icon: markRaw(h(FileText, iconProps)),
+		completed: false,
+		dependsOn: 'create_first_course',
+		onClick: async () => {
+			let course = await getFirstCourse()
+			if (course) {
+				minimize.value = true
+				router.push({
+					name: 'CourseDetail',
+					params: { courseName: course },
+					hash: '#editor',
+				})
+			} else {
+				openCourseForm()
+			}
+		},
+	},
+	{
+		name: 'publish_first_course',
+		title: __('Publish your course'),
+		icon: markRaw(h(Globe, iconProps)),
+		completed: false,
+		dependsOn: 'create_first_lesson',
+		onClick: async () => {
+			let course = await getFirstCourse()
+			if (course) {
+				minimize.value = true
+				router.push({ name: 'CourseDetail', params: { courseName: course } })
+			} else {
+				openCourseForm()
+			}
+		},
+	},
+	{
+		name: 'invite_students',
+		title: __('Invite your team and students'),
+		icon: markRaw(h(InviteIcon, iconProps)),
+		completed: false,
+		onClick: () => {
+			minimize.value = false
+			pushSettingsHash(router, 'members')
+		},
+	},
+	{
+		name: 'create_first_batch',
+		title: __('Create your first batch'),
+		icon: markRaw(h(Users, iconProps)),
+		completed: false,
+		onClick: () => {
+			minimize.value = false
+			setFormSource('onboarding')
+			openFormRoute(router, { name: 'NewBatch' })
+		},
+	},
+].map((step) => reactive(step))
+
+const BATCH_FIRST = [
+	'create_first_batch',
+	'invite_students',
+	'create_first_course',
+	'create_first_lesson',
+	'publish_first_course',
+]
+
+const stepsFor = (goal) => {
+	if (goal !== 'Onboard my existing learners') return allSteps
+	return BATCH_FIRST.map((name) => allSteps.find((step) => step.name === name))
+}
+
+// The goal from this browser, else from the server, asked twice so one failed
+// request does not put the checklist in the wrong order for the visit.
+const firstGoal = async () => {
+	const saved = localStorage.getItem('lmsFirstGoal')
+	if (saved) return saved
+	for (const delay of [0, 2000]) {
+		if (delay) await new Promise((resolve) => setTimeout(resolve, delay))
+		try {
+			const goal = (await call('lms.lms.onboarding.get_setup_state'))
+				?.first_goal
+			if (goal) localStorage.setItem('lmsFirstGoal', goal)
+			return goal
+		} catch {
+			// Try once more.
+		}
+	}
+	return null
+}
+
+const articles = ref([
+	{
+		title: __('Introduction'),
+		opened: false,
+		subArticles: [
+			{ name: 'introduction', title: __('Introduction') },
+			{ name: 'setting-up', title: __('Setting up') },
+		],
+	},
+	{
+		title: __('Creating a course'),
+		opened: false,
+		subArticles: [
+			{ name: 'create-a-course', title: __('Create a course') },
+			{ name: 'add-a-chapter', title: __('Add a chapter') },
+			{ name: 'add-a-lesson', title: __('Add a lesson') },
+		],
+	},
+	{
+		title: __('Creating a batch'),
+		opened: false,
+		subArticles: [
+			{ name: 'create-a-batch', title: __('Create a batch') },
+			{ name: 'create-a-live-class', title: __('Create a live class') },
+		],
+	},
+	{
+		title: __('Learning Paths'),
+		opened: false,
+		subArticles: [{ name: 'add-a-program', title: __('Add a program') }],
+	},
+	{
+		title: __('Assessments'),
+		opened: false,
+		subArticles: [
+			{ name: 'quizzes', title: __('Quizzes') },
+			{ name: 'assignments', title: __('Assignments') },
+		],
+	},
+	{
+		title: __('Certification'),
+		opened: false,
+		subArticles: [
+			{ name: 'issue-a-certificate', title: __('Issue a Certificate') },
+			{
+				name: 'custom-certificate-templates',
+				title: __('Custom Certificate Templates'),
+			},
+		],
+	},
+	{
+		title: __('Monetization'),
+		opened: false,
+		subArticles: [
+			{
+				name: 'setting-up-payment-gateway',
+				title: __('Setting up payment gateway'),
+			},
+		],
+	},
+	{
+		title: __('Settings'),
+		opened: false,
+		subArticles: [{ name: 'roles', title: __('Roles') }],
+	},
+])
+
+const setUpOnboarding = async () => {
+	if (seesOnboarding(userResource.data)) {
+		onboardingDetails = useOnboarding('learning')
+		const goal = onboardingDetails.isOnboardingStepsCompleted.value
+			? null
+			: await firstGoal()
+		onboardingDetails.setUp(stepsFor(goal))
+		isOnboardingStepsCompleted = onboardingDetails.isOnboardingStepsCompleted
+		showOnboarding.value = true
+	}
+}
+
+watch(userResource, async () => {
+	await userResource.promise
+	if (userResource.data) {
+		isModerator.value = userResource.data.is_moderator
+		isInstructor.value = userResource.data.is_instructor
+		await programs.reload()
+		setUpOnboarding()
+	}
+	updateSidebarLinks()
+})
+
+watch(settingsStore.settings, () => {
+	updateSidebarLinks()
+})
+
+watch(
+	() => sidebarSettings.data,
+	() => updateSidebarLinks(),
+	{ deep: true }
+)
+
+const updateSidebarLinks = () => {
+	sidebarLinks.value = getSidebarLinks()
+	updateSidebarLinksVisibility()
+	updateUnreadCount()
+}
+
+const isStudent = computed(() => {
+	return userResource.data?.is_student
+})
+
+const profileIsComplete = computed(() => {
+	return (
+		userResource.data?.user_image &&
+		userResource.data?.headline &&
+		userResource.data?.bio
+	)
+})
+
+onUnmounted(() => {
+	socket.off('publish_lms_notifications')
+	window.removeEventListener('keydown', onKeyboardShortcut)
+})
+</script>
+
+<style scoped>
+.getting-started :deep(.overflow-y-auto) {
+	scrollbar-width: thin;
+	scrollbar-color: var(--outline-gray-3) transparent;
+}
+</style>

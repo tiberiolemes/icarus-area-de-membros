@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0-rc.1",
+  "reason": "Keyboard activation follows the installed Agenda event protocol; pointer and authority paths are preserved.",
+  "files": [
+    {
+      "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+      "before_sha256": "b77200ca1763919eee88b341a88b2f61a73b04ad609f61884e230eb52c0a4381",
+      "after_sha256": "120c95291df3da3c4e9a7b4f7f836d2476fbb318c35c131bc675e5f2ca728738"
+    },
+    {
+      "path": "experimental/Calendar/CalendarMonthEvent.vue",
+      "before_sha256": "1e3068990340321915928811181b12cf14e752aeb80527149df24d6cd5e555d5",
+      "after_sha256": "95c21b929f34cd23b212628911e7ec9b9a1910f9a9015588b633d836f72682fc"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "doctype": "DocType",
+  "name": "LMS Community",
+  "module": "LMS",
+  "autoname": "field:community_key",
+  "engine": "InnoDB",
+  "field_order": [
+    "community_key",
+    "title",
+    "term_months",
+    "renewal_policy",
+    "refund_policy"
+  ],
+  "fields": [
+    {
+      "fieldname": "community_key",
+      "label": "Community key",
+      "fieldtype": "Data",
+      "unique": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "title",
+      "label": "Title",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "term_months",
+      "label": "Term Months",
+      "fieldtype": "Int",
+      "reqd": 1
+    },
+    {
+      "fieldname": "renewal_policy",
+      "label": "Renewal Policy",
+      "fieldtype": "Select",
+      "options": "Explicit dates",
+      "reqd": 1
+    },
+    {
+      "fieldname": "refund_policy",
+      "label": "Refund Policy",
+      "fieldtype": "Select",
+      "options": "Manual revocation",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Moderator",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1
+    }
+  ],
+  "track_changes": 1,
+  "allow_rename": 0
+}

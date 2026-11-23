@@ -1,0 +1,1013 @@
+{
+  "criterion": "Published ESM dependency has no phrase API. All multiword literals/templates reviewed; only CSS/regex selectors are technical. Single-word accessibility role descriptions are also localized; ARIA roles and IDs remain raw.",
+  "records": [
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgb\\({0},{1},{2}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgb\\({0},{1},{2}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgba\\({0},{1},{2},{3}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgba\\({0},{1},{2},{3}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^hsl\\({0},{1},{2}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^hsla\\({0},{1},{2},{3}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "callback is not a function",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2135
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "too late; already scheduled",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2263
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "too late; already running",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2269
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "transition not found",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2275
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "transition {0} not found",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2885
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Can't create edge. An edge needs a source and a target.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3636
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Can't create new edge. An edge needs a source and a target.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3657
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "The old edge with id={0} does not exist.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3662
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "The padding value \"{0}\" is invalid. Please provide a number or a string with a valid unit (px or %).",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3787
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "It seems that you haven't loaded the necessary styles. Please import '@vue-flow/core/dist/style.css' to ensure that the graph is rendered correctly",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4369
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "The Vue Flow parent container needs a width and a height to render the graph",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4373
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node is invalid\nNode: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4377
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node not found\nNode: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4382
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node is missing a parent\nNode: {0}\nParent: {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4387
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node type is missing\nType: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4393
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Only child nodes can use a parent extent\nNode: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4398
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "An edge needs a source and a target\nEdge: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4403
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge source is missing\nEdge: {0} \nSource: {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4408
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge target is missing\nEdge: {0} \nTarget: {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4414
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge type is missing\nType: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4420
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge source and target are the same\nEdge: {0} \nSource: {1} \nTarget: {2}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4425
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge source or target is missing\nEdge: {0} \nSource: {1} \nTarget: {2}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4432
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge was orphaned (suddenly missing source or target) and has been removed\nEdge: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4439
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge not found\nEdge: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4444
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "The options parameter is deprecated and will be removed in the next major version. Please use the id parameter instead",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4450
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": ".{0}-flow__handle[data-id=\"{1}-{2}-{3}-{4}\"]",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 4574
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "[ID UNKNOWN|INDEX {0}]",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4744
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Viewport not initialized yet.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 5583
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "No store instance found for id {0} in storage.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8038
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px, {1}px)",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 8105
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px,{1}px) scale({2})",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 8172
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px,{1}px) scale({2})",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 8404
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Viewport element is missing",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8476
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": " Press enter or space to select a node. ",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8735
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "You can then use the arrow keys to move the node around.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8735
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": " You can then use the arrow keys to move the node around, press delete to remove it and press escape to cancel. ",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8735
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": " Press enter or space to select an edge. You can then press delete to remove it or press escape to cancel. ",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8739
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "rect(0px, 0px, 0px, 0px)",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 8745
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge from {0} to {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8936
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "vue-flow__edges vue-flow__connectionline vue-flow__container",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 9203
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px,{1}px)",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 9583
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Moved selected node {0}. New position, x: {1}, y: {2}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 9700
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "You are trying to set node data via useNodesData. This is not supported.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 10078
+    },
+    {
+      "path": "studio/frontend/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "You are trying to set edge data via useEdgesData. This is not supported.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 10112
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgb\\({0},{1},{2}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgb\\({0},{1},{2}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgba\\({0},{1},{2},{3}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgba\\({0},{1},{2},{3}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^hsl\\({0},{1},{2}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^hsla\\({0},{1},{2},{3}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1501
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "callback is not a function",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2135
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "too late; already scheduled",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2263
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "too late; already running",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2269
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "transition not found",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2275
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "transition {0} not found",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2885
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Can't create edge. An edge needs a source and a target.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3636
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Can't create new edge. An edge needs a source and a target.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3657
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "The old edge with id={0} does not exist.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3662
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "The padding value \"{0}\" is invalid. Please provide a number or a string with a valid unit (px or %).",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3787
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "It seems that you haven't loaded the necessary styles. Please import '@vue-flow/core/dist/style.css' to ensure that the graph is rendered correctly",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4369
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "The Vue Flow parent container needs a width and a height to render the graph",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4373
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node is invalid\nNode: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4377
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node not found\nNode: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4382
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node is missing a parent\nNode: {0}\nParent: {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4387
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node type is missing\nType: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4393
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Only child nodes can use a parent extent\nNode: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4398
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "An edge needs a source and a target\nEdge: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4403
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge source is missing\nEdge: {0} \nSource: {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4408
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge target is missing\nEdge: {0} \nTarget: {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4414
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge type is missing\nType: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4420
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge source and target are the same\nEdge: {0} \nSource: {1} \nTarget: {2}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4425
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge source or target is missing\nEdge: {0} \nSource: {1} \nTarget: {2}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4432
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge was orphaned (suddenly missing source or target) and has been removed\nEdge: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4439
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge not found\nEdge: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4444
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "The options parameter is deprecated and will be removed in the next major version. Please use the id parameter instead",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4450
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": ".{0}-flow__handle[data-id=\"{1}-{2}-{3}-{4}\"]",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 4574
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "[ID UNKNOWN|INDEX {0}]",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4744
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Viewport not initialized yet.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 5583
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "No store instance found for id {0} in storage.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8038
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px, {1}px)",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 8105
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px,{1}px) scale({2})",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 8172
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px,{1}px) scale({2})",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 8404
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Viewport element is missing",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8476
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": " Press enter or space to select a node. ",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8735
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "You can then use the arrow keys to move the node around.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8735
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": " You can then use the arrow keys to move the node around, press delete to remove it and press escape to cancel. ",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8735
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": " Press enter or space to select an edge. You can then press delete to remove it or press escape to cancel. ",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8739
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "rect(0px, 0px, 0px, 0px)",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 8745
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge from {0} to {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8936
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "vue-flow__edges vue-flow__connectionline vue-flow__container",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 9203
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px,{1}px)",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 9583
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Moved selected node {0}. New position, x: {1}, y: {2}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 9700
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "You are trying to set node data via useNodesData. This is not supported.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 10078
+    },
+    {
+      "path": "flow/node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "You are trying to set edge data via useEdgesData. This is not supported.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 10112
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgb\\({0},{1},{2}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1524
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgb\\({0},{1},{2}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1524
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgba\\({0},{1},{2},{3}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1524
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^rgba\\({0},{1},{2},{3}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1524
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^hsl\\({0},{1},{2}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1524
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "^hsla\\({0},{1},{2},{3}\\)$",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 1524
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "callback is not a function",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2104
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "too late; already scheduled",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2232
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "too late; already running",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2238
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "transition not found",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2244
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "transition {0} not found",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 2854
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Can't create edge. An edge needs a source and a target.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3481
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Can't create new edge. An edge needs a source and a target.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3502
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "The old edge with id={0} does not exist.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 3507
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "The Vue Flow parent container needs a width and a height to render the graph",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4150
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node is invalid\nNode: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4154
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node not found\nNode: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4159
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node is missing a parent\nNode: {0}\nParent: {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4164
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Node type is missing\nType: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4170
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Only child nodes can use a parent extent\nNode: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4175
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "An edge needs a source and a target\nEdge: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4180
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge source is missing\nEdge: {0} \nSource: {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4185
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge target is missing\nEdge: {0} \nTarget: {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4191
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge type is missing\nType: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4197
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge source and target are the same\nEdge: {0} \nSource: {1} \nTarget: {2}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4202
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge source or target is missing\nEdge: {0} \nSource: {1} \nTarget: {2}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4209
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge was orphaned (suddenly missing source or target) and has been removed\nEdge: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4216
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge not found\nEdge: {0}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 4221
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": ".vue-flow__handle[data-id=\"{0}-{1}-{2}\"]",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 4334
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px,{1}px)",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 5131
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Moved selected node {0}. New position, x: {1}, y: {2}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 5248
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Edge from {0} to {1}",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 6060
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "vue-flow__edges vue-flow__connectionline vue-flow__container",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 6332
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px,{1}px) scale({2})",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 6420
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px, {1}px)",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 6451
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "No store instance found for id {0} in storage.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 7474
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Viewport not initialized yet.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 8046
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "translate({0}px,{1}px) scale({2})",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 9030
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "Viewport element is missing",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 9099
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": " Press enter or space to select a node. ",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 9339
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "You can then use the arrow keys to move the node around.",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 9339
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": " You can then use the arrow keys to move the node around, press delete to remove it and press escape to cancel. ",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 9339
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": " Press enter or space to select an edge. You can then press delete to remove it or press escape to cancel. ",
+      "decision": "translated",
+      "reason": "Complete display/error/a11y message, with expression arguments retained.",
+      "line": 9343
+    },
+    {
+      "path": "node_modules/@vue-flow/core/dist/vue-flow-core.mjs",
+      "source": "rect(0px, 0px, 0px, 0px)",
+      "decision": "technical",
+      "reason": "Exact CSS transform/class/selector/clip geometry or color regex; an executable value rather than a sentence.",
+      "line": 9349
+    }
+  ]
+}

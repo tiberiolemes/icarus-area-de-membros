@@ -1,0 +1,17 @@
+{
+  "files": [
+    "studio/frontend/node_modules/frappe-ui/src/components/DatePicker/DateRangePicker.vue",
+    "studio/frontend/node_modules/frappe-ui/src/components/DatePicker/DatePicker.vue",
+    "studio/frontend/node_modules/frappe-ui/src/components/DatePicker/DateTimePicker.vue",
+    "studio/frontend/node_modules/frappe-ui/src/components/DatePicker/DateRangeCalendar.vue",
+    "studio/frontend/node_modules/frappe-ui/src/components/DatePicker/DateCalendar.vue",
+    "flow/node_modules/frappe-ui/src/components/DatePicker/DateRangePicker.vue",
+    "flow/node_modules/frappe-ui/src/components/DatePicker/DatePicker.vue",
+    "flow/node_modules/frappe-ui/src/components/DatePicker/DateTimePicker.vue",
+    "flow/node_modules/frappe-ui/src/components/DatePicker/DateRangeCalendar.vue",
+    "flow/node_modules/frappe-ui/src/components/DatePicker/DateCalendar.vue"
+  ],
+  "native_parser": "Accepts the localized Portuguese separator a, the original English to, and the existing dash separator; submitted dates remain ISO.",
+  "presentation": "Today/Now captions localized through native display props; calendar state and identifiers unchanged.",
+  "regression": "Real DateRangePicker keyboard entry + blur submits both ISO dates, with Portuguese visible text."
+}

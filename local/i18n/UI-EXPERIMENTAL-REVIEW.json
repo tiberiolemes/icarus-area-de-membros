@@ -1,0 +1,3004 @@
+{
+  "package": "frappe-ui",
+  "version": "1.0.0-rc.1",
+  "reason": "Actual populated evaluator calendar exposed experimental/ outside previous src/ transform gate.",
+  "files": [
+    {
+      "path": "experimental/Accordion/Accordion.vue",
+      "sha256": "66d8ab8a7d7ddd7d12cfb8f34f1d38c4aabb98adf50d473e49a75d2319fb16ba"
+    },
+    {
+      "path": "experimental/Accordion/index.ts",
+      "sha256": "1577e80e90f250dd8bcde3862bdb20d08b4ecbcbfd7dd5a6d7af9ef08baf82b1"
+    },
+    {
+      "path": "experimental/Accordion/types.ts",
+      "sha256": "11bcab2ae275288eaed33eb915c54a3e20c995bc697d6c8a9e6da0798ed68037"
+    },
+    {
+      "path": "experimental/Calendar/Calendar.vue",
+      "sha256": "4b824996dbb5a9e059f4f515f5e928e5697216c9a1246f983f7fea317b029035"
+    },
+    {
+      "path": "experimental/Calendar/CalendarAgenda.vue",
+      "sha256": "6f116de8ecbfe6c195c683a9bd4994fe24ae272724fc9e9ffb6d3c4cef6e5c8f"
+    },
+    {
+      "path": "experimental/Calendar/CalendarDaily.vue",
+      "sha256": "a19e455f44867d2a7679535ba0795ba3faa73e13f5ab8a29280c066c1ed49e1c"
+    },
+    {
+      "path": "experimental/Calendar/CalendarEventPopover.vue",
+      "sha256": "8ee0cda87007ccabb598aea2f477b3dfd075557db58d2fe068dd799c808b8970"
+    },
+    {
+      "path": "experimental/Calendar/CalendarEventRow.vue",
+      "sha256": "97b20ba93a50b10ec6e8ea13cb7aab2b4bee517832b4682c555670df889c62e7"
+    },
+    {
+      "path": "experimental/Calendar/CalendarMonthEvent.vue",
+      "sha256": "1e3068990340321915928811181b12cf14e752aeb80527149df24d6cd5e555d5"
+    },
+    {
+      "path": "experimental/Calendar/CalendarMonthly.vue",
+      "sha256": "9b254096743c9575649de817cdfc32de45040e213117c2adaa4e3b1fd5b8c70a"
+    },
+    {
+      "path": "experimental/Calendar/CalendarTimeMarker.vue",
+      "sha256": "d6d67b79b69f52f83783dc5e25659147349719ab9d883361e32309e39ccd2dad"
+    },
+    {
+      "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+      "sha256": "b77200ca1763919eee88b341a88b2f61a73b04ad609f61884e230eb52c0a4381"
+    },
+    {
+      "path": "experimental/Calendar/CalendarWeekly.vue",
+      "sha256": "babdf7ed9f8472d1c6846b47667a6ef4822a7803e7cad43c7133161c39003beb"
+    },
+    {
+      "path": "experimental/Calendar/EventModalContent.vue",
+      "sha256": "c7fb89c96fa44f01469742918242f6b7b1872ec81280654d595d0561b22b3c9b"
+    },
+    {
+      "path": "experimental/Calendar/Icon/AgendaIcon.vue",
+      "sha256": "51c2962349bb7ff5a2f3c430ece90e8ddcf86ac5fa6dd8133b6c032a78362eca"
+    },
+    {
+      "path": "experimental/Calendar/Icon/DayIcon.vue",
+      "sha256": "c5df5ee752429598a27be8a2405691db918226fc66abe5eaad67ec3d60dfeb15"
+    },
+    {
+      "path": "experimental/Calendar/Icon/MonthIcon.vue",
+      "sha256": "2092d2f1cbbecee9c4a0ad36dfed1f70d733476c78e1a3a46857429b4535afbe"
+    },
+    {
+      "path": "experimental/Calendar/Icon/WeekIcon.vue",
+      "sha256": "7af5782fa9d04af48244d3cf01d1dc995aef256ac19df5aed6d69ba3a9ad33ed"
+    },
+    {
+      "path": "experimental/Calendar/NewEventModal.vue",
+      "sha256": "7d7a20503108c1996d546b9cd892e748d0348b3f867d11b7138cc9d4168c77e2"
+    },
+    {
+      "path": "experimental/Calendar/agendaDays.ts",
+      "sha256": "039f1bf5dad75b7632dfb965e928ae67a5d5f6697ff517f715f18d6e5903d15e"
+    },
+    {
+      "path": "experimental/Calendar/calendarUtils.ts",
+      "sha256": "d85eaa60698e203fb1a5ea93b9fe37977104621b59f1b27d0d074c4308b77885"
+    },
+    {
+      "path": "experimental/Calendar/composables/useCalendarData.ts",
+      "sha256": "5f51a80dc3141a7e91d46745b4ce8028d5258cfc1656452d019110352110d2c9"
+    },
+    {
+      "path": "experimental/Calendar/composables/useEventModal.ts",
+      "sha256": "2b41d23773d1881805c808bc565be45e168135d1b90e4a41144c6cb15f1c5fbe"
+    },
+    {
+      "path": "experimental/Calendar/composables/useHourGrid.ts",
+      "sha256": "917bd3630f64ac7267b8ff7961670d890678ea87ab19ed2e0c53a0022de7d847"
+    },
+    {
+      "path": "experimental/Calendar/composables/useNow.ts",
+      "sha256": "398c74a7a66bd91a829b3df1d402413652de665782b48082ac5950da34c449cb"
+    },
+    {
+      "path": "experimental/Calendar/composables/useStripScroll.ts",
+      "sha256": "84b1a5840eb79910867d5af421a4c5a3e5e33e6648699915a11e2e249dd38305"
+    },
+    {
+      "path": "experimental/Calendar/eventRow.ts",
+      "sha256": "17724c47928d2f65bc2b1388bd65598ca53fd29b4136a5d276cf163cb2a26279"
+    },
+    {
+      "path": "experimental/Calendar/eventSpan.ts",
+      "sha256": "56f6c5ee03bc4c487e759a9d67a9561733d82561e2f89760c450e49166725759"
+    },
+    {
+      "path": "experimental/Calendar/index.ts",
+      "sha256": "d9de61fb89650dc14ad7b49df400bdf9f9f38778631ccb14b511f5ca9255db0d"
+    },
+    {
+      "path": "experimental/Calendar/monthStrip.ts",
+      "sha256": "daf5670eddd424b902dfc218c8d1a9909f4f57aefcf90f1653f92acdc37f4a6d"
+    },
+    {
+      "path": "experimental/Calendar/types.ts",
+      "sha256": "3a08937f17abe9914a5cf00ce174ebf47dd13c1db824454b7830da3423a18a2b"
+    },
+    {
+      "path": "experimental/Calendar/useEventBase.ts",
+      "sha256": "9993d8f497dbbb068cdc969253963d5c68117220003739879de785a650403fe5"
+    },
+    {
+      "path": "experimental/Charts/AxisChart.vue",
+      "sha256": "c814942f6afd13053674010ff89d576efb2850ca14d055ba7775fa2f4eb52b10"
+    },
+    {
+      "path": "experimental/Charts/DonutChart.vue",
+      "sha256": "da49ae1213dd95138bfa284e8bcaf04286f37e210ae08a893aa6aad57f2335d5"
+    },
+    {
+      "path": "experimental/Charts/ECharts.vue",
+      "sha256": "dfa5c75b6be6ab91c123ec81e532e3799a9fd949ff57dad93c4b82dc53dc3055"
+    },
+    {
+      "path": "experimental/Charts/FunnelChart.vue",
+      "sha256": "6022076987afe8946871065090b29c4b7b1959cfa0a3023df788756a9e2ed910"
+    },
+    {
+      "path": "experimental/Charts/NumberChart.vue",
+      "sha256": "d0760f42cb7280019ea9449345b72da2d9640100226df755728d6fc1b1d0aadd"
+    },
+    {
+      "path": "experimental/Charts/axisChartOptions.ts",
+      "sha256": "c73f725bf5f5d77d93a40ce1796908156ad8b6db1257ec4c8a23ee0b3744f488"
+    },
+    {
+      "path": "experimental/Charts/donutChartOptions.ts",
+      "sha256": "35bb5c13cfedf8909a67717cc8609a51f7f1fbb8bae88862cf01088c653e794e"
+    },
+    {
+      "path": "experimental/Charts/eChartOptions.ts",
+      "sha256": "775f0a9599024a2e0c880959831e82d5af3acc7ad0f00444b9b2e5fa7d920f61"
+    },
+    {
+      "path": "experimental/Charts/funnelChartOptions.ts",
+      "sha256": "3cd3afe0889efa41fbc584e4edea17a905053227baa560a319eeadd5e9b0cf7a"
+    },
+    {
+      "path": "experimental/Charts/helpers.ts",
+      "sha256": "7b99c0cbd6194089d2f6e6b0ebf51195d34964b45f9f98f8502bc29eba0022e9"
+    },
+    {
+      "path": "experimental/Charts/index.ts",
+      "sha256": "818c3bb6cb59b6d75c339d8b3484e551a2e8fdf914a6c97f9b4051d2a7c517c4"
+    },
+    {
+      "path": "experimental/Charts/types.ts",
+      "sha256": "1c8d8984fd1896050cd7d521249c514f749139d7752d25e4a05264d0d609764d"
+    },
+    {
+      "path": "experimental/CommandPalette/CommandPalette.vue",
+      "sha256": "30539e2e0351fc43d69851df1c02823b077c8ff1576e188b1187e5f7ecd0111a"
+    },
+    {
+      "path": "experimental/CommandPalette/CommandPaletteEmpty.vue",
+      "sha256": "2cf47483c5cac969a2396b13fbd4145fc6d35b01e47902807e2609c9a3459b1b"
+    },
+    {
+      "path": "experimental/CommandPalette/CommandPaletteFooter.vue",
+      "sha256": "756f0594958bcb30a79c78a472bf7cb7786f6a84ea83dab945f646829507bc3f"
+    },
+    {
+      "path": "experimental/CommandPalette/CommandPaletteGroup.vue",
+      "sha256": "d3236e36e125869c6fa9bcc150563658253088c7a35d141f4ae05f98390a4317"
+    },
+    {
+      "path": "experimental/CommandPalette/CommandPaletteInput.vue",
+      "sha256": "25e72a44c21ea2cede5375fd855c32106a6c2af4a2eab24ec781cd4f2677e053"
+    },
+    {
+      "path": "experimental/CommandPalette/CommandPaletteItem.vue",
+      "sha256": "2918f887948a9bbb1db85066f4d73614f535f69329dd266852add01cbb948604"
+    },
+    {
+      "path": "experimental/CommandPalette/CommandPaletteList.vue",
+      "sha256": "a5510116fee7a4517a5d1942581ea8882e3740b9b6a1022cf332b92c0150b898"
+    },
+    {
+      "path": "experimental/CommandPalette/context.ts",
+      "sha256": "d7ad90229557dc2225676c53f1e63aa8fc2d671242c5895a8f09804ea932bfce"
+    },
+    {
+      "path": "experimental/CommandPalette/index.ts",
+      "sha256": "d5cd4da75e9a4340c17d7b0889d51b2ce05bc03d72eab3fb2c3f10cb8a74363f"
+    },
+    {
+      "path": "experimental/CommandPalette/types.ts",
+      "sha256": "d8cbf396b9001d897c57312ffc5b6b8fc6e46fb4f46cbb4a4ff5d1a9324e5cfe"
+    },
+    {
+      "path": "experimental/FloatingWindow/FloatingWindow.vue",
+      "sha256": "fb05bc43c6a5790a7cd9edbc52957871482c7a87d270622ddc01805be3cddc3a"
+    },
+    {
+      "path": "experimental/FloatingWindow/index.ts",
+      "sha256": "314bc0a5dd3cee298c2353404a76e13caedf33d66cfdbce7604a7646681141db"
+    },
+    {
+      "path": "experimental/FloatingWindow/types.ts",
+      "sha256": "34f4944dc9e977de17efd44c810a1cc4b0d9361c391e599dc894614d62a7d946"
+    },
+    {
+      "path": "experimental/FloatingWindow/useFloatingWindow.ts",
+      "sha256": "44b869a79c7648bbac44fc0a6642d9b4008c8b1fdb0bdb403b17d96934bfb483"
+    },
+    {
+      "path": "experimental/ListView/ListEmptyState.vue",
+      "sha256": "e1fff49e0f1d2a7c9fd664bfd622bc2efd03373652b6e5bdac9b14c6d72b4f5c"
+    },
+    {
+      "path": "experimental/ListView/ListFooter.vue",
+      "sha256": "f93174e39b342525a596331324445380fc47cbde292e87769e126b3f737cd1ac"
+    },
+    {
+      "path": "experimental/ListView/ListGroupHeader.vue",
+      "sha256": "cf7098ca990e7aa6aac92a8fc223683ec21a3539b14eacb82630236156edcab5"
+    },
+    {
+      "path": "experimental/ListView/ListGroupRows.vue",
+      "sha256": "cb366acbce3164683dbadda5cbecdb44f236917fe204332e11c57074c9912a71"
+    },
+    {
+      "path": "experimental/ListView/ListGroups.vue",
+      "sha256": "18e3c7948e1e0d8915bc2ad8cf17a3aa1a2322a9e5a40f94e357cd5099ef5e8a"
+    },
+    {
+      "path": "experimental/ListView/ListHeader.vue",
+      "sha256": "10b062992874506f24ae3e03f18fe8e2bc151ca1cbc2354bbad62ef50dd253d4"
+    },
+    {
+      "path": "experimental/ListView/ListHeaderItem.vue",
+      "sha256": "7bd4256272ebe9cd8c11dea7b09abb42704815bee0c026deb8c558f8ddc35b09"
+    },
+    {
+      "path": "experimental/ListView/ListRow.vue",
+      "sha256": "aefb46c2dc277a81340e7c4e4b70c49f3c1672efcc0bd278ae2c86646a97e8ac"
+    },
+    {
+      "path": "experimental/ListView/ListRowItem.vue",
+      "sha256": "6f63d47f71a2f23b340860e024bc2e44ad09f2ccd6904a0332341e3c442059e0"
+    },
+    {
+      "path": "experimental/ListView/ListRows.vue",
+      "sha256": "dc02630da2ae34386af1599698aadcb50c2dd525e0bbcea2e8b34748397a6361"
+    },
+    {
+      "path": "experimental/ListView/ListSelectBanner.vue",
+      "sha256": "44511871326bfb1f82ef6aec559ef5203d769a6b1d055ced318d69f1e0beacd7"
+    },
+    {
+      "path": "experimental/ListView/ListView.vue",
+      "sha256": "3e61650d8edf6d7c4fe6b4b8ad49e91c862fbeeaa59b3b40ecce715e2143139b"
+    },
+    {
+      "path": "experimental/ListView/index.ts",
+      "sha256": "1966b732ec9d14980055d9bcf476d9cb6e16727146af46a4eec9fde1730417b1"
+    },
+    {
+      "path": "experimental/ListView/utils.js",
+      "sha256": "b2bd223e2c96e50db5d2c848a5c3a155e890c9c02e30cc8e8053c3bc67c0c337"
+    },
+    {
+      "path": "experimental/MultiEmailInput/MultiEmailInput.vue",
+      "sha256": "d841a776f35ebd19dc53ae761204afebdfbada94745f20a1f371bee5dd1f1e52"
+    },
+    {
+      "path": "experimental/MultiEmailInput/index.ts",
+      "sha256": "3ff871ecd046fbaf4543ceeb8ec566a5a2fe3dcb83bd86a1180d242f9ee13912"
+    },
+    {
+      "path": "experimental/MultiEmailInput/types.ts",
+      "sha256": "7d434f3156dcf1bf8d16f2c66c61e899146f632a8f548229124880e29b3ab84d"
+    },
+    {
+      "path": "experimental/MultiEmailInput/utils.ts",
+      "sha256": "aacd0bf4671c814beeac46e73ca7f0c200dd3b8281fd2621d0a0c70a23f473cf"
+    },
+    {
+      "path": "experimental/SpriteIcons/Icon.vue",
+      "sha256": "149c91a9daf0ddbb872198fce660c8519008eded8469193599a2ad0c9e3d058c"
+    },
+    {
+      "path": "experimental/SpriteIcons/IconPicker.vue",
+      "sha256": "286a0ed8013f3f6dfd6cccc03fd3cc4c46ec2225c856a5c36c3d2aa925d781ad"
+    },
+    {
+      "path": "experimental/SpriteIcons/index.ts",
+      "sha256": "72ba21e6d983c30632c969fcf92e70a197b6a67b298d98a659fc7668d9900fde"
+    },
+    {
+      "path": "experimental/SpriteIcons/spritePlugin.ts",
+      "sha256": "0999e3b47042c2fc5336868ce2b924f502cdce453bcc0d6d76756610528e3386"
+    },
+    {
+      "path": "experimental/TextEditor/TextEditor.vue",
+      "sha256": "51d387eb2f4a0b7ece02345e350c6b09a09add10bfedc23ad2b355d486969428"
+    },
+    {
+      "path": "experimental/TextEditor/classIcon.ts",
+      "sha256": "0918727b7c7dfbdb3a9aeb1cb385e03747721f05ffb2583b6bfc40f06a55321e"
+    },
+    {
+      "path": "experimental/TextEditor/commands.js",
+      "sha256": "3ee0e94efb6314c7f183ec23470472cec2dc7a9ba2d19d5d5da68d89faeae813"
+    },
+    {
+      "path": "experimental/TextEditor/components/CodeBlockComponent.vue",
+      "sha256": "55989d01307544221f8df11d90bf869207423294b21ba809644ba62c362448c2"
+    },
+    {
+      "path": "experimental/TextEditor/components/FontColor.vue",
+      "sha256": "06d468ad236f1cc4118299910701afb3246cf2169834c58ea75563a269775635"
+    },
+    {
+      "path": "experimental/TextEditor/components/ImageViewerModal.vue",
+      "sha256": "5803161265c70382e9ea863baa3a3db7ec23aa8a821c0f4c6a471e3b7d9cdeb5"
+    },
+    {
+      "path": "experimental/TextEditor/components/InsertImage.vue",
+      "sha256": "e3c4fc185d2ddf86b02704ac7979248db21a0fa506f81bd771b6e3ddd271abb1"
+    },
+    {
+      "path": "experimental/TextEditor/components/InsertLink.vue",
+      "sha256": "4696b5b10630201242c99cd07f82cb343f81c74e5efa56154e1df4ca9b9a8936"
+    },
+    {
+      "path": "experimental/TextEditor/components/InsertVideo.vue",
+      "sha256": "4bac312000e83b080713365cb7eea40bb7ec2a16c3d33eb7db53c8ca038e9751"
+    },
+    {
+      "path": "experimental/TextEditor/components/LinkPopup.vue",
+      "sha256": "e70ec5edfdc1e9f2edaa642efabf7384b91ad7d11580feb5a0a4fe2580166467"
+    },
+    {
+      "path": "experimental/TextEditor/components/MediaNodeView.vue",
+      "sha256": "96d7fb433fd852dc1e7513710c198133f2edcb858e5a5c584195c2a9190bd5e8"
+    },
+    {
+      "path": "experimental/TextEditor/components/MentionList.vue",
+      "sha256": "21fe4f719cfc398aa55f1b576820781fa63ad3cac41c2c2d2b08528121067a84"
+    },
+    {
+      "path": "experimental/TextEditor/components/TextEditorBubbleMenu.vue",
+      "sha256": "331f8c6f69afe5902f2211df017eda3b20dc7a82df9bf64ba43367d62ec9a18d"
+    },
+    {
+      "path": "experimental/TextEditor/components/TextEditorFixedMenu.vue",
+      "sha256": "85261612809dc88c271999e7611718336e3a0499db167a7aec11775aa32a14ae"
+    },
+    {
+      "path": "experimental/TextEditor/components/TextEditorFloatingMenu.vue",
+      "sha256": "8d3b0d941a1db5b129cef18448f26576cea16ceab702c3cf3810dd7bfe97b30c"
+    },
+    {
+      "path": "experimental/TextEditor/components/TextEditorMenu.vue",
+      "sha256": "e27e331c6f394c338efac4dee82e600ae9acd6b4ac7d2770d9408de8e5da5c24"
+    },
+    {
+      "path": "experimental/TextEditor/components/index.js",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/code-block.ts",
+      "sha256": "13d303293c52d8830b2afaad85a36b0af65fed6de9f289389cfeaa0be8173217"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/color/color-extension.ts",
+      "sha256": "031c3a0505e65b812fc9cadcd5920d94eb06d24587e131050d7cafe15f21d7c3"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/color/index.ts",
+      "sha256": "25c7ac9ef19358ab157ea25c540ac02a199e4e59a079b39d77ec54faef6766a6"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/content-paste-extension.ts",
+      "sha256": "c0b3df3f70820c9ac39c8741316dcdd2295f3d511bc7ee80e66d66a753c04166"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/copy-styles.ts",
+      "sha256": "c0ffaf587dc53017f6e0daa217b3e1ed7c74805351b796c30e4c242782c6a850"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/emoji/EmojiList.vue",
+      "sha256": "02366bd4de1586597bd60fc04a2c4ccc8016a08ae2f8b9cb9966da830a601f16"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/emoji/emoji-extension.ts",
+      "sha256": "ac958fd80d145cd9662526543cfc9893f954be3af48756c54feeedfb0d2fc7a1"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/heading/heading.ts",
+      "sha256": "eea1605c98b7998313994a46e11e4ad342d71e6a9847c5db374660ef6ede93ba"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/highlight/highlight-extension.ts",
+      "sha256": "55d7b49fe37d474b5b259c75921ea71144723ecd541f861e24f09e94f2cdb1e3"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/highlight/index.ts",
+      "sha256": "0565d63e10ebe6e40c7a0eb75c278a3b9d7b88ec7fa0250504512c44004121f9"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+      "sha256": "956b32b8efa0c7ee3d57f1280898c594e17acb942dd3ede14a6fb68e6d3e6493"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/iframe/InsertIframe.vue",
+      "sha256": "cb8d9f43c6b572e0d8570bdf9452f6772aaa91fabad399952c44ff587d3f7947"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/iframe/iframe-extension.ts",
+      "sha256": "c84c19c4feccd9ad63c0beb21ea644efa462bf9327d84bec7a1e669513aa14b5"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/iframe/index.ts",
+      "sha256": "e3b2f3e5856e1dfa4326c3665dd3989712ab2fe78cdbcd2d223f59a67f9aa3cb"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/iframe/utils.ts",
+      "sha256": "bcdd80466010815be7e100a858cdffc327a650ca3527dc16321358592121edf1"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/image/image-extension.ts",
+      "sha256": "bc21c1e5a766d20c70f9ae0f94ff52569577e28597fab17821bafa98b6b9e8de"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/image/index.ts",
+      "sha256": "a58c2b3f55e4561037070ab40df4f417f8daa13f9e4c9c2e9e2f5bbe9a23b401"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/image-group/ImageGroupNodeView.vue",
+      "sha256": "0789e8470c9604b067b23aad0c5ba7954b61223761cd7114a8699843be239464"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+      "sha256": "2d7385658e750bb22e23b3cb63cca55b7f1fdc9934a3cca84aab084ba434b1a1"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/image-group/image-group-extension.ts",
+      "sha256": "15dc6fb8d371a33299a97885e537d237981123563278a41fa7cf6bb157469b94"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/image-viewer-extension.ts",
+      "sha256": "6e7676bf90b824ee4c503bd629bffb13f53051762d1359fb6a613aed21c4ff14"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/link/index.ts",
+      "sha256": "c855d8980eb31151c3d351e16bad239b8bf722af09cd9eb004ee7c1e9c8a203a"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/link/link-extension.ts",
+      "sha256": "e83f9c3173738cc7a03c509b10fc9f96c742095e3d838df06875e2aa97317967"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/link/linkPasteHandler.ts",
+      "sha256": "827b3405dfda7983d526fd4164757ab68ef0024aedfc11bc891250c89e5be035"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/mention/index.ts",
+      "sha256": "6632073d569bfb4f7b577ec4255122e6236ea3b5b7f95dadd794a7f1e577a8bb"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/mention/mention-extension.ts",
+      "sha256": "0ae7e601a09a2082758b049c9656f5c34292ce316690437a5e440495e6dc99b3"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/shared/color-utils.ts",
+      "sha256": "f10885e071975a638c5fbf51327cdfefb3377c903d500f77d220e70c5188097e"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/slash-commands/SlashCommandsList.vue",
+      "sha256": "b2140e711de81597fe0c5c8b9fa7dd9cdae99d6ac82d42adc6a105e0d0e51092"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+      "sha256": "8c14183bbb9e091fc49aa26169a58b7ef85b96c53bc5568333d8d23703e86290"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/suggestion/SuggestionList.vue",
+      "sha256": "a346c6d36f15266721eb656587e67e022d3f2a7244efa2d38e6ff40d2774fecc"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/suggestion/createSuggestionExtension.ts",
+      "sha256": "c11e2d6bad61a26ce850888ae35bfd0c3410a24134f329975fe69e5777dcbf9b"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/suggestion/index.ts",
+      "sha256": "4d0b9ebe767cf3ae32e0df634820ed14e3341f9d347715809d049817ff3fa039"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/tag/index.ts",
+      "sha256": "f7fd69b1d31d3d32fa5acacc41f161f3432a522a5b697fff3280b104190d3a80"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/tag/tag-extension.ts",
+      "sha256": "8750da7cbe461653efd185025cfa2b570fdcc79f9dfbe6fced3b122c3d84edde"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/toc-node/TocNodeView.vue",
+      "sha256": "dd553ccd3906ac3580a2311250fb3f425ceda580cf3e5c11859bbcde0dc6b677"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/toc-node/index.ts",
+      "sha256": "898baa5530dca52e92f395885878bbf93afb49d64880350cb39656ebb896fbde"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/toc-node/toc-node-extension.ts",
+      "sha256": "a0e4e1c70627f17ad5b5502a7e661519a954c79ef4d922ad8bc2a88e57833845"
+    },
+    {
+      "path": "experimental/TextEditor/extensions/video-extension.ts",
+      "sha256": "3d220ab2d9797abb567e20055196b8590729874a45721337b6b0b0f44a326a48"
+    },
+    {
+      "path": "experimental/TextEditor/index.ts",
+      "sha256": "20e0f4ed6d7fd19b189a95e530f16933d30686e4876ea9fb085486805cba87d6"
+    },
+    {
+      "path": "experimental/TextEditor/types.ts",
+      "sha256": "820b0999fd6185eb8c40122bdc0180c0e19de9c354c43ca434a5e4868924c630"
+    },
+    {
+      "path": "experimental/TextEditor/utils.js",
+      "sha256": "84237b6b12b1885e4d27a8540c01a53dfa8e4199b345efa3ab90a3765dc5988d"
+    },
+    {
+      "path": "experimental/ThemeSwitcher/ThemePreview.vue",
+      "sha256": "7bfdc066a2e5617464e9ca7cdbaa50c6d1102f3bd536a18a14bba454b54a285b"
+    },
+    {
+      "path": "experimental/ThemeSwitcher/ThemeSwitcher.vue",
+      "sha256": "c913ab971c19398b0cdbdd69de0c18e5fc7b66aa39d5bb104f34e7ef4f470f90"
+    },
+    {
+      "path": "experimental/ThemeSwitcher/index.ts",
+      "sha256": "c00750af1938b2116a824fbf08437c01c9be9c8a481f38ed6c2b28b472e7faab"
+    },
+    {
+      "path": "experimental/ThemeSwitcher/previews/PreviewWindow.vue",
+      "sha256": "7538dd0fa1608daba93d6c4a937f63c88194b8e7006466133bca9cda7ccc8ae5"
+    },
+    {
+      "path": "experimental/ThemeSwitcher/types.ts",
+      "sha256": "0753df298bf856eeb9d03f298c6a588eba19382a2c23d058b1b08754ad606c4b"
+    }
+  ],
+  "candidate_counts": {
+    "technical-literal": 37,
+    "translated-native-presentation": 136,
+    "composed-template-fragment": 2
+  },
+  "candidates": [
+    {
+      "source": "\n                <div{0} class=\"flex items-center justify-between gap-5\">\n                  <div>{1}</div>\n                  <div class=\"font-bold\">{2}</div>\n                </div>\n              ",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Charts/eChartOptions.ts",
+          "line": 68,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "\n              <div{0} class=\"flex flex-col\">\n                {1}\n                <div class=\"flex items-center justify-between gap-5\">\n                  <div class=\"flex gap-1 items-center\">\n                    {2}\n                    <div>{3}:</div>\n                  </div>\n                  <div class=\"font-bold\">{4}</div>\n                </div>\n              </div>\n            ",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Charts/eChartOptions.ts",
+          "line": 85,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "\n          .ProseMirror:not(.ProseMirror-focused) img {\n            cursor: pointer;\n          }\n        ",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-viewer-extension.ts",
+          "line": 31,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "\n          <div{0} class=\"flex items-center justify-between gap-5\">\n            <div>{1}</div>\n            <div class=\"font-bold\">\n              {2} ({3}%)\n            </div>\n          </div>\n        ",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Charts/funnelChartOptions.ts",
+          "line": 108,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Charts/donutChartOptions.ts",
+          "line": 127,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "2 columns",
+      "classification": "translated-native-presentation",
+      "translation": "2 colunas",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupNodeView.vue",
+          "line": 70,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 658,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "3 columns",
+      "classification": "translated-native-presentation",
+      "translation": "3 colunas",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupNodeView.vue",
+          "line": 71,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 659,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "4 columns",
+      "classification": "translated-native-presentation",
+      "translation": "4 colunas",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupNodeView.vue",
+          "line": 72,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 660,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "<div>{0}</div>",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Charts/eChartOptions.ts",
+          "line": 87,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "A",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/FontColor.vue",
+          "line": 28,
+          "kind": "text"
+        },
+        {
+          "path": "experimental/TextEditor/components/FontColor.vue",
+          "line": 46,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Add \"{0}\"",
+      "classification": "translated-native-presentation",
+      "translation": "Adicionar \"{0}\"",
+      "locations": [
+        {
+          "path": "experimental/MultiEmailInput/MultiEmailInput.vue",
+          "line": 108,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "Add Column After",
+      "classification": "translated-native-presentation",
+      "translation": "Adicionar coluna depois",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 269,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Add Column Before",
+      "classification": "translated-native-presentation",
+      "translation": "Adicionar coluna antes",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 263,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Add Row After",
+      "classification": "translated-native-presentation",
+      "translation": "Adicionar linha depois",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 287,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Add Row Before",
+      "classification": "translated-native-presentation",
+      "translation": "Adicionar linha antes",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 281,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Add caption",
+      "classification": "translated-native-presentation",
+      "translation": "Adicionar legenda",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 391,
+          "kind": "attributes"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 297,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Add caption...",
+      "classification": "translated-native-presentation",
+      "translation": "Adicionar legenda...",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 97,
+          "kind": "attributes"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 157,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Add email…",
+      "classification": "translated-native-presentation",
+      "translation": "Adicionar e-mail…",
+      "locations": [
+        {
+          "path": "experimental/MultiEmailInput/MultiEmailInput.vue",
+          "line": 51,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Add images",
+      "classification": "translated-native-presentation",
+      "translation": "Adicionar imagens",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 15,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Agenda",
+      "classification": "translated-native-presentation",
+      "translation": "Agenda",
+      "locations": [
+        {
+          "path": "experimental/Calendar/Calendar.vue",
+          "line": 443,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Align Center",
+      "classification": "translated-native-presentation",
+      "translation": "Centralizar",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 252,
+          "kind": "attributes"
+        },
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 158,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Align Left",
+      "classification": "translated-native-presentation",
+      "translation": "Alinhar à esquerda",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 242,
+          "kind": "attributes"
+        },
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 165,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Align Right",
+      "classification": "translated-native-presentation",
+      "translation": "Alinhar à direita",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 262,
+          "kind": "attributes"
+        },
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 172,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Align center",
+      "classification": "translated-native-presentation",
+      "translation": "Centralizar",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 317,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Align left",
+      "classification": "translated-native-presentation",
+      "translation": "Alinhar à esquerda",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 309,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Align right",
+      "classification": "translated-native-presentation",
+      "translation": "Alinhar à direita",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 325,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "All day",
+      "classification": "translated-native-presentation",
+      "translation": "Dia inteiro",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarDaily.vue",
+          "line": 55,
+          "kind": "text"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekly.vue",
+          "line": 115,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Background Color",
+      "classification": "translated-native-presentation",
+      "translation": "Cor do fundo",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/FontColor.vue",
+          "line": 33,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Blockquote",
+      "classification": "translated-native-presentation",
+      "translation": "Citação",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 186,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 94,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Bold",
+      "classification": "translated-native-presentation",
+      "translation": "Negrito",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 97,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Bullet List",
+      "classification": "translated-native-presentation",
+      "translation": "Lista com marcadores",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 125,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 66,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Cancel",
+      "classification": "translated-native-presentation",
+      "translation": "Cancelar",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/InsertIframe.vue",
+          "line": 35,
+          "kind": "text"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 209,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Close",
+      "classification": "translated-native-presentation",
+      "translation": "Fechar",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/ImageViewerModal.vue",
+          "line": 150,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Code",
+      "classification": "translated-native-presentation",
+      "translation": "Código",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 193,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Code Block",
+      "classification": "translated-native-presentation",
+      "translation": "Bloco de código",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 87,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Color",
+      "classification": "translated-native-presentation",
+      "translation": "Cor",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 57,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Color \"{0}\" is not in the allowed colors list",
+      "classification": "translated-native-presentation",
+      "translation": "A cor \"{0}\" não está na lista de cores permitidas",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/color/color-extension.ts",
+          "line": 119,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "Command palette",
+      "classification": "translated-native-presentation",
+      "translation": "Paleta de comandos",
+      "locations": [
+        {
+          "path": "experimental/CommandPalette/CommandPalette.vue",
+          "line": 63,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Date",
+      "classification": "translated-native-presentation",
+      "translation": "Data",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 19,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Day",
+      "classification": "translated-native-presentation",
+      "translation": "Dia",
+      "locations": [
+        {
+          "path": "experimental/Calendar/Calendar.vue",
+          "line": 440,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Day {0}/{1}",
+      "classification": "translated-native-presentation",
+      "translation": "Dia {0}/{1}",
+      "locations": [
+        {
+          "path": "experimental/Calendar/eventRow.ts",
+          "line": 81,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "Dedent List",
+      "classification": "translated-native-presentation",
+      "translation": "Diminuir recuo da lista",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 152,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Delete Column",
+      "classification": "translated-native-presentation",
+      "translation": "Excluir coluna",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 275,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Delete Row",
+      "classification": "translated-native-presentation",
+      "translation": "Excluir linha",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 293,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Delete Table",
+      "classification": "translated-native-presentation",
+      "translation": "Excluir tabela",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 299,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Do you want to embed this content?\n\nURL: {0}\n\nClick \"OK\" to create an embed, or \"Cancel\" to paste as plain text.",
+      "classification": "translated-native-presentation",
+      "translation": "Deseja incorporar este conteúdo?\n\nURL: {0}\n\nClique em \"OK\" para incorporar ou em \"Cancelar\" para colar como texto simples.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/iframe-extension.ts",
+          "line": 366,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "Download image",
+      "classification": "translated-native-presentation",
+      "translation": "Baixar imagem",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/ImageViewerModal.vue",
+          "line": 126,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Drag & drop images here or click to select",
+      "classification": "translated-native-presentation",
+      "translation": "Arraste imagens para cá ou clique para selecionar",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 183,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Drop images anywhere",
+      "classification": "translated-native-presentation",
+      "translation": "Solte as imagens em qualquer lugar",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 245,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Edit",
+      "classification": "translated-native-presentation",
+      "translation": "Editar",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupNodeView.vue",
+          "line": 8,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Embed",
+      "classification": "translated-native-presentation",
+      "translation": "Conteúdo incorporado",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 230,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 115,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "End Time",
+      "classification": "translated-native-presentation",
+      "translation": "Hora de Término",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 42,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Ends {0}",
+      "classification": "translated-native-presentation",
+      "translation": "Termina às {0}",
+      "locations": [
+        {
+          "path": "experimental/Calendar/eventRow.ts",
+          "line": 46,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "Error:",
+      "classification": "translated-native-presentation",
+      "translation": "Erro:",
+      "locations": [
+        {
+          "path": "experimental/Charts/ECharts.vue",
+          "line": 63,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Expand",
+      "classification": "translated-native-presentation",
+      "translation": "Expandir",
+      "locations": [
+        {
+          "path": "experimental/FloatingWindow/FloatingWindow.vue",
+          "line": 58,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Float left",
+      "classification": "translated-native-presentation",
+      "translation": "Flutuar à esquerda",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 337,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Float right",
+      "classification": "translated-native-presentation",
+      "translation": "Flutuar à direita",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 345,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Font Color",
+      "classification": "translated-native-presentation",
+      "translation": "Cor da fonte",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 179,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Frappe, Neelkanth Business Park",
+      "classification": "translated-native-presentation",
+      "translation": "Local do evento",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 51,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "From {0}",
+      "classification": "translated-native-presentation",
+      "translation": "A partir de {0}",
+      "locations": [
+        {
+          "path": "experimental/Calendar/eventRow.ts",
+          "line": 53,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "Full Day Event?",
+      "classification": "translated-native-presentation",
+      "translation": "Evento de dia inteiro?",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 71,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Heading 1",
+      "classification": "translated-native-presentation",
+      "translation": "Título 1",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 43,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Heading 2",
+      "classification": "translated-native-presentation",
+      "translation": "Título 2",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 52,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 42,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Heading 3",
+      "classification": "translated-native-presentation",
+      "translation": "Título 3",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 61,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 54,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Heading 4",
+      "classification": "translated-native-presentation",
+      "translation": "Título 4",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 70,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Heading 5",
+      "classification": "translated-native-presentation",
+      "translation": "Título 5",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 79,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Heading 6",
+      "classification": "translated-native-presentation",
+      "translation": "Título 6",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 88,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Highlight color \"{0}\" is not in the allowed colors list",
+      "classification": "translated-native-presentation",
+      "translation": "A cor de destaque \"{0}\" não está na lista de cores permitidas",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/highlight/highlight-extension.ts",
+          "line": 169,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/highlight/highlight-extension.ts",
+          "line": 200,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "Horizontal Rule",
+      "classification": "translated-native-presentation",
+      "translation": "Linha horizontal",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 200,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 129,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Image",
+      "classification": "translated-native-presentation",
+      "translation": "Imagem",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 214,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 101,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Indent List",
+      "classification": "translated-native-presentation",
+      "translation": "Aumentar recuo da lista",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 146,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Insert Embed",
+      "classification": "translated-native-presentation",
+      "translation": "Inserir conteúdo incorporado",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/InsertIframe.vue",
+          "line": 40,
+          "kind": "text"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/iframe/InsertIframe.vue",
+          "line": 6,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Insert Table",
+      "classification": "translated-native-presentation",
+      "translation": "Inserir tabela",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 252,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Italic",
+      "classification": "translated-native-presentation",
+      "translation": "Itálico",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 104,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "John Doe",
+      "classification": "translated-native-presentation",
+      "translation": "Nome completo",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 28,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Link",
+      "classification": "translated-native-presentation",
+      "translation": "Link",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 206,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 122,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Load More",
+      "classification": "translated-native-presentation",
+      "translation": "Carregar mais",
+      "locations": [
+        {
+          "path": "experimental/ListView/ListFooter.vue",
+          "line": 16,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Loading embed...",
+      "classification": "translated-native-presentation",
+      "translation": "Carregando conteúdo incorporado…",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 287,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Meet with John Doe",
+      "classification": "translated-native-presentation",
+      "translation": "Reunião de exemplo",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 14,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Merge Cells",
+      "classification": "translated-native-presentation",
+      "translation": "Mesclar células",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 305,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Minimize",
+      "classification": "translated-native-presentation",
+      "translation": "Minimizar",
+      "locations": [
+        {
+          "path": "experimental/FloatingWindow/FloatingWindow.vue",
+          "line": 69,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Month",
+      "classification": "translated-native-presentation",
+      "translation": "Mês",
+      "locations": [
+        {
+          "path": "experimental/Calendar/Calendar.vue",
+          "line": 442,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "New tag: \"{0}\"",
+      "classification": "translated-native-presentation",
+      "translation": "Nova etiqueta: \"{0}\"",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/tag/tag-extension.ts",
+          "line": 120,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "Next image",
+      "classification": "translated-native-presentation",
+      "translation": "Próxima imagem",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/ImageViewerModal.vue",
+          "line": 84,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "No Data",
+      "classification": "translated-native-presentation",
+      "translation": "Nenhum dado",
+      "locations": [
+        {
+          "path": "experimental/ListView/ListView.vue",
+          "line": 57,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "No data available",
+      "classification": "translated-native-presentation",
+      "translation": "Nenhum dado disponível",
+      "locations": [
+        {
+          "path": "experimental/ListView/ListView.vue",
+          "line": 58,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "No icons available.",
+      "classification": "translated-native-presentation",
+      "translation": "Nenhum ícone disponível.",
+      "locations": [
+        {
+          "path": "experimental/SpriteIcons/IconPicker.vue",
+          "line": 202,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "No icons found for \"",
+      "classification": "composed-template-fragment",
+      "complete_key": "No icons found for \"{0}\"",
+      "reason": "Full interpolated sentence translated in compiler input; fragment is not counted as a resolved sentence.",
+      "locations": [
+        {
+          "path": "experimental/SpriteIcons/IconPicker.vue",
+          "line": 199,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "No results",
+      "classification": "translated-native-presentation",
+      "translation": "Nenhum resultado",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/suggestion/SuggestionList.vue",
+          "line": 29,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "No results for \"{0}\"",
+      "classification": "translated-native-presentation",
+      "translation": "Nenhum resultado para \"{0}\"",
+      "locations": [
+        {
+          "path": "experimental/CommandPalette/CommandPaletteEmpty.vue",
+          "line": 51,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "Nothing on between",
+      "classification": "composed-template-fragment",
+      "complete_key": "Nothing on between {0}.",
+      "reason": "Full interpolated sentence translated in compiler input; fragment is not counted as a resolved sentence.",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarAgenda.vue",
+          "line": 41,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Now",
+      "classification": "translated-native-presentation",
+      "translation": "Agora",
+      "locations": [
+        {
+          "path": "experimental/Calendar/eventRow.ts",
+          "line": 162,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Numbered List",
+      "classification": "translated-native-presentation",
+      "translation": "Lista numerada",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 132,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 73,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Paragraph",
+      "classification": "translated-native-presentation",
+      "translation": "Parágrafo",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 36,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Person",
+      "classification": "translated-native-presentation",
+      "translation": "Pessoa",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 27,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Previous image",
+      "classification": "translated-native-presentation",
+      "translation": "Imagem anterior",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/ImageViewerModal.vue",
+          "line": 71,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Redo",
+      "classification": "translated-native-presentation",
+      "translation": "Refazer",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 245,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Remove float",
+      "classification": "translated-native-presentation",
+      "translation": "Remover flutuação",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 353,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Remove image",
+      "classification": "translated-native-presentation",
+      "translation": "Remover imagem",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupNodeView.vue",
+          "line": 18,
+          "kind": "attributes"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 48,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Remove table of contents",
+      "classification": "translated-native-presentation",
+      "translation": "Remover sumário",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/toc-node/TocNodeView.vue",
+          "line": 25,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Reset zoom",
+      "classification": "translated-native-presentation",
+      "translation": "Redefinir zoom",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/ImageViewerModal.vue",
+          "line": 105,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Resize",
+      "classification": "translated-native-presentation",
+      "translation": "Redimensionar",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 273,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Resize window",
+      "classification": "translated-native-presentation",
+      "translation": "Redimensionar janela",
+      "locations": [
+        {
+          "path": "experimental/FloatingWindow/FloatingWindow.vue",
+          "line": 122,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Save",
+      "classification": "translated-native-presentation",
+      "translation": "Salvar",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 217,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Search",
+      "classification": "translated-native-presentation",
+      "translation": "Pesquisa",
+      "locations": [
+        {
+          "path": "experimental/CommandPalette/CommandPaletteInput.vue",
+          "line": 31,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Select all",
+      "classification": "translated-native-presentation",
+      "translation": "Selecionar tudo",
+      "locations": [
+        {
+          "path": "experimental/ListView/ListSelectBanner.vue",
+          "line": 56,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Some files failed to upload.",
+      "classification": "translated-native-presentation",
+      "translation": "Não foi possível enviar alguns arquivos.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 201,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Soon",
+      "classification": "translated-native-presentation",
+      "translation": "Em breve",
+      "locations": [
+        {
+          "path": "experimental/Calendar/eventRow.ts",
+          "line": 166,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Split Cell",
+      "classification": "translated-native-presentation",
+      "translation": "Dividir célula",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 311,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Start Time",
+      "classification": "translated-native-presentation",
+      "translation": "Hora de início",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 34,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Strikethrough",
+      "classification": "translated-native-presentation",
+      "translation": "Tachado",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 118,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Submit",
+      "classification": "translated-native-presentation",
+      "translation": "Submeter",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 84,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Switch between light, dark, or system theme",
+      "classification": "translated-native-presentation",
+      "translation": "Alternar entre os temas claro, escuro ou do sistema",
+      "locations": [
+        {
+          "path": "experimental/ThemeSwitcher/ThemeSwitcher.vue",
+          "line": 100,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Table",
+      "classification": "translated-native-presentation",
+      "translation": "Tabela",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 136,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Table of Contents",
+      "classification": "translated-native-presentation",
+      "translation": "Sumário",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 335,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/toc-node/toc-node-extension.ts",
+          "line": 156,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 148,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Task List",
+      "classification": "translated-native-presentation",
+      "translation": "Lista de tarefas",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 139,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 80,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Text Color",
+      "classification": "translated-native-presentation",
+      "translation": "Cor do texto",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/FontColor.vue",
+          "line": 15,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Theme",
+      "classification": "translated-native-presentation",
+      "translation": "Tema",
+      "locations": [
+        {
+          "path": "experimental/ThemeSwitcher/ThemeSwitcher.vue",
+          "line": 99,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "There are no headings in this document.",
+      "classification": "translated-native-presentation",
+      "translation": "Não há títulos neste documento.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/toc-node/TocNodeView.vue",
+          "line": 6,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "This",
+      "classification": "translated-native-presentation",
+      "translation": "Este",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 385,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Title",
+      "classification": "translated-native-presentation",
+      "translation": "Título",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 13,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Today",
+      "classification": "translated-native-presentation",
+      "translation": "Hoje",
+      "locations": [
+        {
+          "path": "experimental/Calendar/Calendar.vue",
+          "line": 58,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Toggle Header Cell",
+      "classification": "translated-native-presentation",
+      "translation": "Alternar célula de cabeçalho",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 329,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Toggle Header Column",
+      "classification": "translated-native-presentation",
+      "translation": "Alternar coluna de cabeçalho",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 317,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Toggle Header Row",
+      "classification": "translated-native-presentation",
+      "translation": "Alternar linha de cabeçalho",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 323,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Try again",
+      "classification": "translated-native-presentation",
+      "translation": "Tentar novamente",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 366,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "URL",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/InsertIframe.vue",
+          "line": 27,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "URL or Embed Code",
+      "classification": "translated-native-presentation",
+      "translation": "URL ou código de incorporação",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/InsertIframe.vue",
+          "line": 10,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Underline",
+      "classification": "translated-native-presentation",
+      "translation": "Sublinhado",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 111,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Undo",
+      "classification": "translated-native-presentation",
+      "translation": "Desfazer",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 238,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Upload",
+      "classification": "translated-native-presentation",
+      "translation": "Carregar",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 225,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Upload more images by dropping them anywhere in this window. Reorder images by dragging them. Hover over an image to edit caption.",
+      "classification": "translated-native-presentation",
+      "translation": "Envie mais imagens soltando-as em qualquer lugar desta janela. Arraste as imagens para reordenar. Passe o cursor sobre uma imagem para editar a legenda.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 166,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Uploading",
+      "classification": "translated-native-presentation",
+      "translation": "Enviando",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 379,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Uploading:",
+      "classification": "translated-native-presentation",
+      "translation": "Enviando:",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 189,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "Venue",
+      "classification": "translated-native-presentation",
+      "translation": "Local",
+      "locations": [
+        {
+          "path": "experimental/Calendar/NewEventModal.vue",
+          "line": 50,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Video",
+      "classification": "translated-native-presentation",
+      "translation": "Vídeo",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/commands.js",
+          "line": 222,
+          "kind": "descriptors"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/slash-commands/slash-commands-extension.ts",
+          "line": 108,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Week",
+      "classification": "translated-native-presentation",
+      "translation": "Semana",
+      "locations": [
+        {
+          "path": "experimental/Calendar/Calendar.vue",
+          "line": 441,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "Zoom in",
+      "classification": "translated-native-presentation",
+      "translation": "Aumentar zoom",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/ImageViewerModal.vue",
+          "line": 114,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "Zoom out",
+      "classification": "translated-native-presentation",
+      "translation": "Diminuir zoom",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/ImageViewerModal.vue",
+          "line": 96,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "[data-toc-id=\"{0}\"]",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/toc-node/TocNodeView.vue",
+          "line": 99,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/toc-node/TocNodeView.vue",
+          "line": 349,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "^(#{{0}})( |\\u00A0)$",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/heading/heading.ts",
+          "line": 12,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "auto",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/CodeBlockComponent.vue",
+          "line": 11,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "background-color: var(--prose-highlight-{0})",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/highlight/highlight-extension.ts",
+          "line": 138,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "calc(7% + {0}px)",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 482,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "calc({0}% + {1}px)",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarMonthly.vue",
+          "line": 428,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 481,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 536,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 569,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "calc({0}% - {1}px)",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarMonthly.vue",
+          "line": 429,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 537,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "color-mix(in srgb, {0} 10%, var(--surface-base))",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Calendar/useEventBase.ts",
+          "line": 30,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "color-mix(in srgb, {0} 16%, var(--surface-base))",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Calendar/useEventBase.ts",
+          "line": 31,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "color: var(--prose-color-{0})",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/color/color-extension.ts",
+          "line": 102,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "existing-{0}-{1}",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 563,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "file-{0}-{1}-{2}",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 555,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "font-size:{0}px",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/content-paste-extension.ts",
+          "line": 91,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "hasn't yet been uploaded.",
+      "classification": "translated-native-presentation",
+      "translation": "ainda não foi enviado.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 385,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "heading-{0}",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/toc-node/TocNodeView.vue",
+          "line": 336,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "html",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/CodeBlockComponent.vue",
+          "line": 65,
+          "kind": "descriptors"
+        }
+      ]
+    },
+    {
+      "source": "https://codepen.io/{0}/embed/{1}?default-tab=result",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/utils.ts",
+          "line": 245,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "https://example.com",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/LinkPopup.vue",
+          "line": 10,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "https://player.vimeo.com/video/{0}?title=0&byline=0&portrait=0",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/utils.ts",
+          "line": 227,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "https://www.youtube.com/embed/{0}?rel=0&modestbranding=1",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/utils.ts",
+          "line": 209,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "https://youtube.com/watch?v=... or <iframe src=...>",
+      "classification": "translated-native-presentation",
+      "translation": "https://youtube.com/watch?v=... ou <iframe src=...>",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/InsertIframe.vue",
+          "line": 16,
+          "kind": "attributes"
+        }
+      ]
+    },
+    {
+      "source": "inset({0}px {1} calc(100% - {2}px) {3} round {4}px)",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 526,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "of",
+      "classification": "translated-native-presentation",
+      "translation": "de",
+      "locations": [
+        {
+          "path": "experimental/ListView/ListFooter.vue",
+          "line": 22,
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "source": "repeat({0}, minmax(0, 1fr))",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupNodeView.vue",
+          "line": 65,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/image-group/ImageGroupUploadDialog.vue",
+          "line": 647,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "translate({0}px, 0)",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 540,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "translate({0}px, {1}px)",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 548,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 579,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "upload-{0}-{1}",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/video-extension.ts",
+          "line": 421,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/image/image-extension.ts",
+          "line": 440,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "{0} and {1}",
+      "classification": "translated-native-presentation",
+      "translation": "{0} e {1}",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarAgenda.vue",
+          "line": 555,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "{0} bg-surface-gray-2 hover:bg-surface-gray-3 border-transparent",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/SpriteIcons/IconPicker.vue",
+          "line": 138,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "{0} border-outline-gray-2",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/SpriteIcons/IconPicker.vue",
+          "line": 139,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "{0} rows selected",
+      "classification": "translated-native-presentation",
+      "translation": "{0} linhas selecionadas",
+      "locations": [
+        {
+          "path": "experimental/ListView/ListView.vue",
+          "line": 97,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "{0} {1} and {2} {3}",
+      "classification": "translated-native-presentation",
+      "translation": "{0} {1} e {2} {3}",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarAgenda.vue",
+          "line": 556,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "{0}.jpg",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/components/ImageViewerModal.vue",
+          "line": 351,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "{0}:\\s*(#[0-9a-f]{6})",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/shared/color-utils.ts",
+          "line": 157,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "{0}:\\s*(rgb\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*\\))",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/shared/color-utils.ts",
+          "line": 181,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "{0}px",
+      "classification": "technical-literal",
+      "reason": "Executable HTML/CSS, selector, identifier, regular expression, functional URL, file extension or format code; A is the font toolbar symbol and URL is the protocol label.",
+      "locations": [
+        {
+          "path": "experimental/Calendar/CalendarMonthly.vue",
+          "line": 430,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarMonthly.vue",
+          "line": 431,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 510,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 513,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 514,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 538,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 539,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 568,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 570,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 574,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/Calendar/CalendarWeekDayEvent.vue",
+          "line": 577,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/FloatingWindow/useFloatingWindow.ts",
+          "line": 98,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/FloatingWindow/useFloatingWindow.ts",
+          "line": 99,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/FloatingWindow/useFloatingWindow.ts",
+          "line": 100,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/FloatingWindow/useFloatingWindow.ts",
+          "line": 105,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/FloatingWindow/useFloatingWindow.ts",
+          "line": 106,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/FloatingWindow/useFloatingWindow.ts",
+          "line": 107,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/FloatingWindow/useFloatingWindow.ts",
+          "line": 108,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/ListView/ListRow.vue",
+          "line": 171,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/ListView/ListHeaderItem.vue",
+          "line": 77,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 208,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 209,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/components/MediaNodeView.vue",
+          "line": 210,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 43,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 44,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 107,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 108,
+          "kind": "templates"
+        },
+        {
+          "path": "experimental/TextEditor/extensions/iframe/IframeNodeView.vue",
+          "line": 109,
+          "kind": "templates"
+        }
+      ]
+    },
+    {
+      "source": "✓ Valid",
+      "classification": "translated-native-presentation",
+      "translation": "✓ Válido",
+      "locations": [
+        {
+          "path": "experimental/TextEditor/extensions/iframe/InsertIframe.vue",
+          "line": 26,
+          "kind": "text"
+        }
+      ]
+    }
+  ],
+  "visual_validation_complete": false
+}

@@ -1,0 +1,311 @@
+{
+  "framework_version": "16.60.2",
+  "lms_version": "16.4.0",
+  "order": "after local/i18n/apply_overlay.py and apply_frontend_context.py, before build; do not reapply prior manifests after this overlay",
+  "patches": [
+    {
+      "path": "utils/password.py",
+      "before_sha256": "bb34dca712cf471da6fe6a8a929d3c547c2464880754945233066efabc74b296",
+      "after_sha256": "1d4cf1d284837e298d78308e0fdd75a8a5f197e24580992af2dd0fcc481a5e7d",
+      "replacements": [
+        [
+          "\t\t\"pbkdf2_sha256\",\n\t\t\"argon2\",\n\t],\n",
+          "\t\t\"argon2\",\n\t\t\"pbkdf2_sha256\",\n\t],\n\tdeprecated=[\"pbkdf2_sha256\"],\n\targon2__type=\"ID\",\n\targon2__memory_cost=65536,\n\targon2__time_cost=3,\n\targon2__parallelism=1,\n"
+        ],
+        [
+          "update_password(user, pwd, doctype, fieldname)\n",
+          "update_password(user, pwd, doctype, fieldname, validate_policy=False)\n"
+        ],
+        [
+          "def update_password(user, pwd, doctype=\"User\", fieldname=\"password\", logout_all_sessions=False):",
+          "def update_password(user, pwd, doctype=\"User\", fieldname=\"password\", logout_all_sessions=False, validate_policy=True):"
+        ],
+        [
+          "\thashPwd = passlibctx.hash(pwd)\n",
+          "\tif validate_policy and doctype == \"User\" and fieldname == \"password\":\n\t\tfrom lms.lms.account_security import validate_new_credential\n\n\t\tvalidate_new_credential(user, pwd)\n\thashPwd = passlibctx.hash(pwd)\n"
+        ]
+      ]
+    },
+    {
+      "path": "utils/logger.py",
+      "before_sha256": "d8508de1687aa06551141cedf60d476fb087ad73ebd832b883ba5b6ed5f41465",
+      "after_sha256": "b9735d964cc0d3dbf714593c72bdfe7d28c10858f2d4ab377bffae517d74c4e0",
+      "replacements": [
+        [
+          "\t\t\"pwd\",\n\t]",
+          "\t\t\"pwd\",\n\t\t\"otp\",\n\t\t\"tmp_id\",\n\t\t\"recovery\",\n\t\t\"trusted_device\",\n\t\t\"authorization\",\n\t\t\"cookie\",\n\t\t\"csrf\",\n\t\t\"sid\",\n\t]"
+        ],
+        [
+          "if secret_kw in k:",
+          "if isinstance(k, str) and secret_kw in k.lower():"
+        ]
+      ]
+    },
+    {
+      "path": "utils/__init__.py",
+      "before_sha256": "2dd12e9a6abff0b9863d4acf4b8b49f7a2898cc28f028ea5c9d54462f94ae299",
+      "after_sha256": "b4a5817762f967c88a7c54497ba40af11c81465cdb87d9de8f3616772c4fcded",
+      "replacements": [
+        [
+          "\t\t\"authorization\",\n\t\t\"cookie\",\n",
+          "\t\t\"authorization\",\n\t\t\"cookie\",\n\t\t\"otp\",\n\t\t\"tmp_id\",\n\t\t\"recovery\",\n\t\t\"codes\",\n\t\t\"digest\",\n"
+        ]
+      ]
+    },
+    {
+      "path": "sessions.py",
+      "before_sha256": "bafac6e4d3d066cd39e6ccc4b08ef9ac4c2bf9492e5af04eaf2a49b079e4f189",
+      "after_sha256": "fe6ce0721284e1cb3b93376a403d38bd88fe9245628d64d0df2a01680ae57e0a",
+      "replacements": [
+        [
+          "\tfrappe.cache.hdel(\"session\", sid_hash)\n",
+          "\tfrappe.cache.hdel(\"session\", sid_hash)\n\tfrappe.cache.delete_value(\"lms:human-activity:\" + sid_hash)\n"
+        ],
+        [
+          "\t\tr = self.get_session_data()\n\n\t\tif not (r and r.get(\"user\")):",
+          "\t\tr = self.get_session_data()\n\t\tfrom lms.lms.account_security import session_expired\n\n\t\tif self.sid != \"Guest\" and session_expired(r, self.sid):\n\t\t\tself._delete_session()\n\t\t\tr = None\n\n\t\tif not (r and r.get(\"user\")):"
+        ]
+      ]
+    },
+    {
+      "path": "auth.py",
+      "before_sha256": "b3b67d15f58de6e3a22b33cdee862e3176d04b564a34c3bbe18bf4392821d809",
+      "after_sha256": "36f24c70e06b270b2156f5711fcccabc740cda83b6ea926da8f9cca951e2deb0",
+      "replacements": [
+        [
+          "\t\tuser, pwd = get_cached_user_pass()\n\t\tself.authenticate(user=user, pwd=pwd)\n",
+          "\t\tuser, pwd = get_cached_user_pass()\n\t\tfrom lms.lms.account_security import resume_native_challenge\n\n\t\tif resume_native_challenge(user, frappe.form_dict.get(\"tmp_id\")):\n\t\t\tself.user = user\n\t\telse:\n\t\t\tself.authenticate(user=user, pwd=pwd)\n"
+        ],
+        [
+          "\t\t\tif not confirm_otp_token(self):\n\t\t\t\treturn False\n",
+          "\t\t\tif not confirm_otp_token(self):\n\t\t\t\treturn False\n\t\t\tfrom lms.lms.account_security import clear_native_challenge\n\n\t\t\tclear_native_challenge(frappe.form_dict.get(\"tmp_id\"))\n"
+        ],
+        [
+          "self.fail(\"User disabled or missing\", user=user.name)",
+          "self.fail(\"Invalid login credentials\", user=user.name)"
+        ],
+        [
+          "\t\tfrappe.local.response[\"message\"] = _(message)\n",
+          "\t\tfrappe.local.response[\"message\"] = _(message)\n\t\tfrom lms.lms.account_security import login_failure_hint\n\n\t\tfrappe.local.response.update(login_failure_hint())\n"
+        ]
+      ]
+    },
+    {
+      "path": "core/doctype/user/user.py",
+      "before_sha256": "f5044cf4318576c060968f35d070a5fad8575fb91358af565c53cbdd52160ca3",
+      "after_sha256": "93902f86ea8d78cfef7fa07dc5ebcfe3a742db2f7dd81c72c8ba2eeabe74a0f4",
+      "replacements": [
+        [
+          "def sign_up(email: str, full_name: str, redirect_to: str) -> tuple[int, str]:\n",
+          "def sign_up(email: str, full_name: str, redirect_to: str) -> tuple[int, str]:\n\tfrom lms.lms.account_security import temporary_password\n\n"
+        ],
+        [
+          "\"new_password\": random_string(10),",
+          "\"new_password\": temporary_password(),"
+        ],
+        [
+          "If this email is registered with us, we have sent password reset instructions to it. Please check your inbox.",
+          "If this account can receive a reset link, check your inbox for the next step. If no email arrives, contact the site administrator."
+        ],
+        [
+          "> last_reset_password_key_generated_on + timedelta(seconds=reset_password_link_expiry)",
+          ">= last_reset_password_key_generated_on + timedelta(seconds=reset_password_link_expiry)"
+        ],
+        [
+          "@frappe.whitelist(allow_guest=True, methods=[\"POST\"])\ndef update_password(",
+          "@frappe.whitelist(allow_guest=True, methods=[\"POST\"])\n@rate_limit(limit=10, seconds=60)\ndef update_password("
+        ],
+        [
+          "\tif key and should_run_2fa(user):\n\t\treturn \"/login\"\n\n\t# get redirect url from cache\n\tredirect_to = frappe.cache.hget(\"redirect_after_login\", user)\n\tif redirect_to:\n\t\tredirect_url = redirect_to\n\t\tfrappe.cache.hdel(\"redirect_after_login\", user)\n\n\tfrappe.local.login_manager.login_as(user)\n\n\tif user_doc.user_type == \"System User\":\n\t\treturn get_default_path() or \"/desk\"\n\telse:\n\t\treturn redirect_url or get_default_path() or get_home_page()\n",
+          "\tif key:\n\t\tfrom frappe.sessions import clear_sessions\n\n\t\tclear_sessions(user=user, force=True)\n\t\tif frappe.session.user != \"Guest\":\n\t\t\tfrappe.local.login_manager.logout()\n\treturn \"/login?password-updated=1\"\n"
+        ],
+        [
+          "@frappe.whitelist(allow_guest=True)\ndef test_password_strength(",
+          "@frappe.whitelist(allow_guest=True, methods=[\"POST\"])\n@rate_limit(limit=60, seconds=60)\ndef test_password_strength("
+        ],
+        [
+          "\t\tif not users:\n\t\t\treturn\n",
+          "\t\tif not users:\n\t\t\tif validate_password:\n\t\t\t\tfrom frappe.utils.password import passlibctx\n\n\t\t\t\tpasslibctx.dummy_verify()\n\t\t\treturn\n"
+        ],
+        [
+          "\t\tuser = frappe.db.get_value(\n\t\t\t\"User\", {\"reset_password_key\": hashed_key}, [\"name\", \"last_reset_password_key_generated_on\"]\n\t\t)\n",
+          "\t\t# The locking read itself must return the proof, not a repeatable-read snapshot.\n\t\trows = frappe.db.sql(\"select name, last_reset_password_key_generated_on from `tabUser` where reset_password_key=%s for update\", hashed_key)\n\t\tuser = rows[0] if rows else None\n"
+        ],
+        [
+          "\t\tresult.user = user\n\treturn result\n",
+          "\t\tresult.user = user\n\telse:\n\t\tfrappe.throw(_(\"A current password or valid reset link is required.\"), frappe.AuthenticationError)\n\treturn result\n"
+        ],
+        [
+          "\tdef password_reset_mail(self, link):\n",
+          "\tdef password_reset_mail(self, link):\n\t\tfrom frappe.email.email_body import get_brand_name\n"
+        ],
+        [
+          "\t\t\t_(\"Password Reset\"),\n\t\t\t\"password_reset\",",
+          "\t\t\t_(\"Reset your password - {0}\").format(get_brand_name()),\n\t\t\t\"password_reset\","
+        ]
+      ]
+    },
+    {
+      "path": "twofactor.py",
+      "before_sha256": "e4a0cfa412c2016f83db47822b3b33a0e3679033ae8bab7d5f813c41097b316b",
+      "after_sha256": "3eb8ecd866c8bf95250595ae94e66a07cd3da528bec778663b4dd3561bd1e6c2",
+      "replacements": [
+        [
+          "tmp_id = frappe.form_dict.get(\"tmp_id\")\n\tif tmp_id:",
+          "tmp_id = frappe.form_dict.get(\"tmp_id\")\n\tif isinstance(tmp_id, str) and 0 < len(tmp_id) <= 64:"
+        ],
+        [
+          "def should_run_2fa(user):\n\t\"\"\"Check if 2fa should run.\"\"\"\n",
+          "def should_run_2fa(user):\n\t\"\"\"Check if 2fa should run.\"\"\"\n\tfrom lms.lms.account_security import _security, should_require_factor\n\n\tif (security := _security(user)) and security.enabled:\n\t\treturn should_require_factor(user)\n"
+        ],
+        [
+          "tmp_id = frappe.generate_hash(length=8)",
+          "tmp_id = frappe.generate_hash(length=32)"
+        ],
+        [
+          "\tpwd = frappe.form_dict.get(\"pwd\")\n\tverification_method = get_verification_method()",
+          "\tverification_method = get_verification_method()"
+        ],
+        [
+          "for k, v in {\"_usr\": user, \"_pwd\": pwd, \"_otp_secret\": otp_secret}.items():",
+          "for k, v in {\"_usr\": user, \"_otp_secret\": otp_secret, \"_auth_version\": str(frappe.db.get_value(\"User\", user, \"modified\"))}.items():"
+        ],
+        [
+          "\tfrom frappe.auth import get_login_attempt_tracker\n\n\tif not otp:",
+          "\tfrom frappe.auth import get_login_attempt_tracker\n\tfrom lms.lms.account_security import confirm_native_factor\n\n\tresult = confirm_native_factor(login_manager, otp, tmp_id)\n\tif result is not None:\n\t\treturn result\n\tif not otp:"
+        ],
+        [
+          "def get_verification_obj(user, token, otp_secret):\n",
+          "def get_verification_obj(user, token, otp_secret):\n\tfrom lms.lms.account_security import _security\n\n\tif (security := _security(user)) and security.enabled:\n\t\treturn {\"method\": \"OTP App\", \"setup\": True}\n"
+        ],
+        [
+          "\tsettings = frappe.get_cached_doc(\"System Settings\")\n\n\tif not settings.enable_two_factor_auth:",
+          "\tfrom lms.lms.account_security import _security\n\n\tif (security := _security(user)) and security.enabled:\n\t\tfrappe.throw(_(\"Manage your authenticator from account security using your password and a verification or recovery code.\"))\n\tsettings = frappe.get_cached_doc(\"System Settings\")\n\n\tif not settings.enable_two_factor_auth:"
+        ]
+      ]
+    },
+    {
+      "path": "core/api/user_invitation.py",
+      "before_sha256": "592f2f7b71f8a5e97787a7da042f0bdb34cdb7580ccf010e4e54cef33f6bdef4",
+      "after_sha256": "3a757e5554a5377cdd792d8d9223a2e2bf2dcaf0d7a5ede89e983fc3d67e718f",
+      "replacements": [
+        [
+          "\t_accept_invitation(key, False)\n",
+          "\ttry:\n\t\t_accept_invitation(key, False)\n\texcept (frappe.ValidationError, frappe.DoesNotExistError):\n\t\tfrappe.db.rollback()\n\t\tfrappe.clear_messages()\n\t\tfrappe.local.response[\"type\"] = \"redirect\"\n\t\tfrappe.local.response[\"location\"] = \"/login?invitation-expired=1#forgot\"\n"
+        ],
+        [
+          "\tinvitation = frappe.get_doc(\"User Invitation\", invitation_name)\n\n\t# accept invitation",
+          "\tproof = frappe.db.sql(\"select name from `tabUser Invitation` where name=%s and `key`=%s for update\", (invitation_name, hashed_key))\n\tif not proof:\n\t\tfrappe.throw(_(\"Invalid or expired key\"))\n\tinvitation = frappe.get_doc(\"User Invitation\", invitation_name)\n\n\t# accept invitation"
+        ],
+        [
+          "\tif not in_test and not should_update_password:\n\t\tfrappe.local.login_manager.login_as(invitation.email)\n",
+          "\tif not should_update_password:\n\t\tfrom urllib.parse import quote\n\n\t\tredirect_to = \"/login?invitation-accepted=1&redirect-to=\" + quote(\"/\" + invitation.get_redirect_to_path(), safe=\"\")\n"
+        ]
+      ]
+    },
+    {
+      "path": "core/doctype/user_invitation/user_invitation.py",
+      "before_sha256": "bced0a8640e345014a59a32f7eb9887c61a02919978e04e1ff642feeffc925d9",
+      "after_sha256": "8c08c4fecad489b174ed73528e80e961cfe5b5516d3269e4fbe3295bc08e7a29",
+      "replacements": [
+        [
+          "\tdef _accept(self):\n",
+          "\tdef _accept(self):\n\t\tfrom datetime import timedelta\n\n\t\tif self.email_sent_at and frappe.utils.get_datetime(self.email_sent_at) + timedelta(days=INVITATION_EXPIRY_DAYS) <= frappe.utils.now_datetime():\n\t\t\tfrappe.throw(title=_(\"Error\"), msg=_(\"Invitation is expired\"))\n"
+        ]
+      ]
+    },
+    {
+      "path": "www/login.html",
+      "before_sha256": "b1b9ff05e0a225919676a4bd07dabfc467f5310e63c6e1242af5ecce98308c5a",
+      "after_sha256": "589711583a6e3c68bc559736a8367fd3d016c2f4b17de8b02a8442af8c3b8221",
+      "replacements": [
+        [
+          "<svg toggle=\"#login_password\" class=\"icon icon-sm toggle-password\" xmlns=\"http://www.w3.org/2000/svg\">\n\t\t\t\t\t\t<use href=\"#icon-eye\"></use>\n\t\t\t\t\t</svg>",
+          "<button type=\"button\" toggle=\"#login_password\" class=\"toggle-password\" aria-controls=\"login_password\" aria-pressed=\"false\" aria-label=\"{{ _('Show password') }}\" style=\"min-width:44px;min-height:44px;background:transparent;border:0;display:flex;align-items:center;justify-content:center;\"><svg aria-hidden=\"true\" class=\"icon icon-sm\" xmlns=\"http://www.w3.org/2000/svg\">\n\t\t\t\t\t\t<use href=\"#icon-eye\"></use>\n\t\t\t\t\t</svg></button>"
+        ],
+        [
+          "{{ alert_banner(\"error\") }}\n\t<div class=\"form-group",
+          "{{ alert_banner(\"error\") }}\n\t{{ alert_banner(\"success\") }}\n\t<div class=\"form-group"
+        ],
+        [
+          "{{ include_style('login.bundle.css') }}",
+          "{{ include_style('login.bundle.css') }}\n<link rel=\"stylesheet\" href=\"/assets/lms/css/account_login.css\">\n<script type=\"module\" src=\"/assets/lms/js/account_login.js\"></script>"
+        ],
+        [
+          "<section class='for-login'>\n\t\t<div class=\"login-content",
+          "<section class='for-login'>\n\t\t<div class=\"auth-layout\">\n\t\t<div class=\"login-content"
+        ],
+        [
+          "\t\t</div>\n\t</section>\n\n\t{%- if social_login -%}",
+          "\t\t</div>\n\t\t<aside class=\"auth-welcome\" aria-label=\"{{ _('Learning tips') }}\">\n\t\t\t<h2>{{ _('Learn at your own pace.') }}</h2>\n\t\t\t<p data-auth-tip>{{ _('Resume your course where you left off.') }}</p>\n\t\t\t<p data-auth-tip hidden>{{ _('Review the lesson materials as you study.') }}</p>\n\t\t\t<p data-auth-tip hidden>{{ _('Keep your questions with the lesson discussion.') }}</p>\n\t\t</aside>\n\t\t</div>\n\t</section>\n\n\t{%- if social_login -%}"
+        ]
+      ]
+    },
+    {
+      "path": "www/update-password.html",
+      "before_sha256": "43fdd735a9d40b03dc867ab1b94da5b567ab90a670337dcbbeeb71a833e4d145",
+      "after_sha256": "cd2af1cf2724074acce06f610adb93d560e849b32e7e9ed8fec424b6288488cb",
+      "replacements": [
+        [
+          "<svg toggle=\"#old_password\" class=\"icon icon-sm toggle-password\" xmlns=\"http://www.w3.org/2000/svg\">\n\t\t\t\t\t\t\t\t<use href=\"#icon-eye\"></use>\n\t\t\t\t\t\t\t</svg>",
+          "<button type=\"button\" toggle=\"#old_password\" class=\"toggle-password\" aria-controls=\"old_password\" aria-pressed=\"false\" aria-label=\"{{ _('Show password') }}\" style=\"min-width:44px;min-height:44px;background:transparent;border:0;display:flex;align-items:center;justify-content:center;\"><svg aria-hidden=\"true\" class=\"icon icon-sm\" xmlns=\"http://www.w3.org/2000/svg\">\n\t\t\t\t\t\t\t\t<use href=\"#icon-eye\"></use>\n\t\t\t\t\t\t\t</svg></button>"
+        ],
+        [
+          "<svg toggle=\"#new_password\" class=\"icon icon-sm toggle-password\" xmlns=\"http://www.w3.org/2000/svg\">\n\t\t\t\t\t\t\t\t<use href=\"#icon-eye\"></use>\n\t\t\t\t\t\t\t</svg>",
+          "<button type=\"button\" toggle=\"#new_password\" class=\"toggle-password\" aria-controls=\"new_password\" aria-pressed=\"false\" aria-label=\"{{ _('Show password') }}\" style=\"min-width:44px;min-height:44px;background:transparent;border:0;display:flex;align-items:center;justify-content:center;\"><svg aria-hidden=\"true\" class=\"icon icon-sm\" xmlns=\"http://www.w3.org/2000/svg\">\n\t\t\t\t\t\t\t\t<use href=\"#icon-eye\"></use>\n\t\t\t\t\t\t\t</svg></button>"
+        ],
+        [
+          "<svg toggle=\"#confirm_password\" class=\"icon icon-sm toggle-password\" xmlns=\"http://www.w3.org/2000/svg\">\n\t\t\t\t\t\t\t\t<use href=\"#icon-eye\"></use>\n\t\t\t\t\t\t\t</svg>",
+          "<button type=\"button\" toggle=\"#confirm_password\" class=\"toggle-password\" aria-controls=\"confirm_password\" aria-pressed=\"false\" aria-label=\"{{ _('Show password') }}\" style=\"min-width:44px;min-height:44px;background:transparent;border:0;display:flex;align-items:center;justify-content:center;\"><svg aria-hidden=\"true\" class=\"icon icon-sm\" xmlns=\"http://www.w3.org/2000/svg\">\n\t\t\t\t\t\t\t\t<use href=\"#icon-eye\"></use>\n\t\t\t\t\t\t\t</svg></button>"
+        ],
+        [
+          "{{ include_style('login.bundle.css') }}",
+          "{{ include_style('login.bundle.css') }}\n<meta name=\"referrer\" content=\"no-referrer\">"
+        ],
+        [
+          "{% block script %}\n<script>\n\nfrappe.ready(function() {\n\t// URL args\n\tconst key = frappe.utils.get_url_arg('key');\n\tconst password_expired = frappe.utils.get_url_arg('password_expired');\n\t// inputs and button elements\n\tconst old_password = $('#old_password');\n\tconst new_password = $('#new_password');\n\tconst confirm_password = $('#confirm_password');\n\tconst update_button = $('#update');\n\tconst password_mismatch_message = $('.password-mismatch-message');\n\tconst password_hint = $('.password-hint');\n\tconst password_strength_indicator = $('.password-strength-indicator');\n\tconst error_banner = $('.login-error-banner');\n\tconst success_banner = $('.login-success-banner');\n\n\tfunction show_error_banner(message) {\n\t\tsuccess_banner.addClass('hidden');\n\t\terror_banner.removeClass('hidden').find('.es-alert__title').text(message);\n\t}\n\n\tfunction show_success_banner(message) {\n\t\terror_banner.addClass('hidden');\n\t\tsuccess_banner.removeClass('hidden').find('.es-alert__title').text(message);\n\t}\n\t// Info text\n\tconst password_not_same_as_old_password = \"{{ _('New password cannot be same as old password') }}\";\n\tconst password_mismatch = \"{{ _('Passwords do not match') }}\";\n\n\tif(key) {\n\t\told_password.closest('.form-group').toggle();\n\t}\n\n\tif(password_expired) {\n\t\t$('.page-card-subtitle').text(\"{{ _('Your password has expired. Please set a new password.') }}\");\n\t}\n\n\t$(\"#reset-password input\").on(\"input\", function() {\n\t\terror_banner.addClass(\"hidden\");\n\t\tsuccess_banner.addClass(\"hidden\");\n\t});\n\n\t$(\".toggle-password\").click(function() {\n\t\tvar input = $($(this).attr(\"toggle\"));\n\t\tvar isPassword = input.attr(\"type\") == \"password\";\n\t\tinput.attr(\"type\", isPassword ? \"text\" : \"password\");\n\t\t$(this).find(\"use\").attr(\"href\", isPassword ? \"#icon-eye-off\" : \"#icon-eye\");\n\t});\n\n\t$(\"#reset-password\").on(\"submit\", function(e) {\n\t\te.preventDefault();\n\t\tvar args = {\n\t\t\tkey: key || \"\",\n\t\t\told_password: old_password.val(),\n\t\t\tnew_password: new_password.val(),\n\t\t\tconfirm_password: confirm_password.val(),\n\t\t\tlogout_all_sessions: 1\n\t\t}\n\t\tif (!args.old_password && !args.key) {\n\t\t\tshow_error_banner(\"{{ _('Please enter your old password.') }}\");\n\t\t\treturn;\n\t\t}\n\t\tif (!args.new_password) {\n\t\t\tshow_error_banner(\"{{ _('Please enter your new password.') }}\");\n\t\t\treturn;\n\t\t}\n\t\tif (args.old_password === args.new_password) {\n\t\t\tshow_error_banner(password_not_same_as_old_password);\n\t\t\treturn;\n\t\t}\n\n\t\tif (args.new_password !== args.confirm_password) {\n\t\t\tpassword_mismatch_message.text(password_mismatch)\n\t\t\t\t.removeClass('hidden text-muted').addClass('text-danger');\n\t\t\treturn;\n\t\t}\n\n\t\tfrappe.call({\n\t\t\ttype: \"POST\",\n\t\t\tmethod: \"frappe.core.doctype.user.user.update_password\",\n\t\t\tbtn: update_button,\n\t\t\targs: args,\n\t\t\terror_msg: \"section.for-reset-password .login-error-banner .es-alert__title\",\n\t\t\tstatusCode: {\n\t\t\t\t401: function() {\n\t\t\t\t\tshow_error_banner(\"{{ _('Your old password is incorrect.') }}\");\n\t\t\t\t},\n\t\t\t\t410: function({ responseJSON }) {\n\t\t\t\t\tshow_error_banner(responseJSON.message);\n\t\t\t\t},\n\t\t\t\t200: function(r) {\n\t\t\t\t\t$(\"input\").val(\"\");\n\t\t\t\t\tpassword_strength_indicator.addClass(\"hidden\");\n\t\t\t\t\tif(r.message) {\n\t\t\t\t\t\tshow_success_banner(\"{{ _('Your new password has been set successfully.') }}\");\n\t\t\t\t\t\tsetTimeout(function() {\n\t\t\t\t\t\t\twindow.location.href = r.message;\n\t\t\t\t\t\t}, 2000);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}).catch(function() {\n\t\t\tif (error_banner.find(\".es-alert__title\").text().trim()) {\n\t\t\t\terror_banner.removeClass(\"hidden\");\n\t\t\t}\n\t\t});\n\n\t\treturn false;\n\t});\n\n\tconst fulfills_instruction = (pwd) => pwd.length >= 8 && /[0-9]|[^A-Za-z0-9]/.test(pwd);\n\n\tnew_password.on('input', function() {\n\t\tconst val = new_password.val();\n\t\tpassword_hint.toggleClass('hidden', !(val && !fulfills_instruction(val)));\n\t\twindow.clear_timeout();\n\t\twindow.timout_password_strength = setTimeout(window.test_password_strength, 200);\n\t});\n\n\t$(\"#old_password, #new_password, #confirm_password\").on(\"keyup paste\", frappe.utils.debounce(function () {\n\t\tlet common_conditions = new_password.val() && confirm_password.val() && new_password.val() === confirm_password.val()\n\n\t\tif (new_password.val() && old_password.val() === new_password.val()) {\n\t\t\tpassword_mismatch_message.text(password_not_same_as_old_password)\n\t\t\t\t.removeClass(\"hidden text-muted\").addClass(\"text-danger\");\n\t\t}\n\t\tif ((new_password.val() || old_password.val) && old_password.val() !== new_password.val()) {\n\t\t\tpassword_mismatch_message.addClass(\"hidden\");\n\t\t\tpassword_mismatch_message.text('')\n\t\t}\n\t\tif (confirm_password.val() &&  new_password.val() !== confirm_password.val()) {\n\t\t\tpassword_mismatch_message.text(password_mismatch)\n\t\t\t\t.removeClass(\"hidden text-muted\").addClass(\"text-danger\");\n\t\t}\n\t\tif ((key || (!key && old_password.val() )) && common_conditions ) {\n\t\t\tupdate_button.prop(\"disabled\", false).css(\"cursor\", \"pointer\");\n\t\t}\n\t\telse {\n\t\t\tupdate_button.prop(\"disabled\", true).css(\"cursor\", \"not-allowed\");\n\t\t}\n\t\t},500)\n\t)\n\n\tconst strength_map = {\n\t\t0: { label: \"{{ _('Poor') }}\",    color: \"text-ink-red-8\"    },\n\t\t1: { label: \"{{ _('Poor') }}\",    color: \"text-ink-red-8\"    },\n\t\t2: { label: \"{{ _('Average') }}\", color: \"text-ink-orange-8\" },\n\t\t3: { label: \"{{ _('Good') }}\",    color: \"text-ink-blue-8\"   },\n\t\t4: { label: \"{{ _('Great') }}\",   color: \"text-ink-green-8\"  },\n\t};\n\n\twindow.test_password_strength = function() {\n\t\twindow.timout_password_strength = null;\n\n\t\tif (!new_password.val()) {\n\t\t\tset_strength_indicator(null);\n\t\t\treturn;\n\t\t}\n\n\t\treturn frappe.call({\n\t\t\tmethod: 'frappe.core.doctype.user.user.test_password_strength',\n\t\t\targs: {\n\t\t\t\tkey: key || \"\",\n\t\t\t\told_password: old_password.val(),\n\t\t\t\tnew_password: new_password.val()\n\t\t\t},\n\t\t\tstatusCode: {\n\t\t\t\t401: function() {},\n\t\t\t\t200: function(r) {\n\t\t\t\t\tif (r.message && r.message.score !== undefined && r.message.score !== null) {\n\t\t\t\t\t\tset_strength_indicator(r.message.score);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t});\n\t};\n\n\twindow.set_strength_indicator = function(score) {\n\t\tclearTimeout(window.strength_hide_timeout);\n\n\t\tvar config = strength_map[score];\n\t\tif (!config) {\n\t\t\tpassword_strength_indicator.addClass('hidden');\n\t\t\treturn;\n\t\t}\n\n\t\tpassword_strength_indicator\n\t\t\t.removeClass('hidden')\n\t\t\t.find('.password-strength-value')\n\t\t\t.text(config.label)\n\t\t\t.attr('class', 'password-strength-value text-sm-medium ' + config.color);\n\n\t\tif (score === 4) {\n\t\t\twindow.strength_hide_timeout = setTimeout(function() {\n\t\t\t\tpassword_strength_indicator.addClass('hidden');\n\t\t\t}, 3000);\n\t\t}\n\t}\n\n\twindow.clear_timeout = function() {\n\t\tif (window.timout_password_strength) {\n\t\t\tclearTimeout(window.timout_password_strength);\n\t\t\twindow.timout_password_strength = null;\n\t\t}\n\t};\n});\n</script>\n{% endblock %}\n",
+          "{% block script %}\n<script type=\"module\" src=\"/assets/lms/js/account_password.js\"></script>\n{% endblock %}\n"
+        ]
+      ]
+    },
+    {
+      "path": "templates/includes/login/login.js",
+      "before_sha256": "8b8947d7515f0650118ba56a7e99818a3fee714732c0b4ef34f8b1b6084181d8",
+      "after_sha256": "0d1b0ffd56fb2bf58e43d7da2dd2d211418663177a708e8f6a35fa10fa9bb32a",
+      "replacements": [
+        [
+          "login.set_status({{ _(\"Sent\") | tojson }}, 'green');",
+          "login.set_status({{ _(\"Request accepted\") | tojson }}, 'green');"
+        ],
+        [
+          "login.call = function (args, callback, url=\"/\", error_msg=null) {\n\tlogin.show_loading();",
+          "login.call = function (args, callback, url=\"/\", error_msg=null) {\n\tif (login.request_pending) return;\n\tlogin.request_pending = true;\n\tlogin.show_loading();"
+        ],
+        [
+          "\t\tstatusCode: login.login_handlers\n\t});",
+          "\t\tstatusCode: login.login_handlers\n\t}).always(function() { login.request_pending = false; login.hide_loading(); });"
+        ],
+        [
+          "\t\t\tvar message = default_message;\n",
+          "\t\t\tvar message = $(\".form-verify\").is(\":visible\") ? {{ _(\"Incorrect verification or recovery code.\") | tojson }} : default_message;\n\t\t\tif (Number.isInteger(data.remaining_attempts)) {\n\t\t\t\tmessage += \" \" + (data.remaining_attempts > 0 ? {{ _(\"Attempts remaining for this connection: {0}\") | tojson }}.replace(\"{0}\", data.remaining_attempts) : {{ _(\"Too many attempts. Wait {0} seconds before trying again.\") | tojson }}.replace(\"{0}\", data.retry_after));\n\t\t\t}\n"
+        ],
+        [
+          "\t\t$(this).find(\"use\").attr(\"href\", isPassword ? \"#icon-eye-off\" : \"#icon-eye\");",
+          "\t\t$(this).attr(\"aria-pressed\", String(isPassword)).attr(\"aria-label\", isPassword ? {{ _(\"Hide password\") | tojson }} : {{ _(\"Show password\") | tojson }});\n\t\t$(this).find(\"use\").attr(\"href\", isPassword ? \"#icon-eye-off\" : \"#icon-eye\");"
+        ],
+        [
+          "\t\targs.tmp_id = frappe.get_cookie('tmp_id');",
+          "\t\targs.tmp_id = frappe.get_cookie('tmp_id');\n\t\targs.trust_device = $(\"#trust_device\").prop(\"checked\") ? 1 : 0;"
+        ],
+        [
+          "\t\t\t\t<input type=\"text\" id=\"login_token\" autocomplete=\"one-time-code\" inputmode=\"numeric\" class=\"form-control\" placeholder=\"{{ _(\"Verification Code\") | e }}\" required=\"\">",
+          "\t\t\t\t<label for=\"login_token\">{{ _(\"Verification or recovery code\") | e }}</label>\n\t\t\t\t<input type=\"text\" id=\"login_token\" autocomplete=\"one-time-code\" class=\"form-control\" placeholder=\"{{ _(\"Verification Code\") | e }}\" required=\"\">\n\t\t\t\t<label class=\"flex items-center gap-2\"><input type=\"checkbox\" id=\"trust_device\">{{ _(\"Trust this device for seven days\") | e }}</label>"
+        ],
+        [
+          "\t$(document).trigger('login_rendered');",
+          "\tconst state = new URLSearchParams(window.location.search);\n\tif (state.has('password-updated')) login.show_success_banner({{ _(\"Your password was updated. Sign in with your new password.\") | tojson }});\n\tif (state.has('invitation-accepted')) login.show_success_banner({{ _(\"Invitation accepted. Sign in to continue.\") | tojson }});\n\tif (state.has('session-expired')) login.show_error_banner({{ _(\"Your session expired. Sign in again to continue.\") | tojson }});\n\tif (state.has('logged-out')) login.show_success_banner({{ _(\"You signed out safely.\") | tojson }});\n\tif (state.has('invitation-expired')) login.show_error_banner({{ _(\"This invitation is invalid, expired or already used. Ask for a new invitation, or request a password link if you already have an account.\") | tojson }});\n\t$(document).trigger('login_rendered');"
+        ]
+      ]
+    }
+  ]
+}

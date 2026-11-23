@@ -37,7 +37,7 @@ const token = (aal: string) =>
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "x-supabase-api-version": "2024-01-01" },
   });
 function Location() {
   return (
@@ -46,7 +46,7 @@ function Location() {
     </output>
   );
 }
-function setup(hasFactor: boolean, failCode = false) {
+function setup(hasFactor: boolean, failCode = false, loginError?: string) {
   const user = {
     id,
     aud: "authenticated",
@@ -92,7 +92,9 @@ function setup(hasFactor: boolean, failCode = false) {
       if (url.endsWith("/user")) {
         return json(user);
       }
-      if (url.includes("grant_type=password")) return json(session("aal1"));
+      if (url.includes("grant_type=password")) return loginError
+        ? json({msg:loginError === "email_not_confirmed" ? "Email not confirmed" : "Invalid login credentials",code:loginError},400)
+        : json(session("aal1"));
       if (url.endsWith("/challenge")) {
         return json({
           id: "challenge-login",
@@ -205,7 +207,7 @@ it("permite voltar à senha encerrando a sessão incompleta sem acesso ao destin
   expect(screen.queryByText("Destino autorizado")).not.toBeInTheDocument();
 });
 
-it.each(["Criar uma conta", "Esqueci minha senha", "Confirmar email"])(
+it.each(["Criar conta", "Esqueci minha senha"])(
   "preserva returnTo ao abrir %s e voltar para entrar",
   async (name) => {
     setup(false);
@@ -223,3 +225,33 @@ it.each(["Criar uma conta", "Esqueci minha senha", "Confirmar email"])(
     await screen.findByText("Destino autorizado");
   },
 );
+
+it("oferece confirmação somente após a resposta nativa e preserva o destino sem enviar email automaticamente", async () => {
+  const {requests}=setup(false,false,"email_not_confirmed");
+  expect(screen.queryByRole("link",{name:"Reenviar confirmação de email"})).not.toBeInTheDocument();
+  await password();
+  const link=await screen.findByRole("link",{name:"Reenviar confirmação de email"});
+  expect(screen.getByRole("alert")).toHaveTextContent("Confirme seu email antes de entrar");
+  expect(screen.getByLabelText("Email")).toHaveValue("admin@example.test");
+  expect(screen.getByLabelText("Senha")).toHaveValue("");
+  expect(requests.some(url=>url.includes("/resend"))).toBe(false);
+  fireEvent.click(link);
+  expect(screen.getByTestId("location")).toHaveTextContent("/confirmar-email?returnTo=%2Fadmin%2Fcursos");
+  fireEvent.click(await screen.findByRole("link",{name:"Voltar para entrar"}));
+  expect(screen.getByTestId("location")).toHaveTextContent("/entrar?returnTo=%2Fadmin%2Fcursos");
+});
+
+it("não sugere confirmação para credenciais inválidas", async () => {
+  setup(false,false,"invalid_credentials");
+  await password();
+  expect(await screen.findByRole("alert")).toHaveTextContent("Email ou senha inválidos");
+  expect(screen.queryByRole("link",{name:"Reenviar confirmação de email"})).not.toBeInTheDocument();
+});
+
+it("descarta o contexto de confirmação quando o email é alterado", async () => {
+  setup(false,false,"email_not_confirmed");
+  await password();
+  await screen.findByRole("link",{name:"Reenviar confirmação de email"});
+  fireEvent.change(screen.getByLabelText("Email"),{target:{value:"outra@example.test"}});
+  expect(screen.queryByRole("link",{name:"Reenviar confirmação de email"})).not.toBeInTheDocument();
+});

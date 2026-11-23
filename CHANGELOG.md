@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3 · 2026-11-23
+
+- Recuperação de senha junto do campo, cadastro em frase no rodapé e confirmação de email exibida somente quando o Auth indicar pendência.
+- Destino interno, login AJAX e desafio MFA preservados; nenhum reenvio automático de email.
+
+
 ## 0.1.2 · 2026-11-23
 
 - Ações de privacidade e confirmação administrativa agrupadas com espaçamento e quebra responsiva; política em linha própria.

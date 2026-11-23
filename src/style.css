@@ -764,6 +764,30 @@ h2 > a,
   margin-top: 24px;
   font-size: 14px;
 }
+.login-password .field {
+  margin-bottom: 0;
+}
+.login-recovery {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+  font-size: 14px;
+}
+.login-signup,
+.login-confirmation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  margin: 24px 0 0;
+  font-size: 14px;
+  color: var(--ic-text-secondary);
+}
+.login-signup a {
+  color: var(--ic-text);
+  font-weight: 600;
+}
 .course-list {
   margin: 32px 0;
 }

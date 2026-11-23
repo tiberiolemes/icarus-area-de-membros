@@ -116,7 +116,8 @@ function Login({ target }: { target: string }) {
     { id: string; friendly_name?: string }[]
   >([]);
   const [checking, setChecking] = useState(false),
-    [failure, setFailure] = useState("");
+    [failure, setFailure] = useState(""),
+    [needsConfirmation, setNeedsConfirmation] = useState(false);
   const codeInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     let active = true;
@@ -194,10 +195,15 @@ function Login({ target }: { target: string }) {
                 if (error) throw error;
                 navigate(target, { replace: true });
               } else {
+                setNeedsConfirmation(false);
                 const { error } = await client().auth.signInWithPassword({
                   email: value(data, "email"),
                   password: String(data.get("password") ?? ""),
                 });
+                if (error?.code === "email_not_confirmed") {
+                  setNeedsConfirmation(true);
+                  throw new Error("Confirme seu email antes de entrar. Você pode solicitar um novo link abaixo.");
+                }
                 if (error) throw error;
               }
             } finally {
@@ -252,15 +258,25 @@ function Login({ target }: { target: string }) {
                       autoComplete="email"
                       required
                       maxLength={254}
+                      onChange={() => setNeedsConfirmation(false)}
                     />
                   </Field>
-                  <Password
-                    label="Senha"
-                    name="password"
-                    autoComplete="current-password"
-                    required
-                    maxLength={128}
-                  />
+                  <div className="login-password">
+                    <Password
+                      label="Senha"
+                      name="password"
+                      autoComplete="current-password"
+                      required
+                      maxLength={128}
+                    />
+                    {!session && (
+                      <div className="login-recovery">
+                        <Link className="text-action" to={"/recuperar?returnTo=" + encodeURIComponent(target)}>
+                          Esqueci minha senha
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
           </>
@@ -276,19 +292,21 @@ function Login({ target }: { target: string }) {
             </Action>
           )
           : (
-            <nav className="access-links">
-              <Link to={"/recuperar?returnTo=" + encodeURIComponent(target)}>
-                Esqueci minha senha
-              </Link>
-              <Link to={"/cadastro?returnTo=" + encodeURIComponent(target)}>
-                Criar uma conta
-              </Link>
-              <Link
-                to={"/confirmar-email?returnTo=" + encodeURIComponent(target)}
-              >
-                Confirmar email
-              </Link>
-            </nav>
+            <>
+              {needsConfirmation && (
+                <p className="login-confirmation">
+                  <Link className="text-action" to={"/confirmar-email?returnTo=" + encodeURIComponent(target)}>
+                    Reenviar confirmação de email
+                  </Link>
+                </p>
+              )}
+              <p className="login-signup">
+                Ainda não tem conta?{" "}
+                <Link className="text-action" to={"/cadastro?returnTo=" + encodeURIComponent(target)}>
+                  Criar conta
+                </Link>
+              </p>
+            </>
           )}
       </div>
     </PublicFrame>

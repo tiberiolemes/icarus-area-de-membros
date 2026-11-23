@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-23",
+  "status": "completed_L1_resolved_no_new_finding",
+  "base_head": "8c11ad2a26be6e53657f90ecebbc5f44311ae7d3",
+  "source_state": "snapshot de alterações Root ainda não commitadas, identificado por SHA256",
+  "scope": "Somente L1/links auxiliares, Form disabled, tema inicial explícito e ajustes correlatos de first-admin/migration19/fixtures.",
+  "previous_finding": {
+    "id": "L1",
+    "status": "RESOLVED",
+    "locations": [
+      "src/pages/access.tsx:186",
+      "src/pages/access.tsx:187",
+      "src/pages/access.tsx:188",
+      "src/pages/access.tsx:395"
+    ],
+    "reason": "Login propaga target sanitizado com encodeURIComponent para cadastro, recuperação e confirmação; as três telas retornam a /entrar propagando o mesmo target. O cadastro/convite continua usando esse target para o callback."
+  },
+  "new_findings": [],
+  "checked_deltas": [
+    {
+      "topic": "Regressões de navegação",
+      "result": "Três casos reais de componente com SDK/fetch sintético percorrem cadastro/recuperação/confirmação e retorno ao login; autenticam e chegam a /admin/cursos. Três cenários anteriores preservam fluxo sem fator, mesma Form/foco/código inválido/retry e cancelamento."
+    },
+    {
+      "topic": "Form disabled",
+      "location": "src/ui.tsx:201",
+      "result": "submit agora retorna antes de validação/onSave se disabled, além de lock contra duplo envio. Fieldset/botão continuam desabilitados, e login usa disabled durante sessão/assurance carregando; successMessage vazio continua suprimindo falso sucesso."
+    },
+    {
+      "topic": "Tema inicial",
+      "locations": [
+        "index.html:2",
+        "src/shell.tsx:49",
+        "src/auth.tsx:43"
+      ],
+      "result": "HTML inicia explicitamente em light; Shell continua aplicando preferência do perfil, inclusive dark, e troca de ator limpa tema para light. Sem alteração de tokens/paleta no complemento."
+    },
+    {
+      "topic": "MFA opcional e primeiro admin",
+      "result": "019 continua restrita a requires_aal2 privado e revoke, sem grants novos. first-admin mantém ID explícito e email/primeira senha legítimos; remove somente condição de fator, conforme decisão do usuário. Sem novo gate diferente do revisado anteriormente."
+    },
+    {
+      "topic": "Fixtures SQL negativas",
+      "locations": [
+        "supabase/tests/backend.sql:114",
+        "supabase/tests/followup.sql:84"
+      ],
+      "result": "Delta acrescenta fator verificado ao admin de teste antes das negativas AAL1; não remove nem relaxa essas asserções. Não executei SQL."
+    }
+  ],
+  "executed_tests": [
+    {
+      "command": "npx vitest run src/login.test.tsx",
+      "result": "6 passed, 0 failed",
+      "scope": "apenas regressões dirigidas de Login e ida/volta dos links; sem banco/provedor real"
+    }
+  ],
+  "root_reported_not_reexecuted": [
+    "37 frontend totais e35 contratos aprovados.",
+    "SQL17+109+36+16+45+25 e corrida4 aprovados.",
+    "QA nativa: sem fator SQL/Edge200, fator verificado AAL1 SQL negado/Edge403 e AAL2 SQL/Edge200.",
+    "Navegador nativo: senha→código na mesma Form/documento e /entrar; após Enter, /admin/cursos no mesmo documento.",
+    "Root verificou capturas1280/360 em light e fará dark; alteração do tema salvo das contas demo foi feita pelo Root via app_profile nativo, não por este reviewer."
+  ],
+  "limits": [
+    "Não li .local/env, segredo ou recibo privado; não alterei fonte/DB/runtime e não publiquei.",
+    "Sem controle de navegador ou análise direta das capturas Root; aceite visual dos dois temas pertence à verificação do Root.",
+    "Não repeti suítes completas ou provas nativas sem mudança que as justificasse.",
+    "Veredito restrito a este complemento e aos hashes registrados, sem nova auditoria de produto."
+  ],
+  "files_sha256": {
+    "src/pages/access.tsx": "f1f513470a1ffcd8d5bd1cd1890371f34189711d54c4707c7dcd769e95e2c102",
+    "src/login.test.tsx": "9daca4f8287aa812c3a0e7d14bce8c53b6fe055c9e01f7343eb6ef903f314f49",
+    "src/ui.tsx": "147aed22f42899bb2d40e6c3843fe792ffe93a08153a363d0057b537c204d620",
+    "index.html": "b8eb381a6cd0244704e2e8a1134e4d6656b395ca7c8e6365ede7cd880bdfdcf8",
+    "src/shell.tsx": "92151f5f1af405ea789ea9b52df9c893a0f937b445ef5db0d9ba1dd8b85860ab",
+    "src/auth.tsx": "b166bd709a3726c978e44887e1ab19f38a69f5906ac9acabf80ae8393b702e7c",
+    "supabase/migrations/202611230019_optional_mfa.sql": "67d22427dc69fedc2429b9185962b753fd0472fdd84628e358c81f69d432a90f",
+    "scripts/first-admin.mjs": "272fca3dcc234337eaa4472af20ebe34caf42d06f2769a0f41eb17d24c93231e",
+    "supabase/tests/backend.sql": "bbed6c666c6569777117dd7d64ab4fe3656689815d395cd3e8d2eda55d176128",
+    "supabase/tests/followup.sql": "f078a2cf855fb7d72d4e717bfda6d34901e0cddbf4ad27f322669e2051712899"
+  },
+  "cache_clear_addendum_0_1_1": {
+    "scope": "Adendo restrito à retirada de dois cache.clear do Login, consumidores/gates e alinhamento 0.1.1.",
+    "result": "Sem defeito novo demonstrável; retirada não relaxa gate nem limpeza por identidade.",
+    "base_head": "8c11ad2a26be6e53657f90ecebbc5f44311ae7d3",
+    "AuthProvider_unchanged_vs_base": true,
+    "Login_cache_clear_count": 0,
+    "cache_authority": "AuthProvider limpa antes de trocar identidade; signOut/troca de usuário continuam emitindo evento e limpando cache/rascunhos/tema. Atualização AAL da mesma conta mantém identidade; não é a autoridade de acesso.",
+    "gates_preserved": "Login ainda depende de signInWithPassword/challengeAndVerify nativos e nível suficiente antes de navegar; destino continua em Gate, SessionGate e AccountAssurance. Gates SQL/Edge não foram alterados neste adendo.",
+    "test_source": "src/login.test.tsx agora envolve h1 do destino em Gate real, com transporte controlado de app_bootstrap/app_touch_session; os seis casos continuam aguardando conteúdo, não só URL.",
+    "new_test_runs": 0,
+    "package_version": "0.1.1",
+    "dependencies_unchanged_vs_base": true,
+    "native_and_visual_evidence": "Relato Root e docs/acceptance/login-0.1.1.md: a primeira observação ficou sem conteúdo até reload e não conta como ponta a ponta aprovada; repetição no build sem clears chegou ao h1 autorizado no mesmo documento, com tema claro. Não reexecutei nem inspecionei navegador/recibos privados.",
+    "limits": "Revisão de fonte do adendo, sem afirmar causa histórica provada só pela remoção, sem suites novas, DB/runtime, publicação ou investigação lateral.",
+    "files_sha256": {
+      "src/pages/access.tsx": "bcf0f9e5ded21539245f4bf5e03f40fed6fe2c81601601eb66f70ad69e6b2f21",
+      "src/auth.tsx": "bc6c73c91437766285d5282b313c76781183dacac5a1f510d0cc3bd1249ebcf9",
+      "src/login.test.tsx": "107212132d4cd0ce70099cf5a68e8e5810ed1677658bacadeb460069a5871c9e",
+      "package.json": "dd01226551064bac871568e655350784a15d1795210e3237a46a30368a738c5f",
+      "docs/acceptance/login-0.1.1.md": "385dba7a22fe677911287b78ff57ef3f2e6fd320462dd497f54d42ef0c302da5"
+    }
+  }
+}

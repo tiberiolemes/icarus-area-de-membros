@@ -94,9 +94,9 @@ Deno.test("Auth + SQL gates + private Storage real local, providers disabled", a
       const publicRequest = await media()(req({ kind: "ticket-attachment", id: attachmentId })); assert(publicRequest.status === 401, "UUID público contornou Auth.");
       const status = await orderStatus()(req({ order_id: crypto.randomUUID(), email: accounts.member.email }, tokenB)); assert(status.status >= 400, "Email cliente autorizou pedido.");
     });
-    await t.step("staff AAL1 cannot sign media or upload through service role", async () => {
+    await t.step("staff without MFA can access authorized media through exact session gate", async () => {
       const staff = createClient(url, key, options);
-      try { const token = await login(staff, accounts.admin); assert((await media()(req({ kind: "lesson", id: resources.lesson_id }, token))).status === 403, "Staff AAL1 usou mídia service-only."); }
+      try { const token = await login(staff, accounts.admin); assert((await media()(req({ kind: "lesson", id: resources.lesson_id }, token))).status === 200, "Staff sem fator não acessou mídia autorizada."); }
       finally { await staff.auth.signOut({ scope: "local" }); }
     });
   } finally { await a.auth.signOut({ scope: "local" }); await b.auth.signOut({ scope: "local" }); }

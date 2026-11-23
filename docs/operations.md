@@ -21,13 +21,13 @@ node scripts/first-admin.mjs invite email-do-responsavel
 
 O operador informa o destino deliberadamente. O script usa Auth Admin nativo para criar conta **não confirmada**, com markers exclusivos de app_metadata e `password_setup_required=true`; nenhuma senha é fornecida, conhecida, impressa ou enviada. O Auth pode gerar internamente uma credencial aleatória. O convite nativo vai para o SMTP configurado, que no ambiente entregue é Mailpit local. SDK200 não comprova recebimento externo.
 
-O titular abre o convite recebido, confirma email, define sua própria senha pela Edge `password-setup`, conclui onboarding e matricula/verifica MFA TOTP nas configurações de segurança. O operador então executa:
+O titular abre o convite recebido, confirma email, define sua própria senha pela Edge `password-setup`, conclui onboarding. Pode ativar MFA TOTP nas configurações de segurança quando desejar. O operador então executa:
 
 ```sh
 node scripts/first-admin.mjs promote
 ```
 
-Essa ação é SQL privilegiado **específico para o ID salvo em `.local/first-admin.json`**, sem RPC pública de papel. Só promove se a conta não for demo/suspensa, tiver email confirmado, primeira senha concluída e fator MFA nativo verificado. Demais usuários não conseguem editar role pelo perfil. Ações administrativas continuam exigindo JWT/sessãoAAL2; não existe bypass por email ou marker no user_metadata. O arquivo privado do operador não deve ser commitado.
+Essa ação é SQL privilegiado **específico para o ID salvo em `.local/first-admin.json`**, sem RPC pública de papel. Só promove se a conta não for demo/suspensa, tiver email confirmado, primeira senha concluída. Demais usuários não conseguem editar role pelo perfil. Contas com fator verificado exigem JWT/sessãoAAL2; contas sem fator podem operar em AAL1; não existe bypass por email ou marker no user_metadata. O arquivo privado do operador não deve ser commitado.
 
 ## Edge Functions e secrets
 

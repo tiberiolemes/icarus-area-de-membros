@@ -13,7 +13,7 @@ export const articles = [
       "Se você acabou de criar sua conta, abra a confirmação enviada pelo sistema de autenticação. O link tem validade limitada. Use Confirmar email para solicitar outro.",
       "Esqueceu a senha? Abra Recuperar acesso e solicite as instruções. O sistema não confirma a existência de uma conta pelo endereço informado.",
       "Complete o perfil e as perguntas de empresa. Responda os campos marcados como obrigatórios. Você pode editar essas respostas em Configurações.",
-      "Na administração, cadastre um aplicativo autenticador e valide o código de seis dígitos. A permissão é verificada novamente no servidor.",
+      "O segundo fator é opcional. Para ativá-lo, abra Sua conta → Segurança e valide o aplicativo autenticador. Nos próximos acessos, o código é solicitado no mesmo formulário de login, sem mudar de página. O servidor mantém essa exigência enquanto houver fator ativo.",
     ],
   },
   {

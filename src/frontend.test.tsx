@@ -7,7 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:58521");
@@ -66,7 +66,8 @@ describe("Formulários reais", () => {
             }),
       ),
     );
-    wrap(<Access mode="login" />);
+    wrap(<AuthProvider><Access mode="login" /></AuthProvider>);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled());
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "synthetic@example.test" },
     });
@@ -290,16 +291,16 @@ describe("SDK e componentes do domínio com fetch controlado", () => {
       });
       expect(session.error).toBeNull();
       wrap(
-        <AccountAssurance requiredStaff={false}>
-          <p>Conteúdo autorizado</p>
-        </AccountAssurance>,
+        <Routes>
+          <Route path="/" element={<AccountAssurance><p>Conteúdo autorizado</p></AccountAssurance>} />
+          <Route path="/entrar" element={<h1>Login no mesmo formulário</h1>} />
+        </Routes>,
       );
       if (hasFactor) {
-        await screen.findByRole("heading", { name: "Confirme seu acesso" });
+        await screen.findByRole("heading", { name: "Login no mesmo formulário" });
         expect(
           screen.queryByText("Conteúdo autorizado"),
         ).not.toBeInTheDocument();
-        await screen.findByRole("button", { name: "Consultar autenticadores" });
       } else await screen.findByText("Conteúdo autorizado");
       await act(async () => {
         await client().auth.signOut({ scope: "local" });

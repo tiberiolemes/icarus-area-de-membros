@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import {
   cache,
@@ -18,6 +18,7 @@ import {
   Password,
   Form,
   Heading,
+  Loading,
   Notice,
   QueryState,
   value,
@@ -109,6 +110,191 @@ export function PasswordSetup() {
     </PublicFrame>
   );
 }
+function Login({ target }: { target: string }) {
+  const { session, loading } = useAuth(), navigate = useNavigate();
+  const [factors, setFactors] = useState<
+    { id: string; friendly_name?: string }[]
+  >([]);
+  const [checking, setChecking] = useState(false),
+    [failure, setFailure] = useState("");
+  const codeInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    let active = true;
+    setFactors([]);
+    setFailure("");
+    if (!session) {
+      setChecking(false);
+      return;
+    }
+    setChecking(true);
+    async function check() {
+      try {
+        const { data, error } = await client().auth.mfa
+          .getAuthenticatorAssuranceLevel();
+        if (error) throw error;
+        if (!active) return;
+        if (
+          data.currentLevel === "aal2" ||
+          (data.currentLevel === "aal1" && data.nextLevel === "aal1")
+        ) {
+          navigate(target, { replace: true });
+          return;
+        }
+        const result = await client().auth.mfa.listFactors();
+        if (result.error) throw result.error;
+        if (!active) return;
+        const verified = result.data.totp.filter((factor) =>
+          factor.status === "verified"
+        );
+        if (!verified.length) {
+          throw new Error(
+            "Não foi possível consultar seu autenticador. Tente novamente.",
+          );
+        }
+        setFactors(verified);
+      } catch (error) {
+        if (active) {
+          setFailure(
+            error instanceof Error
+              ? error.message
+              : "Não foi possível verificar seu acesso.",
+          );
+        }
+      } finally {
+        if (active) setChecking(false);
+      }
+    }
+    void check();
+    return () => {
+      active = false;
+    };
+  }, [session?.access_token, target, navigate]);
+  useEffect(() => {
+    if (factors.length) codeInput.current?.focus();
+  }, [factors]);
+  return (
+    <PublicFrame>
+      <div className="access" data-tour="login">
+        <Heading title="Entre na sua área de membros" />
+        {failure && <Notice error>{failure}</Notice>}
+        <Form
+          label={factors.length ? "Verificar e entrar" : "Entrar"}
+          successMessage=""
+          disabled={loading || checking || (!!session && !factors.length)}
+          onSave={async (data, form) => {
+            try {
+              if (factors.length) {
+                const factorId = factors.length === 1
+                  ? factors[0].id
+                  : value(data, "factor");
+                const { error } = await client().auth.mfa.challengeAndVerify({
+                  factorId,
+                  code: value(data, "code"),
+                });
+                if (error) throw error;
+                navigate(target, { replace: true });
+              } else {
+                const { error } = await client().auth.signInWithPassword({
+                  email: value(data, "email"),
+                  password: String(data.get("password") ?? ""),
+                });
+                if (error) throw error;
+              }
+            } finally {
+              form.querySelectorAll<HTMLInputElement>(
+                "input[data-sensitive=password], input[name=code]",
+              ).forEach((input) => {
+                input.value = "";
+              });
+            }
+          }}
+        >
+          <>
+            {checking && <Loading />}
+            {factors.length
+              ? (
+                <>
+                  <p role="status">
+                    Informe o código do seu aplicativo autenticador para
+                    concluir o acesso.
+                  </p>
+                  {factors.length > 1 && (
+                    <Field label="Autenticador">
+                      <select name="factor">
+                        {factors.map((factor) => (
+                          <option key={factor.id} value={factor.id}>
+                            {factor.friendly_name || "Aplicativo autenticador"}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  )}
+                  <Field label="Código de seis dígitos">
+                    <input
+                      ref={codeInput}
+                      name="code"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]{6}"
+                      minLength={6}
+                      maxLength={6}
+                      required
+                    />
+                  </Field>
+                </>
+              )
+              : (
+                <>
+                  <Field label="Email">
+                    <input
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      maxLength={254}
+                    />
+                  </Field>
+                  <Password
+                    label="Senha"
+                    name="password"
+                    autoComplete="current-password"
+                    required
+                    maxLength={128}
+                  />
+                </>
+              )}
+          </>
+        </Form>
+        {session
+          ? (
+            <Action
+              run={async () => {
+                await signOut();
+              }}
+            >
+              Voltar para email e senha
+            </Action>
+          )
+          : (
+            <nav className="access-links">
+              <Link to={"/recuperar?returnTo=" + encodeURIComponent(target)}>
+                Esqueci minha senha
+              </Link>
+              <Link to={"/cadastro?returnTo=" + encodeURIComponent(target)}>
+                Criar uma conta
+              </Link>
+              <Link
+                to={"/confirmar-email?returnTo=" + encodeURIComponent(target)}
+              >
+                Confirmar email
+              </Link>
+            </nav>
+          )}
+      </div>
+    </PublicFrame>
+  );
+}
+
 export function Access({
   mode,
 }: {
@@ -116,12 +302,10 @@ export function Access({
 }) {
   const [params] = useSearchParams(),
     navigate = useNavigate(),
-    { session, loading } = useAuth(),
     [message, setMessage] = useState("");
   const target = internalPath(params.get("returnTo")),
     context = useRpc<PublicContext>("app_public_context");
-  if (session && !loading && mode === "login")
-    return <Navigate to={target} replace />;
+  if (mode === "login") return <Login target={target} />;
   const titles = {
     login: "Entre na sua área de membros",
     register: "Crie sua conta",
@@ -162,15 +346,6 @@ export function Access({
               password = value(data, "password");
             const auth = client().auth;
             try {
-              if (mode === "login") {
-                const { error } = await auth.signInWithPassword({
-                  email,
-                  password,
-                });
-                if (error) throw error;
-                cache.clear();
-                navigate(target, { replace: true });
-              }
               if (mode === "register") {
                 if (
                   !context.data?.registration_enabled ||
@@ -277,20 +452,18 @@ export function Access({
               />
             </Field>
           )}
-          {["login", "register", "reset"].includes(mode) && (
+          {["register", "reset"].includes(mode) && (
             <Password
               label="Senha"
               hint={
-                mode === "login"
-                  ? undefined
-                  : "Use pelo menos 12 caracteres, com letras e números. A política do servidor também será verificada."
+                "Use pelo menos 12 caracteres, com letras e números. A política do servidor também será verificada."
               }
               name="password"
               autoComplete={
-                mode === "login" ? "current-password" : "new-password"
+                "new-password"
               }
               required
-              minLength={mode === "login" ? 1 : 12}
+              minLength={12}
               maxLength={128}
             />
           )}
@@ -323,21 +496,7 @@ export function Access({
           )}
         </Form>
         <nav className="access-links">
-          {mode === "login" ? (
-            <>
-              <Link to={"/recuperar?returnTo=" + encodeURIComponent(target)}>
-                Esqueci minha senha
-              </Link>
-              <Link to={"/cadastro?returnTo=" + encodeURIComponent(target)}>
-                Criar uma conta
-              </Link>
-              <Link to="/confirmar-email">Confirmar email</Link>
-            </>
-          ) : (
-            <Link to={"/entrar?returnTo=" + encodeURIComponent(target)}>
-              Voltar para entrar
-            </Link>
-          )}
+          <Link to={"/entrar?returnTo=" + encodeURIComponent(target)}>Voltar para entrar</Link>
         </nav>
       </div>
     </PublicFrame>

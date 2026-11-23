@@ -132,10 +132,10 @@ Deno.test("unlinked refund never reaches financial transition", async () => {
   const result = await webhook(d)(request({ id: "evt_unlinked_synthetic", event: "PAYMENT_REFUNDED", payment: { id: "pay_synthetic", externalReference: id, value: 10, billingType: "PIX" } }, { token: null, headers: { "asaas-access-token": billing.ASAAS_WEBHOOK_TOKEN } }));
   equal(result.status, 409); assert(!requests.some((r) => r.url.includes("app_process_payment")));
 });
-Deno.test("reauth verifies native password and revokes only secondary session", async () => {
+for (const role of ["member", "admin"]) Deno.test(`reauth without factor verifies native password for ${role} and revokes only secondary session`, async () => {
   let stored: Record<string, unknown> = {};
   const { d, requests } = deps((url, init) => {
-    if (url.pathname.endsWith("app_bootstrap")) return response({ profile: { role: "member" } });
+    if (url.pathname.endsWith("app_bootstrap")) return response({ profile: { role } });
     if (url.pathname === "/auth/v1/token") return response({ access_token: jwt({ session_id: id }), refresh_token: "synthetic-refresh", token_type: "bearer", expires_in: 3600, user });
     if (url.pathname.endsWith("app_confirm_reauth")) { stored = JSON.parse(String(init.body)); return response({ expires_at: new Date(Date.now() + 300_000).toISOString() }); }
     if (url.pathname === "/auth/v1/logout") { equal(url.searchParams.get("scope"), "local"); assert(new Headers(init.headers).get("authorization") !== `Bearer ${jwt()}`); return response({}); }
@@ -145,8 +145,8 @@ Deno.test("reauth verifies native password and revokes only secondary session", 
   equal((requests.find((r) => r.url.includes("/auth/v1/token"))!.body as Record<string, string>).password, " synthetic password ");
   assert(requests.some((r) => r.url.includes("/auth/v1/logout")));
 });
-Deno.test("staff AAL1 reauth denies before password verification", async () => {
-  const { d, requests } = deps((url) => url.pathname.endsWith("app_bootstrap") ? response({ profile: { role: "admin" } }) : undefined);
+Deno.test("verified staff AAL1 reauth denies before password verification", async () => {
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_bootstrap") ? response({ profile: { role: "admin" } }) : url.pathname === "/auth/v1/user" ? response({ ...user, factors: [{ id: other, status: "verified", factor_type: "totp" }] }) : undefined);
   const result = await reauthenticate(d)(request({ password: "test-only-password" })); equal(result.status, 403); equal((await result.json()).error.code, "MFA_REQUIRED");
   assert(!requests.some((r) => r.url.includes("/token")));
 });

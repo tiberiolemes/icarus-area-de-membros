@@ -5,9 +5,8 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   const body = await json(req);
   text(body.password, 1024);
   const password = body.password as string;
-  const staff = a.profile.role !== "member";
   const hasMfa = a.userInfo.factors?.some((f) => f.status === "verified");
-  if ((staff || hasMfa) && a.claims.aal !== "aal2") throw new HttpError(403, "MFA_REQUIRED", "Confirme o segundo fator para continuar.");
+  if (hasMfa && a.claims.aal !== "aal2") throw new HttpError(403, "MFA_REQUIRED", "Confirme o segundo fator para continuar.");
   const verifier = a.verifier();
   try {
     const checked = await verifier.auth.signInWithPassword({ email: a.userInfo.email!, password });

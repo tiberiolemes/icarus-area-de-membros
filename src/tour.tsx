@@ -49,7 +49,7 @@ const steps = [
   {
     target: "settings",
     title: "Cuide da sua conta",
-    body: "Atualize perfil e empresa, salve o tema por usuário e configure sua segurança. Privacidade permite exportar dados e pedir exclusão.",
+    body: "Atualize perfil e empresa, salve o tema por usuário e ative o segundo fator opcional em Segurança. Depois de ativado, o código é confirmado no próprio login. Privacidade permite exportar dados e pedir exclusão.",
   },
   {
     target: "course-editor",

@@ -1,7 +1,5 @@
 import {
   createContext,
-  lazy,
-  Suspense,
   useContext,
   useEffect,
   useRef,
@@ -23,10 +21,6 @@ import {
 import type { Bootstrap } from "./api";
 import { Action, Loading, Notice } from "./ui";
 import { PasswordSetup } from "./pages/access";
-const Mfa = lazy(() =>
-  import("./pages/settings").then((module) => ({ default: module.Mfa })),
-);
-
 const AuthContext = createContext<{
   session: Session | null;
   loading: boolean;
@@ -153,7 +147,7 @@ export function Gate({
     );
   return (
     <SessionGate>
-      <AccountAssurance requiredStaff={boot.data.profile.role !== "member"}>
+      <AccountAssurance>
         {children}
       </AccountAssurance>
     </SessionGate>
@@ -175,55 +169,41 @@ export function RoleGate({
     <Notice error>Você não tem permissão para esta área.</Notice>
   );
 }
-export function AccountAssurance({
-  children,
-  requiredStaff,
-}: {
-  children: ReactNode;
-  requiredStaff: boolean;
-}) {
+export function AccountAssurance({ children }: { children: ReactNode }) {
+  const { session } = useAuth(), location = useLocation();
   const [verified, setVerified] = useState<boolean | null>(null),
     [error, setError] = useState("");
   useEffect(() => {
     let active = true;
-    client()
-      .auth.mfa.getAuthenticatorAssuranceLevel()
-      .then(({ data, error }) => {
-        if (active) {
-          if (error) setError(errorMessage(error));
-          else
-            setVerified(
-              data.currentLevel === "aal2" ||
-                (!requiredStaff &&
-                  data.currentLevel === "aal1" &&
-                  data.nextLevel === "aal1"),
-            );
-        }
-      });
+    setVerified(null);
+    setError("");
+    client().auth.mfa.getAuthenticatorAssuranceLevel().then(
+      ({ data, error }) => {
+        if (!active) return;
+        if (error) setError(errorMessage(error));
+        else {setVerified(
+            data.currentLevel === "aal2" ||
+              (data.currentLevel === "aal1" && data.nextLevel === "aal1"),
+          );}
+      },
+    );
     return () => {
       active = false;
     };
-  }, [requiredStaff]);
+  }, [session?.access_token]);
   if (error) return <Notice error>{error}</Notice>;
   if (verified === null) return <Loading />;
-  return verified ? (
-    <>{children}</>
-  ) : (
-    <main className="content reading">
-      <h1>Confirme seu acesso</h1>
-      <Suspense fallback={<Loading />}>
-        <Mfa required onVerified={() => setVerified(true)} />
-      </Suspense>
-      <Action
-        run={async () => {
-          await signOut();
-        }}
-      >
-        Sair
-      </Action>
-    </main>
-  );
+  return verified
+    ? <>{children}</>
+    : (
+      <Navigate
+        to={"/entrar?returnTo=" +
+          encodeURIComponent(location.pathname + location.search)}
+        replace
+      />
+    );
 }
+
 function SessionGate({ children }: { children: ReactNode }) {
   const [expiry, setExpiry] = useState<number | null>(null),
     [seconds, setSeconds] = useState<number | null>(null),

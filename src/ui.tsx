@@ -179,6 +179,7 @@ export function Form({
   className = "",
   onDone,
   successMessage = "Salvo com sucesso.",
+  disabled = false,
 }: {
   children: ReactNode;
   onSave: (data: FormData, form: HTMLFormElement) => Promise<unknown>;
@@ -186,6 +187,7 @@ export function Form({
   className?: string;
   onDone?: () => void;
   successMessage?: string;
+  disabled?: boolean;
 }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -196,7 +198,7 @@ export function Form({
     summary = useRef<HTMLDivElement>(null);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (lock.current) return;
+    if (lock.current || disabled) return;
     const form = e.currentTarget;
     setFields({});
     if (!form.checkValidity()) {
@@ -253,13 +255,13 @@ export function Form({
               </div>
             </div>
           )}
-          <fieldset disabled={busy}>
+          <fieldset disabled={busy || disabled}>
             {children}
             <div className="form-actions">
-              <button className="primary" type="submit" disabled={busy}>
+              <button className="primary" type="submit" disabled={busy || disabled}>
                 {busy ? "Enviando…" : label}
               </button>
-              {saved && (
+              {saved && successMessage && (
                 <span role="status">
                   <Check size={18} aria-hidden="true" /> {successMessage}
                 </span>

@@ -701,8 +701,26 @@ progress::-moz-progress-bar {
   margin: 0 auto;
 }
 .access {
-  max-width: 440px;
+  max-width: 480px;
   margin: auto;
+  padding: 32px;
+  border: 1px solid var(--ic-border);
+  border-radius: 12px;
+  background: var(--ic-surface);
+}
+.access .page-heading h1 {
+  font-size: 28px;
+  line-height: 1.2;
+}
+.access .form-actions > .primary {
+  width: 100%;
+}
+.access .access-links {
+  gap: 4px;
+}
+@media (max-width: 480px) {
+  .access { padding: 24px 20px; }
+  .access .page-heading h1 { font-size: 24px; }
 }
 .access .page-heading {
   margin-bottom: 32px;

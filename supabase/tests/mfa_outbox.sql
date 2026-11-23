@@ -54,7 +54,7 @@ reset role;
 select pg_temp.login(4);
 set local role authenticated;
 select pg_temp.assert(public.app_bootstrap()?'profile','staff bootstrap aal1 reachable');
-select pg_temp.denied('select public.app_catalog()','staff aal1 still denied');
+select pg_temp.assert(public.app_catalog()?'items','staff without verified factor aal1 allowed');
 reset role;
 set local role service_role;
 select pg_temp.headers(1);
@@ -64,7 +64,7 @@ select pg_temp.denied($q$select public.app_confirm_reauth(pg_temp.id(2),'e100000
 select pg_temp.headers(2,'aal2');
 select pg_temp.assert(public.app_confirm_reauth(pg_temp.id(2),'e1000000-0000-4000-8000-000000000002',repeat('b',64))?'expires_at','service verified header and native aal2 allowed');
 select pg_temp.headers(4);
-select pg_temp.denied($q$select public.app_confirm_reauth(pg_temp.id(4),'e1000000-0000-4000-8000-000000000004',repeat('c',64))$q$,'service staff aal1 denied');
+select pg_temp.assert(public.app_confirm_reauth(pg_temp.id(4),'e1000000-0000-4000-8000-000000000004',repeat('c',64))?'expires_at','service staff without factor aal1 allowed');
 reset role;
 update auth.sessions set aal='aal1' where user_id=pg_temp.id(2);
 set local role service_role;

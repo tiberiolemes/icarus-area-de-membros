@@ -81,6 +81,7 @@ select pg_temp.assert(public.app_course('followup-course')->'course'->>'certific
 reset role;
 insert into public.tickets(user_id,subject,priority) select pg_temp.id(1),'DEMONSTRAÇÃO relacionado '||n,'normal' from generate_series(1,21)n;
 insert into public.tickets(user_id,subject,priority) values(pg_temp.id(2),'SEGREDO_TERCEIRO_TICKET','urgent');
+insert into auth.mfa_factors(id,user_id,friendly_name,factor_type,status,created_at,updated_at) values('b0000000-0000-4000-8000-999999999999',pg_temp.id(3),'DEMONSTRAÇÃO admin MFA','totp','verified',now(),now());
 select pg_temp.login(3);
 set local role authenticated;
 select pg_temp.denied(format('select public.app_admin_member_detail(%L)',pg_temp.id(1)),'AAL1 admin dossier denied');

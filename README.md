@@ -9,7 +9,7 @@
 ```
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.1.0-black)
+![Version](https://img.shields.io/badge/version-0.1.1-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)
@@ -20,7 +20,7 @@ Aplicação nova em React, TypeScript, Vite e Supabase. A árvore desta versão 
 
 ## Incluído
 
-- Acesso, confirmação de email, primeira senha por convite, recuperação, onboarding, perfil e autenticação de dois fatores. Equipe exige MFA; membro que ativa MFA também deve concluir o desafio.
+- Acesso, confirmação de email, primeira senha por convite, recuperação, onboarding, perfil e autenticação de dois fatores. MFA é opcional para todas as contas; após ativar, o código é exigido no mesmo formulário AJAX do login.
 - Cursos, módulos, seções, aulas de texto/vídeo/áudio, prévias, restrições por plano, retomada e conclusão autorizada no servidor.
 - Arquivos privados, uploads controlados, certificados com retrato da emissão, verificação pública por código e exportação PDF/PNG.
 - Comunidade com espaços, publicações, respostas, votos, denúncias e aprovação manual de publicações e edições.

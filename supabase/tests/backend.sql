@@ -111,6 +111,7 @@ select pg_temp.assert(not (public.app_lesson('60000000-0000-4000-8000-0000000000
 select pg_temp.assert((public.app_lesson('60000000-0000-4000-8000-000000000001')->>'can_access')::boolean,'expired can view published preview');
 select pg_temp.denied($q$select public.app_progress('60000000-0000-4000-8000-000000000002',120,true)$q$,'expired cannot forge completion');
 reset role;
+insert into auth.mfa_factors(id,user_id,friendly_name,factor_type,status,created_at,updated_at) values('00000000-0000-4000-8000-999999999999',pg_temp.uid(3),'DEMONSTRAÇÃO admin MFA','totp','verified',now(),now());
 select pg_temp.login(3);
 set local role authenticated;
 select pg_temp.assert(public.app_bootstrap()->'profile'->>'role'='admin','AAL1 admin bootstrap for MFA');

@@ -29,7 +29,7 @@ export async function actor(req: Request, d: Dependencies, optional = false) {
   await rpc(c.user, "app_touch_session", { p_activity: false });
   const boot = await rpc(c.user, "app_bootstrap");
   if (!boot?.profile?.role) throw new HttpError(403, "FORBIDDEN", "Perfil indisponível.");
-  if ((boot.profile.role !== "member" || data.user.factors?.some((f) => f.status === "verified")) && claims.data.claims.aal !== "aal2") throw new HttpError(403, "MFA_REQUIRED", "Confirme o segundo fator para continuar.");
+  if (data.user.factors?.some((f) => f.status === "verified") && claims.data.claims.aal !== "aal2") throw new HttpError(403, "MFA_REQUIRED", "Confirme o segundo fator para continuar.");
   const admin = clients(d, token, { id: claims.data.claims.session_id, aal: String(claims.data.claims.aal) }).admin;
   return { ...c, admin, userInfo: data.user, claims: claims.data.claims, profile: boot.profile };
 }

@@ -264,3 +264,11 @@ it("exibe o nome publicado nos dois espaços da marca do membro", () => {
   expect(screen.getAllByText("Academia de teste")).toHaveLength(2);
   expect(screen.queryByRole("img", { name: "Icarus" })).not.toBeInTheDocument();
 });
+
+it("usa o nome personalizado na lateral e no topo móvel da administração", () => {
+  profile.role = "admin";
+  settings.name = "Plataforma de teste";
+  mount("/admin/cursos");
+  expect(screen.getAllByText("Plataforma de teste")).toHaveLength(2);
+  expect(screen.queryByRole("img", { name: "Icarus" })).not.toBeInTheDocument();
+});

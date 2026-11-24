@@ -38,24 +38,24 @@ select pg_temp.id(n),'member-search-'||n||'@example.test',now(),'{"icarus_server
 set constraints all immediate;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
 select pg_temp.id(10+n),pg_temp.id(n),now(),now(),'aal2' from generate_series(1,4) n;
-update public.profiles set role='instructor' where id=pg_temp.id(3);
-update public.profiles set suspended=true where id=pg_temp.id(4);
-insert into public.plans(id,name,slug,price_cents,access_months)
+update public.ica_profiles set role='instructor' where id=pg_temp.id(3);
+update public.ica_profiles set suspended=true where id=pg_temp.id(4);
+insert into public.ica_plans(id,name,slug,price_cents,access_months)
 values (pg_temp.id(90),'Plano teste','search-fixture-plan',0,1);
-insert into public.subscriptions(user_id,plan_id,ends_at,source)
+insert into public.ica_subscriptions(user_id,plan_id,ends_at,source)
 values (pg_temp.id(2),pg_temp.id(90),now()+interval '1 day','courtesy');
 
-insert into public.courses(id,slug,title,description,status,access_mode) values
+insert into public.ica_courses(id,slug,title,description,status,access_mode) values
  (pg_temp.id(100),'search-aberto','Busca Ágil','corpo sigiloso marcador','published','members'),
  (pg_temp.id(101),'search-restrito','Busca Ágil curso restrito','','published','subscribers'),
  (pg_temp.id(102),'search-arquivado','Busca Ágil curso arquivado','','archived','members');
-insert into public.modules(id,course_id,slug,title,status,access_mode,plan_ids) values
+insert into public.ica_modules(id,course_id,slug,title,status,access_mode,plan_ids) values
  (pg_temp.id(110),pg_temp.id(100),'conteudo','Busca Ágil módulo','published','inherit','{}'),
  (pg_temp.id(111),pg_temp.id(101),'conteudo','Busca Ágil módulo restrito','published','inherit','{}'),
  (pg_temp.id(112),pg_temp.id(100),'tem-plano','Busca Ágil módulo por plano','published','plans',array[pg_temp.id(90)]),
  (pg_temp.id(113),pg_temp.id(100),'rascunho','Busca Ágil módulo rascunho','draft','inherit','{}'),
  (pg_temp.id(114),pg_temp.id(102),'conteudo','Busca Ágil módulo filho de arquivado','published','inherit','{}');
-insert into public.sections(id,module_id,title,status,order_index) values
+insert into public.ica_sections(id,module_id,title,status,order_index) values
  (pg_temp.id(120),pg_temp.id(110),'Primeira seção','published',0),
  (pg_temp.id(121),pg_temp.id(111),'Seção restrita','published',0),
  (pg_temp.id(122),pg_temp.id(112),'Seção por plano','published',0),
@@ -64,7 +64,7 @@ insert into public.sections(id,module_id,title,status,order_index) values
  (pg_temp.id(125),pg_temp.id(110),'Seção arquivada','archived',2),
  (pg_temp.id(126),pg_temp.id(114),'Seção em curso arquivado','published',0),
  (pg_temp.id(127),pg_temp.id(110),'Seção rascunho anterior','draft',0);
-insert into public.lessons(id,section_id,slug,title,status,is_preview,body,video_id,storage_path) values
+insert into public.ica_lessons(id,section_id,slug,title,status,is_preview,body,video_id,storage_path) values
  (pg_temp.id(130),pg_temp.id(120),'principal','Aula de Busca Ágil','published',false,'<p>corpo sigiloso marcador</p>','video-privado','path-privado'),
  (pg_temp.id(131),pg_temp.id(121),'bloqueada','Busca Ágil aula restrita','published',false,'Marcador protegido','video-privado','path-privado'),
  (pg_temp.id(132),pg_temp.id(121),'previa','Prévia de Busca Ágil','published',true,'',null,null),
@@ -78,7 +78,7 @@ insert into public.lessons(id,section_id,slug,title,status,is_preview,body,video
  (pg_temp.id(140),pg_temp.id(120),'parecida','Aula 100XXreal','published',false,'',null,null),
  (pg_temp.id(141),pg_temp.id(127),'mesma-rota','Rota reservada em rascunho','draft',false,'',null,null),
  (pg_temp.id(142),pg_temp.id(124),'mesma-rota','Rota publicada','published',false,'',null,null);
-insert into public.lessons(id,section_id,slug,title,status)
+insert into public.ica_lessons(id,section_id,slug,title,status)
 select pg_temp.id(200+n),pg_temp.id(120),'paginacao-'||n,'Paginação igual','published' from generate_series(10,31) n;
 
 select pg_temp.ok(
@@ -144,9 +144,9 @@ select pg_temp.ok(public.app_member_search('busca ágil')->>'total'='9','instrut
 select pg_temp.ok(public.app_member_search('Rota publicada')->>'total'='1','rascunho com mesmo slug não exclui o resultado publicado para a equipe');
 
 reset role;
-update public.subscriptions set revoked_at=now() where user_id=pg_temp.id(2);
-update public.app_sessions set revoked_at=now() where id=pg_temp.id(11);
-insert into public.rate_limits(actor_id,bucket,window_start,count)
+update public.ica_subscriptions set revoked_at=now() where user_id=pg_temp.id(2);
+update public.ica_app_sessions set revoked_at=now() where id=pg_temp.id(11);
+insert into public.ica_rate_limits(actor_id,bucket,window_start,count)
 values (pg_temp.id(2),'member_search',date_trunc('minute',now()),59)
 on conflict (actor_id,bucket,window_start) do update set count=excluded.count;
 set local role authenticated;

@@ -25,7 +25,9 @@ from unnest(array['admin', 'admin_b', 'member', 'support', 'moderator', 'instruc
 grant select on actors to authenticated;
 insert into auth.users(id, email, email_confirmed_at, aud, role, raw_app_meta_data)
 select actor_id, actor_id || '@example.test', now(), 'authenticated', 'authenticated', '{"icarus_server_created":true}' from actors;
-update public.profiles p set role = case a.role when 'admin_b' then 'admin' else a.role end from actors a where p.id = a.actor_id;
+-- O perfil nasce na validação final do Auth; antecipa-a para usar as fixtures nesta transação.
+set constraints all immediate;set constraints all deferred;
+update public.ica_profiles p set role = case a.role when 'admin_b' then 'admin' else a.role end from actors a where p.id = a.actor_id;
 insert into auth.sessions(id, user_id, created_at, updated_at, aal)
 select session_id, actor_id, now(), now(), 'aal2' from actors;
 insert into auth.mfa_factors(id, user_id, friendly_name, factor_type, status, created_at, updated_at)
@@ -35,9 +37,9 @@ create function pg_temp.login(actor_role text, aal text) returns void language s
   from actors where role = actor_role
 $$;
 
-select pg_temp.ok(not has_table_privilege('authenticated', 'app_private.installation_brand', 'SELECT,UPDATE'), 'Tabela fechada para autenticados');
-select pg_temp.ok(not has_table_privilege('anon', 'app_private.installation_brand', 'SELECT,UPDATE'), 'Tabela fechada para anônimos');
-select pg_temp.ok(not has_table_privilege('service_role', 'app_private.installation_brand', 'SELECT,UPDATE'), 'Tabela fechada para serviço');
+select pg_temp.ok(not has_table_privilege('authenticated', 'ica_private.installation_brand', 'SELECT,UPDATE'), 'Tabela fechada para autenticados');
+select pg_temp.ok(not has_table_privilege('anon', 'ica_private.installation_brand', 'SELECT,UPDATE'), 'Tabela fechada para anônimos');
+select pg_temp.ok(not has_table_privilege('service_role', 'ica_private.installation_brand', 'SELECT,UPDATE'), 'Tabela fechada para serviço');
 select pg_temp.ok(not has_function_privilege('service_role', 'public.app_admin_save_installation_name(text,integer)', 'EXECUTE'), 'Escrita sem grant de serviço');
 
 set local role anon;
@@ -85,6 +87,6 @@ set local role anon;
 select pg_temp.ok(public.app_public_context()->>'name' = 'Academia São José & Cursos 👩‍💻', 'Readback anônimo reflete a alteração');
 select pg_temp.ok(not public.app_public_context() ?| array['installation_brand', 'name_revision'], 'Contexto público mantém DTO mínimo');
 reset role;
-select pg_temp.ok((select count(*) = 5 and count(*) filter (where actor_id = (select actor_id from actors where role = 'admin_b')) = 2 and count(*) filter (where actor_id = (select actor_id from actors where role = 'admin')) = 3 and bool_and(action = 'save' and target_id is null and reason is null) from public.audit_events where target_type = 'installation_brand'), 'Exatamente uma auditoria por alteração efetiva e seu ator');
+select pg_temp.ok((select count(*) = 5 and count(*) filter (where actor_id = (select actor_id from actors where role = 'admin_b')) = 2 and count(*) filter (where actor_id = (select actor_id from actors where role = 'admin')) = 3 and bool_and(action = 'save' and target_id is null and reason is null) from public.ica_audit_events where target_type = 'installation_brand'), 'Exatamente uma auditoria por alteração efetiva e seu ator');
 select count(*) from results;
 rollback;

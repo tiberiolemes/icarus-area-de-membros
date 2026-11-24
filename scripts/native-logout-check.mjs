@@ -28,12 +28,12 @@ try {
       const claims = await client.auth.getClaims(login.data.session.access_token); const sid = claims.data.claims.session_id;
       const response = await fetch(`${url}/functions/v1/reauthenticate`, { method: 'POST', headers: { authorization: `Bearer ${login.data.session.access_token}`, 'content-type': 'application/json' }, body: JSON.stringify({ password: accounts[0].password }) });
       assert(response.status === 200, 'Reauth Native não criou nonce.'); await response.body.cancel();
-      const nonce = await admin.from('reauth_nonces').select('actor_id', { count: 'exact', head: true }).eq('session_id', sid).eq('actor_id', accounts[0].id); assert(nonce.count === 1, 'Nonce próprio não encontrado.');
-      if (consumed) assert(!(await admin.from('reauth_nonces').update({ consumed_at: new Date().toISOString() }).eq('session_id', sid).eq('actor_id', accounts[0].id)).error, 'Fixture consumed não aplicada.');
-      const auditId = randomUUID(); assert(!(await admin.from('audit_events').insert({ id: auditId, actor_id: accounts[0].id, action: 'qa-native-logout', target_type: 'profiles', target_id: accounts[0].id, reason: 'DEMONSTRAÇÃO: auditoria preservada após logout.' })).error, 'Auditoria fixture não criada.');
+      const nonce = await admin.from('ica_reauth_nonces').select('actor_id', { count: 'exact', head: true }).eq('session_id', sid).eq('actor_id', accounts[0].id); assert(nonce.count === 1, 'Nonce próprio não encontrado.');
+      if (consumed) assert(!(await admin.from('ica_reauth_nonces').update({ consumed_at: new Date().toISOString() }).eq('session_id', sid).eq('actor_id', accounts[0].id)).error, 'Fixture consumed não aplicada.');
+      const auditId = randomUUID(); assert(!(await admin.from('ica_audit_events').insert({ id: auditId, actor_id: accounts[0].id, action: 'qa-native-logout', target_type: 'profiles', target_id: accounts[0].id, reason: 'DEMONSTRAÇÃO: auditoria preservada após logout.' })).error, 'Auditoria fixture não criada.');
       const loggedOut = await client.auth.signOut(); assert(!loggedOut.error && logoutHttp >= 200 && logoutHttp < 300, 'Logout GLOBAL Native falhou.');
-      const remaining = await admin.from('reauth_nonces').select('actor_id', { count: 'exact', head: true }).eq('session_id', sid);
-      const audit = await admin.from('audit_events').select('id', { count: 'exact', head: true }).eq('id', auditId);
+      const remaining = await admin.from('ica_reauth_nonces').select('actor_id', { count: 'exact', head: true }).eq('session_id', sid);
+      const audit = await admin.from('ica_audit_events').select('id', { count: 'exact', head: true }).eq('id', auditId);
       const control = await other.rpc('app_touch_session', { p_activity: false });
       assert(remaining.count === 0 && audit.count === 1 && !control.error, 'Nonce/audit/terceiro divergiram.');
       cases.push({ nonce_state: consumed ? 'consumed' : 'pending', global_logout_http: logoutHttp, nonce_removed: true, audit_preserved: true, other_session_intact: true });

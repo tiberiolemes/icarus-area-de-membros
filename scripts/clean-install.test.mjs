@@ -82,7 +82,7 @@ if (tool === 'docker') {
     } else if (rest.includes('pg_dump')) console.log('dump fixture');
     else if (rest[0] === 'tar' || rest[0] === 'sh') console.log('storage fixture');
     else if (rest.includes('-c')) {
-      assert.match(rest.at(-1), /^update app_private\.local_demo_guard set enabled=(true|false) where singleton;$/);
+      assert.match(rest.at(-1), /^update ica_private\.local_demo_guard set enabled=(true|false) where singleton;$/);
       container.demoGuard = rest.at(-1).includes('=true');
       save();
     } else {

@@ -95,7 +95,7 @@ Use este roteiro para o stack completo da v0.1.6 criado pelo Supabase CLI, com A
 
 ### Migrations e fluxos da árvore atual
 
-Aplique `202611230001` a `202611230040` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
+Aplique `202611230001` a `202611230041` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
 
 | Migration | O que configurar ou validar |
 | --- | --- |
@@ -119,6 +119,7 @@ Aplique `202611230001` a `202611230040` em ordem antes de servir este frontend. 
 | `038` | Verificar o retorno do checkout visitante no mesmo navegador, o prazo do recibo e a consulta da conta titular após expirar. |
 | `039` | Conferir no Dashboard e no Ranking o intervalo personalizado, incluindo eventos na data final em Brasília. |
 | `040` | Abrir a vitrine com aluno novo e com aluno em andamento. Iniciar e retomar uma aula pelo cartão e conferir o acesso para cursos e módulos restritos. |
+| `041` | Projeto Supabase compartilhado: só usuários com marcador do Icarus ganham perfil (`icarus_server_created` ou `icarus_local_demo` no `app_metadata`, ou `legal_version_ids` no cadastro do Icarus). Cadastros de outros sistemas passam sem perfil e sem recusa. Uma conta que já existia no projeto antes do Icarus não ganha perfil sozinha e precisa de bootstrap manual. |
 
 A validação de navegação também cobre entrada e confirmação de email, primeira senha, perguntas de onboarding, edição parcial do perfil e MFA opcional. A seed fornece perguntas iniciais editáveis. Cadastre os próprios cursos, aulas, materiais, planos, ofertas e documentos legais pelo fluxo administrativo apropriado.
 
@@ -235,12 +236,12 @@ declare
   target_id constant uuid := '00000000-0000-0000-0000-000000000000';
   target_email constant text := 'responsavel@example.invalid';
 begin
-  lock table public.profiles in share row exclusive mode;
-  if exists (select 1 from public.profiles where role = 'admin') then
+  lock table public.ica_profiles in share row exclusive mode;
+  if exists (select 1 from public.ica_profiles where role = 'admin') then
     raise exception 'Já existe um administrador nesta instalação.';
   end if;
 
-  update public.profiles p
+  update public.ica_profiles p
      set role = 'admin'
     from auth.users u
    where u.id = target_id and p.id = u.id and lower(u.email) = lower(target_email)
@@ -249,14 +250,14 @@ begin
      and u.raw_app_meta_data @> '{"icarus_server_created": true, "icarus_password_setup_required": false}'::jsonb
      and not p.password_setup_required
      and exists (
-       select 1 from public.audit_events e
+       select 1 from public.ica_audit_events e
        where e.actor_id = p.id and e.target_id = p.id and e.target_type = 'profiles'
          and e.action = 'password-setup-complete'
      );
   if not found then
     raise exception 'Confirme UUID, e-mail, convite e primeira senha do titular.';
   end if;
-  perform app_private.audit(null, 'first-admin-bootstrap', 'profiles', target_id);
+  perform ica_private.audit(null, 'first-admin-bootstrap', 'profiles', target_id);
 end $$;
 ```
 
@@ -285,7 +286,7 @@ node scripts/backup.mjs dump
 node scripts/backup.mjs verify-restore
 ```
 
-O primeiro comando produz `.local/backups/icarus.dump`, `icarus-storage.tar.gz` e manifesto de hashes600. O dump preserva owners e ACLs (REVOKE/GRANT); não usar `--no-privileges` no dump ou restore. O segundo restaura SQL em banco novo isolado e binários em diretório temporário isolado, compara contagens/hashes SQL, conteúdo binário, owners, RLS, policies, default ACLs e privilégios efetivos de todas as funções/tabelas dos schemas public/app_private/auth/storage para anon/authenticated/service_role. Preserva a origem e remove somente os destinos QA criados. O teste negativo `verify-restore --omit-acl-negative` deve falhar mesmo com linhas/binários iguais, comprovando que a guarda detecta a perda de grants.
+O primeiro comando produz `.local/backups/icarus.dump`, `icarus-storage.tar.gz` e manifesto de hashes600. O dump preserva owners e ACLs (REVOKE/GRANT); não usar `--no-privileges` no dump ou restore. O segundo restaura SQL em banco novo isolado e binários em diretório temporário isolado, compara contagens/hashes SQL, conteúdo binário, owners, RLS, policies, default ACLs e privilégios efetivos de todas as funções/tabelas dos schemas public/ica_private/auth/storage para anon/authenticated/service_role. Preserva a origem e remove somente os destinos QA criados. O teste negativo `verify-restore --omit-acl-negative` deve falhar mesmo com linhas/binários iguais, comprovando que a guarda detecta a perda de grants.
 
 O pacote contém aplicação/Auth/Storage/extensions e histórico nativo quando existente; não inclui serviços externos nem configuração/roles do cluster Supabase. O restore exige cluster Supabase compatível, roles nativas já criadas e operador `supabase_admin` privilegiado para preservar ownership/ACL. Não substituir roles nem afrouxar default privileges para fazê-lo passar. Para servidor futuro, manter também uma cópia criptografada separada dos secrets/configs e executar o mesmo ensaio de restauração com imagens/roles compatíveis.
 

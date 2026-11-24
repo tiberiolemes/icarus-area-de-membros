@@ -41,14 +41,14 @@ select pg_temp.id(n),'notification-'||n||'@example.test',now(),'{"icarus_server_
 set constraints all immediate;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
 select pg_temp.id(10+n),pg_temp.id(n),now(),now(),'aal2' from generate_series(1,4) n;
-update public.profiles set role='moderator' where id=pg_temp.id(3);
-insert into public.courses(id,slug,title,status,access_mode,certificate_enabled,signer_name,signer_title)
+update public.ica_profiles set role='moderator' where id=pg_temp.id(3);
+insert into public.ica_courses(id,slug,title,status,access_mode,certificate_enabled,signer_name,signer_title)
 values (pg_temp.id(101),'notificacoes-teste','Curso de teste','published','members',true,'Pessoa Responsável','Instrutora');
-insert into public.modules(id,course_id,slug,title,status)
+insert into public.ica_modules(id,course_id,slug,title,status)
 values (pg_temp.id(102),pg_temp.id(101),'modulo','Módulo','published');
-insert into public.sections(id,module_id,title,status)
+insert into public.ica_sections(id,module_id,title,status)
 values (pg_temp.id(103),pg_temp.id(102),'Seção','published');
-insert into public.lessons(id,section_id,slug,title,duration_seconds,status)
+insert into public.ica_lessons(id,section_id,slug,title,duration_seconds,status)
 values (pg_temp.id(104),pg_temp.id(103),'aula','Aula teste',600,'published');
 
 select pg_temp.ok((select count(*)=5 and bool_and(
@@ -61,11 +61,11 @@ select pg_temp.ok((select count(*)=5 and bool_and(
 select pg_temp.ok((select count(*)=2 and bool_and(relrowsecurity and not exists (
  select from unnest(array['anon','authenticated','service_role']) role_name
  where has_table_privilege(role_name,oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
-)) from pg_class where oid in ('public.notifications'::regclass,'public.notification_preferences'::regclass)),
+)) from pg_class where oid in ('public.ica_notifications'::regclass,'public.ica_notification_preferences'::regclass)),
  'RLS e ACL negam acesso direto a ambas as tabelas');
 select pg_temp.ok(not exists (
  select from pg_proc p cross join unnest(array['anon','authenticated','service_role']) role_name
- where p.pronamespace='app_private'::regnamespace
+ where p.pronamespace='ica_private'::regnamespace
  and p.proname in ('notify_learning_event','notification_item','notification_item_v026','notification_preference_items','lesson_path')
  and has_function_privilege(role_name,p.oid,'EXECUTE')
 ),'helpers privados sem EXECUTE direto');
@@ -80,8 +80,8 @@ reset role;
 set local role authenticated;
 select pg_temp.denied('select public.app_notifications()','Sessão inválida. Entre novamente.','sem JWT');
 select pg_temp.login(1);
-select pg_temp.denied('select from public.notifications','permission','membro sem acesso direto à caixa');
-select pg_temp.denied('update public.notification_preferences set in_app=false',
+select pg_temp.denied('select from public.ica_notifications','permission','membro sem acesso direto à caixa');
+select pg_temp.denied('update public.ica_notification_preferences set in_app=false',
  'permission','membro sem escrita direta em preferências');
 select pg_temp.ok(public.app_notifications()='{"items":[],"total":0,"page":1,"page_size":20,"unread_count":0}',
  'caixa vazia tem DTO completo');
@@ -175,22 +175,22 @@ select pg_temp.login(2);
 select pg_temp.ok(public.app_notifications()->>'unread_count'='1','ACK em lote não altera a caixa de outro membro');
 reset role;
 
-update public.lessons set slug='nova-aula' where id=pg_temp.id(104);
+update public.ica_lessons set slug='nova-aula' where id=pg_temp.id(104);
 set local role authenticated;
 select pg_temp.login(1);
 select pg_temp.ok(public.app_notifications()->'items'->0->>'action_path'=pg_temp.result('owned_comment_notice')->>'action_path',
  'link mantém o destino após alterar o slug da aula');
 reset role;
-insert into public.sections(id,module_id,title,status)
+insert into public.ica_sections(id,module_id,title,status)
 values (pg_temp.id(105),pg_temp.id(102),'Outra seção','published');
-update public.sections set order_index=1 where id=pg_temp.id(103);
-insert into public.lessons(id,section_id,slug,title,status,is_required)
+update public.ica_sections set order_index=1 where id=pg_temp.id(103);
+insert into public.ica_lessons(id,section_id,slug,title,status,is_required)
 values (pg_temp.id(106),pg_temp.id(105),'nova-aula','Outra aula','published',false);
 set local role authenticated;
 select pg_temp.ok(public.app_notifications()->'items'->0->>'action_path'=pg_temp.result('owned_comment_notice')->>'action_path',
  'colisão na seção anterior conserva o endereço da aula vinculada');
 reset role;
-update public.courses set access_mode='subscribers' where id=pg_temp.id(101);
+update public.ica_courses set access_mode='subscribers' where id=pg_temp.id(101);
 set local role authenticated;
 select pg_temp.ok(public.app_notifications()->'items'->0->'action_path'='null','perda de acesso oculta o link e mantém histórico');
 insert into notification_results values ('small_export',public.app_export_data());
@@ -205,7 +205,7 @@ select pg_temp.ok((pg_temp.result('small_export')-'notifications'-'notification_
  'export preserva chaves da migration 025 e exclui identificadores alheios');
 reset role;
 
-insert into public.notifications(id,user_id,event_key,source_id,created_at)
+insert into public.ica_notifications(id,user_id,event_key,source_id,created_at)
 select pg_temp.id(n),pg_temp.id(1),'certificate_issued',pg_temp.id(n),'2000-01-01 UTC'
 from generate_series(1000,1998) n;
 set local role authenticated;
@@ -227,16 +227,16 @@ select pg_temp.ok(pg_temp.result('large_export')->'notifications_truncated'='tru
 select pg_temp.denied('select public.app_export_data()','Muitas solicitações. Aguarde um minuto.','export mantém limite existente');
 reset role;
 
-update public.app_sessions set revoked_at=now() where id=pg_temp.id(11);
+update public.ica_app_sessions set revoked_at=now() where id=pg_temp.id(11);
 set local role authenticated;
 select pg_temp.denied('select public.app_notifications_read()','Sessão expirada. Entre novamente.','sessão revogada não altera estado');
 reset role;
-update public.profiles set suspended=true where id=pg_temp.id(1);
+update public.ica_profiles set suspended=true where id=pg_temp.id(1);
 set local role authenticated;
 select pg_temp.denied('select public.app_notification_preferences()','Acesso indisponível.','perfil suspenso não lê preferências');
 reset role;
 
-update public.courses set access_mode='members' where id=pg_temp.id(101);
+update public.ica_courses set access_mode='members' where id=pg_temp.id(101);
 set local role authenticated;
 select pg_temp.login(4);
 insert into notification_results values ('atomic_comment',public.app_save_lesson_comment(pg_temp.id(104),null,'Prova de atomicidade'));
@@ -246,7 +246,7 @@ begin
  if new.target_id=pg_temp.result_id('atomic_comment') then raise exception 'Falha simulada na auditoria'; end if;
  return new;
 end $$;
-create trigger notifications_test_fail_moderation before insert on public.moderation_events
+create trigger notifications_test_fail_moderation before insert on public.ica_moderation_events
  for each row execute function pg_temp.fail_moderation();
 set local role authenticated;
 select pg_temp.login(3);
@@ -254,8 +254,8 @@ select pg_temp.denied(
  'select public.app_moderate_lesson_comment(pg_temp.id(104),pg_temp.result_id(''atomic_comment''),''approve'',''Motivo'')',
  'Falha simulada na auditoria','falha depois do trigger aborta moderação');
 reset role;
-select pg_temp.ok((select status='pending' from public.lesson_comments where id=pg_temp.result_id('atomic_comment'))
- and not exists(select from public.notifications where source_id=pg_temp.result_id('atomic_comment')),
+select pg_temp.ok((select status='pending' from public.ica_lesson_comments where id=pg_temp.result_id('atomic_comment'))
+ and not exists(select from public.ica_notifications where source_id=pg_temp.result_id('atomic_comment')),
  'falha depois do trigger reverte tanto comentário quanto notificação');
 
 savepoint before_certificate;
@@ -266,8 +266,8 @@ select pg_temp.ok(public.app_progress(pg_temp.id(104),600,true)->>'certificate_c
 select pg_temp.ok(public.app_notifications()->>'total'='1','caixa vê certificado da mesma transação');
 reset role;
 rollback to before_certificate;
-select pg_temp.ok(not exists(select from public.certificates where user_id=pg_temp.id(4))
- and not exists(select from public.notifications where user_id=pg_temp.id(4)),
+select pg_temp.ok(not exists(select from public.ica_certificates where user_id=pg_temp.id(4))
+ and not exists(select from public.ica_notifications where user_id=pg_temp.id(4)),
  'rollback remove o certificado e a notificação da mesma transação');
 
 select count(*) from notification_checks;

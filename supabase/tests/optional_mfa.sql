@@ -18,7 +18,7 @@ create function pg_temp.headers(n integer,aal text default 'aal1') returns void 
 end $$;
 insert into auth.users(id,email,email_confirmed_at,raw_app_meta_data,raw_user_meta_data) select pg_temp.id(n),'mfa-outbox-'||n||'@example.test',case when n<=4 then now() end,'{"icarus_server_created":true}',jsonb_build_object('full_name','DEMONSTRAÇÃO MFA '||n) from generate_series(1,6)n;
 set constraints all immediate;
-update public.profiles set role='admin' where id=pg_temp.id(4);
+update public.ica_profiles set role='admin' where id=pg_temp.id(4);
 insert into auth.sessions(id,user_id,created_at,updated_at,aal) select ('e9100000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,pg_temp.id(n),now(),now(),'aal1' from generate_series(1,4)n;
 insert into auth.mfa_factors(id,user_id,friendly_name,factor_type,status,created_at,updated_at) values(pg_temp.id(12),pg_temp.id(2),'DEMONSTRAÇÃO verified','totp','verified',now(),now()),(pg_temp.id(13),pg_temp.id(3),'DEMONSTRAÇÃO unverified','totp','unverified',now(),now());
 select pg_temp.login(1);
@@ -91,7 +91,7 @@ select pg_temp.login(4,'aal2');
 set local role authenticated;
 select pg_temp.assert(public.app_catalog()?'items','verified staff native and JWT aal2 allowed');
 reset role;
-select pg_temp.assert(not has_function_privilege('anon','app_private.requires_aal2(uuid)','EXECUTE') and not has_function_privilege('authenticated','app_private.requires_aal2(uuid)','EXECUTE'),'private MFA helper grants unchanged');
+select pg_temp.assert(not has_function_privilege('anon','ica_private.requires_aal2(uuid)','EXECUTE') and not has_function_privilege('authenticated','ica_private.requires_aal2(uuid)','EXECUTE'),'private MFA helper grants unchanged');
 delete from auth.mfa_factors where user_id=pg_temp.id(4);
 update auth.sessions set aal='aal1' where user_id=pg_temp.id(4);
 select pg_temp.login(4);

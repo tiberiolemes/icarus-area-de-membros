@@ -461,7 +461,7 @@
     padding: 2px 8px;
     border-radius: 4px;
     background: rgb(0 0 0 / 0.7);
-    font: 600 10px / 15px var(--stitch-font-family);
+    font: 600 var(--stitch-type-label-uppercase-size) / 15px var(--stitch-font-family);
     letter-spacing: 0.05em;
   }
 
@@ -527,7 +527,7 @@
     padding: 0 4px;
     background: rgb(255 255 255 / 0.2);
     color: #fff;
-    font: 700 10px / 15px var(--stitch-font-family);
+    font: 700 var(--stitch-type-label-uppercase-size) / 15px var(--stitch-font-family);
   }
   .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__rate { order: -1; }
   .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__rate span {

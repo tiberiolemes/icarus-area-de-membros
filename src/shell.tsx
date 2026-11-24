@@ -69,6 +69,13 @@ const adminNav = [
   ["Configurações", "configuracoes", Settings, ["admin"]],
 ] as const;
 
+const staffEntryLabels: Readonly<Record<string, string | undefined>> = {
+  admin: "Administração",
+  instructor: "Painel de conteúdo",
+  moderator: "Moderação",
+  support: "Atendimento",
+};
+
 function AccountPhoto({ avatarId }: { avatarId: string }) {
   const { data } = usePrivateImageQuery("avatar", avatarId);
   const url = safeUrl(data?.url);
@@ -109,6 +116,7 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
   const staffRoutes = adminNav.filter((item) =>
     (item[3] as readonly string[]).includes(profile.role),
   );
+  const [staffEntry] = staffRoutes;
   const help = (
     <Link to="/ajuda" onClick={onNavigate}>
       <HelpCircle size={20} aria-hidden="true" />
@@ -145,10 +153,10 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
         aria-label={admin ? "Administração" : "Área de membros"}
         data-tour="navigation"
       >
-        {!admin && profile.role === "admin" && (
-          <Link to="/admin/cursos" onClick={onNavigate}>
+        {!admin && staffEntry && (
+          <Link to={`/admin/${staffEntry[1]}`} onClick={onNavigate}>
             <ArrowUpRight size={20} aria-hidden="true" />
-            Administração
+            {staffEntryLabels[profile.role] ?? staffEntry[0]}
           </Link>
         )}
         {(admin ? staffRoutes : memberNav).map(([title, path, Icon]) => (

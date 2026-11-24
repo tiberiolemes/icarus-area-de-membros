@@ -201,30 +201,29 @@ it("mostra erro de gravação e mantém a aparência confirmada", async () => {
   expect(refetch).not.toHaveBeenCalled();
 });
 
-it.each(["admin", "member", "instructor", "moderator", "support"])(
-  "mostra o atalho Administração no menu da área de membros para %s somente se for admin",
-  (role) => {
-    profile.role = role;
-    mount("/app/cursos");
-    const sidebar = screen.getByRole("complementary");
-    const menu = within(sidebar).getByRole("navigation", { name: "Área de membros" });
-    const first = within(menu).getAllByRole("link")[0];
-    if (role === "admin") {
-      expect(first).toHaveAccessibleName("Administração");
-      expect(first).toHaveAttribute("href", "/admin/cursos");
-    } else {
-      expect(sidebar.querySelector('a[href^="/admin/"]')).toBeNull();
-    }
+it.each([
+  ["admin", "Administração", "/admin/cursos"],
+  ["member", "Cursos", "/app/cursos"],
+  ["instructor", "Painel de conteúdo", "/admin/cursos"],
+  ["moderator", "Moderação", "/admin/comunidade"],
+  ["support", "Atendimento", "/admin/suporte"],
+])("mostra a entrada adequada ao papel %s na área de membros", (role, label, path) => {
+  profile.role = role;
+  mount("/app/cursos");
+  const sidebar = screen.getByRole("complementary");
+  const menu = within(sidebar).getByRole("navigation", { name: "Área de membros" });
+  expect(within(menu).getAllByRole("link")[0]).toHaveAccessibleName(label);
+  expect(within(menu).getAllByRole("link")[0]).toHaveAttribute("href", path);
 
-    fireEvent.click(screen.getByRole("button", { name: "Abrir navegação" }));
-    const drawer = screen.getByRole("dialog", { name: "Navegação" });
-    if (role === "admin") {
-      expect(within(drawer).getByRole("link", { name: "Administração" })).toHaveAttribute("href", "/admin/cursos");
-    } else {
-      expect(drawer.querySelector('a[href^="/admin/"]')).toBeNull();
-    }
-  },
-);
+  fireEvent.click(screen.getByRole("button", { name: "Abrir navegação" }));
+  const drawer = screen.getByRole("dialog", { name: "Navegação" });
+  expect(within(drawer).getByRole("link", { name: label, exact: true })).toHaveAttribute("href", path);
+
+  if (role !== "admin") {
+    expect(within(menu).queryByRole("link", { name: "Administração", exact: true })).toBeNull();
+    expect(within(drawer).queryByRole("link", { name: "Administração", exact: true })).toBeNull();
+  }
+});
 
 it.each([
   ["support", "/admin/suporte", "Suporte", ["/admin/suporte"]],

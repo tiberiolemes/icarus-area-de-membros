@@ -150,7 +150,7 @@ export const articles = [
       "Abra a edição de uma aula salva e use Editar apresentação para cadastrar subtítulo, capítulos, destaques, fórmula, checklist e CTA. Remover um item publicado também remove as marcações dele.",
       "Configure o responsável pelo certificado antes de habilitar a emissão. Use dados reais ou identifique uma demonstração.",
       "Em Materiais, crie pasta e registro do arquivo, depois envie o arquivo privado. Confira a confirmação do servidor.",
-      "Com uma conta administradora, use Administração no topo do menu da área de membros. No celular, abra o menu primeiro.",
+      "Com uma conta administradora, use Administração no topo do menu da área de membros. Instrutores usam Painel de conteúdo, moderadores usam Moderação e a equipe de suporte usa Atendimento. No celular, abra o menu primeiro.",
       "Em Membros, use Abrir ficha na linha da pessoa. Cadastros sem nome mostram Membro sem nome e um identificador curto. Gerencie cortesia, validade, suspensão e papel na ficha. Informe motivo e reautentique. Cortesia não é pagamento.",
       "Na fila da comunidade, revise o conteúdo e confirme uma decisão com motivo. Na fila de suporte, responda a conversa e ajuste o estado.",
       "Em Comunidade, abra Comentários de aula, escolha um curso publicado e uma aula disponível para seu acesso. Revise os itens pendentes e informe o motivo ao aprovar ou rejeitar.",

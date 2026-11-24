@@ -5,6 +5,7 @@ import "./onboarding.css";
 import {
   cache,
   client,
+  demoAccounts,
   signOut,
   edge,
   internalPath,
@@ -47,7 +48,7 @@ export function PublicFrame({ children }: { children: React.ReactNode }) {
       <header className="public-top">
         <Link to="/entrar" aria-label={`${name}, início`} className={name === "Icarus" ? undefined : "public-installation-name"}>
           {name === "Icarus" ? (
-            <img src="/brand/icarus-horizontal-preto.svg" alt="Icarus" width="244" height="64" />
+            <img src={import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg"} alt="Icarus" width="244" height="64" />
           ) : <strong className="installation-name" title={name}>{name}</strong>}
         </Link>
         <Link to="/ajuda">Central de ajuda</Link>
@@ -113,6 +114,9 @@ export function PasswordSetup() {
 }
 function Login({ target }: { target: string }) {
   const { session, loading } = useAuth(), navigate = useNavigate();
+  const destination = import.meta.env.MODE === "demo" && target === "/app/cursos" &&
+    demoAccounts?.some((account) => account.role === "admin" && account.email === session?.user.email)
+      ? "/admin/dashboard" : target;
   const [factors, setFactors] = useState<
     { id: string; friendly_name?: string }[]
   >([]);
@@ -139,7 +143,7 @@ function Login({ target }: { target: string }) {
           data.currentLevel === "aal2" ||
           (data.currentLevel === "aal1" && data.nextLevel === "aal1")
         ) {
-          navigate(target, { replace: true });
+          navigate(destination, { replace: true });
           return;
         }
         const result = await client().auth.mfa.listFactors();
@@ -170,7 +174,7 @@ function Login({ target }: { target: string }) {
     return () => {
       active = false;
     };
-  }, [session?.access_token, target, navigate]);
+  }, [session?.access_token, destination, navigate]);
   useEffect(() => {
     if (factors.length) codeInput.current?.focus();
   }, [factors]);
@@ -178,6 +182,18 @@ function Login({ target }: { target: string }) {
     <PublicFrame>
       <div className="access" data-tour="login">
         <Heading title="Entre na sua área de membros" />
+        {import.meta.env.MODE === "demo" && demoAccounts && <Notice>
+          <p>Demonstração com dados fictícios. Escolha um perfil ou use as credenciais abaixo.</p>
+          <div className="actions">
+            {demoAccounts.map(({ email, password, label, role }) => <Action key={role} run={async () => {
+              const { error } = await client().auth.signInWithPassword({ email, password });
+              if (error) throw error;
+            }}>Entrar como {label.toLocaleLowerCase("pt-BR")}</Action>)}
+          </div>
+          <dl>{demoAccounts.map(({ email, password, label }) =>
+            <div key={email}><dt>{label}</dt><dd>{email} · <code>{password}</code></dd></div>
+          )}</dl>
+        </Notice>}
         {failure && <Notice error>{failure}</Notice>}
         <Form
           label={factors.length ? "Verificar e entrar" : "Entrar"}
@@ -194,7 +210,7 @@ function Login({ target }: { target: string }) {
                   code: value(data, "code"),
                 });
                 if (error) throw error;
-                navigate(target, { replace: true });
+                navigate(destination, { replace: true });
               } else {
                 setNeedsConfirmation(false);
                 const { error } = await client().auth.signInWithPassword({

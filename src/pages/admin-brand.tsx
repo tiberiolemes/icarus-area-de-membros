@@ -137,7 +137,7 @@ function BrandEditor({ actorId, token, name, revision }: { actorId: string; toke
             {(["light", "dark"] as const).map((tone) => (
               <div key={tone} className="brand-sample" data-brand-tone={tone}>
                 <span>{tone === "light" ? "Tema claro" : "Tema escuro"}</span>
-                <img src="/brand/icarus-horizontal-preto.svg" alt="Icarus" width="244" height="64" />
+                <img src={import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg"} alt="Icarus" width="244" height="64" />
                 <strong dir="auto">{(draft && trimmedName(draft.name)) || name}</strong>
               </div>
             ))}

@@ -136,7 +136,7 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
             </div>
           </>
         ) : installationName === "Icarus" ? (
-          <img src="/brand/icarus-horizontal-preto.svg" alt="Icarus" />
+          <img src={import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg"} alt="Icarus" />
         ) : <strong className="installation-name" title={installationName}>{installationName}</strong>}
       </Link>
       {drawerInitials && (
@@ -272,7 +272,10 @@ export function Shell() {
       data-mobile-frame={mobileFrame}
       data-admin-view={adminView}
     >
-      <a className="skip" href="#main">
+      <a className="skip" href="#main" onClick={(event) => {
+        event.preventDefault();
+        document.getElementById("main")?.focus();
+      }}>
         Pular para o conteúdo
       </a>
       <aside className="sidebar">
@@ -319,7 +322,7 @@ export function Shell() {
           {mobileFrame && (
             <div className="mobile-frame-label">
               {lesson ? <span>Aula</span> : installationName === "Icarus" ? (
-                <img src="/brand/icarus-horizontal-preto.svg" alt="Icarus" />
+                <img src={import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg"} alt="Icarus" />
               ) : <span title={installationName}>{installationName}</span>}
               {!lesson && planBadge}
             </div>
@@ -339,7 +342,7 @@ export function Shell() {
             </Link>
           </div>
         </header>
-        <main id="main" className="content">
+        <main id="main" className="content" tabIndex={-1}>
           <RouteFocus />
           <Outlet />
         </main>

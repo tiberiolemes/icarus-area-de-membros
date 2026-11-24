@@ -1,7 +1,7 @@
 import { Component, Suspense, lazy } from "react";
 import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, HashRouter, Link, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { cache } from "./api";
 import { AuthProvider, Gate, RoleGate, useBootstrap } from "./auth";
@@ -133,7 +133,7 @@ class ErrorBoundary extends Component<
           Ocorreu uma falha inesperada. Seus dados no servidor foram
           preservados. Volte ao início e tente novamente.
         </Notice>
-        <a className="button" href="/entrar">
+        <a className="button" href={import.meta.env.MODE === "demo" ? import.meta.env.BASE_URL : "/entrar"}>
           Voltar ao início
         </a>
       </PublicFrame>
@@ -157,11 +157,13 @@ const restricted = (roles: string[], children: ReactNode) => (
   <RoleGate roles={roles}>{children}</RoleGate>
 );
 
+const Router = import.meta.env.MODE === "demo" ? HashRouter : BrowserRouter;
+
 function App() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={cache}>
-        <BrowserRouter>
+    <QueryClientProvider client={cache}>
+      <Router>
+        <ErrorBoundary>
           <AuthProvider>
             <Suspense fallback={<Loading />}>
               <Routes>
@@ -356,9 +358,9 @@ function App() {
               </Routes>
             </Suspense>
           </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ErrorBoundary>
+        </ErrorBoundary>
+      </Router>
+    </QueryClientProvider>
   );
 }
 createRoot(document.getElementById("root")!).render(<App />);

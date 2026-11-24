@@ -28,9 +28,15 @@ Papéis de equipe e direitos de assinatura são independentes. O servidor valida
 
 ## Demonstração navegável
 
-Baixe o [HTML da demonstração](demo/index.html) e abra o arquivo no navegador. Os acessos fictícios de aluno e administrador estão na tela de entrada. A demo funciona offline, sem instalação ou conexão com o Supabase, e apresenta a jornada de estudo, o editor de cursos, a moderação e os chamados.
+A demonstração usa as telas, rotas e estilos da aplicação, com dados fictícios e acessos de aluno e administrador. Progresso e alterações ficam na sessão do navegador. Ela roda em hospedagem estática, sem banco, Supabase, configuração de chaves ou processamento de pagamentos.
 
-Ao alterar um fluxo apresentado na demo, atualize e teste o HTML no mesmo PR. A tag `icarus-source` identifica a revisão da aplicação usada como referência.
+```sh
+npm ci
+npm run build:demo
+python3 -m http.server 8111 --bind 127.0.0.1 --directory demo-dist
+```
+
+Abra [a demonstração local](http://127.0.0.1:8111/). Para a página de vendas, sirva todo o diretório `demo-dist/` por HTTPS. A simulação reaproveita o código da aplicação em cada build. Ajuste as fixtures em [demo/](demo/) no mesmo PR se o contrato de um fluxo demonstrado mudar.
 
 ## Começar localmente
 
@@ -94,7 +100,7 @@ Icarus is an open-source membership and online course delivery platform for busi
 
 This release is a fresh implementation; it does not use Frappe. Git history is preserved. Staff roles and subscription entitlements are separate. Server-side authorization is required for every protected operation.
 
-Download the [standalone HTML demo](demo/index.html) and open it in a browser. The sign-in screen includes fictional student and administrator accounts. It works offline with no backend. Update and test the demo in the same PR when a change affects one of its flows.
+Build the demo with `npm run build:demo` and serve the entire `demo-dist/` folder over HTTP on loopback or HTTPS on a static host. The demo uses the application’s routes, components and styles with fictional student and admin sessions and no backend. Update the [fixtures](demo/) when a demonstrated flow changes.
 
 Use the source archive or checkout for the intended GitHub tag. The npm package is private. Use Node.js 24+, npm and Supabase CLI `2.109.1`. Before running `local:start`, declare the [dedicated, empty Docker daemon](docs/operations.md#requisitos-do-docker-dedicado). Contract tests use Deno 2, database tests use Python 3, and the optional demo uses `ffmpeg` with `libx264`. Run the commands above and open `http://127.0.0.1:8088`. The local checkout uses a fixed Docker project and ports. For a new installation, follow the first-admin instructions. The optional `node scripts/bootstrap.mjs --demo` writes randomly generated demo credentials to the private, ignored `.local/ACESSOS.md` file.
 

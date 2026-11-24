@@ -1,7 +1,10 @@
 import { safeUrl, downloadBlob } from "./api";
 import type { Certificate } from "./api";
 
-export async function certificateCanvas(certificate: Certificate) {
+export async function certificateCanvas(
+  certificate: Certificate,
+  verificationUrl = `${location.origin}/verificar/${encodeURIComponent(certificate.code)}`,
+) {
   if (certificate.revoked_at)
     throw new Error(
       "Este certificado foi revogado e não pode ser exportado como válido.",
@@ -21,7 +24,7 @@ export async function certificateCanvas(certificate: Certificate) {
   ctx.lineWidth = 2;
   ctx.strokeRect(56, 56, 1488, 1008);
   const logo = new Image();
-  logo.src = "/brand/icarus-horizontal-preto.svg";
+  logo.src = import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg";
   await logo.decode();
   ctx.drawImage(logo, 100, 96, 305, 80);
   ctx.fillStyle = "#000000";
@@ -84,7 +87,7 @@ export async function certificateCanvas(certificate: Certificate) {
   ctx.font = "400 18px Inter";
   ctx.fillText(`Código de verificação: ${certificate.code}`, 100, 1002);
   ctx.fillText(
-    `${location.origin}/verificar/${encodeURIComponent(certificate.code)}`,
+    verificationUrl,
     100,
     1036,
   );
@@ -155,8 +158,9 @@ export function pdfWithImage(
 export async function exportCertificate(
   certificate: Certificate,
   format: "png" | "pdf",
+  verificationUrl?: string,
 ) {
-  const canvas = await certificateCanvas(certificate);
+  const canvas = await certificateCanvas(certificate, verificationUrl);
   if (format === "png") {
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob(

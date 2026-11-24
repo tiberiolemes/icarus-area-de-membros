@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentProps, ReactNode, Ref } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -42,7 +42,8 @@ import {
 import { BunnyPlayer } from "../bunny";
 import { LessonVideoControls } from "../lesson-video-controls";
 import { usePrivateImageQuery } from "../media";
-import { CourseFeature, CourseModules } from "./catalog";
+import { CourseFeature, curriculumPercent } from "./catalog";
+import { CatalogLaunches } from "./catalog-launches";
 import { LessonComments, LessonEngagementActions, LessonEngagementTab, LessonNotes, useLessonEngagement } from "./lesson-engagement";
 import { LessonCta, LessonDescription, useLessonPresentation } from "./lesson-presentation";
 import { notificationListKey, reconcileNotificationQueries } from "./notifications";
@@ -51,65 +52,31 @@ import "../lesson-stitch.css";
 export { Catalog } from "./catalog";
 
 export type CourseDetail = { course: Course; modules: Module[] };
-export function Curriculum({
-  course,
-  modules,
-  current,
-}: {
-  course: Course;
-  modules: Module[];
-  current?: string;
-}) {
-  return (
-    <div className="curriculum" data-tour="curriculum">
-      {modules.map((module) => (
-        <section key={module.id}>
-          <h3>
-            <Link to={`/app/cursos/${course.slug}/${module.slug}`}>
-              {module.title}
-            </Link>
-            {!module.can_access && (
-              <Lock size={16} aria-label="Acesso restrito" />
-            )}
-          </h3>
-          {module.sections.map((section) => (
-            <details key={section.id} open>
-              <summary>
-                {section.title}
-                {section.is_bonus && <span className="badge">Bônus</span>}
-              </summary>
-              <ol>
-                {section.lessons.map((lesson) => (
-                  <li key={lesson.id}>
-                    <Link
-                      aria-current={lesson.id === current ? "page" : undefined}
-                      to={courseLessonPath(course.slug, module.slug, lesson.id)}
-                    >
-                      {lesson.completed ? (
-                        <CheckCircle2 size={18} />
-                      ) : lesson.can_access ? (
-                        <Play size={18} />
-                      ) : (
-                        <Lock size={18} />
-                      )}
-                      <span>
-                        {lesson.title}
-                        <small>
-                          {Math.ceil(lesson.duration_seconds / 60)} min
-                        </small>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ol>
-            </details>
-          ))}
-        </section>
-      ))}
-    </div>
-  );
+export function Curriculum({course, modules, preferredModule}: CourseDetail & {preferredModule?: string | null}) {
+  const initial = modules.find(module => module.slug === preferredModule)
+    ?? modules.find(module => module.sections.some(section => section.lessons.some(lesson => lesson.can_access && !lesson.completed)))
+    ?? modules[0];
+  return <div className="curriculum course-syllabus">
+    {modules.map((module, index) => <details key={module.id} open={module.id === initial?.id}>
+      <summary data-tour={index === 0 ? "curriculum" : undefined}>{module.title}
+        {!module.can_access && <Lock size={16} aria-label="Acesso restrito" />}
+      </summary>
+      <Link className="syllabus-module-link" to={`/app/cursos/${encodeURIComponent(course.slug)}/${encodeURIComponent(module.slug)}`}>Abrir módulo</Link>
+      {module.sections.map(section => <div key={section.id}>
+        <h3>{section.title}{section.is_bonus && <span className="badge">Bônus</span>}</h3>
+        <ol>{section.lessons.map(lesson => <li key={lesson.id}>
+          <Link to={courseLessonPath(course.slug, module.slug, lesson.id)}>
+            {lesson.completed ? <CheckCircle2 size={18} aria-label="Concluída" /> :
+              lesson.can_access ? <Play size={18} aria-label="Disponível" /> : <Lock size={18} aria-label="Acesso restrito" />}
+            <span>{lesson.title}<small>{Math.ceil(lesson.duration_seconds / 60)} min</small></span>
+          </Link>
+        </li>)}</ol>
+      </div>)}
+    </details>)}
+  </div>;
 }
 export function CoursePage() {
+  const [params] = useSearchParams();
   const { curso, modulo } = useParams(),
     query = useRpc<CourseDetail>("app_course", { p_slug: curso }),
     data = query.data,
@@ -140,27 +107,26 @@ export function CoursePage() {
                     {Math.ceil(data.course.duration_seconds / 60)} minutos
                   </Heading>
                 ) : (
-                  <CourseFeature course={data.course} modules={data.modules} detail />
+                  <CourseFeature course={data.course} modules={data.modules} />
                 )}
                 {!data.course.can_access && <AccessRequired />}
-                {modulo ? (
+                {modulo && (
                   <Progress
-                    value={data.course.progress_percent}
+                    value={curriculumPercent(data.course)}
                     done={data.course.completed_lessons}
                     total={data.course.total_lessons}
                   />
-                ) : (
-                  <CourseModules course={data.course} modules={data.modules} />
                 )}
                 <div className="course-outline">
                   <h2>Conteúdo do curso</h2>
-                  <Curriculum course={data.course} modules={modules ?? []} />
-                  {modulo && !modules?.length && (
+                  <Curriculum course={data.course} modules={modules ?? []} preferredModule={modulo ?? params.get("modulo")} />
+                  {!modules?.length && (
                     <Empty>
                       O conteúdo deste curso ainda não está disponível.
                     </Empty>
                   )}
                 </div>
+                {!modulo && data.course.can_access && <CatalogLaunches courseSlug={data.course.slug} />}
               </>
             )}
           </>
@@ -204,6 +170,7 @@ function PlayerCurriculum({ course, modules, current, hidden, playing, filterRef
   playing: boolean;
   filterRef: Ref<HTMLInputElement>;
 }) {
+  const percent = curriculumPercent(course);
   const [filter, setFilter] = useState("");
   const term = filter.trim().toLocaleLowerCase("pt-BR");
   const matches = (title: string) => title.toLocaleLowerCase("pt-BR").includes(term);
@@ -229,17 +196,17 @@ function PlayerCurriculum({ course, modules, current, hidden, playing, filterRef
               {" • "}{modules.length} {modules.length === 1 ? "módulo" : "módulos"}
             </small>
             <span className="stitch-lesson-mobile stitch-lesson-light-label stitch-curriculum-caption">
-              {course.progress_percent}% Concluído • {course.total_lessons} {course.total_lessons === 1 ? "aula" : "aulas"}
+              {percent}% Concluído • {course.total_lessons} {course.total_lessons === 1 ? "aula" : "aulas"}
               {" • "}{modules.length} {modules.length === 1 ? "módulo" : "módulos"}
             </span>
           </div>
-          <strong className="stitch-course-progress" aria-label={`${course.progress_percent}% do curso concluído`}>
+          <strong className="stitch-course-progress" aria-label={`${percent}% do curso concluído`}>
             <span>
-              {course.progress_percent}% <span className="stitch-light-only">Concluído</span><span className="stitch-dark-only stitch-lesson-wide-label">Total</span><span className="stitch-lesson-mobile stitch-lesson-dark-label">concluído</span>
+              {percent}% <span className="stitch-light-only">Concluído</span><span className="stitch-dark-only stitch-lesson-wide-label">Total</span><span className="stitch-lesson-mobile stitch-lesson-dark-label">concluído</span>
             </span>
           </strong>
         </div>
-        <progress className="stitch-lesson-mobile stitch-curriculum-progress" max={100} value={course.progress_percent}
+        <progress className="stitch-lesson-mobile stitch-curriculum-progress" max={100} value={percent}
           aria-label="Progresso do curso" />
         <label className="stitch-curriculum-filter">
           <SearchIcon size={16} aria-hidden="true" />

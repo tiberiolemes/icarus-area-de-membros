@@ -62,7 +62,16 @@ async function prepare(browser, viewport, theme) {
         plans: [], settings: {},
       });
       case 'app_touch_session': return reply({ expires_at: new Date(expiry * 1000).toISOString(), warning_seconds: 60 });
-      case 'app_catalog': return reply({ items: [course], total: 1, page: 1, page_size: 12 });
+      case 'app_catalog_showcase': {
+        const card = { ...course, state: 'ongoing', module_count: 1, target: {id:'10000000-0000-4000-8000-000000000003',
+          title:'Arquitetura de planos', module_title:'Pricing e embalagem', module_slug:'pricing', position_seconds:614} };
+        const available = {...course, id:'new', slug:'ia', title:'Fundamentos de IA para Engenharia de Produto',
+          completed_lessons:0, progress_percent:0, state:'available', module_count:1, target:{...card.target, position_seconds:0}};
+        const restricted = {...course,id:'locked',slug:'design',title:'Design System e UI Avançado',can_access:false,
+          state:'restricted',completed_lessons:0,progress_percent:0,module_count:1,target:null};
+        return reply({items:[card, available, restricted], total:3, page:1, page_size:20,
+          resume:card, counts:{all:3,ongoing:1,completed:0,restricted:1}});
+      }
       case 'app_course': return reply({ course, modules: [] });
       case 'app_catalog_launches': return reply([]);
       case 'app_notifications': return reply({ items: [], total: 0, page: 1, page_size: 20, unread_count: 0 });
@@ -142,10 +151,10 @@ async function exercise(browser, settings, commit, target, theme, mobile) {
     const result = {
       settings, commit, theme, mobile, role: 'member', state: observed, clock, path,
       png: { ...pngSize(png), sha256: sha256(png) },
-      screen: target === 'catalog' ? (theme === 'light' ? 'cursos_aprendizagem_tema_claro' : 'cursos_aprendizagem')
+      screen: target === 'catalog' ? (theme === 'light' ? 'cursos_aprendizagem_vitrine_eficiente_tema_claro' : 'cursos_aprendizagem_vitrine_eficiente_tema_escuro')
         : theme === 'dark' ? 'encontros_ao_vivo_masterminds' : null,
       stateProof: { equivalent: false, evidence: target === 'catalog' ?
-        ['Fixture com um curso, sem capa, módulos ou lançamentos. HTML tem mídia, grade e conteúdo promocional.'] :
+        ['Fixture com três cursos sem capas e sem lançamentos; estados de acesso e retomada simulados.'] :
         ['Fixture com dois encontros, um restrito, e acervo vazio. HTML escuro tem outros dados, gravações e mídia.'] },
       heading: await heading.innerText(), topbarTarget, adminLinks: 0,
     };
@@ -164,6 +173,13 @@ async function exercise(browser, settings, commit, target, theme, mobile) {
       await drawer.waitFor({ state: 'detached' });
       await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'Abrir navegação');
       Object.assign(result, { drawerTarget, drawerKeyboard: true, drawerFocusRestored: true });
+    }
+    if (target === 'catalog') {
+      const link = page.getByRole('link', { name: 'Retomar aula (10:14)' });
+      assert.equal(await link.getAttribute('href'), '/app/cursos/marketing-para-saas/pricing/~10000000-0000-4000-8000-000000000003');
+      assert.equal(await page.locator('.showcase-grid article').count(), 3);
+      await page.getByRole('link', {name:'Começar curso'}).waitFor();
+      await page.getByRole('link', {name:'Consultar acesso'}).waitFor();
     }
     if (target === 'events') {
       const restrictedCard = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Encontro restrito' }) });

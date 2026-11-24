@@ -33,7 +33,7 @@ function mount({ type = "text", allowed = true, cover = false, coverResponse = t
     const course = {
       id: "course", slug: "curso", title: "Curso de teste", total_lessons: 2,
       cover_url: cover ? "https://example.test/not-authorized-as-src.jpg" : null,
-      progress_percent: completed ? 50 : 0,
+      completed_lessons: completed ? 1 : 0, required_lessons: 0, progress_percent: 0,
     };
     const mod = { id: "module", slug: "modulo", title: "Módulo de teste", can_access: true, sections: [
       { id: "section", title: "Seção de teste", lessons: collision ? [{ ...lesson, completed }] : [{ ...lesson, completed }, following] },
@@ -258,6 +258,7 @@ it("carrega áudio autorizado, restaura o ponto e confirma a conclusão via RPC"
   complete.focus();
   fireEvent.click(complete);
   expect(await screen.findByText("Aula concluída")).toHaveFocus();
+  expect(await screen.findByLabelText("50% do curso concluído")).toBeVisible();
   await waitFor(() => expect(requests).toContainEqual({
     name: "app_progress", args: { p_lesson_id: textLesson.id, p_position_seconds: 57, p_complete: true },
   }));

@@ -174,8 +174,16 @@ const steps = [
   },
 ];
 function visibleTarget(target: string) {
-  return [...document.querySelectorAll<HTMLElement>(`[data-tour="${target}"]`)]
+  const region = [...document.querySelectorAll<HTMLElement>(`[data-tour="${target}"]`)]
     .find((element) => element.getClientRects().length > 0);
+  if (!region || region.getBoundingClientRect().height < window.innerHeight * 0.75) return region;
+
+  // Long feeds and curricula can fill the entire viewport. Anchor their step to a visible heading or control.
+  const candidates = region.querySelectorAll<HTMLElement>("h1, h2, h3, summary, a[href], button, input, select");
+  return [...candidates].find(element => {
+    const rect = element.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 && rect.height < window.innerHeight / 2;
+  }) ?? region;
 }
 export function Tour() {
   const { pathname, search } = useLocation(),

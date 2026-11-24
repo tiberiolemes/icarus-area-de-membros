@@ -26,6 +26,19 @@ function show(node: React.ReactNode, route = "/admin/planos") {
   return render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={[route]}>{node}</MemoryRouter></QueryClientProvider>);
 }
 
+it("ilumina o início de uma seção longa sem recortar a tela inteira", async () => {
+  const view = show(<><section data-tour="community"><h2>Publicações</h2></section><Tour /></>);
+  const feed = view.container.querySelector("section")!;
+  const heading = screen.getByRole("heading", { name: "Publicações" });
+  const region = new DOMRect(0, 120, 360, 2400);
+  vi.spyOn(feed, "getClientRects").mockReturnValue([region] as unknown as DOMRectList);
+  vi.spyOn(feed, "getBoundingClientRect").mockReturnValue(region);
+  vi.spyOn(heading, "getBoundingClientRect").mockReturnValue(new DOMRect(16, 130, 328, 28));
+  fireEvent.click(screen.getByRole("button", { name: "Guia desta tela" }));
+  await waitFor(() => expect(heading).toHaveClass("tour-target"));
+  expect(feed).not.toHaveClass("tour-target");
+});
+
 it("o guia encontra alvos carregados após o render, ignora a navegação oculta e devolve o foco ao pausar", async () => {
   vi.spyOn(HTMLElement.prototype, "getClientRects").mockImplementation(function (this: HTMLElement) {
     return (this.style.display === "none" ? [] : [new DOMRect(0, 0, 44, 44)]) as unknown as DOMRectList;

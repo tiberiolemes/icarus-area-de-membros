@@ -30,14 +30,14 @@ insert into auth.users(id,email,email_confirmed_at,raw_app_meta_data,raw_user_me
  select pg_temp.id(n),'event-test-'||n||'@example.test',now(),'{"icarus_server_created":true}',
  jsonb_build_object('full_name','DEMONSTRAÇÃO RSVP '||n) from generate_series(1,4)n;
 set constraints all immediate;
-update public.profiles set role='admin' where id=pg_temp.id(1);
-update public.profiles set role='instructor' where id=pg_temp.id(4);
+update public.ica_profiles set role='admin' where id=pg_temp.id(1);
+update public.ica_profiles set role='instructor' where id=pg_temp.id(4);
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
  select pg_temp.id(100+n),pg_temp.id(n),now(),now(),'aal2' from generate_series(1,4)n;
-insert into public.plans(id,name,slug,price_cents,access_months,active)
+insert into public.ica_plans(id,name,slug,price_cents,access_months,active)
  values(pg_temp.id(10),'DEMONSTRAÇÃO plano liberado','event-allow',0,1,true),
  (pg_temp.id(11),'DEMONSTRAÇÃO outro plano','event-deny',0,1,true);
-insert into public.subscriptions(user_id,plan_id,starts_at,ends_at,source)
+insert into public.ica_subscriptions(user_id,plan_id,starts_at,ends_at,source)
  values(pg_temp.id(2),pg_temp.id(10),now()-interval '1 day',now()+interval '1 day','courtesy'),
  (pg_temp.id(3),pg_temp.id(11),now()-interval '1 day',now()+interval '1 day','courtesy');
 
@@ -55,11 +55,11 @@ select pg_temp.assert(not exists(
    or not has_function_privilege('authenticated',p.oid,'execute'))
 ),'grants efetivos das seis RPCs');
 select pg_temp.assert((select count(*)=2 and bool_and(relrowsecurity) from pg_class
- where oid in ('public.live_events'::regclass,'public.live_event_rsvps'::regclass)),'RLS ativa nas duas tabelas');
+ where oid in ('public.ica_live_events'::regclass,'public.ica_live_event_rsvps'::regclass)),'RLS ativa nas duas tabelas');
 
 set local role anon;
 select pg_temp.denied('select public.app_live_events()','anon sem RPC','permission');
-select pg_temp.denied('select * from public.live_events','anon sem tabela','permission');
+select pg_temp.denied('select * from public.ica_live_events','anon sem tabela','permission');
 
 set local role authenticated;
 select pg_temp.login(1);
@@ -87,8 +87,8 @@ select pg_temp.denied('select public.app_live_event_link(pg_temp.id(20),false)',
 select pg_temp.denied('select public.app_live_event_link(pg_temp.id(21),true)','gravação direta bloqueada','Link indisponível para este encontro.');
 select pg_temp.denied('select public.app_live_event_rsvp(pg_temp.id(20),true)','RSVP exige plano','Confirmação indisponível para este encontro.');
 select pg_temp.denied('select pg_temp.save(20,1,''archived'',now())','membro não edita','Operação não permitida.');
-select pg_temp.denied('select * from public.live_events','membro sem acesso direto a eventos','permission');
-select pg_temp.denied('select * from public.live_event_rsvps','membro sem acesso direto a RSVPs','permission');
+select pg_temp.denied('select * from public.ica_live_events','membro sem acesso direto a eventos','permission');
+select pg_temp.denied('select * from public.ica_live_event_rsvps','membro sem acesso direto a RSVPs','permission');
 
 select pg_temp.login(4);
 select pg_temp.denied('select public.app_admin_live_event_rsvps(pg_temp.id(20))','instrutor sem lista de RSVPs','Operação não permitida.');
@@ -124,11 +124,11 @@ select pg_temp.assert(jsonb_array_length(public.app_live_events()->'items')=0,'a
 select pg_temp.denied('select public.app_live_event_link(pg_temp.id(20),false)','arquivado revoga link','Link indisponível para este encontro.');
 
 reset role;
-update public.subscriptions set revoked_at=now() where user_id=pg_temp.id(2);
+update public.ica_subscriptions set revoked_at=now() where user_id=pg_temp.id(2);
 set local role authenticated;
 select pg_temp.denied('select public.app_live_event_link(pg_temp.id(21),true)','revogação retira link da gravação','Link indisponível para este encontro.');
 reset role;
-update public.app_sessions set revoked_at=now() where id=pg_temp.id(102);
+update public.ica_app_sessions set revoked_at=now() where id=pg_temp.id(102);
 set local role authenticated;
 select pg_temp.denied('select public.app_live_events()','sessão revogada perde a agenda','Sessão expirada. Entre novamente.');
 reset role;

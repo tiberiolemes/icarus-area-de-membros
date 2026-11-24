@@ -18,7 +18,7 @@ async function firstAdmin(target) {
   } else if (process.argv[2] === 'promote') {
     const { id, database } = JSON.parse(readFileSync(file, 'utf8'));
     if (!/^[a-f0-9]{8}-[a-f0-9-]{27}$/i.test(id) || (database !== undefined && database !== target.database)) throw Error();
-    const sql = `do $$ begin if not exists(select 1 from public.profiles p join auth.users u on u.id=p.id where p.id='${id}'::uuid and not p.demo and not p.suspended and not p.password_setup_required and u.email_confirmed_at is not null and u.raw_app_meta_data->>'icarus_server_created'='true') then raise exception 'Confirmação de email e primeira senha são obrigatórias.'; end if; update public.profiles set role='admin' where id='${id}'::uuid; end $$;`;
+    const sql = `do $$ begin if not exists(select 1 from public.ica_profiles p join auth.users u on u.id=p.id where p.id='${id}'::uuid and not p.demo and not p.suspended and not p.password_setup_required and u.email_confirmed_at is not null and u.raw_app_meta_data->>'icarus_server_created'='true') then raise exception 'Confirmação de email e primeira senha são obrigatórias.'; end if; update public.ica_profiles set role='admin' where id='${id}'::uuid; end $$;`;
     target.docker(['exec', '-i', target.database, 'psql', '-X', '-v', 'ON_ERROR_STOP=1', '-U', 'postgres', '-d', 'postgres'], { input: sql });
     console.log('Primeiro administrador específico promovido após email e senha nativos. Ative MFA em Segurança quando desejar.');
   } else throw Error();

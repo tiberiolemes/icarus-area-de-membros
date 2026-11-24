@@ -1,5 +1,5 @@
 -- Conteúdo operacional do formulário; nenhuma pessoa, senha, preço ou oferta real.
-insert into public.onboarding_questions(key,label,type,options,required,active,order_index) values
+insert into public.ica_onboarding_questions(key,label,type,options,required,active,order_index) values
  ('name','Nome da empresa','text','[]',true,true,0),
  ('role','Seu cargo','select','["Founder/CEO","Co-founder","C-level (CTO/CPO/CRO)","Head / VP","Gerente","Outro"]',true,true,1),
  ('size','Tamanho do time','select','["Só eu","2–5","6–20","21–50","51+"]',true,true,2),

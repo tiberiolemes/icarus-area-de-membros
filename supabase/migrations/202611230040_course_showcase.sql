@@ -3,31 +3,31 @@ create function public.app_catalog_showcase(p_query text default '', p_page inte
   p_filter text default 'all', p_sort text default 'recent') returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare
-  member_id uuid := app_private.actor();
+  member_id uuid := ica_private.actor();
   result jsonb;
 begin
   if p_query is null or length(p_query)>200 or p_page is null or p_page not between 1 and 100000
     or p_filter is null or p_filter not in ('all','ongoing','completed','restricted')
     or p_sort is null or p_sort not in ('recent','progress','title','duration') then
-    perform app_private.fail('Filtro de cursos inválido.');
+    perform ica_private.fail('Filtro de cursos inválido.');
   end if;
 
   with courses as materialized (
     select c.id,c.slug,c.title,c.description,(c.cover_url is not null) as has_cover,c.created_at,
-      app_private.course_access(member_id,c.id) as can_access,
+      ica_private.course_access(member_id,c.id) as can_access,
       stats.*,
       case when stats.total_lessons=0 then 0
         else round(100.0*stats.completed_lessons/stats.total_lessons) end as progress_percent
-    from public.courses c cross join lateral (
+    from public.ica_courses c cross join lateral (
       select count(distinct m.id) as module_count,count(l.id) as total_lessons,
         coalesce(sum(l.duration_seconds),0) as duration_seconds,
         count(p.completed_at) as completed_lessons,
         max(p.updated_at) filter(where (p.position_seconds>0 or p.completed_at is not null)
-          and app_private.lesson_access(member_id,l.id)) as last_activity
-      from public.modules m
-      left join public.sections s on s.module_id=m.id and s.status='published'
-      left join public.lessons l on l.section_id=s.id and l.status='published'
-      left join public.lesson_progress p on p.lesson_id=l.id and p.user_id=member_id
+          and ica_private.lesson_access(member_id,l.id)) as last_activity
+      from public.ica_modules m
+      left join public.ica_sections s on s.module_id=m.id and s.status='published'
+      left join public.ica_lessons l on l.section_id=s.id and l.status='published'
+      left join public.ica_lesson_progress p on p.lesson_id=l.id and p.user_id=member_id
       where m.course_id=c.id and m.status='published'
     ) stats where c.status='published'
   ), classified as materialized (
@@ -50,11 +50,11 @@ begin
   ), latest as (
     select id from classified where state='ongoing'
       and exists (
-        select 1 from public.modules m join public.sections s on s.module_id=m.id
-        join public.lessons l on l.section_id=s.id
-        left join public.lesson_progress p on p.lesson_id=l.id and p.user_id=member_id
+        select 1 from public.ica_modules m join public.ica_sections s on s.module_id=m.id
+        join public.ica_lessons l on l.section_id=s.id
+        left join public.ica_lesson_progress p on p.lesson_id=l.id and p.user_id=member_id
         where m.course_id=classified.id and m.status='published' and s.status='published' and l.status='published'
-          and p.completed_at is null and app_private.lesson_access(member_id,l.id)
+          and p.completed_at is null and ica_private.lesson_access(member_id,l.id)
       )
     order by last_activity desc,id limit 1
   ), cards as materialized (
@@ -62,10 +62,10 @@ begin
     from classified c left join lateral (
       select jsonb_build_object('id',l.id,'title',l.title,'module_slug',m.slug,'module_title',m.title,
         'position_seconds',coalesce(p.position_seconds,0)) as target
-      from public.modules m join public.sections s on s.module_id=m.id join public.lessons l on l.section_id=s.id
-      left join public.lesson_progress p on p.lesson_id=l.id and p.user_id=member_id
+      from public.ica_modules m join public.ica_sections s on s.module_id=m.id join public.ica_lessons l on l.section_id=s.id
+      left join public.ica_lesson_progress p on p.lesson_id=l.id and p.user_id=member_id
       where c.can_access and m.course_id=c.id and m.status='published' and s.status='published'
-        and l.status='published' and app_private.lesson_access(member_id,l.id)
+        and l.status='published' and ica_private.lesson_access(member_id,l.id)
         and (c.state='completed' or p.completed_at is null)
       order by case when c.state='ongoing' and p.position_seconds>0 then p.updated_at end desc nulls last,
         m.order_index,m.id,s.order_index,s.id,l.order_index,l.id limit 1

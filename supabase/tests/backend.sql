@@ -17,27 +17,30 @@ end $$;
 create function pg_temp.service_headers(n integer,aal text default 'aal1') returns void language plpgsql as $$ begin
  perform set_config('request.headers',jsonb_build_object('x-icarus-session-id',('10000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'x-icarus-aal',aal)::text,true);
 end $$;
+select pg_temp.assert((select count(*)=0 from pg_tables where schemaname='public' and tablename not like 'ica\_%'),'all public tables use the ica_ prefix');
 select pg_temp.assert((select count(*)=0 from pg_tables t where schemaname='public' and not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where c.relname=t.tablename and n.nspname='public' and c.relrowsecurity)),'all public tables RLS');
 select pg_temp.assert((select count(*)=0 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and (has_table_privilege('anon',c.oid,'SELECT,INSERT,UPDATE,DELETE') or has_table_privilege('authenticated',c.oid,'SELECT,INSERT,UPDATE,DELETE'))),'browser table grants closed');
 select pg_temp.assert((select count(*)=2 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and proname like 'app_%' and has_function_privilege('anon',p.oid,'EXECUTE')),'exactly two anonymous RPCs');
 select pg_temp.assert((select count(*)=0 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and proname in ('app_checkout_begin','app_process_payment','app_confirm_reauth','app_finalize_paid_order','app_upload_access') and has_function_privilege('authenticated',p.oid,'EXECUTE')),'service RPCs closed to member');
 select pg_temp.assert(has_function_privilege('service_role','public.app_order_status(uuid,uuid,text)','EXECUTE') and not has_function_privilege('anon','public.app_order_status(uuid,uuid,text)','EXECUTE') and not has_function_privilege('authenticated','public.app_order_status(uuid,uuid,text)','EXECUTE'),'order status remains service only');
-select pg_temp.denied($q$do $body$ begin insert into auth.users(id,email,raw_user_meta_data) values('00000000-0000-4000-8000-000000000099','signup@example.test','{}');set constraints all immediate;end $body$$q$,'native signup blocked without real legal');
+select pg_temp.denied($q$do $body$ begin insert into auth.users(id,email,raw_user_meta_data) values('00000000-0000-4000-8000-000000000099','signup@example.test','{"legal_version_ids":[]}');set constraints all immediate;end $body$$q$,'native signup blocked without real legal');
 insert into auth.users(id,instance_id,email,email_confirmed_at,aud,role,raw_user_meta_data,raw_app_meta_data) select pg_temp.uid(n),'00000000-0000-0000-0000-000000000000','fixture'||n||'@example.test',now(),'authenticated','authenticated',jsonb_build_object('full_name','DEMONSTRAÇÃO pessoa '||n),'{"icarus_server_created":true}'::jsonb from generate_series(1,8)n;
+-- O perfil nasce na validação final do Auth; antecipa-a para usar as fixtures nesta transação.
+set constraints all immediate;set constraints all deferred;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal) select ('10000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,pg_temp.uid(n),now(),now(),case when n between 3 and 6 then 'aal2'::auth.aal_level else 'aal1'::auth.aal_level end from generate_series(1,8)n;
-update public.profiles set role=case id when pg_temp.uid(3) then 'admin' when pg_temp.uid(4) then 'moderator' when pg_temp.uid(5) then 'support' when pg_temp.uid(6) then 'instructor' else 'member' end,demo=true where id in (select pg_temp.uid(n) from generate_series(1,8)n);
-insert into public.plans(id,name,slug,price_cents,access_months,active) values('20000000-0000-4000-8000-000000000001','DEMONSTRAÇÃO teste','demo-test',12345,12,true),('20000000-0000-4000-8000-000000000002','DEMONSTRAÇÃO outro','demo-other',54321,12,true);
-insert into public.subscriptions(user_id,plan_id,ends_at,source) values(pg_temp.uid(1),'20000000-0000-4000-8000-000000000001',now()+interval '1 year','courtesy'),(pg_temp.uid(2),'20000000-0000-4000-8000-000000000001',now()+interval '1 year','courtesy');
-insert into public.subscriptions(user_id,plan_id,starts_at,ends_at,source) values(pg_temp.uid(7),'20000000-0000-4000-8000-000000000001',now()-interval '2 years',now()-interval '1 year','courtesy');
-insert into public.courses(id,slug,title,status,certificate_enabled,signer_name,signer_title) values('30000000-0000-4000-8000-000000000001','demo-completo','DEMONSTRAÇÃO completo','published',true,'DEMONSTRAÇÃO responsável','Instrutor de demonstração'),('30000000-0000-4000-8000-000000000002','demo-vazio','DEMONSTRAÇÃO vazio','published',true,'DEMONSTRAÇÃO responsável','Instrutor de demonstração'),('30000000-0000-4000-8000-000000000003','demo-draft','DEMONSTRAÇÃO rascunho','draft',false,'','');
-insert into public.modules(id,course_id,slug,title,status) values('40000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001','demo-modulo','DEMONSTRAÇÃO módulo','published');
-insert into public.sections(id,module_id,title,status) values('50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001','DEMONSTRAÇÃO seção','published');
-insert into public.lessons(id,section_id,slug,title,body,type,duration_seconds,status,is_preview) values('60000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001','preview','DEMONSTRAÇÃO prévia','Corpo demonstrativo prévia','text',60,'published',true),('60000000-0000-4000-8000-000000000002','50000000-0000-4000-8000-000000000001','privada','DEMONSTRAÇÃO privada','CONTEUDO_PRIVADO','text',120,'published',false);
-insert into public.spaces(id,name,status) values('70000000-0000-4000-8000-000000000001','DEMONSTRAÇÃO espaço','published');
+update public.ica_profiles set role=case id when pg_temp.uid(3) then 'admin' when pg_temp.uid(4) then 'moderator' when pg_temp.uid(5) then 'support' when pg_temp.uid(6) then 'instructor' else 'member' end,demo=true where id in (select pg_temp.uid(n) from generate_series(1,8)n);
+insert into public.ica_plans(id,name,slug,price_cents,access_months,active) values('20000000-0000-4000-8000-000000000001','DEMONSTRAÇÃO teste','demo-test',12345,12,true),('20000000-0000-4000-8000-000000000002','DEMONSTRAÇÃO outro','demo-other',54321,12,true);
+insert into public.ica_subscriptions(user_id,plan_id,ends_at,source) values(pg_temp.uid(1),'20000000-0000-4000-8000-000000000001',now()+interval '1 year','courtesy'),(pg_temp.uid(2),'20000000-0000-4000-8000-000000000001',now()+interval '1 year','courtesy');
+insert into public.ica_subscriptions(user_id,plan_id,starts_at,ends_at,source) values(pg_temp.uid(7),'20000000-0000-4000-8000-000000000001',now()-interval '2 years',now()-interval '1 year','courtesy');
+insert into public.ica_courses(id,slug,title,status,certificate_enabled,signer_name,signer_title) values('30000000-0000-4000-8000-000000000001','demo-completo','DEMONSTRAÇÃO completo','published',true,'DEMONSTRAÇÃO responsável','Instrutor de demonstração'),('30000000-0000-4000-8000-000000000002','demo-vazio','DEMONSTRAÇÃO vazio','published',true,'DEMONSTRAÇÃO responsável','Instrutor de demonstração'),('30000000-0000-4000-8000-000000000003','demo-draft','DEMONSTRAÇÃO rascunho','draft',false,'','');
+insert into public.ica_modules(id,course_id,slug,title,status) values('40000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001','demo-modulo','DEMONSTRAÇÃO módulo','published');
+insert into public.ica_sections(id,module_id,title,status) values('50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001','DEMONSTRAÇÃO seção','published');
+insert into public.ica_lessons(id,section_id,slug,title,body,type,duration_seconds,status,is_preview) values('60000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001','preview','DEMONSTRAÇÃO prévia','Corpo demonstrativo prévia','text',60,'published',true),('60000000-0000-4000-8000-000000000002','50000000-0000-4000-8000-000000000001','privada','DEMONSTRAÇÃO privada','CONTEUDO_PRIVADO','text',120,'published',false);
+insert into public.ica_spaces(id,name,status) values('70000000-0000-4000-8000-000000000001','DEMONSTRAÇÃO espaço','published');
 set local role anon;
 select pg_temp.assert(not (public.app_public_context()->>'registration_enabled')::boolean,'anon public context blocked registration');
 select pg_temp.denied('select public.app_bootstrap()','anon bootstrap denied');
-select pg_temp.denied('select * from public.profiles','anon direct profiles denied');
+select pg_temp.denied('select * from public.ica_profiles','anon direct profiles denied');
 reset role;
 select pg_temp.login(1);
 set local role authenticated;
@@ -134,8 +137,8 @@ set local role authenticated;
 select pg_temp.assert((public.app_admin_archive('courses','30000000-0000-4000-8000-000000000001',true,'nonce-archive-test')->>'archived')::boolean,'archive valid reauth');
 select pg_temp.denied($q$select public.app_admin_archive('courses','30000000-0000-4000-8000-000000000001',false,'nonce-archive-test')$q$,'reauth single use');
 reset role;
-select pg_temp.assert((select count(*)=1 from public.certificates where user_id=pg_temp.uid(1)),'archive keeps certificate');
-select pg_temp.assert((select count(*)=2 from public.lesson_progress where user_id=pg_temp.uid(1)),'archive keeps progress');
+select pg_temp.assert((select count(*)=1 from public.ica_certificates where user_id=pg_temp.uid(1)),'archive keeps certificate');
+select pg_temp.assert((select count(*)=2 from public.ica_lesson_progress where user_id=pg_temp.uid(1)),'archive keeps progress');
 set local role service_role;
 select pg_temp.service_headers(3,'aal2');
 select public.app_confirm_reauth(pg_temp.uid(3),'10000000-0000-4000-8000-000000000003',encode(extensions.digest('nonce-restore-test','sha256'),'hex'));
@@ -144,7 +147,7 @@ select pg_temp.login(3,'aal2');
 set local role authenticated;
 select pg_temp.assert(not (public.app_admin_archive('courses','30000000-0000-4000-8000-000000000001',false,'nonce-restore-test')->>'archived')::boolean,'restore valid reauth');
 reset role;
-select pg_temp.assert((select status='published' from public.courses where id='30000000-0000-4000-8000-000000000001'),'restore preserves original status');
+select pg_temp.assert((select status='published' from public.ica_courses where id='30000000-0000-4000-8000-000000000001'),'restore preserves original status');
 -- Transaction rollback must also roll back nonce consumption.
 set local role service_role;
 select pg_temp.service_headers(3,'aal2');
@@ -160,15 +163,15 @@ select pg_temp.assert((public.app_admin_list('plans','demo-novo')->>'total')::in
 select pg_temp.assert((public.app_admin_list('plans','demo-novo',2)->>'total')::integer=1 and jsonb_array_length(public.app_admin_list('plans','demo-novo',2)->'items')=0,'pagination real total second page empty');
 reset role;
 -- These legal fixtures exist only inside this rolled-back test. No public signup or provider is called.
-update public.legal_versions set published=false where published;
-insert into public.legal_versions(id,kind,version,title,body,published,demo) values
+update public.ica_legal_versions set published=false where published;
+insert into public.ica_legal_versions(id,kind,version,title,body,published,demo) values
  ('80000000-0000-4000-8000-000000000001','terms','test-transaction','DEMONSTRAÇÃO contrato de teste','FIXTURE de contrato exclusivamente para testar transação financeira revertida.',true,true),
  ('80000000-0000-4000-8000-000000000002','privacy','test-transaction','DEMONSTRAÇÃO privacidade de teste','FIXTURE de privacidade exclusivamente para testar transação financeira revertida.',true,true);
 set local role service_role;
 select pg_temp.denied($q$select public.app_checkout_begin(null,'20000000-0000-4000-8000-000000000001','demo-checkout-attempt-01','PIX',1,'{"name":"DEMONSTRAÇÃO comprador","email":"fixture8@example.test","document":"00000000000"}',array['80000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002']::uuid[],false,repeat('a',64))$q$,'demo legal never enables checkout');
 reset role;
 -- Exercise the configured-legal branch in an isolated rollback, never persisted as approved policy.
-update public.legal_versions set demo=false where version='test-transaction';
+update public.ica_legal_versions set demo=false where version='test-transaction';
 set local role service_role;
 select public.app_checkout_begin(null,'20000000-0000-4000-8000-000000000001','demo-checkout-attempt-01','PIX',1,'{"name":"DEMONSTRAÇÃO comprador","email":"fixture8@example.test","document":"00000000000"}',array['80000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002']::uuid[],false,repeat('a',64)) as neworder \gset
 select pg_temp.assert((:'neworder'::jsonb->>'create_gateway')::boolean,'first reserve owns gateway create');
@@ -189,9 +192,9 @@ select pg_temp.assert((public.app_order_status((:'neworder'::jsonb->>'id')::uuid
 select pg_temp.assert(public.app_process_payment(jsonb_build_object('id','event-refund-demo-01','type','refunded','order_id',:'neworder'::jsonb->>'id','gateway_id','checkout-demo-01','amount_cents',12345,'method','PIX'))->>'status'='refunded','refund terminal');
 select pg_temp.assert(public.app_process_payment(jsonb_build_object('id','event-paid-old-demo-01','type','paid','order_id',:'neworder'::jsonb->>'id','gateway_id','checkout-demo-01','amount_cents',12345,'method','PIX'))->>'status'='refunded','old paid cannot reactivate refund');
 reset role;
-select pg_temp.assert((select count(*)=1 from public.subscriptions where order_id=(:'neworder'::jsonb->>'id')::uuid),'single payment entitlement');
-select pg_temp.assert((select revoked_at is not null from public.subscriptions where order_id=(:'neworder'::jsonb->>'id')::uuid),'refund revokes matching entitlement');
-update public.orders set created_at=now()-interval '2 hours' where id=(:'neworder'::jsonb->>'id')::uuid;
+select pg_temp.assert((select count(*)=1 from public.ica_subscriptions where order_id=(:'neworder'::jsonb->>'id')::uuid),'single payment entitlement');
+select pg_temp.assert((select revoked_at is not null from public.ica_subscriptions where order_id=(:'neworder'::jsonb->>'id')::uuid),'refund revokes matching entitlement');
+update public.ica_orders set created_at=now()-interval '2 hours' where id=(:'neworder'::jsonb->>'id')::uuid;
 select pg_temp.login(8);
 set local role authenticated;
 select public.app_touch_session(false);
@@ -253,12 +256,12 @@ select pg_temp.assert(public.app_media_access(pg_temp.uid(1),'ticket-attachment'
 select pg_temp.denied(format('select public.app_upload_cancel(%L,%L)',pg_temp.uid(1),:'upload'::jsonb->>'id'),'cancel cannot delete ready file');
 select public.app_upload_access(pg_temp.uid(1),'avatar',pg_temp.uid(1),'demo.png','image/png',20) as avatar \gset
 reset role;
-update public.profiles set suspended=true where id=pg_temp.uid(1);
+update public.ica_profiles set suspended=true where id=pg_temp.uid(1);
 set local role service_role;
 select pg_temp.denied(format('select public.app_upload_context(%L,%L)',pg_temp.uid(1),:'avatar'::jsonb->>'id'),'suspended blocks before path return');
 reset role;
-update public.profiles set suspended=false where id=pg_temp.uid(1);
-update public.uploads set expires_at=now()-interval '1 second' where id=(:'avatar'::jsonb->>'id')::uuid;
+update public.ica_profiles set suspended=false where id=pg_temp.uid(1);
+update public.ica_uploads set expires_at=now()-interval '1 second' where id=(:'avatar'::jsonb->>'id')::uuid;
 set local role service_role;
 select pg_temp.denied(format('select public.app_upload_context(%L,%L)',pg_temp.uid(1),:'avatar'::jsonb->>'id'),'expired upload reservation blocks path');
 select pg_temp.service_headers(2);
@@ -266,12 +269,12 @@ select pg_temp.denied(format('select public.app_upload_context(%L,%L)',pg_temp.u
 select set_config('request.headers','{}',true);
 select pg_temp.denied(format('select public.app_media_access(%L,%L,%L)',pg_temp.uid(1),'ticket-attachment',:'upload'::jsonb->>'id'),'service human call missing exact session denied');
 reset role;
-update public.app_sessions set expires_at=now()-interval '1 second' where user_id=pg_temp.uid(1);
+update public.ica_app_sessions set expires_at=now()-interval '1 second' where user_id=pg_temp.uid(1);
 select pg_temp.login(1);
 set local role authenticated;
 select pg_temp.denied('select public.app_touch_session(true)','touch cannot revive expired');
 select pg_temp.denied('select public.app_bootstrap()','expired session blocks bootstrap');
 reset role;
-select pg_temp.assert((select expires_at<now() from public.app_sessions where user_id=pg_temp.uid(1)),'expired stayed expired');
+select pg_temp.assert((select expires_at<now() from public.ica_app_sessions where user_id=pg_temp.uid(1)),'expired stayed expired');
 select count(*) as passed_assertions from test_results;
 rollback;

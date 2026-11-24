@@ -35,12 +35,12 @@ try {
     const sent = await client.storage.from('icarus-private').upload(path, data, { upsert: false, contentType: 'text/plain' }); assert(!sent.error, 'Storage nativo não aceitou arquivo >50MiB.');
     const finalized = await call('upload', { action: 'finalize', upload_id: uploadId }); assert(finalized.state === 'ready', 'Finalize não conferiu bytes/metadados.');
     const media = await call('media', { kind: 'material', id: materialId }); const ranged = await fetch(media.url, { headers: { Range: 'bytes=0-31' } }); assert(ranged.status === 206 && (await ranged.arrayBuffer()).byteLength === 32, 'URL pública não retornou Range real.');
-    const stored = await admin.from('uploads').select('size_bytes,state,content_type').eq('id', uploadId).single(); assert(!stored.error && stored.data.size_bytes === bytes && stored.data.state === 'ready', 'Metadados persistidos divergiram.');
+    const stored = await admin.from('ica_uploads').select('size_bytes,state,content_type').eq('id', uploadId).single(); assert(!stored.error && stored.data.size_bytes === bytes && stored.data.state === 'ready', 'Metadados persistidos divergiram.');
     receipt = { passed: true, actual_upload_bytes: bytes, above_50MiB: true, runtime_limit_bytes: 524288000, bucket_limit_bytes: bucket.data.file_size_limit, native_mfa_aal2: true, storage_upload: true, finalize_ready: true, public_url_range_http: 206, checked_at: new Date().toISOString() };
   } finally {
     if (path) assert(!(await admin.storage.from('icarus-private').remove([path])).error, 'Cleanup do objeto QA falhou.');
-    if (uploadId) assert(!(await admin.from('uploads').delete().eq('id', uploadId).eq('actor_id', account.id)).error, 'Cleanup da reserva QA falhou.');
-    if (materialId) assert(!(await admin.from('materials').delete().eq('id', materialId).eq('status', 'draft')).error, 'Cleanup do material QA falhou.');
+    if (uploadId) assert(!(await admin.from('ica_uploads').delete().eq('id', uploadId).eq('actor_id', account.id)).error, 'Cleanup da reserva QA falhou.');
+    if (materialId) assert(!(await admin.from('ica_materials').delete().eq('id', materialId).eq('status', 'draft')).error, 'Cleanup do material QA falhou.');
     try { unlinkSync(fixture); } catch {}
     await client.auth.signOut({ scope: 'local' });
   }

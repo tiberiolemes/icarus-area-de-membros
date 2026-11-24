@@ -40,21 +40,21 @@ select pg_temp.id(n),'podcast-export-'||n||'@example.test',now(),'{"icarus_serve
 set constraints all immediate;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
 select pg_temp.id(10+n),pg_temp.id(n),now(),now(),'aal2' from generate_series(1,3) n;
-update public.profiles set role='admin' where id=pg_temp.id(3);
+update public.ica_profiles set role='admin' where id=pg_temp.id(3);
 
-insert into public.podcast_episodes(id,youtube_id,kind,title,description,published_at,status)
+insert into public.ica_podcast_episodes(id,youtube_id,kind,title,description,published_at,status)
 select pg_temp.id(20+n),'qa_export_'||n,'podcast','Episódio sintético '||n,'Descrição sintética',now(),'published'
 from generate_series(1,3) n;
-insert into public.courses(id,slug,title,description,status,access_mode)
+insert into public.ica_courses(id,slug,title,description,status,access_mode)
 values (pg_temp.id(30),'qa-podcast-export','Curso sintético','','draft','members');
-insert into app_private.catalog_launches(id,course_id,title,summary,enabled)
+insert into ica_private.catalog_launches(id,course_id,title,summary,enabled)
 values (pg_temp.id(31),pg_temp.id(30),'Anúncio sintético','Resumo sintético',true);
-insert into app_private.catalog_launch_signups(launch_id,user_id,subscribed_at)
+insert into ica_private.catalog_launch_signups(launch_id,user_id,subscribed_at)
 values (pg_temp.id(31),pg_temp.id(1),'2026-11-24T12:00:00Z');
 
-insert into public.plans(id,name,slug,price_cents,access_months,active)
+insert into public.ica_plans(id,name,slug,price_cents,access_months,active)
 values (pg_temp.id(32),'Plano sintético','qa-podcast-export',1,1,true);
-insert into public.subscriptions(id,user_id,plan_id,ends_at,source)
+insert into public.ica_subscriptions(id,user_id,plan_id,ends_at,source)
 values (pg_temp.id(33),pg_temp.id(1),pg_temp.id(32),now()+interval '1 month','courtesy');
 
 select pg_temp.ok((select prosecdef and proconfig=array['search_path=""']
@@ -65,8 +65,8 @@ select pg_temp.ok(
  and not has_function_privilege('service_role','public.app_export_data()','EXECUTE'), 'ACL pública só para authenticated');
 select pg_temp.ok(not exists (
  select from unnest(array['anon','authenticated','service_role']) r(role_name)
- where has_function_privilege(r.role_name,'app_private.export_data_v029()','EXECUTE')
-  or has_table_privilege(r.role_name,'public.podcast_watches','SELECT, INSERT, UPDATE, DELETE')
+ where has_function_privilege(r.role_name,'ica_private.export_data_v029()','EXECUTE')
+  or has_table_privilege(r.role_name,'public.ica_podcast_watches','SELECT, INSERT, UPDATE, DELETE')
 ), 'função privada e tabela de marcações continuam fechadas');
 
 set local role anon;
@@ -88,9 +88,9 @@ select public.app_admin_save_podcast(pg_temp.id(21),'qa_export_1','podcast','Epi
 select pg_temp.ok(public.app_export_data()->'podcast_watches'='[]'::jsonb,'admin sem marcação recebe lista vazia');
 reset role;
 
-update public.subscriptions set revoked_at=now() where id=pg_temp.id(33);
+update public.ica_subscriptions set revoked_at=now() where id=pg_temp.id(33);
 select pg_temp.login(1);
-insert into export_v029 select app_private.export_data_v029();
+insert into export_v029 select ica_private.export_data_v029();
 set local role authenticated;
 select pg_temp.denied('select public.app_podcast(pg_temp.id(21))','P0001','Episódio indisponível.',
  'detalhe do episódio voltou a ser restrito');
@@ -114,7 +114,7 @@ select public.app_podcast_watch(pg_temp.id(23),false);
 select pg_temp.ok(public.app_export_data()->'podcast_watches'='[]'::jsonb,'desmarcar remove o item do export');
 reset role;
 
-update public.app_sessions set revoked_at=now() where id=pg_temp.id(11);
+update public.ica_app_sessions set revoked_at=now() where id=pg_temp.id(11);
 set local role authenticated;
 select pg_temp.login(1);
 select pg_temp.denied('select public.app_export_data()','P0001',

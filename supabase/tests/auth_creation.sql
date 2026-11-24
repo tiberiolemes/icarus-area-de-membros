@@ -5,25 +5,41 @@ grant all on auth_test_results to authenticated,service_role;
 create function pg_temp.assert(ok boolean,name text) returns void language plpgsql as $$ begin
  if ok is distinct from true then raise exception 'FAIL: %',name;end if;insert into auth_test_results values(name);
 end $$;
-update app_private.local_demo_guard set enabled=false;
+update ica_private.local_demo_guard set enabled=false;
 do $$
 declare rejected boolean:=false;begin
  begin
   insert into auth.users(id,email,raw_user_meta_data) values('a0000000-0000-4000-8000-000000000099','forged-local@example.test','{"icarus_server_created":true,"icarus_local_demo":true,"role":"admin"}');
   set constraints all immediate;
  exception when sqlstate 'P0001' then rejected:=true;end;
- perform pg_temp.assert(rejected,'user_metadata forgery rejected at constraint execution');
- perform pg_temp.assert(not exists(select 1 from public.profiles where id='a0000000-0000-4000-8000-000000000099'),'deferred rejection rolls profile back');
+ perform pg_temp.assert(not rejected,'user_metadata forgery is not an Icarus marker');
+ perform pg_temp.assert(not exists(select 1 from public.ica_profiles where id='a0000000-0000-4000-8000-000000000099'),'user_metadata forgery gets no Icarus profile');
+end $$;
+set constraints all deferred;
+-- Shared Supabase project: another app's user has no Icarus marker and must pass untouched, even without published legal documents.
+update public.ica_legal_versions set published=false where published and not demo;
+insert into auth.users(id,email,raw_user_meta_data) values('a0000000-0000-4000-8000-000000000097','other-app@example.test','{"full_name":"Outro app"}');
+set constraints all immediate;
+select pg_temp.assert(not exists(select 1 from public.ica_profiles where id='a0000000-0000-4000-8000-000000000097'),'foreign user accepted without Icarus profile');
+set constraints all deferred;
+do $$
+declare rejected boolean:=false;begin
+ begin
+  insert into auth.users(id,email,raw_user_meta_data) values('a0000000-0000-4000-8000-000000000098','bad-legal@example.test','{"legal_version_ids":["not-a-uuid"]}');
+  set constraints all immediate;
+ exception when sqlstate 'P0001' then rejected:=true;end;
+ perform pg_temp.assert(rejected,'Icarus signup with invalid legal_version_ids rejected');
+ perform pg_temp.assert(not exists(select 1 from public.ica_profiles where id='a0000000-0000-4000-8000-000000000098'),'rejected signup leaves no profile');
 end $$;
 set constraints all deferred;
 -- Native order: INSERT with empty app metadata, followed by Admin metadata UPDATE, then commit validation.
 insert into auth.users(id,email,raw_user_meta_data) values('a0000000-0000-4000-8000-000000000001','server-created@example.test','{"role":"admin","icarus_password_setup_required":false,"full_name":"DEMONSTRAÇÃO"}');
-select pg_temp.assert(exists(select 1 from public.profiles where id='a0000000-0000-4000-8000-000000000001' and role='member'),'immediate profile defaults to member');
+select pg_temp.assert(not exists(select 1 from public.ica_profiles where id='a0000000-0000-4000-8000-000000000001'),'profile waits for final app metadata');
 select pg_temp.assert(not exists(select 1 from auth.users where id='a0000000-0000-4000-8000-000000000001' and email_confirmed_at is not null),'profile creation does not confirm email');
 update auth.users set raw_app_meta_data='{"icarus_server_created":true,"icarus_password_setup_required":true}',email_confirmed_at=now() where id='a0000000-0000-4000-8000-000000000001';
 set constraints all immediate;
-select pg_temp.assert(exists(select 1 from public.profiles where id='a0000000-0000-4000-8000-000000000001' and password_setup_required),'constraint reselects final app metadata');
-select pg_temp.assert(not exists(select 1 from public.subscriptions where user_id='a0000000-0000-4000-8000-000000000001'),'server marker never grants a plan');
+select pg_temp.assert(exists(select 1 from public.ica_profiles where id='a0000000-0000-4000-8000-000000000001' and role='member' and password_setup_required),'server-created member profile reselects final app metadata');
+select pg_temp.assert(not exists(select 1 from public.ica_subscriptions where user_id='a0000000-0000-4000-8000-000000000001'),'server marker never grants a plan');
 set constraints all deferred;
 do $$
 declare rejected boolean:=false;begin
@@ -34,11 +50,11 @@ declare rejected boolean:=false;begin
  perform pg_temp.assert(rejected,'demo marker requires privileged guard at final validation');
 end $$;
 set constraints all deferred;
-update app_private.local_demo_guard set enabled=true;
+update ica_private.local_demo_guard set enabled=true;
 insert into auth.users(id,email,raw_app_meta_data) values('a0000000-0000-4000-8000-000000000002','guarded-demo@example.test','{"icarus_server_created":true,"icarus_local_demo":true}');
 set constraints all immediate;
-select pg_temp.assert(exists(select 1 from public.profiles where id='a0000000-0000-4000-8000-000000000002' and role='member'),'guarded demo member validated');
-update app_private.local_demo_guard set enabled=false;
+select pg_temp.assert(exists(select 1 from public.ica_profiles where id='a0000000-0000-4000-8000-000000000002' and role='member'),'guarded demo member validated');
+update ica_private.local_demo_guard set enabled=false;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal) values('a1000000-0000-4000-8000-000000000001','a0000000-0000-4000-8000-000000000001',now(),now(),'aal1');
 select set_config('request.jwt.claims','{"sub":"a0000000-0000-4000-8000-000000000001","session_id":"a1000000-0000-4000-8000-000000000001","aal":"aal1","role":"authenticated"}',true);
 set local role authenticated;

@@ -125,24 +125,24 @@ class Fixture:
           select id,id||'@example.test',now(),'{{"icarus_server_created":true}}','{{"full_name":"Ator de teste"}}'
           from (values ('{self.member}'::uuid),('{self.admin}'::uuid)) fixture(id);
           set constraints all immediate;
-          update public.profiles set role='admin' where id='{self.admin}';
+          update public.ica_profiles set role='admin' where id='{self.admin}';
           insert into auth.sessions(id,user_id,created_at,updated_at,aal) values
             ('{self.member_sid}','{self.member}',now(),now(),'aal2'),
             ('{self.admin_sid}','{self.admin}',now(),now(),'aal2');
-          insert into public.app_sessions(id,user_id,expires_at) values
+          insert into public.ica_app_sessions(id,user_id,expires_at) values
             ('{self.member_sid}','{self.member}',now()+interval '5 minutes'),
             ('{self.admin_sid}','{self.admin}',now()+interval '5 minutes');
-          insert into public.reauth_nonces(token_hash,actor_id,session_id,expires_at)
+          insert into public.ica_reauth_nonces(token_hash,actor_id,session_id,expires_at)
           values (encode(extensions.digest('{self.nonce}','sha256'),'hex'),
             '{self.admin}','{self.admin_sid}',now()+interval '5 minutes');
-          insert into public.courses(id,slug,title,status,access_mode,certificate_enabled,signer_name,signer_title)
+          insert into public.ica_courses(id,slug,title,status,access_mode,certificate_enabled,signer_name,signer_title)
           values ('{self.course}','race-{self.course}','Curso teste','published','members',true,'Pessoa Responsável','Instrutora');
-          insert into public.modules(id,course_id,slug,title,status)
+          insert into public.ica_modules(id,course_id,slug,title,status)
           values ('{self.module}','{self.course}','modulo','Módulo','published');
-          insert into public.sections(id,module_id,title,status) values ('{self.section}','{self.module}','Seção','published');
-          insert into public.lessons(id,section_id,slug,title,duration_seconds,status)
+          insert into public.ica_sections(id,module_id,title,status) values ('{self.section}','{self.module}','Seção','published');
+          insert into public.ica_lessons(id,section_id,slug,title,duration_seconds,status)
           values ('{self.lesson}','{self.section}','aula','Aula','600','published');
-          {"insert into public.lesson_progress(user_id,lesson_id,position_seconds,completed_at) "
+          {"insert into public.ica_lesson_progress(user_id,lesson_id,position_seconds,completed_at) "
            f"values ('{self.member}','{self.lesson}',600,now());" if self.flow == "issue" else ""}
           commit;
         """)
@@ -164,30 +164,30 @@ class Fixture:
         return json.loads(sql(self.psql, f"""
           select jsonb_build_object(
             'progress',(select jsonb_build_array(position_seconds,completed_at is not null)
-                        from public.lesson_progress where user_id='{self.member}'),
-            'certificates',(select count(*) from public.certificates where user_id='{self.member}'),
-            'notifications',(select count(*) from public.notifications
+                        from public.ica_lesson_progress where user_id='{self.member}'),
+            'certificates',(select count(*) from public.ica_certificates where user_id='{self.member}'),
+            'notifications',(select count(*) from public.ica_notifications
                               where user_id='{self.member}' and event_key='certificate_issued'),
-            'suspended',(select suspended from public.profiles where id='{self.member}'),
-            'revoked',(select revoked_at is not null from public.app_sessions where id='{self.member_sid}'));
+            'suspended',(select suspended from public.ica_profiles where id='{self.member}'),
+            'revoked',(select revoked_at is not null from public.ica_app_sessions where id='{self.member_sid}'));
         """))
 
     def cleanup(self):
         users = f"('{self.member}','{self.admin}')"
         sql(self.psql, f"""
           begin;
-          delete from public.notifications where user_id in {users};
-          delete from public.certificates where user_id in {users};
-          delete from public.lesson_progress where user_id in {users};
-          delete from public.audit_events where actor_id in {users};
-          delete from public.reauth_nonces where actor_id in {users};
-          delete from public.app_sessions where user_id in {users};
+          delete from public.ica_notifications where user_id in {users};
+          delete from public.ica_certificates where user_id in {users};
+          delete from public.ica_lesson_progress where user_id in {users};
+          delete from public.ica_audit_events where actor_id in {users};
+          delete from public.ica_reauth_nonces where actor_id in {users};
+          delete from public.ica_app_sessions where user_id in {users};
           delete from auth.sessions where user_id in {users};
-          delete from public.lessons where id='{self.lesson}';
-          delete from public.sections where id='{self.section}';
-          delete from public.modules where id='{self.module}';
-          delete from public.courses where id='{self.course}';
-          delete from public.profiles where id in {users};
+          delete from public.ica_lessons where id='{self.lesson}';
+          delete from public.ica_sections where id='{self.section}';
+          delete from public.ica_modules where id='{self.module}';
+          delete from public.ica_courses where id='{self.course}';
+          delete from public.ica_profiles where id in {users};
           delete from auth.users where id in {users};
           commit;
         """)
@@ -211,7 +211,7 @@ def run_race(psql, flow, admin_first, rollback_member=False):
             else:
                 if flow == "issue":
                     with Session(psql) as editor:
-                        editor.start(f"select 1 from public.courses where id='{fixture.course}' for update")
+                        editor.start(f"select 1 from public.ica_courses where id='{fixture.course}' for update")
                         editor.result()
                         member.start(fixture.request)
                         wait_for(psql, member, editor)

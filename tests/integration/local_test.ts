@@ -57,7 +57,7 @@ Deno.test("Auth + SQL gates + private Storage real local, providers disabled", a
       const denied = await reauthenticate()(req({ password: "incorrect-synthetic-password" }, tokenA)); assert(denied.status === 403, "Senha errada autorizou reauth.");
       const result = await reauthenticate()(req({ password: accounts.member.password }, tokenA)); assert(result.status === 200, "Senha nativa válida não confirmou.");
       const body = await result.json();
-      const saved = await admin.from("reauth_nonces").select("actor_id,expires_at,consumed_at").eq("token_hash", await sha256(body.token)).single();
+      const saved = await admin.from("ica_reauth_nonces").select("actor_id,expires_at,consumed_at").eq("token_hash", await sha256(body.token)).single();
       assert(!saved.error && saved.data.actor_id === accounts.member.id, "Nonce não vinculado ao ator.");
       assert(Date.parse(saved.data.expires_at) - Date.now() <= 300_000, "Nonce excedeu TTL5min.");
       const alive = await a.rpc("app_touch_session", { p_activity: false }); assert(!alive.error, "Reauth revogou sessão principal.");

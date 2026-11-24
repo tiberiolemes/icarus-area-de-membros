@@ -217,11 +217,11 @@ it.each([
 
   fireEvent.click(screen.getByRole("button", { name: "Abrir navegação" }));
   const drawer = screen.getByRole("dialog", { name: "Navegação" });
-  expect(within(drawer).getByRole("link", { name: label, exact: true })).toHaveAttribute("href", path);
+  expect(within(drawer).getByRole("link", { name: label })).toHaveAttribute("href", path);
 
   if (role !== "admin") {
-    expect(within(menu).queryByRole("link", { name: "Administração", exact: true })).toBeNull();
-    expect(within(drawer).queryByRole("link", { name: "Administração", exact: true })).toBeNull();
+    expect(within(menu).queryByRole("link", { name: "Administração" })).toBeNull();
+    expect(within(drawer).queryByRole("link", { name: "Administração" })).toBeNull();
   }
 });
 

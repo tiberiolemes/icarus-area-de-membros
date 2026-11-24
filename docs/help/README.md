@@ -5,7 +5,7 @@ A ajuda pública é servida em `/ajuda`, com busca e oito artigos. A fonte únic
 | Artigo | Rotas e fluxo cobertos |
 | --- | --- |
 | `/ajuda/acesso` | Entrar, confirmação, recuperação, primeira senha do convite, onboarding e MFA |
-| `/ajuda/cursos` | Vitrine com destaque e fileiras, busca e paginação, curso, módulo, aula, retomada e conclusão confirmada |
+| `/ajuda/cursos` | Vitrine de cursos com busca, filtros, início e retomada direta da aula, ementa e conclusão confirmada |
 | `/ajuda/materiais` | Pastas, busca, acesso e download autorizado |
 | `/ajuda/certificados` | Elegibilidade, emissão, PDF/PNG e verificação pública |
 | `/ajuda/comunidade` | Espaços, composição, aprovação humana, edição, resposta, voto e denúncia |

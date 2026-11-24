@@ -95,7 +95,7 @@ Use este roteiro para o stack completo da v0.1.6 criado pelo Supabase CLI, com A
 
 ### Migrations e fluxos da árvore atual
 
-Aplique `202611230001` a `202611230038` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
+Aplique `202611230001` a `202611230040` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
 
 | Migration | O que configurar ou validar |
 | --- | --- |
@@ -117,6 +117,8 @@ Aplique `202611230001` a `202611230038` em ordem antes de servir este frontend. 
 | `036` | Confirmar que somente a sessão autenticada executa a edição de publicações e que o backend preserva as regras de autoria e moderação. |
 | `037` | Abrir duas aulas de mesmo slug em seções diferentes pelo currículo e pela busca. Conferir notificações, progresso e endereços anteriores. |
 | `038` | Verificar o retorno do checkout visitante no mesmo navegador, o prazo do recibo e a consulta da conta titular após expirar. |
+| `039` | Conferir no Dashboard e no Ranking o intervalo personalizado, incluindo eventos na data final em Brasília. |
+| `040` | Abrir a vitrine com aluno novo e com aluno em andamento. Iniciar e retomar uma aula pelo cartão e conferir o acesso para cursos e módulos restritos. |
 
 A validação de navegação também cobre entrada e confirmação de email, primeira senha, perguntas de onboarding, edição parcial do perfil e MFA opcional. A seed fornece perguntas iniciais editáveis. Cadastre os próprios cursos, aulas, materiais, planos, ofertas e documentos legais pelo fluxo administrativo apropriado.
 

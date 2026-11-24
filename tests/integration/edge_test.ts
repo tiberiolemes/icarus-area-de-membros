@@ -181,7 +181,9 @@ for (const role of ["member", "admin"]) Deno.test(`reauth without factor verifie
   });
   const result = await reauthenticate(d)(request({ password: " synthetic password " })); equal(result.status, 200);
   const body = await result.json(); equal(stored.p_actor_id, id); equal(stored.p_session_id, other); equal(stored.p_token_hash, await sha256(body.token));
-  equal((requests.find((r) => r.url.includes("/auth/v1/token"))!.body as Record<string, string>).password, " synthetic password ");
+  const token = requests.find((r) => r.url.includes("/auth/v1/token"))!;
+  equal((token.body as Record<string, string>).password, " synthetic password ");
+  equal(token.headers.get("apikey"), "local-test-secret");
   assert(requests.some((r) => r.url.includes("/auth/v1/logout")));
 });
 Deno.test("verified staff AAL1 reauth denies before password verification", async () => {

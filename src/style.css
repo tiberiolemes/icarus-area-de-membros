@@ -777,6 +777,9 @@ h2 > a,
   border-radius: 12px;
   background: var(--ic-surface);
 }
+.access .captcha {
+  min-height: 65px;
+}
 .access .notice,
 .icarus-order-status .notice {
   border: 0;

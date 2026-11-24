@@ -1,5 +1,10 @@
 # Changelog
 
+## Não publicado
+
+- Turnstile nas telas de entrar, cadastrar, recuperar senha e reenviar confirmação quando `VITE_TURNSTILE_SITE_KEY` estiver definido; o token segue para o CAPTCHA do Supabase Auth, que o confere no servidor.
+- A confirmação de senha da Edge `reauthenticate` usa a chave de serviço, que o CAPTCHA do Auth não exige.
+
 ## 0.2.0 · Entrega 01
 
 - Interface baseada no Stitch com componentes compartilhados, temas claro e escuro e navegação mobile em Catálogo, Fórum e Player.

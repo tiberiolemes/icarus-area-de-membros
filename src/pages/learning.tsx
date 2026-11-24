@@ -57,8 +57,8 @@ export function Curriculum({course, modules, preferredModule}: CourseDetail & {p
     ?? modules.find(module => module.sections.some(section => section.lessons.some(lesson => lesson.can_access && !lesson.completed)))
     ?? modules[0];
   return <div className="curriculum course-syllabus">
-    {modules.map((module, index) => <details key={module.id} open={module.id === initial?.id}>
-      <summary data-tour={index === 0 ? "curriculum" : undefined}>{module.title}
+    {modules.map(module => <details key={module.id} open={module.id === initial?.id}>
+      <summary data-tour={module.id === initial?.id ? "course-syllabus" : undefined}>{module.title}
         {!module.can_access && <Lock size={16} aria-label="Acesso restrito" />}
       </summary>
       <Link className="syllabus-module-link" to={`/app/cursos/${encodeURIComponent(course.slug)}/${encodeURIComponent(module.slug)}`}>Abrir módulo</Link>

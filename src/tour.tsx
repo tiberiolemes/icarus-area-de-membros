@@ -23,6 +23,16 @@ const steps = [
     body: "Abra a aula pelo botão de iniciar ou continuar. Use a busca e os filtros para encontrar outro curso, ou abra a ementa para escolher entre as aulas.",
   },
   {
+    target: "course-catalog",
+    title: "Encontre um curso",
+    body: "Filtre os cursos por andamento, conclusão ou acesso restrito. Você também pode buscar um curso ou alterar a ordem dos resultados.",
+  },
+  {
+    target: "course-syllabus",
+    title: "Escolha uma aula na ementa",
+    body: "Abra um módulo para ver as aulas e selecione a que deseja assistir. O cadeado identifica conteúdo restrito.",
+  },
+  {
     target: "curriculum",
     title: "Abra uma aula",
     body: "Use Filtrar tópicos e aulas para localizar itens deste curso. Cada aula tem um endereço próprio. O cadeado indica acesso restrito; o indicador de conclusão vem do progresso confirmado.",

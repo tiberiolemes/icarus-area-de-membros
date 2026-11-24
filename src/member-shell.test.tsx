@@ -201,6 +201,31 @@ it("mostra erro de gravação e mantém a aparência confirmada", async () => {
   expect(refetch).not.toHaveBeenCalled();
 });
 
+it.each(["admin", "member", "instructor", "moderator", "support"])(
+  "mostra o atalho Administração no menu da área de membros para %s somente se for admin",
+  (role) => {
+    profile.role = role;
+    mount("/app/cursos");
+    const sidebar = screen.getByRole("complementary");
+    const menu = within(sidebar).getByRole("navigation", { name: "Área de membros" });
+    const first = within(menu).getAllByRole("link")[0];
+    if (role === "admin") {
+      expect(first).toHaveAccessibleName("Administração");
+      expect(first).toHaveAttribute("href", "/admin/cursos");
+    } else {
+      expect(sidebar.querySelector('a[href^="/admin/"]')).toBeNull();
+    }
+
+    fireEvent.click(screen.getByRole("button", { name: "Abrir navegação" }));
+    const drawer = screen.getByRole("dialog", { name: "Navegação" });
+    if (role === "admin") {
+      expect(within(drawer).getByRole("link", { name: "Administração" })).toHaveAttribute("href", "/admin/cursos");
+    } else {
+      expect(drawer.querySelector('a[href^="/admin/"]')).toBeNull();
+    }
+  },
+);
+
 it.each([
   ["support", "/admin/suporte", "Suporte", ["/admin/suporte"]],
   ["moderator", "/admin/comunidade", "Moderador", ["/admin/comunidade"]],

@@ -109,7 +109,6 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
   const staffRoutes = adminNav.filter((item) =>
     (item[3] as readonly string[]).includes(profile.role),
   );
-  const staffRoute = staffRoutes[0]?.[1];
   const help = (
     <Link to="/ajuda" onClick={onNavigate}>
       <HelpCircle size={20} aria-hidden="true" />
@@ -146,6 +145,12 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
         aria-label={admin ? "Administração" : "Área de membros"}
         data-tour="navigation"
       >
+        {!admin && profile.role === "admin" && (
+          <Link to="/admin/cursos" onClick={onNavigate}>
+            <ArrowUpRight size={20} aria-hidden="true" />
+            Administração
+          </Link>
+        )}
         {(admin ? staffRoutes : memberNav).map(([title, path, Icon]) => (
           <NavLink key={path} to={(admin ? "/admin/" : "/app/") + path} onClick={onNavigate}>
             <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
@@ -169,13 +174,10 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
             <span className="sr-only">. Mudar para tema {dark ? "claro" : "escuro"}</span>
           </Action>
         )}
-        {staffRoute && (
-          <Link
-            to={admin ? "/app/cursos" : "/admin/" + staffRoute}
-            onClick={onNavigate}
-          >
+        {admin && staffRoutes.length > 0 && (
+          <Link to="/app/cursos" onClick={onNavigate}>
             <ArrowUpRight size={20} aria-hidden="true" />
-            {admin ? "Área do aluno" : "Administração"}
+            Área do aluno
           </Link>
         )}
         {admin && help}

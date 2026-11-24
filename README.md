@@ -55,7 +55,7 @@ Para uma instalação v0.1.6 existente, siga o roteiro de atualização do [Dock
 
 Antes de abrir uma instalação ao público, configure Supabase, HTTPS, URLs de retorno, SMTP, MFA, backup, oferta e textos jurídicos aprovados. Homologue Asaas Sandbox e Bunny nessa instalação. Esta entrega não cria infraestrutura cloud nem atesta operação externa. Cobrança em produção permanece bloqueada até homologação correspondente.
 
-Consulte [contrato](docs/CONTRACT.md), [API](docs/api.md), [integrações](docs/acceptance/integrations.md) e [escopo](docs/ROADMAP.md). URLs privadas já emitidas podem continuar válidas até seu curto prazo de expiração.
+Consulte o [mapa técnico e o dicionário de dados](docs/architecture.md), o [contrato](docs/CONTRACT.md), [API](docs/api.md), [integrações](docs/acceptance/integrations.md) e [escopo](docs/ROADMAP.md). URLs privadas já emitidas podem continuar válidas até seu curto prazo de expiração.
 
 ## Verificações
 
@@ -92,7 +92,7 @@ Use the source archive or checkout for the intended GitHub tag. The npm package 
 
 Apply all migrations for this source tree, then verify native Auth, Postgres, Storage, Edge Functions and local email. This tree includes course search, lesson notes, favorites, checklists, moderated comments, in-app notifications and catalog launch announcements. Members can browse podcasts, masterclasses and live events. Administrators manage the catalog and schedule. Podcast watch marks are included in the member data export.
 
-Read [operations](docs/operations.md) and [API documentation](docs/api.md) before installation. To upgrade an existing v0.1.6 installation, follow the [full local Docker](docs/operations.md#atualizar-uma-instalação-docker-completa) or [hosted Supabase](docs/operations.md#aplicar-migrações-no-supabase-hospedado) procedure. For a new hosted installation, follow the [first administrator procedure](docs/operations.md#primeiro-administrador-hospedado). Configure the Supabase URL and public key in the `VITE_*` variables before building. Keep service-role and provider secrets server-side. Configure HTTPS, redirect URLs, email, MFA support, backups and approved legal content before opening registration.
+Read [operations](docs/operations.md) and [API documentation](docs/api.md) before installation. The [architecture map](docs/architecture.md) links user flows to the [data dictionary](docs/data-dictionary.md). To upgrade an existing v0.1.6 installation, follow the [full local Docker](docs/operations.md#atualizar-uma-instalação-docker-completa) or [hosted Supabase](docs/operations.md#aplicar-migrações-no-supabase-hospedado) procedure. For a new hosted installation, follow the [first administrator procedure](docs/operations.md#primeiro-administrador-hospedado). Configure the Supabase URL and public key in the `VITE_*` variables before building. Keep service-role and provider secrets server-side. Configure HTTPS, redirect URLs, email, MFA support, backups and approved legal content before opening registration.
 
 Asaas checkout is prepared for Sandbox acceptance; production billing remains disabled. Bunny, external email, tax documents and hosted deployment have not been certified by local tests. No real payment is made by the test suite. Future phases, AI and multi-tenancy are outside this release.
 

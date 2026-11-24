@@ -2,6 +2,8 @@
 
 Este contrato é compartilhado entre as três frentes. Se precisar mudar assinatura/DTO, avisar antes e combinar. Não criar fallback que finge backend/provedor. Entrega: Fase1 + comunidade básica pré-moderada; não herdar código Frappe nem criar multi-tenant.
 
+Consulte o [mapa técnico](architecture.md) para seguir uma ação da interface até a autorização e os dados no servidor.
+
 ## Convenções
 - React/TS/Vite e Supabase local real. Schema public; RPC prefixo app_. Roles: member, instructor, moderator, support, admin. Planos e papéis separados. Nomes técnicos em inglês, textos PT-BR.
 - IDs uuid, montantes integer cents, datas timestamptz e exibição Brasília. Cursos e módulos usam slug no caminho. Os links de aula usam `/app/cursos/:curso/:modulo/~<id-da-aula>`. O formato antigo por slug de aula abre a primeira correspondência no currículo retornado para o ator, em ordem de seção (`order_index,id`). Os dois formatos consultam `app_lesson` para autorizar a aula. Toda lista limitada20/servidor e retorno {items,total,page,page_size:20}; buscar/ordenar no servidor antes de limitar.
@@ -103,7 +105,7 @@ O checkout de visitante envia `receipt_hash` (SHA-256 em hex) e mantém a mesma 
 order-status: POST {order_id,receipt_token?} -> {order_id,status,amount_cents,access_granted}. A RPC service-only exige titular autenticado ou recibo válido do pedido dentro das primeiras duas horas da reserva, inclusive para recibos legados. O prazo cobre o checkout hospedado de 60 minutos e a volta do visitante. Só o titular pode consultar depois desse prazo. A resposta tem `Cache-Control: no-store` e exclui comprador, URL de pagamento, hash e token.
 
 Na atualização, aplique a migration 038 e disponibilize a Edge `checkout` atualizada antes de servir o frontend que envia `receipt_hash`.
-asaas-webhook: POST JSON com asaas-access-token; verify_jwt=false só aqui e token dedicado verificado antes de persistir. Evento id único, valor/pedido/estado conferidos e transação idempotente. Não capturar SQL arbitrário nem reativar reembolso por evento antigo.
+asaas-webhook: POST JSON com asaas-access-token; token dedicado verificado antes de persistir. A política de JWT no gateway e os gates da Edge estão no [mapa técnico](architecture.md#edge-functions). Evento id único, valor/pedido/estado conferidos e transação idempotente. Não capturar SQL arbitrário nem reativar reembolso por evento antigo.
 media: POST {kind:lesson|material|ticket-attachment,id} com JWT -> {url,expires_at,provider}. Can_access do banco novamente; storage privado/Supabase ou Bunny assinatura. TTLcurto; ausênciaBunny503 com causa; fixturelocal MP4 só explicitamente demonstração e protegido.
 upload: POST metadados {kind,resource_id,file_name,content_type,size_bytes} -> signed upload ou upload controlado com gate servidor, whitelist/tamanho/path gerado. Não aceitar bucket/path arbitrário do browser.
 Funções service-only a fornecer pelo backend: app_checkout_begin(p_actor_id,p_plan_id,p_attempt_key,p_method,p_installments,p_buyer_data,p_legal_version_ids,p_marketing_opt_in,p_receipt_hash), app_checkout_gateway(p_order_id,p_gateway_id,p_checkout_url), app_process_payment(p_event jsonb), app_finalize_paid_order(p_order_id,p_actor_id), app_order_status(p_order_id,p_actor_id,p_receipt_hash), app_media_access(p_actor_id,p_kind,p_id), app_upload_access(p_actor_id,p_kind,p_resource_id,p_file_name,p_content_type,p_size_bytes).

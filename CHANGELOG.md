@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 · Entrega 01
+
+- Interface baseada no Stitch com componentes compartilhados, temas claro e escuro e navegação mobile em Catálogo, Fórum e Player.
+- Busca autorizada, anúncios de lançamento, retomada, favoritos, notas privadas, comentários moderados e checklist de aulas. Materiais e certificados continuam protegidos pelo servidor.
+- Encontros, Podcasts, Ranking preliminar, notificações internas e feedback com anexo privado. Ranking sem premiação configurada.
+- Administração de conteúdo, pedidos, suporte, Marca, Dashboard e Analytics. Segundo fator opcional e recomendado para admins.
+- Aulas de mesmo slug em seções diferentes têm endereços próprios por ID. O checkout visitante conserva o acesso temporário ao pedido no retorno ao mesmo navegador.
+- Upgrade da versão 0.1.6 com migrations 021–038. Faça backup e siga o [guia de operação](docs/operations.md). Asaas em Sandbox, Bunny e SMTP externo dependem da configuração e da homologação de cada instalação.
+
 ## 0.1.6 · 2026-11-23
 
 - Autor pode arquivar e restaurar sua publicação com confirmação AJAX, preservando texto, imagem, respostas, votos e histórico.

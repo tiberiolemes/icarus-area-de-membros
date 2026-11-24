@@ -1,3 +1,5 @@
+@import "./stitch-tokens.css";
+
 @font-face {
   font-family: Inter;
   src: url("/brand/InterVariable.woff2") format("woff2");
@@ -720,6 +722,22 @@ h2 > a,
   justify-content: space-between;
   gap: 24px;
   padding: 32px 0;
+}
+.installation-name {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.installation-admin,
+.public-installation-name {
+  min-width: 0;
+}
+.public-installation-name {
+  font-size: var(--stitch-type-headline-sm-size);
+  text-decoration: none;
 }
 .public-top img {
   display: block;

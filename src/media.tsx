@@ -1,26 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { edge, errorMessage, safeUrl } from "./api";
+
+type ImageKind = "post-image" | "course-cover" | "avatar" | "feedback-screenshot";
+
+export function usePrivateImageQuery(kind: ImageKind, id: string) {
+  return useQuery({
+    queryKey: ["media", kind, id],
+    queryFn: () =>
+      edge<{ url: string; expires_at: string }>("media", { kind, id }),
+    retry: false,
+    gcTime: 0,
+    staleTime: 0,
+  });
+}
+
 export function PrivateImage({
   kind,
   id,
   alt = "",
   className = "",
 }: {
-  kind: "post-image" | "course-cover" | "avatar";
+  kind: ImageKind;
   id: string;
   alt?: string;
   className?: string;
 }) {
   const retried = useRef(false),
-    query = useQuery({
-      queryKey: ["media", kind, id],
-      queryFn: () =>
-        edge<{ url: string; expires_at: string }>("media", { kind, id }),
-      retry: false,
-      gcTime: 0,
-      staleTime: 0,
-    });
+    query = usePrivateImageQuery(kind, id);
   return query.isPending ? (
     <div className={className} role="status" aria-label="Carregando imagem" />
   ) : query.error ? (

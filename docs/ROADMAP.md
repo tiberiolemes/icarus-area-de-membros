@@ -6,8 +6,11 @@ Fase1 de entrega de cursos com comunidade manual: acesso/onboarding/perfil, pap�
 ## Etapa posterior à publicação da fonte
 O usuário instalará uma cópia no seu servidor e fornecerá as configurações das integrações. Supabase/Asaas/Bunny/email e textos jurídicos reais são configurados e homologados nessa etapa. Não há autorização para criar cloud/Oracle pago ou realizar cobranças nesta entrega.
 
-## Fora desta primeira versão
-Ranking, prêmios, DMs, diretório avançado, podcasts, encontros, automações/campanhas, IA, tutor, quizzes/tarefas, multi-tenant e recursos das fases posteriores. Não criar telas ou botões vazios para eles.
+## Além do núcleo da Entrega 01
+
+A árvore 0.2.0 inclui Podcasts, agenda e acervo de Encontros, Ranking preliminar, notificações internas, feedback, marca por nome e relatórios com os dados disponíveis. A integração desses recursos adianta parte das fases seguintes.
+
+Continuam fora da Entrega 01 a premiação do Ranking, mensagens diretas, diretório avançado, automações de retenção, IA, quizzes, tarefas e multi-tenant. Os fluxos de compra e entrega que dependem de Asaas, Bunny, SMTP e dados reais são homologados na instalação do responsável.
 
 O código novo usa MIT e Design System Icarus. O repositório anterior será substituído por commit normal, sem apagar o histórico. Nenhum aceite, dado ou senha da aplicação descartada é herdado.
 

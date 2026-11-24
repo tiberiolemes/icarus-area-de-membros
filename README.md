@@ -9,7 +9,7 @@
 ```
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.1.6-black)
+![Version](https://img.shields.io/badge/version-0.2.0-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)
@@ -18,12 +18,14 @@ Uma plataforma de cursos para uma academia, com materiais privados, certificados
 
 Aplicação nova em React, TypeScript, Vite e Supabase. A árvore desta versão foi criada do zero; não usa Frappe nem depende da instalação anterior. O histórico Git continua preservado.
 
-## Incluído
+## Incluído nesta árvore de código
 
-- Acesso, confirmação de email, primeira senha por convite, recuperação, onboarding, perfil e autenticação de dois fatores. MFA é opcional para todas as contas; após ativar, o código é exigido no mesmo formulário AJAX do login.
+- Acesso, confirmação de email, primeira senha por convite, recuperação, onboarding, perfil e autenticação de dois fatores. MFA é opcional e recomendado para administradores. A ativação fica em Sua conta → Segurança. Depois de ativar, o código é solicitado no mesmo formulário AJAX do login.
 - Cursos, módulos, seções, aulas de texto/vídeo/áudio, prévias, restrições por plano, retomada e conclusão autorizada no servidor.
 - Arquivos privados, uploads controlados, certificados com retrato da emissão, verificação pública por código e exportação PDF/PNG.
 - Comunidade com espaços, publicações, respostas, votos, denúncias e aprovação manual de publicações e edições.
+- Busca de cursos, módulos e aulas pelo acesso do membro. Aulas com apresentação editorial, favoritos, notas privadas, checklist e comentários moderados.
+- Notificações no aplicativo e anúncios de cursos e módulos, com aviso para inscritos na publicação conforme permissões do membro.
 - Tickets com conversa e anexos privados; administração de conteúdo, membros, planos, pedidos e documentos legais.
 - Checkout hospedado Asaas preparado para Sandbox e mídia Bunny configurável. Dados de cartão não passam pela aplicação.
 - Ajuda pública e guias dos fluxos, sem conceder acesso ou progresso acadêmico.
@@ -32,31 +34,30 @@ Papéis de equipe e direitos de assinatura são independentes. O servidor valida
 
 ## Começar localmente
 
-Pré-requisitos: Node.js 24+, npm, Docker, Supabase CLI e Deno 2; `ffmpeg` para o vídeo sintético de demonstração.
+Para instalar uma versão publicada, extraia o código-fonte da tag correspondente ou abra um checkout dessa tag. O `package.json` está marcado como privado e o procedimento usa o `package-lock.json` do repositório. [Versões publicadas no GitHub](https://github.com/tiberiolemes/icarus-area-de-membros/releases).
+
+Use Node.js 24+, npm e Supabase CLI `2.109.1`. Antes de rodar `local:start`, declare o [Docker dedicado e vazio](docs/operations.md#requisitos-do-docker-dedicado). Use Deno 2 para testes de contratos Edge, Python 3 para a suíte SQL e `ffmpeg` com `libx264` para a demonstração opcional. Execute na raiz do código-fonte.
 
 ```sh
-git clone --depth 1 https://github.com/tiberiolemes/icarus-area-de-membros.git
-cd icarus-area-de-membros
 npm ci
 npm run local:start
-node scripts/bootstrap.mjs --demo
 npm run dev
 ```
 
-Abra **http://127.0.0.1:8088**. Os acessos sintéticos são gerados em `.local/ACESSOS.md`, com permissão privada. Não há senha pública padrão. A demonstração é rotulada e não habilita venda ou cadastro com documentos jurídicos fictícios.
+Abra **http://127.0.0.1:8088**. Para configurar uma academia vazia, siga o fluxo de primeiro administrador no [guia de operação](docs/operations.md#primeiro-administrador-sem-conteúdo-demo). Para experimentar com dados sintéticos, execute `node scripts/bootstrap.mjs --demo` após `local:start`. O script gera senhas aleatórias em `.local/ACESSOS.md`, com permissão privada. A demonstração é rotulada e não habilita venda ou cadastro com documentos jurídicos fictícios.
 
-API, banco e caixa de email local usam `58521`, `58522` e `58524`. Os scripts operam apenas `icarus-courses-local`, verificam loopback e preservam volumes de outros projetos.
+API, banco e caixa de email local usam `58521`, `58522` e `58524`. Reserve essas portas e `8088` na máquina de teste. As partidas e paradas seguintes usam os IDs Docker registrados neste checkout.
 
 ```sh
 npm run local:status
 npm run local:stop
 ```
 
-Leia [operação e instalação](docs/operations.md) para a sequência completa, primeiro administrador, Edge Functions, backup e configuração de uma cópia própria. O servidor frontend precisa de fallback de rotas para `index.html`.
+Para uma instalação v0.1.6 existente, siga o roteiro de atualização do [Docker local completo](docs/operations.md#atualizar-uma-instalação-docker-completa) ou do [Supabase hospedado](docs/operations.md#aplicar-migrações-no-supabase-hospedado). Os dois roteiros conferem o histórico e exigem backup antes da aplicação. Para configurar uma cópia hospedada vazia, configure [a instalação](docs/operations.md#instalação-hospedada-e-recursos-comerciais) e [o primeiro administrador](docs/operations.md#primeiro-administrador-hospedado). O servidor frontend precisa de fallback de rotas para `index.html`.
 
 ## Configuração e segurança
 
-`.env.example` contém somente URL e chave pública do Supabase. Chave `service_role`, Asaas e Bunny pertencem ao ambiente **servidor** das Edge Functions. Nunca os coloque em variáveis `VITE_*`, no Git ou no navegador.
+`local:start` gera `.env.local` conforme as variáveis de `.env.example`. Para um build que se conecte a uma instalação própria, configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com a URL e a chave pública do projeto antes de `npm run build`. Guarde `service_role`, Asaas e Bunny exclusivamente no ambiente **servidor**.
 
 Antes de abrir uma instalação ao público, configure Supabase, HTTPS, URLs de retorno, SMTP, MFA, backup, oferta e textos jurídicos aprovados. Homologue Asaas Sandbox e Bunny nessa instalação. Esta entrega não cria infraestrutura cloud nem atesta operação externa. Cobrança em produção permanece bloqueada até homologação correspondente.
 
@@ -73,13 +74,13 @@ npm run test:db
 node scripts/test-integrations.mjs --local
 ```
 
-Banco e integrações nativas exigem instalação local e fixtures próprias. Transporte simulado é identificado separadamente das provas reais de Auth, Postgres, Storage e Mailpit. O [aceite técnico 0.1.0](docs/acceptance/release-0.1.0.md) reúne as provas e limitações. A [revisão visual 0.1.2](docs/audit/06-ux-accessibility.md) distingue capturas conferidas, herança por equivalência e estados não verificados. Os [relatórios](docs/acceptance) não representam capacidade pública ou disponibilidade mensal.
+Banco e integrações nativas exigem instalação local e fixtures próprias. Para esta árvore, aplique todas as migrations em ordem e valide o stack nativo antes de liberar o uso. O ensaio de banco isolado e os requisitos por migration estão no [guia de operação](docs/operations.md). O [aceite técnico 0.1.0](docs/acceptance/release-0.1.0.md) e a [revisão visual 0.1.2](docs/audit/06-ux-accessibility.md) registram evidências de seus respectivos recortes.
 
-O [pipeline de GitHub Actions](docs/ci/README.md) está preparado para ativação pelo proprietário. Ele ainda não está ativo: a credencial de publicação não inclui a permissão `workflow`. Os testes locais e os resultados de Actions são evidências distintas.
+O [modelo do GitHub Actions](docs/ci/README.md) descreve a automação. A execução da trilha nativa em Actions aguarda um runner com Docker dedicado.
 
 ## Limites
 
-Escopo: Fase 1 mais comunidade manual. Ranking, mensagens diretas, podcasts, encontros, automações, IA, quizzes e multi-tenant ficam fora desta versão. Integrações externas, emissão fiscal, SMTP externo, testes com pessoas e instalação no servidor são etapas posteriores com configuração do responsável.
+Encontros têm agenda, acervo e edição administrativa nesta árvore, com links de sala e gravação cadastrados pelo operador. Podcasts e masterclasses têm acervo, editor administrativo e marcação de assistido. O vídeo requer incorporação autorizada no YouTube. O Ranking tem classificação preliminar, sem configuração de prêmios. Mensagens diretas, IA, quizzes e multi-tenant seguem pendentes nesta árvore. Integrações externas, emissão fiscal, SMTP externo, testes com pessoas e instalação no servidor dependem da configuração e homologação do responsável.
 
 ## Licença e colaboração
 
@@ -93,12 +94,14 @@ Icarus is a single-academy course delivery app with private learning materials, 
 
 This release is a fresh implementation; it does not use Frappe. Git history is preserved. Staff roles and subscription entitlements are separate. Server-side authorization is required for every protected operation.
 
-Requirements: Node.js 24+, npm, Docker, Supabase CLI and Deno 2; `ffmpeg` for the optional local demo video. Run the commands above and open `http://127.0.0.1:8088`. Generated demo credentials remain in the private, ignored `.local/ACESSOS.md` file. There is no shared default password.
+Use the source archive or checkout for the intended GitHub tag. The npm package is private. Use Node.js 24+, npm and Supabase CLI `2.109.1`. Before running `local:start`, declare the [dedicated, empty Docker daemon](docs/operations.md#requisitos-do-docker-dedicado). Contract tests use Deno 2, database tests use Python 3, and the optional demo uses `ffmpeg` with `libx264`. Run the commands above and open `http://127.0.0.1:8088`. The local checkout uses a fixed Docker project and ports. For an empty academy follow the first-admin instructions. The optional `node scripts/bootstrap.mjs --demo` writes randomly generated demo credentials to the private, ignored `.local/ACESSOS.md` file.
 
-Read [operations](docs/operations.md) and [API documentation](docs/api.md) before installation. Configure server secrets, HTTPS, redirects, email, MFA, backups and approved legal content before opening registration. Never expose a service-role or provider secret through a `VITE_*` variable.
+Apply all migrations for this source tree, then verify native Auth, Postgres, Storage, Edge Functions and local email. This tree includes course search, lesson notes, favorites, checklists, moderated comments, in-app notifications and catalog launch announcements. Members can browse podcasts, masterclasses and live events. Administrators manage the catalog and schedule. Podcast watch marks are included in the member data export.
+
+Read [operations](docs/operations.md) and [API documentation](docs/api.md) before installation. To upgrade an existing v0.1.6 installation, follow the [full local Docker](docs/operations.md#atualizar-uma-instalação-docker-completa) or [hosted Supabase](docs/operations.md#aplicar-migrações-no-supabase-hospedado) procedure. For a new hosted installation, follow the [first administrator procedure](docs/operations.md#primeiro-administrador-hospedado). Configure the Supabase URL and public key in the `VITE_*` variables before building. Keep service-role and provider secrets server-side. Configure HTTPS, redirect URLs, email, MFA support, backups and approved legal content before opening registration.
 
 Asaas checkout is prepared for Sandbox acceptance; production billing remains disabled. Bunny, external email, tax documents and hosted deployment have not been certified by local tests. No real payment is made by the test suite. Future phases, AI and multi-tenancy are outside this release.
 
 Original application code is MIT licensed. Third-party assets retain their licenses. Contributions must preserve authorization, privacy, accessibility, local verification and the Icarus visual system.
 
-The [GitHub Actions pipeline](docs/ci/README.md) is supplied as an activation template. It is not active because the publication credential lacks the `workflow` scope. Local test results are not presented as a successful Actions run.
+The [GitHub Actions template](docs/ci/README.md) documents the automation. The native job requires a runner with a dedicated Docker daemon.

@@ -1,0 +1,1694 @@
+/* Stitch packages 1 (light) and 3 (dark). */
+:is(.lesson-stitch, .member-shell-stitch:has(> .workspace > .content > .lesson-stitch)) {
+  --lesson-canvas: var(--lesson-stitch-canvas, #f8f9fa);
+  --lesson-toolbar: #fff;
+  --lesson-card: var(--stitch-surface-card);
+  --lesson-control: var(--stitch-surface-control);
+  --lesson-selected: var(--stitch-surface-hover);
+  --lesson-line: var(--stitch-border-subtle);
+  --lesson-strong: var(--stitch-border-strong);
+  --lesson-text: var(--stitch-text-primary);
+  --lesson-body: var(--stitch-text-body);
+  --lesson-muted: var(--stitch-text-secondary);
+  --lesson-tertiary: var(--stitch-text-muted);
+  --lesson-action: var(--stitch-surface-selection);
+  --lesson-on-action: var(--stitch-on-action);
+  --lesson-card-shadow: 0 1px 3px rgb(0 0 0 / 0.02);
+  color: var(--lesson-text);
+  background: var(--lesson-canvas);
+}
+
+[data-theme="dark"] :is(.lesson-stitch, .member-shell-stitch:has(> .workspace > .content > .lesson-stitch)) {
+  --lesson-canvas: #131313;
+  --lesson-toolbar: #0e0e0e;
+  --lesson-card: var(--stitch-surface-control);
+  --lesson-control: var(--stitch-surface-panel);
+  --lesson-line: transparent;
+  --lesson-muted: var(--stitch-text-muted);
+  --lesson-action: var(--stitch-action);
+  --lesson-card-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+
+.member-shell-stitch .content:has(> .lesson-stitch) {
+  max-width: none;
+  padding: 0;
+}
+
+.lesson-stitch {
+  container: lesson / inline-size;
+  min-height: calc(100dvh - var(--stitch-topbar-height, 64px));
+  font: var(--stitch-type-body-md-weight) var(--stitch-type-body-md-size) / 20px var(--stitch-font-family);
+  overflow-wrap: anywhere;
+}
+
+:is(.stitch-lesson-toolbar, .stitch-lesson-meta, .stitch-lesson-deck, .stitch-curriculum) {
+  -webkit-font-smoothing: antialiased;
+}
+
+.stitch-dark-only,
+.stitch-lesson-mobile,
+[data-theme="dark"] .stitch-light-only {
+  display: none;
+}
+
+[data-theme="dark"] .stitch-dark-only {
+  display: inline;
+}
+
+.lesson-stitch > :not(.stitch-lesson-toolbar, .stitch-lesson-grid) {
+  margin-inline: 24px;
+}
+
+.stitch-lesson-toolbar {
+  border-bottom: 1px solid var(--lesson-line);
+  background: var(--lesson-toolbar);
+  box-shadow: var(--lesson-card-shadow);
+}
+
+.stitch-lesson-toolbar-inner {
+  max-width: 1520px;
+  min-height: 70px;
+  margin-inline: auto;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+[data-theme="dark"] .stitch-lesson-toolbar {
+  border-bottom: 0;
+}
+
+[data-theme="dark"] .stitch-lesson-toolbar-inner {
+  min-height: 68px;
+}
+
+@media (min-width: 768px) {
+  .stitch-lesson-toolbar {
+    position: sticky;
+    top: 64px;
+    z-index: 20;
+  }
+
+  [data-theme="dark"] .stitch-lesson-toolbar {
+    position: static;
+  }
+}
+
+.stitch-lesson-context,
+.stitch-lesson-nav,
+.stitch-lesson-facts,
+.stitch-lesson-actions {
+  display: flex;
+  align-items: center;
+}
+
+.stitch-lesson-context {
+  flex: 1 1 350px;
+  min-width: 0;
+  gap: 16px;
+}
+
+.stitch-lesson-context > div {
+  min-width: 0;
+}
+
+.lesson-stitch .stitch-icon-button {
+  flex: none;
+  width: 44px;
+  padding: 0;
+  border-radius: 12px;
+  color: var(--lesson-text);
+  background: var(--lesson-control);
+  border-color: var(--lesson-line);
+}
+
+.lesson-stitch .stitch-icon-button:hover {
+  background: var(--lesson-card);
+  border-color: var(--lesson-strong);
+}
+
+.stitch-lesson-crumbs {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--lesson-tertiary);
+  font: 500 11px / 16px var(--ic-font-family);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .stitch-lesson-crumbs {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.stitch-lesson-crumbs a {
+  display: block;
+  align-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  overflow: hidden;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stitch-lesson-crumbs a:first-child,
+.stitch-lesson-crumbs svg {
+  flex: none;
+}
+
+.stitch-lesson-crumbs a:last-child {
+  color: var(--lesson-text);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .stitch-lesson-crumbs a:last-child {
+  font-weight: 500;
+}
+
+.stitch-lesson-crumbs a:hover {
+  text-decoration: underline;
+}
+
+.stitch-lesson-context p {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0 0;
+  color: var(--lesson-muted);
+  font: 400 13px / 18px var(--ic-font-family);
+}
+
+.stitch-lesson-context p::before,
+.stitch-course-progress::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lesson-action);
+}
+
+[data-theme="dark"] .stitch-lesson-context p::before,
+.stitch-course-progress::before {
+  width: 6px;
+  height: 6px;
+}
+
+.stitch-lesson-nav,
+.stitch-lesson-facts,
+.stitch-lesson-actions {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lesson-stitch .stitch-lesson-nav .button,
+.lesson-stitch .stitch-lesson-actions .action button {
+  gap: 4px;
+  border-color: var(--lesson-strong);
+  color: var(--lesson-text);
+  background: var(--lesson-toolbar);
+  font: 500 13px / 18px var(--ic-font-family);
+  padding: 6px 14px;
+}
+
+[data-theme="light"] .stitch-lesson-nav > .button {
+  text-transform: capitalize;
+}
+
+.lesson-stitch .stitch-lesson-nav .button:hover,
+.lesson-stitch .stitch-lesson-actions .action button:hover {
+  background: var(--lesson-control);
+}
+
+.lesson-stitch :is(.stitch-lesson-nav, .stitch-lesson-actions .action) .primary {
+  background: var(--lesson-action);
+  border-color: var(--lesson-action);
+  color: var(--lesson-on-action);
+  font-weight: 600;
+}
+
+.lesson-stitch :is(.stitch-lesson-nav, .stitch-lesson-actions .action) .primary:hover {
+  background: color-mix(in srgb, var(--lesson-action) 83%, var(--lesson-on-action));
+}
+
+[data-theme="dark"] .lesson-stitch .stitch-lesson-nav :is(.button:not(.primary), button),
+[data-theme="dark"] .lesson-stitch .stitch-lesson-actions .action button {
+  color: var(--lesson-text);
+  background: var(--lesson-control);
+  border-color: transparent;
+}
+
+[data-theme="dark"] .lesson-stitch .stitch-lesson-actions .action button:hover {
+  background: var(--lesson-action);
+  color: var(--lesson-on-action);
+}
+
+.stitch-lesson-actions .action button[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.stitch-curriculum-toggle[hidden] { display: none; }
+
+@container lesson (min-width: 768px) {
+  .stitch-lesson-context {
+    gap: 12px;
+    flex-basis: 0;
+    margin-inline-start: -4px;
+  }
+
+  .stitch-lesson-crumbs a {
+    margin-block: -14px;
+    padding-block: 14px;
+  }
+
+  .lesson-stitch .stitch-lesson-context > .stitch-icon-button,
+  .lesson-stitch .stitch-lesson-nav > :is(.button.primary, .button:not(.primary), .stitch-curriculum-toggle) {
+    position: relative;
+    isolation: isolate;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .stitch-lesson-context > .stitch-icon-button::before,
+  .stitch-curriculum-toggle::before,
+  .stitch-lesson-nav > .button::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 6px 0;
+    border: 1px solid var(--lesson-strong);
+    border-radius: 8px;
+    background: var(--lesson-toolbar);
+  }
+
+  .stitch-lesson-context > .stitch-icon-button::before,
+  .stitch-curriculum-toggle::before {
+    inset: 4px;
+    border-color: var(--lesson-line);
+    border-radius: 12px;
+    background: var(--lesson-control);
+  }
+
+  .stitch-lesson-context > .stitch-icon-button::before { inset: 3px; }
+
+  [data-theme="light"] .lesson-stitch .stitch-lesson-nav > .button.primary { border-width: 0; }
+  [data-theme="light"] .stitch-lesson-nav > .button.primary::before { inset-block: 7px; }
+
+  .stitch-lesson-nav > .button.primary::before {
+    border-color: transparent;
+    background: var(--lesson-action);
+  }
+
+  .stitch-lesson-nav > .button:hover::before {
+    background: var(--lesson-control);
+  }
+
+  .stitch-lesson-nav > .button.primary:hover::before {
+    background: color-mix(in srgb, var(--lesson-action) 83%, var(--lesson-on-action));
+  }
+
+  [data-theme="dark"] .lesson-stitch .stitch-lesson-nav > :is(.button.primary, .button:not(.primary), .stitch-curriculum-toggle) {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  [data-theme="dark"] .lesson-stitch .stitch-lesson-nav > .button {
+    border-width: 0;
+    padding-inline: 16px;
+  }
+
+  [data-theme="dark"] .stitch-lesson-nav > .button::before { inset-block: 9px; border: 0; }
+  [data-theme="dark"] .stitch-lesson-nav > .button:not(.primary)::before { background: var(--lesson-control); }
+}
+
+.stitch-lesson-grid {
+  width: 100%;
+  max-width: 1520px;
+  display: grid;
+  align-items: start;
+  gap: 24px;
+  margin-inline: auto;
+  padding: 24px 16px;
+}
+
+@media (min-width: 768px) {
+  .stitch-lesson-grid {
+    padding-inline: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .stitch-lesson-grid.with-curriculum {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .stitch-lesson-grid.with-curriculum .stitch-lesson-main {
+    grid-column: span 8;
+  }
+
+  .stitch-curriculum {
+    position: sticky;
+    top: 144px;
+    grid-column: span 4;
+  }
+
+  [data-theme="dark"] .stitch-curriculum {
+    top: 80px;
+  }
+
+  .stitch-curriculum-list {
+    max-height: max(232px, calc(100dvh - 320px));
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  [data-theme="dark"] .stitch-curriculum-list {
+    max-height: max(232px, calc(100dvh - 280px));
+  }
+}
+
+.stitch-lesson-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.stitch-lesson-media,
+.stitch-lesson-meta,
+.stitch-lesson-deck,
+.stitch-curriculum {
+  min-width: 0;
+  border-radius: 16px;
+  border: 1px solid var(--lesson-line);
+  background: var(--lesson-card);
+  box-shadow: var(--lesson-card-shadow);
+}
+
+[data-theme="dark"] :is(.stitch-lesson-media, .stitch-lesson-meta, .stitch-lesson-deck, .stitch-curriculum) {
+  border: 0;
+}
+
+.stitch-lesson-media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  border-color: var(--lesson-strong);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.05), 0 8px 30px rgb(0 0 0 / 0.12);
+}
+
+[data-theme="dark"] .stitch-lesson-media {
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+.stitch-lesson-media :is(iframe, video) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: contain;
+}
+
+.stitch-lesson-cover {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+}
+
+.stitch-lesson-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+
+[data-theme="dark"] .stitch-lesson-cover img { opacity: 0.6; }
+
+@media (hover: hover) {
+  [data-theme="light"] .stitch-lesson-media:hover .stitch-lesson-cover img { opacity: 0.95; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme="light"] .stitch-lesson-cover img { transition: opacity 150ms ease; }
+}
+
+.stitch-lesson-media.is-audio {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  aspect-ratio: auto;
+}
+
+.stitch-lesson-media audio {
+  width: 100%;
+  min-width: 0;
+}
+
+.stitch-lesson-media > p,
+.stitch-lesson-media .stitch-media-error {
+  padding: 16px;
+}
+
+.stitch-lesson-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px;
+}
+
+.stitch-lesson-meta > div:first-child {
+  min-width: 0;
+}
+
+@container lesson (min-width: 960px) {
+  .stitch-lesson-meta {
+    flex-direction: row;
+  }
+
+  [data-theme="dark"] .stitch-lesson-meta {
+    align-items: center;
+  }
+
+  /* Reserve the measured desktop card space for the editorial summary slot. */
+  .with-curriculum .stitch-lesson-media:not(.is-audio) ~ .stitch-lesson-meta {
+    min-block-size: 285px;
+  }
+
+  .with-curriculum .stitch-lesson-media:not(.is-audio) ~ .stitch-lesson-meta .stitch-lesson-facts {
+    min-block-size: 55px;
+    align-items: flex-start;
+  }
+
+  [data-theme="light"] .with-curriculum .stitch-lesson-media:not(.is-audio) ~ .stitch-lesson-meta :is(h1, .stitch-lesson-subtitle) {
+    position: relative;
+    inset-block-start: 1px;
+  }
+
+  [data-theme="light"] .lesson-stitch .stitch-lesson-actions .lesson-engagement-icon {
+    min-height: 47px;
+  }
+
+  [data-theme="dark"] .with-curriculum .stitch-lesson-media:not(.is-audio) ~ .stitch-lesson-meta {
+    min-block-size: 172px;
+  }
+
+  [data-theme="dark"] .with-curriculum .stitch-lesson-media ~ .stitch-lesson-meta .stitch-lesson-facts {
+    min-block-size: auto;
+  }
+
+  .with-curriculum .stitch-lesson-actions {
+    position: relative;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .with-curriculum .stitch-lesson-actions > .action:last-child {
+    position: absolute;
+    inset-block-start: calc(100% + 4px);
+    inset-inline-end: 0;
+  }
+
+  [data-theme="dark"] .with-curriculum .stitch-lesson-actions .action button.primary {
+    width: 118px;
+    min-height: 74px;
+    line-height: 18px;
+    padding-block: 9px;
+  }
+
+  [data-theme="dark"] .with-curriculum .stitch-lesson-actions button.primary svg { flex: none; }
+}
+
+.stitch-lesson-meta h1 {
+  margin: 8px 0 0;
+  font: 700 var(--stitch-type-headline-md-size) / var(--stitch-type-headline-md-line) var(--stitch-font-family);
+  letter-spacing: var(--stitch-tracking-tight);
+}
+
+[data-theme="dark"] .stitch-lesson-meta h1 {
+  margin-top: 4px;
+  font-weight: var(--stitch-type-headline-md-weight);
+}
+
+.stitch-lesson-subtitle {
+  margin: 8px 0 0;
+  color: var(--lesson-muted);
+}
+
+.stitch-lesson-facts {
+  color: var(--lesson-muted);
+  font: var(--stitch-type-code-inline-weight) var(--stitch-type-code-inline-size) / var(--stitch-type-code-inline-line) var(--stitch-font-family);
+}
+
+.stitch-lesson-facts > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stitch-lesson-facts svg {
+  color: var(--lesson-tertiary);
+}
+
+.stitch-lesson-number {
+  border: 1px solid var(--lesson-line);
+  border-radius: 9999px;
+  padding: 2px 10px;
+  color: var(--lesson-text);
+  background: var(--lesson-control);
+  font: 600 11px / 16px var(--ic-font-family);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .stitch-lesson-number {
+  border: 0;
+  padding-block: 4px;
+  background: var(--stitch-surface-raised-strong);
+}
+
+.stitch-lesson-actions {
+  flex: none;
+  max-width: 100%;
+  align-items: flex-start;
+}
+
+.lesson-stitch .stitch-lesson-actions .action button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 12px;
+}
+
+.lesson-stitch .stitch-lesson-actions .action button:not(.primary) {
+  padding: 0;
+  background: var(--lesson-control);
+  border-color: var(--lesson-line);
+}
+
+.lesson-stitch .stitch-lesson-actions .action button:not(.primary):hover {
+  border-color: var(--lesson-strong);
+}
+
+.stitch-lesson-deck {
+  container: lesson-tabs / inline-size;
+  overflow: clip;
+}
+
+.stitch-lesson-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px 0;
+  border-bottom: 1px solid var(--lesson-line);
+  background: var(--lesson-canvas);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+[data-theme="dark"] .stitch-lesson-tabs {
+  gap: 8px;
+  padding: 16px 24px 0;
+  border-bottom: 0;
+  background: var(--lesson-toolbar);
+}
+
+.lesson-stitch .stitch-lesson-tabs button {
+  gap: 4px;
+  padding: 10px 16px;
+  margin-bottom: -1px;
+  border-radius: 12px 12px 0 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--lesson-muted);
+  font: var(--stitch-type-label-md-weight) var(--stitch-type-label-md-size) / var(--stitch-type-label-md-line) var(--stitch-font-family);
+  overflow-wrap: normal;
+}
+
+[data-theme="dark"] .lesson-stitch .stitch-lesson-tabs button { padding-block: 8px; }
+
+.stitch-lesson-tabs svg {
+  flex: none;
+}
+
+.lesson-stitch .stitch-lesson-actions .lesson-engagement-icon {
+  background: var(--lesson-control);
+  color: var(--lesson-text);
+}
+
+.lesson-stitch .stitch-lesson-tabs button:focus-visible {
+  outline-offset: -3px;
+}
+
+.lesson-stitch .stitch-lesson-tabs button:hover,
+.lesson-stitch .stitch-lesson-tabs [aria-selected="true"] {
+  color: var(--lesson-text);
+}
+
+[data-theme="dark"] .lesson-stitch .stitch-lesson-tabs [aria-selected="true"] {
+  color: var(--stitch-text-heading);
+}
+
+.lesson-stitch .stitch-lesson-tabs [aria-selected="true"] {
+  background: var(--lesson-card);
+  border-color: var(--lesson-line) var(--lesson-line) var(--lesson-card);
+  font-weight: 600;
+}
+
+.stitch-lesson-tab-count {
+  border: 1px solid var(--lesson-line);
+  border-radius: 9999px;
+  padding: 2px 6px;
+  background: var(--lesson-control);
+  font: 600 11px / 16px var(--ic-font-family);
+}
+
+[data-theme="dark"] .stitch-lesson-tabs :is(.stitch-lesson-tab-count, .lesson-engagement-tab-count) {
+  border: 0;
+  padding: 2px 6px;
+  background: var(--stitch-surface-panel);
+  font: var(--stitch-type-code-inline-weight) var(--stitch-type-label-uppercase-size) / var(--stitch-type-label-md-line) var(--stitch-font-family);
+}
+
+.stitch-lesson-deck [role="tabpanel"] {
+  padding: 24px;
+}
+
+@container lesson (min-width: 960px) {
+  [data-theme="light"] .stitch-lesson-deck #lesson-description:has(> .lesson-presentation) {
+    padding-block-start: 4px;
+  }
+
+  [data-theme="dark"] .stitch-lesson-tabs:has(+ #lesson-description > .lesson-presentation) {
+    padding-block-start: 15px;
+  }
+
+  [data-theme="dark"] .lesson-stitch .stitch-lesson-tabs [aria-selected="true"] {
+    border-block-start-width: 5px;
+    background-clip: padding-box;
+  }
+}
+
+.stitch-lesson-deck :where(#lesson-description) > .prose {
+  margin: 0;
+  max-width: none;
+  color: var(--lesson-body);
+  font: 400 16px / 26px var(--ic-font-family);
+  letter-spacing: -0.005em;
+}
+
+.stitch-lesson-deck :where(#lesson-description) > .prose > :first-child {
+  margin-top: 0;
+}
+
+.stitch-lesson-deck :where(#lesson-description) > .prose h2 {
+  margin: 24px 0 8px;
+  color: var(--lesson-text);
+  font: 600 18px / 24px var(--ic-font-family);
+  letter-spacing: -0.015em;
+}
+
+.stitch-lesson-deck :where(#lesson-description) > .prose h3 {
+  margin: 24px 0 4px;
+  color: var(--lesson-tertiary);
+  font: 600 11px / 16px var(--ic-font-family);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.stitch-lesson-deck :where(#lesson-description) > .prose p {
+  margin: 0 0 12px;
+}
+
+.stitch-lesson-deck :where(#lesson-description) > .prose pre {
+  padding: 16px;
+  border: 1px solid var(--lesson-line);
+  border-radius: 8px;
+  background: var(--lesson-toolbar);
+  font: 500 12px / 16px monospace;
+}
+
+.stitch-lesson-deck :where(#lesson-description) > .prose > :last-child {
+  margin-bottom: 0;
+}
+
+.stitch-lesson-deck .file-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 16px;
+  margin: 0;
+}
+
+.stitch-lesson-deck .file-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--lesson-line);
+  border-radius: 12px;
+  background: var(--lesson-toolbar);
+}
+
+.stitch-lesson-deck .file-list li > :last-child {
+  grid-column: 2;
+  justify-self: start;
+}
+
+.stitch-curriculum {
+  overflow: clip;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.03);
+}
+
+[data-theme="dark"] .stitch-curriculum {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.stitch-curriculum-head {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+  background: var(--lesson-toolbar);
+  border-bottom: 1px solid var(--lesson-line);
+}
+
+[data-theme="dark"] .stitch-curriculum-head {
+  border-bottom: 0;
+  gap: 12px;
+  padding-block-end: 14px;
+}
+
+.stitch-curriculum-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stitch-curriculum h2 {
+  margin: 0;
+  font: 700 var(--stitch-type-headline-sm-size) / var(--stitch-type-headline-sm-line) var(--stitch-font-family);
+  letter-spacing: var(--stitch-type-headline-sm-tracking);
+}
+
+[data-theme="dark"] .stitch-curriculum h2 {
+  font-weight: var(--stitch-type-headline-sm-weight);
+}
+
+.stitch-curriculum small {
+  display: block;
+  color: var(--lesson-tertiary);
+  font: 400 12px / 16px var(--ic-font-family);
+}
+
+.stitch-course-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid var(--lesson-line);
+  border-radius: 9999px;
+  padding: 4px 10px;
+  background: var(--lesson-control);
+  font: 600 12px / 16px var(--ic-font-family);
+}
+
+.stitch-course-progress::before {
+  display: block;
+}
+
+[data-theme="dark"] .stitch-course-progress::before {
+  display: none;
+}
+
+.stitch-curriculum-filter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 16px;
+  border: 1px solid var(--lesson-line);
+  border-radius: 12px;
+  background: var(--lesson-control);
+}
+
+.stitch-curriculum-filter svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--lesson-tertiary);
+  pointer-events: none;
+}
+
+.stitch-curriculum-filter:focus-within {
+  outline: 2px solid var(--ic-focus);
+  outline-offset: 3px;
+}
+
+.stitch-curriculum-field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.lesson-stitch .stitch-curriculum-filter input[type="search"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border-radius: 0;
+  padding: 0 4px;
+  border: 0;
+  color: var(--lesson-text);
+  background: transparent;
+  font: 400 16px / 18px var(--ic-font-family);
+}
+
+.stitch-curriculum-filter input:focus-visible {
+  outline: none;
+}
+
+.stitch-curriculum-filter input::placeholder {
+  color: var(--lesson-tertiary);
+  background: transparent;
+  padding: 0;
+}
+
+@media (min-width: 1024px) and (pointer: fine) {
+  .lesson-stitch .stitch-curriculum-filter input[type="search"] {
+    font-size: 12px;
+  }
+
+  [data-theme="light"] .stitch-curriculum-field::before {
+    content: "";
+    position: absolute;
+    inset: 4px 0;
+    border: 1px solid #6b7280;
+    pointer-events: none;
+  }
+
+  [data-theme="light"] .lesson-stitch .stitch-curriculum-filter input[type="search"] {
+    padding-inline: 12px;
+  }
+
+  [data-theme="dark"] .stitch-curriculum-filter {
+    position: relative;
+    isolation: isolate;
+    background: transparent;
+  }
+
+  [data-theme="dark"] .stitch-curriculum-filter::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 9px -1px;
+    border-radius: 12px;
+    background: var(--lesson-control);
+  }
+}
+
+.stitch-curriculum-empty {
+  margin: 0;
+  padding: 16px 24px;
+}
+
+.stitch-module + .stitch-module {
+  border-top: 1px solid var(--lesson-line);
+}
+
+.stitch-curriculum summary,
+.stitch-lesson-list a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.stitch-module > summary {
+  padding: 16px;
+  font: 600 var(--stitch-type-label-md-size) / var(--stitch-type-label-md-line) var(--stitch-font-family);
+}
+
+[data-theme="dark"] .stitch-module > summary { min-block-size: 72px; }
+
+.stitch-module > summary small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 10px / 20px var(--ic-font-family);
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .stitch-module > summary small { line-height: 22px; }
+
+.stitch-module[data-current="true"] > summary {
+  border-block: 1px solid var(--lesson-line);
+}
+
+[data-theme="dark"] .stitch-module[data-current="true"] > summary { border-block: 0; }
+
+.stitch-module[data-current="true"] > summary small { font-weight: 700; }
+[data-theme="light"] .stitch-module[data-current="true"] > summary small { letter-spacing: 0.05em; }
+[data-theme="dark"] .stitch-module[data-current="true"] > summary small { font-weight: 400; }
+
+.stitch-module > summary strong,
+.stitch-lesson-list a strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: inherit;
+}
+
+[data-theme="light"] .stitch-module[data-current="true"] > summary strong {
+  font-weight: 700;
+}
+
+[data-theme="dark"] .stitch-module[data-current="true"] > summary strong {
+  color: var(--stitch-text-heading);
+}
+
+.stitch-curriculum summary::-webkit-details-marker {
+  display: none;
+}
+
+.stitch-curriculum :is(summary, a):focus-visible {
+  outline-offset: -3px;
+}
+
+.stitch-curriculum summary:hover,
+.stitch-module[open] > summary,
+.stitch-lesson-list a:hover {
+  background: var(--lesson-control);
+}
+
+[data-theme="dark"] .stitch-module[data-current="true"] {
+  background: var(--lesson-toolbar);
+}
+
+.stitch-module[data-locked="true"] > summary {
+  color: var(--lesson-muted);
+  font-weight: var(--stitch-type-label-md-weight);
+}
+
+.stitch-module-restriction {
+  padding: 2px 6px;
+  border: 1px solid var(--lesson-line);
+  border-radius: 4px;
+  color: var(--lesson-tertiary);
+  background: var(--lesson-control);
+  font: 600 10px / 18px var(--ic-font-family);
+}
+
+.stitch-module-index {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--lesson-line);
+  border-radius: 50%;
+  background: var(--lesson-control);
+  font: 700 12px / 16px var(--ic-font-family);
+}
+
+:where(.stitch-module[data-completed="true"]) .stitch-module-index {
+  color: #065f46;
+  background: #d1fae5;
+  border-color: transparent;
+}
+
+[data-theme="dark"] .stitch-module[data-completed="true"] .stitch-module-index,
+.stitch-module[data-current="true"] .stitch-module-index {
+  color: var(--lesson-on-action);
+  background: var(--lesson-action);
+  border-color: transparent;
+}
+
+.stitch-module-bonus {
+  border-radius: 4px;
+  padding: 0 6px;
+  color: var(--lesson-on-action);
+  background: var(--lesson-action);
+  font: 700 9px / 16px var(--ic-font-family);
+  letter-spacing: 0;
+}
+
+[data-theme="dark"] .stitch-module-bonus {
+  background: #393939;
+  color: var(--lesson-action);
+}
+
+[data-theme="dark"] .stitch-module > summary:has(.stitch-module-bonus) .stitch-module-index {
+  background: #353534;
+}
+
+[data-theme="light"] .stitch-module[data-locked="true"] :is(.stitch-module-index, .stitch-module-restriction) {
+  background: #f7f7f8;
+  border-color: #ececee;
+}
+
+[data-theme="dark"] .stitch-module[data-locked="true"] :is(.stitch-module-index, .stitch-module-restriction) {
+  background: #1e1d1d;
+}
+
+.stitch-disclosure {
+  color: var(--lesson-tertiary);
+}
+
+.stitch-module[data-current="true"] > summary > .stitch-disclosure {
+  color: var(--stitch-text-primary);
+}
+
+.stitch-curriculum details[open] > summary > .stitch-disclosure {
+  transform: rotate(180deg);
+}
+
+.stitch-module-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 13px;
+}
+
+.stitch-section > summary {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  min-height: 44px;
+  padding: 8px 16px;
+}
+
+.stitch-section progress {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 4px;
+  accent-color: var(--lesson-action);
+}
+
+.stitch-lesson-list {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+}
+
+.stitch-lesson-list a {
+  min-height: 56px;
+  padding: 8px;
+  border-radius: 12px;
+  font: 500 var(--stitch-type-body-md-size) / var(--stitch-type-body-md-line) var(--stitch-font-family);
+  text-decoration: none;
+}
+
+[data-theme="dark"] .stitch-lesson-list a {
+  min-height: 60px;
+  font-weight: var(--stitch-type-body-md-weight);
+}
+
+.stitch-lesson-list a[data-completed="true"] {
+  color: var(--lesson-muted);
+}
+
+.stitch-lesson-list .stitch-lesson-watched {
+  color: #059669;
+}
+
+.stitch-lesson-list .stitch-lesson-unwatched,
+.stitch-lesson-list .stitch-lesson-list-wide-status {
+  color: var(--lesson-tertiary);
+}
+
+.stitch-lesson-list a[aria-current="page"] .stitch-lesson-list-wide-status {
+  color: inherit;
+}
+
+[data-theme="dark"] .stitch-lesson-list .stitch-lesson-watched {
+  color: var(--lesson-muted);
+}
+
+.stitch-lesson-list a[aria-current="page"] {
+  background: var(--lesson-selected);
+  border: 1px solid var(--lesson-strong);
+  color: var(--lesson-text);
+  font-weight: 700;
+}
+
+[data-theme="dark"] .stitch-lesson-list a[aria-current="page"] {
+  border: 0;
+  color: var(--stitch-text-heading);
+  font-weight: 600;
+}
+
+.stitch-lesson-list a small {
+  font-size: 11px;
+  line-height: inherit;
+  font-weight: var(--stitch-type-code-inline-weight);
+}
+
+[data-theme="light"] .stitch-lesson-list a[aria-current="page"] small {
+  color: var(--stitch-surface-selection);
+  font-weight: 600;
+}
+
+@container lesson (max-width: 767px) {
+  .stitch-lesson-toolbar-inner {
+    padding-inline: 16px;
+  }
+
+  .stitch-lesson-crumbs a:last-child {
+    min-width: 45%;
+  }
+}
+
+@container lesson-tabs (max-width: 632px) {
+  .stitch-lesson-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .lesson-stitch .stitch-lesson-tabs button {
+    max-inline-size: none;
+    margin-bottom: 0;
+    padding-inline: 6px;
+    border-radius: var(--stitch-radius-base);
+    overflow-wrap: anywhere;
+  }
+}
+
+@container lesson (max-width: 480px) {
+  .stitch-lesson-toolbar-inner,
+  .stitch-lesson-grid,
+  .stitch-lesson-main {
+    gap: 16px;
+  }
+
+  .stitch-lesson-meta,
+  .stitch-lesson-deck [role="tabpanel"],
+  .stitch-curriculum-head {
+    padding: 16px;
+  }
+
+  .stitch-lesson-nav {
+    gap: 4px;
+  }
+
+  .stitch-lesson-crumbs a {
+    min-height: 44px;
+  }
+
+  .lesson-stitch .stitch-lesson-nav .button {
+    padding-inline: 8px;
+  }
+}
+
+@media (max-width: 639px) {
+  .lesson-stitch {
+    --lesson-mobile-gutter: 16px;
+    --lesson-mobile-max: 392px;
+    --lesson-mobile-surface: #f1edec;
+    --lesson-mobile-track: #ebe7e7;
+    --lesson-mobile-raised: #e5e2e1;
+    --lesson-mobile-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --lesson-stitch-canvas: #fdf8f8;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  [data-theme="dark"] .lesson-stitch {
+    --lesson-mobile-gutter: 14px;
+    --lesson-mobile-max: 360px;
+    --lesson-mobile-surface: var(--stitch-surface-panel);
+    --lesson-mobile-track: var(--stitch-surface-hover);
+    --lesson-mobile-raised: var(--stitch-surface-raised-strong);
+    --lesson-mobile-shadow: none;
+  }
+
+  .stitch-lesson-mobile { display: inline; }
+  .lesson-stitch .stitch-lesson-wide,
+  .stitch-lesson-wide-label.stitch-light-only,
+  [data-theme="dark"] .stitch-lesson-wide-label.stitch-dark-only,
+  [data-theme="dark"] .stitch-lesson-light-label,
+  .stitch-lesson-dark-label,
+  .member-shell-stitch[data-mobile-frame="lesson"] :is(.stitch-lesson-context, .lesson-stitch > .back) { display: none; }
+  [data-theme="dark"] .stitch-lesson-dark-label { display: inline; }
+
+  .stitch-lesson-toolbar,
+  [data-theme="dark"] .stitch-lesson-toolbar {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .stitch-lesson-toolbar-inner,
+  [data-theme="dark"] .stitch-lesson-toolbar-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    max-width: var(--lesson-mobile-max);
+    min-height: 0;
+    padding: 8px var(--lesson-mobile-gutter) 0;
+  }
+
+  [data-theme="dark"] .stitch-lesson-toolbar-inner {
+    gap: 0;
+    padding-block-start: 0;
+  }
+
+  .stitch-lesson-module-progress {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 8px;
+    border-radius: 12px;
+    background: var(--lesson-card);
+    box-shadow: var(--lesson-mobile-shadow);
+  }
+
+  [data-theme="dark"] .stitch-lesson-module-progress {
+    gap: 6px;
+    padding: 12px 0 8px;
+    background: transparent;
+  }
+
+  .stitch-lesson-mobile-crumbs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    padding-block: 2px;
+    color: var(--lesson-tertiary);
+    font: 600 11px / 16px var(--stitch-font-family);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .stitch-lesson-mobile-crumbs > :nth-child(3) {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stitch-lesson-mobile-crumbs > :not(:nth-child(3)) { flex: none; }
+  .stitch-lesson-mobile-crumbs > :nth-child(5) { color: var(--lesson-text); }
+
+  [data-theme="dark"] .stitch-lesson-mobile-crumbs { padding: 0; }
+  [data-theme="dark"] .stitch-lesson-mobile-crumbs > :nth-child(3) { flex: none; max-width: 55%; }
+  [data-theme="dark"] .stitch-lesson-mobile-crumbs > :nth-child(5) {
+    flex: 0 1 auto;
+    overflow: hidden;
+    color: inherit;
+    text-overflow: ellipsis;
+  }
+  .stitch-lesson-mobile-crumbs > .stitch-lesson-dark-label {
+    margin-inline-start: auto;
+    color: var(--stitch-text-heading);
+    font-weight: 500;
+  }
+
+  .stitch-lesson-module-progress > .stitch-lesson-light-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    margin-block-start: 4px;
+    color: var(--lesson-muted);
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0.005em;
+  }
+
+  [data-theme="dark"] .stitch-lesson-module-progress > .stitch-lesson-light-label { display: none; }
+
+  .stitch-lesson-progress-dots { display: flex; flex: none; gap: 4px; }
+  .stitch-lesson-progress-dots i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--lesson-mobile-raised);
+  }
+  .stitch-lesson-progress-dots [data-completed="true"] { background: var(--lesson-text); }
+
+  .stitch-lesson-module-progress progress,
+  .stitch-curriculum-progress {
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border: 0;
+    border-radius: 9999px;
+    color: var(--lesson-action);
+    background: var(--lesson-mobile-track);
+  }
+
+  .stitch-lesson-module-progress progress { margin-block-start: 2px; }
+  [data-theme="dark"] .stitch-lesson-module-progress progress { height: 4px; margin: 0; }
+  .lesson-stitch :is(.stitch-lesson-module-progress, .stitch-curriculum-head) progress::-webkit-progress-bar {
+    border-radius: inherit;
+    background: var(--lesson-mobile-track);
+  }
+  .lesson-stitch :is(.stitch-lesson-module-progress, .stitch-curriculum-head) progress::-webkit-progress-value {
+    border-radius: inherit;
+    background: var(--lesson-action);
+  }
+  .lesson-stitch :is(.stitch-lesson-module-progress, .stitch-curriculum-head) progress::-moz-progress-bar {
+    border-radius: inherit;
+    background: var(--lesson-action);
+  }
+
+  .stitch-lesson-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  [data-theme="dark"] .stitch-lesson-nav {
+    display: flex;
+    justify-content: space-between;
+    padding-block: 10px;
+  }
+
+  .lesson-stitch .stitch-lesson-nav :is(.button, .button.primary) {
+    gap: 6px;
+    min-height: 44px;
+    padding: 4px 12px;
+    border: 0;
+    border-radius: 8px;
+    color: var(--lesson-body);
+    background: var(--lesson-card);
+    box-shadow: var(--lesson-mobile-shadow);
+    font-weight: 600;
+    text-align: center;
+    text-transform: none;
+  }
+  .lesson-stitch .stitch-lesson-nav .button:last-child.primary { grid-column: 2; }
+  [data-theme="dark"] .lesson-stitch .stitch-lesson-nav :is(.button, .button.primary) {
+    padding-inline: 14px;
+    color: var(--lesson-body);
+    background: var(--lesson-mobile-surface);
+    font-weight: 500;
+  }
+  [data-theme="dark"] .stitch-lesson-nav:not(:has(> .button:not(.primary))) > .primary { margin-inline-start: auto; }
+  .lesson-stitch .stitch-lesson-nav .button:hover { background: var(--lesson-mobile-track); }
+
+  .stitch-lesson-grid {
+    max-width: var(--lesson-mobile-max);
+    gap: 24px;
+    padding: 16px var(--lesson-mobile-gutter) 48px;
+  }
+  [data-theme="dark"] .stitch-lesson-grid { padding-block-start: 0; }
+  .stitch-lesson-main { position: relative; gap: 16px; }
+  [data-theme="dark"] .stitch-lesson-main { gap: 0; }
+
+  .stitch-lesson-media {
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .stitch-lesson-meta {
+    gap: 8px;
+    padding: 16px;
+    border: 0;
+    border-radius: 12px;
+    box-shadow: var(--lesson-mobile-shadow);
+  }
+  [data-theme="dark"] .stitch-lesson-meta {
+    padding: 16px 0 12px;
+    background: transparent;
+  }
+
+  .stitch-lesson-facts { gap: 6px; }
+  [data-theme="dark"] .stitch-lesson-facts { gap: 8px; }
+  .stitch-lesson-facts > span,
+  .stitch-lesson-hd > span {
+    padding: 2px 8px;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--lesson-mobile-surface);
+    font: 600 11px / 16px var(--stitch-font-family);
+    letter-spacing: 0.22em;
+  }
+  .stitch-lesson-hd { flex: 1 0 100%; }
+  .stitch-lesson-hd > span { display: inline-flex; }
+  .stitch-lesson-hd .stitch-lesson-dark-label,
+  [data-theme="dark"] .stitch-lesson-hd .stitch-lesson-light-label { display: none; }
+  [data-theme="dark"] .stitch-lesson-hd .stitch-lesson-dark-label { display: inline-flex; }
+  [data-theme="dark"] .stitch-lesson-facts > span,
+  [data-theme="dark"] .stitch-lesson-hd > span { padding: 4px 10px; }
+  .stitch-lesson-facts svg { width: 13px; height: 13px; color: currentColor; }
+  .stitch-lesson-facts > span:nth-child(2) { color: var(--lesson-body); }
+  [data-theme="dark"] .stitch-lesson-facts > span:nth-child(2) { color: #c8c6c5; }
+  .stitch-lesson-facts .stitch-lesson-number {
+    color: var(--lesson-on-action);
+    background: var(--lesson-action);
+  }
+  [data-theme="dark"] .stitch-lesson-facts .stitch-lesson-number {
+    color: var(--stitch-text-heading);
+    background: var(--lesson-mobile-track);
+  }
+
+  .stitch-lesson-meta h1 {
+    margin-block-start: 8px;
+    font: 600 18px / 24px var(--stitch-font-family);
+  }
+  [data-theme="dark"] .stitch-lesson-meta h1 {
+    margin-block-start: 8px;
+    padding-block-start: 4px;
+    color: var(--stitch-text-heading);
+    font: 700 24px / 32px var(--stitch-font-family);
+    letter-spacing: -0.02em;
+  }
+  .stitch-lesson-subtitle {
+    margin-block-start: 4px;
+    font: 400 12px / 19.5px var(--stitch-font-family);
+    letter-spacing: 0.005em;
+  }
+  [data-theme="dark"] .stitch-lesson-subtitle {
+    margin-block-start: 8px;
+    color: var(--stitch-text-secondary);
+    font: 400 14px / 22px var(--stitch-font-family);
+    letter-spacing: 0;
+  }
+
+  .stitch-lesson-actions {
+    width: 100%;
+    padding-block-start: 4px;
+    reading-flow: flex-visual;
+  }
+  [data-theme="dark"] .stitch-lesson-actions { padding-block-start: 8px; }
+  .stitch-lesson-actions > :is(.badge, .action:has(> .primary)) { flex: 1; min-width: 0; }
+  [data-theme="light"] .stitch-lesson-actions > :is(.badge, .action:has(> .primary)) { order: -1; }
+  .lesson-stitch .stitch-lesson-actions .action button.primary { width: 100%; gap: 8px; padding: 4px 8px; }
+  [data-theme="dark"] .lesson-stitch .stitch-lesson-actions .action button.primary {
+    color: var(--lesson-on-action);
+    background: var(--lesson-action);
+  }
+  .lesson-stitch .stitch-lesson-actions .action button.primary svg { width: 18px; height: 18px; flex: none; }
+  [data-theme="light"] .stitch-lesson-actions button.primary > .stitch-lesson-wide-label {
+    display: none;
+  }
+  [data-theme="light"] .lesson-stitch .stitch-lesson-actions button { border-radius: 8px; }
+  .lesson-stitch .stitch-lesson-actions :is(.lesson-engagement-icon, .action button:not(.primary)) {
+    background: var(--lesson-mobile-surface);
+    border-color: transparent;
+  }
+  .stitch-lesson-actions > .stitch-lesson-resume { width: 44px; }
+  .stitch-lesson-actions > .stitch-lesson-resume:has(> [role="alert"]) { display: contents; }
+  .stitch-lesson-resume > [role="alert"] {
+    order: 1;
+    color: var(--lesson-text);
+  }
+  .stitch-lesson-media:not(.is-audio) ~ .stitch-lesson-meta .stitch-lesson-resume {
+    display: contents;
+  }
+  .lesson-stitch .stitch-lesson-media:not(.is-audio) ~ .stitch-lesson-meta .stitch-lesson-resume button {
+    position: absolute;
+    z-index: 21;
+    inset: 0 0 auto auto;
+    color: #fff;
+    background: rgb(0 0 0 / 0.65);
+  }
+
+  .stitch-lesson-deck,
+  [data-theme="dark"] .stitch-lesson-deck {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-theme="dark"] .stitch-lesson-deck { padding-block-start: 12px; }
+
+  .stitch-lesson-tabs,
+  [data-theme="dark"] .stitch-lesson-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 0 0 4px;
+    border: 0;
+    background: transparent;
+    scrollbar-width: none;
+  }
+  [data-theme="dark"] .stitch-lesson-tabs { gap: 8px; padding-block-end: 0; }
+  .lesson-stitch .stitch-lesson-tabs button,
+  [data-theme="dark"] .lesson-stitch .stitch-lesson-tabs button {
+    position: relative;
+    isolation: isolate;
+    flex: none;
+    gap: 4px;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 14px;
+    border: 0;
+    color: var(--lesson-muted);
+    background: transparent;
+    white-space: nowrap;
+  }
+  .lesson-stitch .stitch-lesson-tabs button::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 2px 0;
+    border-radius: 8px;
+    background: var(--lesson-card);
+    box-shadow: var(--lesson-mobile-shadow);
+  }
+  [data-theme="dark"] .lesson-stitch .stitch-lesson-tabs button::before {
+    inset-block: 0 10px;
+    background: var(--lesson-mobile-surface);
+  }
+  [data-theme="dark"] .lesson-stitch .stitch-lesson-tabs button { padding-block-end: 10px; }
+  .lesson-stitch .stitch-lesson-tabs button[aria-selected="true"],
+  [data-theme="dark"] .lesson-stitch .stitch-lesson-tabs button[aria-selected="true"] {
+    color: var(--lesson-on-action);
+    background: transparent;
+  }
+  .lesson-stitch .stitch-lesson-tabs button[aria-selected="true"]::before,
+  [data-theme="dark"] .lesson-stitch .stitch-lesson-tabs button[aria-selected="true"]::before {
+    background: var(--lesson-action);
+  }
+  .stitch-lesson-tabs svg { display: none; }
+  .stitch-lesson-tabs :is(.stitch-lesson-tab-count, .lesson-engagement-tab-count) {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+  }
+  [data-theme="light"] .stitch-lesson-tabs :is(.stitch-lesson-tab-count, .lesson-engagement-tab-count)::before { content: "("; }
+  [data-theme="light"] .stitch-lesson-tabs :is(.stitch-lesson-tab-count, .lesson-engagement-tab-count)::after { content: ")"; }
+  [data-theme="dark"] .stitch-lesson-tabs :is(.stitch-lesson-tab-count, .lesson-engagement-tab-count) {
+    padding: 0 6px;
+    color: var(--stitch-text-heading);
+    background: var(--lesson-mobile-raised);
+    font: 400 10px / 15px ui-monospace, monospace;
+  }
+  .stitch-lesson-deck [role="tabpanel"] { padding: 12px 0 0; }
+
+  .stitch-curriculum,
+  [data-theme="dark"] .stitch-curriculum {
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-theme="dark"] .stitch-curriculum { border-top: 1px solid var(--lesson-mobile-track); padding-block-start: 24px; }
+  .stitch-curriculum-head,
+  [data-theme="dark"] .stitch-curriculum-head {
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  [data-theme="dark"] .stitch-curriculum-head { gap: 6px; }
+  .stitch-curriculum h2 { font-weight: 600; }
+  [data-theme="dark"] .stitch-curriculum h2 { color: var(--stitch-text-heading); }
+  [data-theme="dark"] .stitch-curriculum-heading small { display: none; }
+  .stitch-curriculum-caption {
+    color: var(--lesson-muted);
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0.005em;
+  }
+  .stitch-course-progress { padding: 0; border: 0; background: none; }
+  .stitch-course-progress::before { display: none; }
+  [data-theme="light"] .stitch-course-progress { display: none; }
+  [data-theme="dark"] .stitch-course-progress {
+    color: var(--lesson-tertiary);
+    font: 600 11px / 16px var(--stitch-font-family);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  [data-theme="light"] .stitch-curriculum-progress { display: none; }
+  .stitch-curriculum-filter { gap: 8px; padding-inline: 12px; border: 0; border-radius: 8px; background: var(--lesson-card); box-shadow: var(--lesson-mobile-shadow); }
+  [data-theme="dark"] .stitch-curriculum-filter { margin-block-start: 10px; background: var(--lesson-mobile-surface); }
+  .stitch-curriculum-filter svg { width: 20px; height: 20px; }
+  .lesson-stitch .stitch-curriculum-filter input[type="search"] { padding: 0; }
+
+  .stitch-curriculum-list { display: grid; gap: 8px; margin-block-start: 12px; }
+  [data-theme="dark"] .stitch-curriculum-list { gap: 8px; margin-block-start: 8px; }
+  .stitch-module,
+  .stitch-module + .stitch-module,
+  [data-theme="dark"] .stitch-module[data-current="true"] {
+    border: 0;
+    border-radius: 12px;
+    background: var(--lesson-card);
+    box-shadow: var(--lesson-mobile-shadow);
+    overflow: clip;
+  }
+  [data-theme="dark"] .stitch-module { background: var(--lesson-mobile-surface); }
+  .stitch-module > summary { gap: 10px; padding: 12px; }
+  .stitch-module > summary .stitch-lesson-mobile small {
+    margin: 0;
+    font: 400 12px / 18px var(--stitch-font-family);
+    letter-spacing: 0.005em;
+    text-transform: none;
+  }
+  .stitch-module > summary strong.stitch-lesson-dark-label { display: none; }
+  [data-theme="dark"] .stitch-module > summary strong.stitch-lesson-dark-label { display: block; }
+  [data-theme="dark"] .stitch-module > summary strong.stitch-lesson-light-label { display: none; }
+  .stitch-module-index { width: 28px; height: 28px; background: var(--lesson-mobile-surface); border: 0; }
+  .stitch-module[data-completed="true"] .stitch-module-index { color: var(--lesson-text); }
+  [data-theme="dark"] .stitch-module .stitch-module-index {
+    width: 18px;
+    height: 18px;
+    color: var(--stitch-text-heading);
+    background: transparent;
+  }
+  .stitch-module[data-current="true"] > summary { border: 0; }
+  .stitch-module[open] > summary { background: var(--lesson-mobile-surface); }
+  .stitch-module[data-current="true"] > summary { background: transparent; }
+  [data-theme="dark"] .stitch-module > summary { min-block-size: 64px; padding: 14px; }
+  [data-theme="dark"] .stitch-module[data-current="true"] > summary { background: var(--lesson-mobile-track); }
+  .stitch-lesson-list { padding: 6px 8px 8px; }
+  .stitch-lesson-list a { min-height: 44px; border-radius: 8px; font-size: 12px; line-height: 18px; }
+  .stitch-lesson-list a > svg:first-child { width: 16px; height: 16px; }
+  .stitch-lesson-list a[aria-current="page"] {
+    color: var(--lesson-on-action);
+    border-color: transparent;
+    background: var(--lesson-action);
+  }
+  [data-theme="dark"] .stitch-lesson-list { background: var(--lesson-card); }
+  [data-theme="dark"] .stitch-lesson-list a[aria-current="page"] { background: var(--lesson-mobile-surface); }
+  .stitch-lesson-list-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font: 500 12px / 16px var(--stitch-font-family);
+  }
+}

@@ -4,9 +4,10 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:58521");
@@ -64,6 +65,7 @@ it("a revisão local anuncia preparação em português sem chamar a mutação a
         <Routes>
           <Route path="/admin/membros/:id" element={<MemberEditor />} />
         </Routes>
+        <Link to="/admin/membros/outro-membro">Abrir outra ficha</Link>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -78,7 +80,9 @@ it("a revisão local anuncia preparação em português sem chamar a mutação a
     "Dados preparados. Confirme sua identidade para aplicar a alteração.",
   );
   expect(screen.queryByText("Salvo com sucesso.")).not.toBeInTheDocument();
-  expect(screen.getByText(/Papel: Membro/)).toBeInTheDocument();
+  const review = screen.getByRole("heading", { name: "Confirme a alteração" }).closest("section")!;
+  expect(within(review).getByText("Papel")).toBeInTheDocument();
+  expect(within(review).getByText("Membro")).toBeInTheDocument();
   expect(requests.some((url) => url.endsWith("/rpc/app_admin_member"))).toBe(
     false,
   );
@@ -88,4 +92,8 @@ it("a revisão local anuncia preparação em português sem chamar a mutação a
       screen.getByRole("button", { name: "Autorizar alteração crítica" }),
     ).toBeEnabled(),
   );
+  fireEvent.click(screen.getByRole("link", { name: "Abrir outra ficha" }));
+  await screen.findByRole("heading", { name: "DEMONSTRAÇÃO membro" });
+  expect(screen.queryByRole("heading", { name: "Confirme a alteração" })).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Motivo obrigatório")).toHaveValue("");
 });

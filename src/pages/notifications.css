@@ -1,0 +1,253 @@
+.notification-bell {
+  position: relative;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-color: transparent;
+}
+
+.notification-badge {
+  position: absolute;
+  inset: 5px 5px auto auto;
+  min-width: 8px;
+  min-height: 8px;
+  border-radius: 999px;
+  background: var(--ic-action);
+  color: var(--ic-on-action);
+}
+
+.notification-badge > span { display: none; }
+
+[data-theme="dark"] .notification-badge {
+  inset: 8px 1px auto auto;
+  min-width: 16px;
+  padding-inline: 3px;
+  text-align: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+[data-theme="dark"] .notification-badge > span { display: inline; }
+
+.notification-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+
+.notification-dropdown {
+  --notification-width: min(25rem, calc(100vw - 24px));
+  position: fixed;
+  top: var(--notification-top);
+  right: min(var(--notification-right), calc(100vw - var(--notification-width) - 12px));
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  width: var(--notification-width);
+  max-height: calc(100dvh - var(--notification-top) - 12px);
+  border: 1px solid var(--ic-border);
+  border-radius: var(--ic-radius-card);
+  background: var(--ic-surface);
+  box-shadow: var(--ic-elevation-overlay);
+}
+
+.notification-dropdown-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  padding: var(--ic-space-2) var(--ic-space-3) 0 var(--ic-space-4);
+  border-bottom: 1px solid var(--ic-border);
+}
+
+.notification-dropdown-header h2 {
+  margin: 0;
+  font-size: var(--ic-type-subtitle);
+}
+
+.notification-dropdown-header > .notification-action { justify-self: start; }
+.notification-close { border-color: transparent; }
+
+.notification-dropdown .notification-list {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.notification-dropdown .notification-list > :is(.notice, .empty, .skeleton, .notification-load-error) {
+  margin: var(--ic-space-4);
+}
+
+.notification-dropdown-footer {
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--ic-space-4);
+  border-top: 1px solid var(--ic-border);
+}
+
+.notification-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ic-space-2);
+  padding: 0 var(--ic-space-1);
+  min-height: var(--ic-accessibility-target-min);
+  min-width: var(--ic-accessibility-target-min);
+  border: 0;
+  background: transparent;
+  border-radius: var(--ic-radius-control);
+  font-size: var(--ic-type-caption);
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+}
+
+.notification-action:hover { text-decoration: underline; background: transparent; }
+
+:is(.notification-action, .notification-switch)[aria-disabled="true"] {
+  opacity: 0.62;
+  cursor: default;
+  text-decoration: none;
+  transform: none;
+}
+
+.notification-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notification-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 8px;
+  align-items: start;
+  gap: var(--ic-space-3);
+  padding: var(--ic-space-4);
+  overflow-wrap: anywhere;
+}
+
+.notification-row + .notification-row { border-top: 1px solid var(--ic-border); }
+.notification-row:focus { outline-offset: -3px; }
+
+.notification-row[data-unread="true"], .notification-row-icon {
+  background: color-mix(in srgb, var(--ic-surface) 94%, var(--ic-text));
+}
+
+.notification-row-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ic-radius-control);
+}
+
+.notification-row-body strong { display: block; line-height: 1.35; }
+
+.notification-row-body p,
+.notification-email-note {
+  margin: var(--ic-space-1) 0 0;
+  color: var(--ic-text-secondary);
+  font-size: var(--ic-type-caption);
+}
+
+.notification-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: var(--ic-space-2);
+}
+
+.notification-row-meta time {
+  color: var(--ic-text-secondary);
+  font-size: var(--ic-type-caption);
+}
+
+.notification-row-meta > .notification-action { margin: 0 -4px 0 auto; }
+
+.notification-row-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: var(--ic-space-2);
+  border-radius: 50%;
+  background: var(--ic-action);
+}
+
+.notification-history,
+.notification-preferences { max-width: 55rem; }
+
+.notification-history .notification-rows {
+  border: 1px solid var(--ic-border);
+  border-radius: var(--ic-radius-card);
+  overflow: hidden;
+}
+
+.notification-history .pagination { margin-block: var(--ic-space-4); }
+
+.notification-load-error {
+  display: grid;
+  justify-items: start;
+  gap: var(--ic-space-2);
+  margin-bottom: var(--ic-space-3);
+}
+
+.notification-preference-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.notification-preference-table :is(th, td) {
+  padding: var(--ic-space-2) var(--ic-space-3);
+  border-bottom: 1px solid var(--ic-border);
+}
+
+.notification-preference-table :is(th, td):not(:first-child) { text-align: center; }
+.notification-preference-table th[scope="row"] { font-weight: 500; }
+
+.notification-preference-table thead,
+.notification-preference-group {
+  background: color-mix(in srgb, var(--ic-surface) 94%, var(--ic-text));
+  font-size: var(--ic-type-caption);
+}
+
+.notification-preference-table tbody td { font-size: var(--ic-type-caption); }
+
+.notification-switch {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.notification-switch > span {
+  display: flex;
+  align-items: center;
+  width: 36px;
+  height: 20px;
+  padding: 2px;
+  border: 1px solid var(--ic-border-control);
+  border-radius: 999px;
+  background: var(--ic-surface);
+}
+
+.notification-switch > span::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ic-text);
+}
+
+.notification-switch[aria-checked="true"] > span {
+  justify-content: flex-end;
+  border-color: var(--ic-action);
+  background: var(--ic-action);
+}
+
+.notification-switch[aria-checked="true"] > span::after { background: var(--ic-on-action); }
+.notification-status { min-height: 1.4em; margin-block: var(--ic-space-2); font-size: var(--ic-type-caption); }
+
+@media (max-width: 639px) {
+  .notification-preference-table :is(th, td) { padding-inline: var(--ic-space-2); }
+}

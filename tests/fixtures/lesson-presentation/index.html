@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fixture local do player Icarus</title>
+    <link rel="stylesheet" href="/brand/icarus-tokens.css" />
+    <style>
+      body { background: #f8f9fa; }
+      [data-theme="dark"] body { background: #131313; }
+      .fixture-shell { margin-left: 256px; padding: 0 24px 24px; }
+      .fixture-shell > .stitch-lesson-main { width: calc((100% * 2 - 24px) / 3); }
+      main.lesson-stitch.fixture-shell .stitch-lesson-deck { border-top: 0; border-start-start-radius: 0; border-start-end-radius: 0; }
+      [data-theme="dark"] main.lesson-stitch.fixture-shell .stitch-lesson-deck { border: 0; }
+      @media (max-width: 1023px) {
+        .fixture-shell { margin-left: 0; padding-inline: 16px; }
+        .fixture-shell > .stitch-lesson-main { width: 100%; }
+      }
+    </style>
+  </head>
+  <body><div id="root"></div><script type="module" src="./preview.tsx"></script></body>
+</html>

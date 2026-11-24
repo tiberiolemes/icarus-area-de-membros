@@ -1,29 +1,18 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { once } from 'node:events';
 import test from 'node:test';
+import { assertBindings } from './local-bindings.mjs';
 
-test('stop preserves its PID when the owned process ignores SIGTERM', async () => {
-  const fixture = mkdtempSync(join(tmpdir(), 'icarus-stop-'));
-  const previous = process.env.ICARUS_LOCAL_WORKDIR;
-  process.env.ICARUS_LOCAL_WORKDIR = fixture;
-  const child = spawn(process.execPath, ['-e', 'process.on("SIGTERM",()=>{});process.on("SIGUSR2",()=>process.exit(0));process.send("ready");setInterval(()=>{},1000)', 'functions serve', fixture], { stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
-  try {
-    await once(child, 'message');
-    const { privateWrite, stopFunctions } = await import('./local.mjs');
-    const record = JSON.stringify({ pid: child.pid, workdir: fixture });
-    const path = join(fixture, '.local/edge-runtime-process.json');
-    privateWrite(path, record);
-    await assert.rejects(stopFunctions(), /PID preservado/);
-    assert.equal(readFileSync(path, 'utf8'), record);
-    assert.doesNotThrow(() => process.kill(child.pid, 0));
-  } finally {
-    child.kill('SIGUSR2'); await once(child, 'exit');
-    rmSync(fixture, { recursive: true });
-    if (previous === undefined) delete process.env.ICARUS_LOCAL_WORKDIR;
-    else process.env.ICARUS_LOCAL_WORKDIR = previous;
-  }
+test('a stopped registered container must still have safe requested bindings for restart', () => {
+  const name = 'bridge-local', id = '1'.repeat(64), project = 'icarus-courses-local';
+  const expected = { '5432/tcp': '58522' };
+  const port = { HostIp: '', HostPort: '58522' };
+  const container = {
+    State: { Running: false },
+    Config: { Labels: { 'com.supabase.cli.project': project } },
+    HostConfig: { PublishAllPorts: false, NetworkMode: name, PortBindings: { '5432/tcp': [port] } },
+    NetworkSettings: { Networks: { [name]: { NetworkID: id } }, Ports: null },
+  };
+  assert.doesNotThrow(() => assertBindings(container, project, { name, id }, expected, { running: false }));
+  port.HostIp = '0.0.0.0';
+  assert.throws(() => assertBindings(container, project, { name, id }, expected, { running: false }), /bindings loopback/);
 });

@@ -6,6 +6,7 @@ export function Upload({
   kind,
   resourceId,
   onUploaded,
+  onBusyChange,
 }: {
   kind:
     | "course-cover"
@@ -16,6 +17,7 @@ export function Upload({
     | "avatar";
   resourceId: string;
   onUploaded?: () => void;
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const [state, setState] = useState(""),
     [error, setError] = useState(""),
@@ -57,6 +59,7 @@ export function Upload({
     if (!selected || lock.current) return;
     lock.current = true;
     setBusy(true);
+    onBusyChange?.(true);
     setError("");
     setState("Enviando arquivo…");
     controller.current = new AbortController();
@@ -138,6 +141,7 @@ export function Upload({
     } finally {
       lock.current = false;
       setBusy(false);
+      onBusyChange?.(false);
       controller.current = null;
     }
   }
@@ -147,12 +151,16 @@ export function Upload({
         label={
           kind === "ticket-attachment"
             ? "Anexar arquivo à conversa"
+            : kind === "lesson"
+              ? "Arquivo de vídeo"
             : kind === "avatar"
               ? "Foto do perfil"
               : "Enviar arquivo"
         }
         hint={
-          kind === "material" || kind === "lesson"
+          kind === "lesson"
+            ? "MP4 até 500 MiB no armazenamento da academia."
+            : kind === "material"
             ? "Até 500 MiB, conforme o tipo permitido pelo servidor. O andamento abaixo não estima percentual."
             : "Imagem raster até 5 MiB; anexos até 20 MiB, conforme o tipo permitido."
         }

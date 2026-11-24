@@ -1,0 +1,414 @@
+.student-onboarding {
+  --onboarding-divider: var(--stitch-border-subtle);
+  --onboarding-guide: var(--stitch-surface-member-rail);
+  --onboarding-option: var(--stitch-surface-control);
+  background: var(--stitch-canvas);
+  color: var(--stitch-text-primary);
+  font: var(--stitch-type-body-md-weight) var(--stitch-type-body-md-size) / var(--stitch-type-body-md-line) var(--stitch-font-family);
+}
+
+.student-onboarding[data-theme="dark"] {
+  --onboarding-divider: transparent;
+  --onboarding-progress-track: var(--stitch-border-strong);
+}
+
+.student-onboarding[data-theme="light"] {
+  color-scheme: light;
+}
+
+.student-onboarding .public-layout {
+  max-width: none;
+  padding-inline: var(--stitch-margin);
+}
+
+.student-onboarding .public-top {
+  padding-block: var(--stitch-space-md);
+}
+
+.student-onboarding .public-top img {
+  width: 112px;
+  height: auto;
+}
+
+.student-onboarding[data-theme="light"] .public-top img {
+  filter: none;
+}
+
+.student-onboarding .public-top a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--stitch-control-min-size);
+}
+
+.student-onboarding .public-layout > footer {
+  justify-content: center;
+  padding-block: var(--stitch-space-md);
+  border-color: var(--stitch-border-subtle);
+  color: var(--stitch-text-muted);
+  font-size: var(--stitch-type-body-sm-size);
+  line-height: var(--stitch-type-body-sm-line);
+}
+
+.student-onboarding .public-main {
+  padding-block: calc(var(--stitch-space-lg) + var(--stitch-space-md));
+}
+
+.student-onboarding-content {
+  max-width: 992px;
+  margin-inline: auto;
+}
+
+.student-onboarding-progress,
+.student-onboarding-questions
+  > :is(.page-heading, .field, .student-onboarding-choice),
+.student-onboarding-guide,
+.student-onboarding-content > .form > fieldset > .form-actions {
+  border: var(--stitch-border-width) solid var(--onboarding-divider);
+  border-radius: var(--stitch-radius-md);
+  background: var(--stitch-surface-card);
+  padding: var(--stitch-space-lg);
+}
+
+.student-onboarding-progress {
+  background: var(--stitch-surface-panel);
+}
+
+.student-onboarding-content > .form {
+  margin: var(--stitch-space-lg) 0 0;
+}
+
+.student-onboarding-progress > div {
+  display: flex;
+  gap: var(--stitch-space-sm);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.student-onboarding-progress strong,
+.student-onboarding-choice legend,
+.student-onboarding-questions > .field > span,
+.student-onboarding-guide h2 {
+  color: var(--stitch-text-heading);
+  font-size: var(--stitch-type-headline-sm-size);
+  line-height: var(--stitch-type-headline-sm-line);
+  font-weight: var(--stitch-type-headline-sm-weight);
+  letter-spacing: var(--stitch-type-headline-sm-tracking);
+}
+
+.student-onboarding-progress span {
+  margin-inline-start: auto;
+  background: var(--stitch-surface-raised-strong);
+  color: var(--stitch-text-heading);
+  padding: var(--stitch-space-xs) var(--stitch-space-sm);
+  border-radius: var(--stitch-radius-full);
+  font-size: var(--stitch-type-label-uppercase-size);
+  line-height: var(--stitch-type-label-uppercase-line);
+  letter-spacing: var(--stitch-tracking-wider);
+  font-weight: var(--stitch-type-label-uppercase-weight);
+}
+
+.student-onboarding-progress progress {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: var(--stitch-progress-size-lg);
+  margin-top: var(--stitch-space-md);
+  border: 0;
+  border-radius: var(--stitch-radius-full);
+  overflow: hidden;
+  background: var(--onboarding-progress-track, var(--stitch-progress-track));
+}
+
+.student-onboarding-progress progress::-webkit-progress-bar {
+  background: var(--onboarding-progress-track, var(--stitch-progress-track));
+}
+
+.student-onboarding-progress progress::-webkit-progress-value {
+  border-radius: var(--stitch-radius-full);
+  background: var(--stitch-progress-fill);
+}
+
+.student-onboarding-progress progress::-moz-progress-bar {
+  border-radius: var(--stitch-radius-full);
+  background: var(--stitch-progress-fill);
+}
+
+.student-onboarding-content > .form > fieldset {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--stitch-gutter);
+}
+
+.student-onboarding-questions {
+  display: grid;
+  gap: var(--stitch-space-lg);
+  min-width: 0;
+}
+
+.student-onboarding-questions > :is(.page-heading, .field) {
+  margin: 0;
+}
+
+.student-onboarding-questions h1 {
+  color: var(--stitch-text-heading);
+  margin-bottom: var(--stitch-space-sm);
+  font-size: var(--stitch-type-headline-lg-size);
+  line-height: var(--stitch-type-headline-lg-line);
+  font-weight: var(--stitch-type-headline-lg-weight);
+  letter-spacing: var(--stitch-type-headline-lg-tracking);
+}
+
+.student-onboarding-questions > .page-heading {
+  padding: var(--stitch-space-xl);
+}
+
+.student-onboarding .page-heading p {
+  color: var(--stitch-text-secondary);
+}
+
+.student-onboarding .student-onboarding-questions .field :is(input, select) {
+  min-block-size: var(--stitch-guide-control-size-lg);
+}
+
+.student-onboarding .student-onboarding-questions .field :is(input, select, textarea) {
+  padding-inline: var(--stitch-space-md);
+  background: var(--onboarding-option);
+  border-color: var(--stitch-text-muted);
+  border-radius: var(--stitch-radius-base);
+  font-size: var(--stitch-input-min-size);
+  line-height: var(--stitch-type-body-lg-line);
+  caret-color: var(--stitch-text-primary);
+}
+
+.student-onboarding .student-onboarding-questions .field :is(input, select, textarea):focus {
+  background: var(--stitch-surface-panel);
+}
+
+.student-onboarding :focus-visible,
+.student-onboarding .notice[role="alert"]:focus {
+  outline: var(--stitch-focus-width) solid var(--stitch-focus);
+  outline-offset: var(--stitch-focus-offset);
+}
+
+.student-onboarding :is(.field-error, .notice[role="alert"]) {
+  color: var(--stitch-error);
+}
+
+.student-onboarding :is(.student-onboarding-questions .field [aria-invalid="true"], .notice[role="alert"]) {
+  border-color: var(--stitch-error);
+}
+
+.student-onboarding-choice {
+  min-width: 0;
+}
+
+.student-onboarding-choice legend {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--stitch-space-sm);
+  overflow-wrap: anywhere;
+}
+
+.student-onboarding .field small:not(.field-error),
+.student-onboarding-choice > small:not(.field-error) {
+  color: var(--stitch-text-muted);
+  font-size: var(--stitch-type-body-sm-size);
+  line-height: var(--stitch-type-body-sm-line);
+}
+
+.student-onboarding-choice > small {
+  clear: both;
+  display: block;
+  margin-bottom: var(--stitch-space-sm);
+}
+
+.student-onboarding-options {
+  clear: both;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--stitch-space-sm);
+}
+
+.student-onboarding-choice[data-question="size"] .student-onboarding-options {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.student-onboarding-choice[data-question="size"] label > span {
+  align-items: center;
+  padding-inline: var(--stitch-space-sm);
+  text-align: center;
+}
+
+.student-onboarding-choice[data-question="stage"] .student-onboarding-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.student-onboarding-choice[data-question="acquisition"]
+  .student-onboarding-options {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.student-onboarding-options label {
+  display: flex;
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.student-onboarding-options label > input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.student-onboarding-options label > span {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--stitch-space-xs);
+  overflow-wrap: anywhere;
+  min-height: var(--stitch-control-min-size);
+  min-width: var(--stitch-control-min-size);
+  padding: var(--stitch-space-md);
+  border: var(--stitch-border-width) solid var(--onboarding-divider);
+  background: var(--onboarding-option);
+  border-radius: var(--stitch-radius-base);
+  font-size: var(--stitch-type-label-md-size);
+  line-height: var(--stitch-type-label-md-line);
+  font-weight: var(--stitch-type-label-md-weight);
+}
+
+.student-onboarding-choice[data-question="acquisition"] label > span {
+  flex-direction: row;
+  align-items: center;
+  padding-block: var(--stitch-space-sm);
+  border-radius: var(--stitch-radius-full);
+}
+
+.student-onboarding-options input:enabled:not(:checked):hover + span {
+  background: var(--stitch-surface-hover);
+}
+
+.student-onboarding-options input:checked + span {
+  background: var(--stitch-action);
+  color: var(--stitch-on-action);
+}
+
+.student-onboarding-options input:focus-visible + span {
+  outline: var(--stitch-focus-width) solid var(--stitch-focus);
+  outline-offset: var(--stitch-focus-offset);
+}
+
+.student-onboarding-options input:disabled + span {
+  opacity: 0.55;
+}
+
+.student-onboarding-check {
+  display: none;
+}
+
+.student-onboarding-options input:checked + span > .student-onboarding-check {
+  display: block;
+}
+
+.student-onboarding-guide {
+  background: var(--onboarding-guide);
+  overflow-wrap: anywhere;
+}
+
+.student-onboarding-guide h2 {
+  margin: var(--stitch-space-sm) 0;
+}
+
+.student-onboarding-guide p {
+  margin: 0 0 var(--stitch-gutter-mobile);
+  color: var(--stitch-text-secondary);
+  font-size: var(--stitch-type-body-sm-size);
+  line-height: var(--stitch-type-body-sm-line);
+  letter-spacing: var(--stitch-type-body-sm-tracking);
+}
+
+.student-onboarding-guide p:last-child {
+  margin-bottom: 0;
+}
+
+.student-onboarding-content > .form > fieldset > .form-actions {
+  margin: 0;
+  align-self: start;
+}
+
+.student-onboarding-content .form-actions > button {
+  width: 100%;
+  min-height: var(--stitch-guide-control-size-lg);
+  border-color: var(--stitch-action);
+  border-radius: var(--stitch-radius-base);
+  background: var(--stitch-action);
+  color: var(--stitch-on-action);
+  font-size: var(--stitch-type-label-md-size);
+  line-height: var(--stitch-type-label-md-line);
+  font-weight: var(--stitch-type-headline-lg-weight);
+}
+
+.student-onboarding-content .form-actions > button:hover:enabled {
+  background: var(--stitch-action-hover);
+  border-color: var(--stitch-action-hover);
+}
+
+@media (min-width: 1024px) {
+  .student-onboarding-content > .form > fieldset {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto 1fr;
+  }
+
+  .student-onboarding-questions {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+
+  .student-onboarding-content > .form > fieldset > .form-actions {
+    grid-column: 3;
+  }
+}
+
+@media (max-width: 767px) {
+  .student-onboarding .public-layout {
+    padding-inline: var(--stitch-margin-mobile);
+  }
+
+  .student-onboarding .public-main {
+    padding-block: var(--stitch-space-lg);
+  }
+
+  .student-onboarding-progress span {
+    margin-inline-start: 0;
+  }
+
+  .student-onboarding-progress {
+    padding: var(--stitch-space-md);
+  }
+
+  .student-onboarding-content .page-heading {
+    padding: var(--stitch-space-lg);
+  }
+
+  .student-onboarding-questions h1 {
+    font-size: var(--stitch-type-headline-lg-mobile-size);
+    line-height: var(--stitch-type-headline-lg-mobile-line);
+    letter-spacing: var(--stitch-type-headline-lg-mobile-tracking);
+  }
+}
+
+@media (max-width: 639px) {
+  .student-onboarding-choice .student-onboarding-options,
+  .student-onboarding-choice[data-question="size"] .student-onboarding-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

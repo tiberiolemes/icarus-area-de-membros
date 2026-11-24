@@ -29,12 +29,12 @@ DDL0016/0017 autorizado pelo root e coordenado com opsctx_38b5e4c5d19d, aplicado
 **45 assertions SQL focadas** em `supabase/tests/mfa_outbox.sql`, saída zero/ROLLBACK: membro com/sem fator, fator não verificado, JWT/header aal1/aal2 versus nível nativo, staff, exceções limitadas de bootstrap/setup, grants service-only, paid persistido, lease único/repetição/claim errado, backoff, erro definitivo/ambíguo, reutilização de convite nativo, late finish mantendo completed e concessão única. **Separadamente, 4 assertions em duas sessões Postgres realmente concorrentes** em `supabase/tests/outbox_concurrency.py`, saída zero: exatamente um claim, finish sent, nova tentativa negada e nenhum acesso concedido só pelo envio; as únicas fixtures aleatórias persistidas pelo teste foram removidas no finally. Não somar esses resultados como testes Native API ou repetir a suíte109 sem causa.
 
 ```sh
-psql -h 127.0.0.1 -p 58522 -U postgres -d postgres -X -v ON_ERROR_STOP=1 -f supabase/tests/mfa_outbox.sql
-# Somente nomes exatos dos containers Icarus local/QA; sem psql host ou senha no runner.
-python3 supabase/tests/outbox_concurrency.py
-# QA isolado, apenas após o runner validar projeto/configuração/portas:
-ICARUS_DB_CONTAINER=supabase_db_icarus-courses-install-qa python3 supabase/tests/outbox_concurrency.py
+npm run test:db
+# Para o QA DB-only isolado:
+node scripts/clean-install.mjs verify
 ```
+
+Ambos os comandos executam os SQLs e a corrida da outbox pelo ID do Postgres validado. [Requisitos do Docker dedicado](../operations.md#requisitos-do-docker-dedicado).
 
 Fixtures SQL para provar webhook normal → consumidor → Mailpit ficam em `supabase/tests/fixtures/payment-outbox.sql` e cleanup com guard/tag exatos; sem termos reais nem cobrança. Recibo de transporte fake/Native Mailpit R2 será anexado depois de recebido da integração; fonte SQL pronta não é prova desse encadeamento automático. Provedores externos permanecem desligados. Não houve publicação ou runner/CI.
 

@@ -1,19 +1,128 @@
 # Instalação e operação do Icarus
 
-Fonte MIT React/Vite + Supabase. Uma academia, sem fornecedores externos configurados nesta entrega. Os comandos abaixo operam o projeto local `icarus-courses-local` nas portas58521/58522/58524; não criam conta cloud, não publicam, não executam cobrança e não reiniciam outro projeto. A instalação futura no servidor exige domínio/TLS, SMTP e secrets próprios antes da homologação externa; CLI de desenvolvimento não constitui, sozinho, deploy de produção.
+Fonte MIT React/Vite + Supabase para uma academia. Os comandos de desenvolvimento usam o projeto Docker `icarus-courses-local` e as portas `58521` (API), `58522` (Postgres), `58524` (Mailpit) e `8088` (Vite). A instalação hospedada exige domínio, TLS, SMTP, configuração e credenciais próprias.
+
+## Requisitos do Docker dedicado
+
+Execute o instalador em uma máquina ou VM Linux de teste reservada. Use Docker Engine estável da série **29.x**, a partir da **29.10.0**, e a distribuição oficial completa do Supabase CLI **2.109.1** no PATH. O Docker 28.0 corrigiu o alcance de portas de loopback no segmento L2 e o 28.3.3 corrigiu a exposição após recarga do firewalld (CVE-2025-54388). A série 28 está fora da manutenção upstream. O preflight confere o Linux, a versão estável e a identidade do daemon. [Publicação de portas](https://docs.docker.com/engine/network/port-publishing/) · [Correção no Docker 28.3.3](https://docs.docker.com/engine/release-notes/28/#2833) · [Ramos mantidos pelo Moby](https://github.com/moby/moby/blob/master/project/BRANCHES-AND-TAGS.md#docker-engine-branches) · [Docker 29.10.0](https://docs.docker.com/engine/release-notes/29/#29100).
+
+Use um daemon próprio, com armazenamento próprio e acesso exclusivo. No provisionamento, confirme que o firewall do Docker está ativo, a bridge IPv4 usa NAT, o daemon deixa o roteamento direto desativado e a VM dispensa encaminhamento externo dessas portas. O instalador cria a bridge IPv4 com NAT e loopback e verifica os mapeamentos efetivos. Para cada ensaio novo, parta de um checkout limpo e de um daemon sem containers, inclusive parados, volumes ou redes próprias. Imagens em cache são permitidas. Use ambientes separados para o stack completo e o QA DB-only. [Bridge, NAT e filtragem no Docker](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
+
+Use o binário principal `supabase` do pacote oficial. Configure `supabase-go` somente como componente do pacote, conforme a distribuição. O instalador desativa o envio de telemetria do CLI via ambiente. O start usa o CLI e o upgrade do QA usa o `psql` do Postgres verificado. [Distribuição do CLI](https://github.com/supabase/cli/releases/tag/v2.109.1).
+
+Exponha o daemon reservado por um socket Unix real chamado `icarus-install.sock`, em um diretório real do usuário com permissão `0700`. Confirme o nome do daemon, a origem do socket e seu diretório de dados durante o provisionamento da VM. O instalador compara o ID declarado com o ID lido no daemon e usa o mesmo socket para Docker, Supabase e testes. Um contexto, um alias de socket ou a ausência de containers em execução são insuficientes para comprovar a reserva.
+
+```sh
+export ICARUS_INSTALL_DOCKER_HOST=unix:///caminho/privado/icarus-install.sock
+unset DOCKER_CONTEXT DOCKER_TLS_VERIFY DOCKER_CERT_PATH DOCKER_API_VERSION
+export DOCKER_HOST="$ICARUS_INSTALL_DOCKER_HOST"
+export ICARUS_INSTALL_DOCKER_ID="$(docker --host "$DOCKER_HOST" info --format '{{.ID}}')"
+```
+
+Consulte o inventário desse daemon antes do ensaio com `docker container ls -a`, `docker volume ls` e `docker network ls --filter type=custom`. Confirme as portas TCP livres na VM. Para o stack completo, use API em 58521, Postgres em 58522 e `[local_smtp]` ativo em 58524. Portas SMTP/POP3 adicionais, TLS da API e pooler ficam desativados nesse perfil. O instalador confere o TOML e sonda as portas antes de criar recursos e repete o inventário antes do start. O CLI pode parar e limpar recursos pelo label do projeto se o start falhar. Preserve a exclusividade do daemon e das portas até o instalador terminar. [Implementação do Supabase CLI 2.109.1](https://github.com/supabase/cli/blob/v2.109.1/apps/cli-go/internal/utils/docker.go#L96-L145).
+
+### Recuperar um lock interrompido
+
+O erro informa o caminho `icarus-install.sock.lock` e o PID quando disponível. Leia `owner.json` no diretório indicado. Compare PID, comando e horário com o processo da VM. Preserve o lock enquanto o dono, um subprocesso do CLI/Docker ou uma operação do ensaio puder estar ativo. Para upgrade, use o daemon dedicado e o ID do registro de QA para consultar `pg_stat_activity` e confirmar que nenhuma sessão `icarus-qa-upgrade` permanece. Se a interrupção ocorreu antes de gravar o dono, confirme que a VM está exclusiva e que todos os processos do ensaio terminaram.
+
+Somente após essas confirmações, remova o `owner.json` desse lock, se presente, e use `rmdir` no diretório exato. Confira o histórico e os logs da tentativa antes de repetir. Preserve as instalações, os recibos e o restante de `.local`.
 
 ## Instalação nova
 
-1. Instalar Node24+, Docker, SupabaseCLI compatível com o config e Deno2. Instalar dependências com `npm ci`; não reaproveitar dados da base descartada.
-2. Rodar `node scripts/local.mjs start`. Em volume **novo**, o CLI nativo inicializa Supabase e aplica as migrations fonte com histórico real. O script restringe portas a127.0.0.1 e só declara pronto após Auth/Storage/RPC pública/Edge HTTP saudáveis. Depois dessas verificações, finaliza somente as cópias técnicas DB/API/mail criadas pelo reparo de bind: compara configurações e IDs, remove os backups parados sem volumes/imagens e arquiva o journal600. Outros containers parados são preservados. Assim, stop seguido de start não reutiliza um journal de IDs anteriores; falha antes da prontidão preserva essas cópias para recuperação.
-3. Executar `node scripts/test-db.mjs`: SQLs assert/rollback com `psql -v ON_ERROR_STOP=1`, saída privada600, somente exit/denominadores no terminal. O script usa Docker local padrão, funciona em Linux/macOS e não exige configuração global do Docker Desktop.
+1. Extrair o archive da tag pretendida ou clonar o checkout correspondente. Na raiz com `package-lock.json`, instalar Node.js 24+, npm e executar `npm ci`. Para testes, instalar também Deno 2 e Python 3. A demonstração opcional usa `ffmpeg` com `libx264`.
+2. Rodar `node scripts/local.mjs start` com a declaração do Docker dedicado. O CLI nativo cria o banco e aplica as migrations com histórico real. A bridge nasce com publicação padrão em loopback. O script confere a rede, os IDs e os bindings efetivos antes de acessar o stack e só declara pronto após Auth, Storage, RPC pública e Edge responderem. Nas próximas partidas e paradas, opera apenas os IDs registrados. Em falha antes de registrar os IDs, preserve os diagnósticos e provisione outro ambiente vazio para um novo ensaio.
+3. Executar `npm run test:db`. O runner usa `psql` e Python 3 para os SQLs de asserção/rollback e a corrida da outbox. A saída detalhada fica privada em `.local/test-db/`. A execução imprime somente status e contagens. As corridas especializadas de comunidade, certificado e lançamentos têm destinos e fixtures de QA próprios.
 4. Rodar `npm run dev` e abrir explicitamente `http://127.0.0.1:8088`. Essa é a origem CORS padrão. Outro hostname exige configurar `APP_ORIGIN` **exato** no servidor; não derivar do header Host nem usar `*`.
 
-Não executar `db reset` para retomar instalação existente. O demo de construção que recebeu DDL manual não tem histórico CLI fabricado: o ensaio `scripts/clean-install.mjs` usa um banco novo isolado, uma bridge própria com default bind127 e migrations aplicadas nativamente; o recibo distingue esses ambientes. `migration repair --status applied` não é usado como prova de execução.
+### Atualizar uma instalação Docker completa
+
+Use este roteiro para o stack completo da v0.1.6 criado pelo Supabase CLI, com API em `58521`, Postgres em `58522` e Mailpit em `58524`. O instalador da versão nova exige um daemon vazio na primeira partida. Neste roteiro, o stack existente continua sob o controle dos comandos da versão instalada, com os mesmos volumes e dados. A atualização usa a tag nova como fonte das migrations, Edge Functions e frontend.
+
+1. Em uma janela de manutenção, suspenda frontend, webhooks e jobs que escrevam no stack. Mantenha Postgres e Storage acessíveis para o backup. No daemon de origem, registre os IDs completos dos containers Postgres e Storage e confirme os volumes nos mounts. Na raiz da tag v0.1.6, com os mesmos contexto e socket Docker da instalação, execute:
+
+   ```sh
+   node scripts/local.mjs status
+   node scripts/backup.mjs dump
+   node scripts/backup.mjs verify-restore
+   ```
+
+   Guarde `.local/backups/` e a configuração privada em armazenamento restrito. O dump inclui o histórico nativo quando presente. Com a máquina parada, tire um snapshot dos discos que contêm os dados do daemon, os volumes e a configuração. Preserve esse snapshot fora dos volumes atualizados e restaure-o em uma VM isolada para o ensaio, com a mesma versão do Supabase e com SMTP externo, webhooks e jobs desativados. Na cópia, suba o stack pelos comandos da v0.1.6 e confira DB, Storage, histórico e acesso a objetos privados antes de proceder. Se a verificação falhar, preserve a instalação e investigue.
+
+2. Extraia a tag nova em outro diretório. Em um shell sem contexto remoto e executado na mesma máquina do daemon, aponte `ICARUS_ANTIGO` e `ICARUS_NOVO` para os diretórios absolutos das duas versões. Confirme que `docker port "$ICARUS_DB_ID" 5432/tcp`, com o ID completo registrado do Postgres, mostra `127.0.0.1:58522` e que o TOML da tag nova declara `icarus-courses-local` e essa porta. Com o CLI `2.109.1`, use o perfil local criado pelo `status` da v0.1.6:
+
+   ```sh
+   icarus_cli_local() {
+     SUPABASE_SERVICES_HOSTNAME=127.0.0.1 supabase \
+       --workdir "$ICARUS_NOVO" --profile "$ICARUS_ANTIGO/.local/supabase-profile.toml" "$@"
+   }
+   icarus_cli_local migration list --local
+   icarus_cli_local db push --local --dry-run
+   ```
+
+   Para uma v0.1.6 íntegra, o banco deve registrar `202611230001` a `202611230020` e a prévia deve listar somente as migrations a partir da `202611230021` até a última da tag nova. Se houver lacuna, versão extra ou SQL aplicado manualmente sem registro, pare e compare o schema e os recibos com a fonte em uma cópia. `migration repair` altera somente o histórico. Use esse comando apenas em uma reconciliação explícita com prova do DDL já efetivo. Evite reset do banco, reexecução de seed e limpeza de volumes.
+
+3. Depois do ensaio e da conferência do destino, execute a aplicação e confira que as duas colunas do histórico coincidem, cada versão aparece uma vez e o novo dry-run está vazio:
+
+   ```sh
+   icarus_cli_local db push --local
+   icarus_cli_local migration list --local
+   icarus_cli_local db push --local --dry-run
+   ```
+
+   Se a aplicação falhar, preserve o erro e confira o schema e o histórico antes de repetir. Uma falha ao registrar a versão pode ocorrer após o `COMMIT` do arquivo SQL. Restaure em uma cópia ou reconcilie com evidência da versão exata. Retome a origem preservada ou restaure o snapshot e o conjunto de banco, Storage e configuração para voltar à versão anterior.
+
+4. Reinicie somente Edge Functions pelo helper da v0.1.6, apontando a fonte para a tag nova. A cópia da configuração abaixo contém a URL local e a chave pública. O runtime Edge continua usando o ambiente privado da instalação existente.
+
+   ```sh
+   cd "$ICARUS_ANTIGO"
+   ICARUS_FUNCTIONS_WORKDIR="$ICARUS_NOVO" node scripts/local.mjs functions-restart
+   install -m 600 .env.local "$ICARUS_NOVO/.env.local"
+   cd "$ICARUS_NOVO"
+   npm ci
+   npm run dev
+   ```
+
+   Confirme a saúde de Auth, Storage, PostgREST e Edge, além dos IDs e volumes já registrados. Valide login de conta existente, acesso a material privado, permissões de membro e admin e um convite via Mailpit antes de liberar escritas. Execute a mesma sequência na instalação de origem só depois de validar a cópia. O ensaio DB-only abaixo usa projeto próprio e serve à verificação do instalador.
+
+### Ensaio de banco isolado
+
+`node scripts/clean-install.mjs install` (ou sem argumento) cria o projeto DB-only `icarus-courses-install-qa` em uma bridge própria com `127.0.0.1:58622`. O diretório `.local/clean-install` precisa estar ausente. Use o gate do Docker dedicado, inventário vazio e porta livre acima. Um start interrompido pode deixar o diretório ou a rede da tentativa. Preserve o diagnóstico e use um ambiente vazio para repetir.
+
+- `node scripts/clean-install.mjs verify` exige o Postgres registrado em execução, o mesmo daemon e a mesma rede, somente o binding esperado, arquivos idênticos à fonte e histórico completo. Roda a suíte SQL com fixtures sintéticas no ID do Postgres.
+- `node scripts/clean-install.mjs upgrade` exige o mesmo destino em execução, configuração original, histórico consecutivo e arquivos já copiados idênticos à fonte. Pelo ID registrado, o `psql` executa cada migration e registra sua versão em `supabase_migrations.schema_migrations` na mesma transação. Os arquivos fonte permanecem íntegros e delimitados por `BEGIN` e `COMMIT`. Só versões inteiras podem formar o prefixo aplicado. Para retomar, confira o histórico e `.local/command-failure.json`. Se uma tentativa com a versão anterior do instalador deixou schema e histórico divergentes, preserve o QA para diagnóstico e use uma cópia íntegra para o novo ensaio. `.local/clean-install-evidence.json` registra a última ação concluída. [Transações em PL/pgSQL](https://www.postgresql.org/docs/17/plpgsql-transactions.html).
+- Rode `node --test scripts/clean-install.test.mjs scripts/local.test.mjs` para validar as recusas, o encaminhamento do upgrade e os fluxos do instalador com dublês. Para aceite nativo, use o archive do commit pretendido, aplique todas as migrations da árvore e confirme histórico e SQL/outbox no QA. Para ensaiar a transição 028 → 029 em outro daemon vazio, use o mesmo instalador com as migrations e os testes SQL da revisão anterior à 029. Após instalar e verificar o histórico até 028, recoloque as migrations e testes do archive-alvo no mesmo checkout, preserve `.local` e execute `upgrade` seguido de `verify`.
+- Para o aceite completo de terceiros, use também um stack Supabase novo com Auth, PostgREST, Storage, Edge Functions e Mailpit. Exercite primeiro administrador, cadastro/convite, MFA, autorização, mídia privada e os fluxos abaixo. Um build sem `.env.local` comprova compilação. `npm run local:start` e `node scripts/test-integrations.mjs --local` verificam o stack configurado com as fixtures da demonstração.
+
+### Migrations e fluxos da árvore atual
+
+Aplique `202611230001` a `202611230038` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
+
+| Migration | O que configurar ou validar |
+| --- | --- |
+| `021` | Editar o texto de uma publicação com imagem privada, confirmar que a imagem anterior permanece e que a edição volta à moderação. |
+| `022` | Em `/admin/podcasts`, cadastrar e publicar episódio com ID YouTube e link opcional de episódio Spotify. Em `/app/podcasts`, validar busca, capítulos e marcação de assistido. |
+| `023` | Agenda e acervo em `/app/encontros-ao-vivo` e edição em `/admin/encontros`. O operador fornece data, duração, permissão por plano, link Zoom/Meet e gravação opcional. O backend autoriza acesso e confirmação de presença. |
+| `024` | Com uma aula publicada, validar favoritos, notas restritas ao titular e comentários que passam pela moderação. |
+| `025` | Configurar as seções editoriais no admin da aula e testar capítulos com mídia, checklist por membro e, se usado, CTA com link HTTPS oficial do WhatsApp. |
+| `026` | Validar central, preferências, leitura e avisos de certificado/comentário aprovado com dois membros. Os avisos são internos ao aplicativo. |
+| `027` | Buscar cursos, módulos e aulas publicados com membros de planos diferentes e validar o acesso de cada resultado. |
+| `028` | Concluir aula/emitir certificado no mesmo cenário de atualização de perfil e suspensão. Conferir resultado consistente, erro recuperável em disputa e ausência de escrita parcial. |
+| `029` | Configurar anúncio de curso ou módulo em rascunho, inscrever membro elegível e publicar. Conferir o aviso interno por inscrição e os gates de acesso na entrega. |
+| `030` | Em duas contas, marcar episódios distintos e baixar os dados de cada titular em Configurações. Conferir apenas seus próprios IDs em `podcast_watches`, inclusive depois de um episódio voltar a rascunho. |
+| `031` | Enviar um feedback com print pelo cabeçalho da área de membros. Confirmar leitura apenas pelo titular ou por admin com sessão válida, transição auditada na fila e export do titular. Atualizar as Edge Functions de upload e mídia da mesma revisão. |
+| `032` | Acessar Dashboard e Analytics como admin e conferir períodos, valores agregados, funil e contagem de conclusões por aula. Conferir a negativa a outros papéis. |
+| `033` | Validar Ranking com ações de dois membros, deduplicação e expurgo de fixtures por titular. Conferir a projeção mínima e a trilha no export. Fechamento mensal e prêmios seguem em definição. |
+| `034` | Salvar o nome pelo editor de Marca e conferir a atualização nas molduras pública e autenticada. Repetir em duas sessões para validar a revisão, o conflito e o evento de auditoria. |
+| `035` | Acessar Dashboard, Analytics e Feedbacks com admin sem autenticador. Ativar o segundo fator em Sua conta → Segurança, confirmar a recusa de uma sessão AAL1 e acessar novamente após validar o código. |
+| `036` | Confirmar que somente a sessão autenticada executa a edição de publicações e que o backend preserva as regras de autoria e moderação. |
+| `037` | Abrir duas aulas de mesmo slug em seções diferentes pelo currículo e pela busca. Conferir notificações, progresso e endereços anteriores. |
+| `038` | Verificar o retorno do checkout visitante no mesmo navegador, o prazo do recibo e a consulta da conta titular após expirar. |
+
+A validação de navegação também cobre entrada e confirmação de email, primeira senha, perguntas de onboarding, edição parcial do perfil e MFA opcional. A seed fornece perguntas iniciais editáveis. Cadastre os próprios cursos, aulas, materiais, planos, ofertas e documentos legais pelo fluxo administrativo apropriado.
 
 ## Primeiro administrador sem conteúdo demo
 
-Não usar `bootstrap --demo` para administrador real. As migrations/seed padrão não criam usuário, preço, curso ou oferta comercial. Após `start` criar `.local/service.env`600:
+Em instalação real, use um administrador próprio. As migrations e a seed padrão deixam usuários, preços, cursos e ofertas comerciais a cargo do operador. O helper abaixo exige o stack local registrado. Ele consulta as credenciais do Auth na instalação validada e usa o ID registrado do Postgres para promover a conta. Para Supabase hospedado, siga o [procedimento do primeiro administrador hospedado](#primeiro-administrador-hospedado).
 
 ```sh
 node scripts/first-admin.mjs invite email-do-responsavel
@@ -31,11 +140,11 @@ Essa ação é SQL privilegiado **específico para o ID salvo em `.local/first-a
 
 ## Edge Functions e secrets
 
-`start` gerencia um processo nativo `supabase functions serve`, registrado por PID/fonte em `.local/`, e log privado600. `functions-restart` reinicia somente esse processo. `stop` encerra exclusivamente o processo registrado e o projeto Supabase exato, preservando volumes. `status` não reescreve arquivos cujos bytes são iguais, preservando mtime para não recarregar Vite. Após recriação nativa, start aguarda até30s pela saúde Auth/Storage/PostgREST; `.local/start-evidence.json` registra o estágio e `.local/command-failure.json` preserva diagnóstico privado em caso de falha. O log Edge é aberto em append600. Se o processo registrado não encerrar após SIGTERM e3s, stop falha e preserva o PID, sem SIGKILL ou falsa declaração de encerramento.
+`start` cria o Edge Runtime com o stack nativo. `functions` verifica sua prontidão e `functions-restart` recupera também o Edge registrado que já parou, desde que os demais serviços estejam ativos. O comando usa o ID e a configuração original. `stop` para os IDs registrados e preserva containers e volumes. O start aguarda até 30 s por Auth/Storage/PostgREST e até 90 s pela resposta Edge. Os recibos ficam em `.local/start-evidence.json` e `.local/edge-readiness.json`. `.local/command-failure.json` guarda o diagnóstico privado de falhas do CLI.
 
-A espera HTTP do Edge é limitada a90s e registra duração, PID, fonte e resultado em `.local/edge-readiness.json`. O start só finaliza as cópias técnicas após Edge e saúde global aprovados. Falha mantém journal/backups para recuperação explícita; não apagar o journal para esconder uma falha e não iniciar outro ciclo frio às cegas.
+`local-bindings.mjs` valida bindings em uso pelo instalador. Os comandos antigos de reparo e rollback foram desativados. Journals e backups legados ficam disponíveis para inspeção explícita.
 
-`.env.local` contém somente `VITE_SUPABASE_URL` e a anon key pública. `.local/service.env`600 contém credenciais de operação; `.local/edge.env`600 contém somente configuração server-side das funções. O CLI fornece os secrets reservados `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` ao runtime. Não colocar service-role, Asaas, Bunny ou senha em variável VITE/browser.
+`.env.local` contém somente `VITE_SUPABASE_URL` e a anon key pública. `.local/service.env` contém credenciais de operação. Antes do primeiro `start`, configure `.local/edge.env` com permissão `0600`. O instalador copia esse arquivo para `supabase/functions/.env` com a mesma permissão para consumo pelo CLI. Alterações nas variáveis Edge exigem configurar um novo stack isolado. O CLI fornece os secrets reservados `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` ao runtime. Guarde service role, Asaas, Bunny e senhas no servidor.
 
 Configuração Edge local mínima:
 
@@ -49,13 +158,115 @@ Em runtime hospedado pode ser usado `SUPABASE_PUBLIC_URL=https://dominio-publico
 
 O config declara `verify_jwt=false` para os handlers que fazem autorização própria: capabilities/checkout guest/recibo/webhook precisam chegar sem JWT; media/upload/reauth/password-setup exigem Auth `getUser/getClaims` e gates de sessão/recurso; process-invites aceita exclusivamente a credencial de serviço. Desativar o gateway não torna a mídia pública. As provas HTTP positivas/negativas ficam no relatório de aceite.
 
-Asaas/Bunny ficam desligados sem credenciais. Checkout de produção continua indisponível até homologação. Nota fiscal não configurada, nenhum documento simulado. Domínios/referrers/arquivos originais do Bunny exigem validação externa própria.
+## Instalação hospedada e recursos comerciais
+
+- Provisione um projeto Supabase próprio e [aplique as migrations](#aplicar-migrações-no-supabase-hospedado). Configure `ICARUS_MODE=production`, o `APP_ORIGIN` exato, a URL pública HTTPS da API, a Site URL do Auth e a URL absoluta de `/auth/callback` na allowlist. Publique as Edge Functions de `supabase/functions/` com a política de JWT do `supabase/config.toml`. Homologue convite, recuperação e confirmação de email com o SMTP real. `EMAIL_CONFIGURED=true` apenas sinaliza a configuração no aplicativo.
+- Gere `dist/` com a URL do seu projeto e sua chave pública em `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. Sirva por HTTPS com fallback das rotas para `index.html`. Ao redistribuir, acompanhe a aplicação com o [texto MIT](../LICENSE) e preservação das licenças de terceiros indicadas em [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). Nome, marca e conteúdo da academia exigem autorização própria.
+- Publique os textos legais aprovados e configure planos, preços e ofertas reais no admin antes de abrir cadastro ou compra. O Asaas funciona apenas em Sandbox neste código. A homologação exige `ASAAS_ENV=sandbox`, `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKEN` e `ASAAS_ITEM_IMAGE_BASE64` no servidor, URL HTTPS do webhook e prova de pedido, confirmação e convite reconciliados. Cobrança real e emissão fiscal continuam pendentes.
+- Para Bunny, configure biblioteca, chave de assinatura e hostname autorizado (`BUNNY_LIBRARY_ID`, `BUNNY_TOKEN_KEY`, `BUNNY_ALLOWED_DOMAIN`). Confirme token, política de domínio/referrer e acesso aos arquivos originais no provedor. Mídia externa, links de encontros e vídeos de terceiros dependem de autorização e teste na instalação de destino.
+- Configure o [primeiro administrador](#primeiro-administrador-hospedado) em uma instalação vazia. Configure o consumidor de convites no servidor com credencial de serviço e valide entrega real em ambiente autorizado.
+
+### Aplicar migrações no Supabase hospedado
+
+Use a raiz da tag pretendida e o CLI `2.109.1`. Para atualizar a v0.1.6, primeiro pause escritas da aplicação e dos jobs e prepare a recuperação do projeto. Confirme um backup de banco atualizado e restaurável no Dashboard ou siga o roteiro de backup lógico do Supabase, incluindo `auth`, `storage` e o histórico `supabase_migrations`. Copie também os bytes dos objetos privados pelos meios de exportação do Storage e preserve as configurações de Auth, Edge e secrets em armazenamento restrito. O backup de banco contém os metadados do Storage. Ensaie a restauração do banco e dos objetos em um destino isolado antes do upgrade. [Backup e restauração do banco](https://supabase.com/docs/guides/platform/backups) · [Backup lógico pelo CLI](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore) · [Download de objetos do Storage](https://supabase.com/docs/guides/storage/management/download-objects)
+
+No terminal do operador, confirme a referência do projeto no Dashboard e use-a em `SUPABASE_PROJECT_REF`. Forneça `SUPABASE_DB_PASSWORD` pelo ambiente protegido do operador para os comandos vinculados. Autentique o CLI, revise o histórico e confira a prévia antes de autorizar a aplicação.
+
+```sh
+supabase login
+supabase link --project-ref "$SUPABASE_PROJECT_REF"
+supabase migration list --linked
+supabase db push --linked --dry-run
+```
+
+Em um projeto novo, o histórico do Icarus deve estar vazio e todas as migrations da tag devem aparecer no plano. Na v0.1.6, o histórico deve estar completo de `202611230001` até `202611230020` e o plano deve começar na `202611230021`. Se o histórico divergir ou houver DDL aplicado manualmente, verifique o schema contra a tag original em uma cópia antes de prosseguir. `migration repair` só corrige metadados do histórico e exige prova da mudança já aplicada ou revertida. [Histórico de migrações](https://supabase.com/docs/reference/cli/supabase-migration-list) · [Aplicação e dry-run](https://supabase.com/docs/reference/cli/supabase-db-push)
+
+Depois de validar o destino e o plano, aplique e confira o histórico e o dry-run final. O push padrão aplica as migrations pendentes. Para uma instalação vazia que queira as perguntas iniciais do formulário, use `supabase db push --linked --include-seed` no primeiro push. Preserve a seed original em instalações em uso. Se a aplicação falhar, preserve o diagnóstico e confira schema e histórico antes de tentar novamente, inclusive se o `COMMIT` da migration já ocorreu e seu registro falhou. Restaure e valide uma cópia do backup antes de qualquer retorno de versão.
+
+```sh
+supabase db push --linked
+supabase migration list --linked
+supabase db push --linked --dry-run
+```
+
+Com todas as versões registradas e sem pendências, publique as Edge Functions e o frontend da mesma tag. Valide login, convite, material privado e permissões de membro e admin antes de reabrir escritas.
+
+### Primeiro administrador hospedado
+
+Use uma instalação vazia de administradores, com as migrations aplicadas, o frontend HTTPS acessível, SMTP e o redirect `/auth/callback` configurados e a Edge Function `password-setup` publicada. Execute `npm ci` na tag instalada. Em um terminal de operação, crie `.local/first-admin-hosted.env` com permissão `0600`. Preencha `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` do mesmo projeto conferido no Dashboard, `APP_ORIGIN` da instalação HTTPS e `ICARUS_ADMIN_EMAIL` do responsável. Execute em um shell sem essas quatro variáveis exportadas para que os valores venham do arquivo privado. O comando registra somente o UUID e o status.
+
+```sh
+node --env-file=.local/first-admin-hosted.env --input-type=module <<'JS'
+import { createClient } from '@supabase/supabase-js';
+
+const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, APP_ORIGIN, ICARUS_ADMIN_EMAIL } = process.env;
+const redirectTo = new URL('/auth/callback', APP_ORIGIN);
+if (new URL(SUPABASE_URL).protocol !== 'https:' || redirectTo.protocol !== 'https:' ||
+    !SUPABASE_SERVICE_ROLE_KEY || !ICARUS_ADMIN_EMAIL) {
+  throw new Error('Confira a configuração privada do projeto, da origem e do titular.');
+}
+const auth = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+}).auth.admin;
+const { data, error } = await auth.createUser({
+  email: ICARUS_ADMIN_EMAIL,
+  email_confirm: false,
+  app_metadata: { icarus_server_created: true, icarus_password_setup_required: true },
+});
+if (error || !data.user) throw new Error('Criação recusada. Confira o projeto e o titular no Dashboard.');
+console.log(`UUID criado: ${data.user.id}`);
+const invite = await auth.inviteUserByEmail(ICARUS_ADMIN_EMAIL, { redirectTo: redirectTo.href });
+if (invite.error || invite.data.user?.id !== data.user.id) {
+  throw new Error('Convite sem confirmação para esse UUID. Confira o Auth e o SMTP.');
+}
+console.log('Convite solicitado. Aguarde a confirmação do titular.');
+JS
+```
+
+Confirme o UUID no Dashboard de Auth. Se a criação deu certo e o envio falhou, confira a conta ainda não confirmada e reenvie o convite pelo Auth Admin para esse mesmo e-mail. O titular abre o convite, confirma o e-mail, define a primeira senha pela aplicação e testa o próprio login. [Criação de usuário](https://supabase.com/docs/reference/javascript/auth-admin-createuser) · [Convites do Auth](https://supabase.com/docs/guides/auth/users#inviting-users)
+
+Só depois, o operador com acesso privilegiado ao SQL Editor do mesmo projeto substitui o UUID e o e-mail pelos valores conferidos. O bloco serializa a criação do primeiro admin, altera somente o perfil elegível daquele UUID e registra a ação na auditoria. Qualquer recusa aborta o bloco.
+
+```sql
+do $$
+declare
+  target_id constant uuid := '00000000-0000-0000-0000-000000000000';
+  target_email constant text := 'responsavel@example.invalid';
+begin
+  lock table public.profiles in share row exclusive mode;
+  if exists (select 1 from public.profiles where role = 'admin') then
+    raise exception 'Já existe um administrador nesta instalação.';
+  end if;
+
+  update public.profiles p
+     set role = 'admin'
+    from auth.users u
+   where u.id = target_id and p.id = u.id and lower(u.email) = lower(target_email)
+     and p.role = 'member' and not p.demo and not p.suspended
+     and u.invited_at is not null and u.email_confirmed_at is not null
+     and u.raw_app_meta_data @> '{"icarus_server_created": true, "icarus_password_setup_required": false}'::jsonb
+     and not p.password_setup_required
+     and exists (
+       select 1 from public.audit_events e
+       where e.actor_id = p.id and e.target_id = p.id and e.target_type = 'profiles'
+         and e.action = 'password-setup-complete'
+     );
+  if not found then
+    raise exception 'Confirme UUID, e-mail, convite e primeira senha do titular.';
+  end if;
+  perform app_private.audit(null, 'first-admin-bootstrap', 'profiles', target_id);
+end $$;
+```
+
+Peça ao titular para entrar novamente e abrir o painel administrativo. Confirme a recusa em uma conta comum. A promoção mantém os grants e as políticas RLS da aplicação. Em Sua conta → Segurança, o administrador pode ativar o segundo fator recomendado. Com fator verificado, a aplicação exige AAL2 na sessão e no JWT.
+
+O [modelo do GitHub Actions](ci/README.md) está em `docs/ci`. A ativação e a primeira execução com o SHA da entrega ainda dependem do proprietário. Guarde resultados de build, SQL e verificação nativa com o SHA avaliado.
 
 ## Convite automático pós-pagamento
 
 Webhook persiste pagamento antes do HTTP200 e agenda o consumidor com `EdgeRuntime.waitUntil`. A outbox tem claim exclusivo, lease, tentativas e retry; sucesso do envio significa `sent`, sem confundir com confirmação de email, primeira senha ou acesso concedido. Falha definitiva sem envio volta a pending com backoff. Timeout/falha ambígua vira `uncertain`, sem reenvio automático cego; reconciliação reavalia `auth.users.invited_at`.
 
-O worker `/functions/v1/process-invites` usa somente credencial de serviço e lê no máximo20 registros devidos. Pode ser invocado por cron do próprio servidor, sem senha/token em argumentos ou logs:
+O worker `/functions/v1/process-invites` usa somente credencial de serviço e lê no máximo 20 registros devidos. No Supabase local, o cron pode usar o helper com a credencial lida do arquivo privado:
 
 ```cron
 * * * * * cd /caminho/icarus && /caminho/node scripts/process-invites.mjs >> .local/invite-worker.log 2>&1
@@ -65,7 +276,7 @@ Criar o log600 antes de ativar cron. O cron local não foi instalado no sistema 
 
 ## Backup completo mínimo da aplicação
 
-Pausar escritas por uma janela curta, capturar SQL **e** binários Storage:
+Os comandos abaixo consultam o Postgres e o Storage registrados no daemon dedicado. Pause as escritas por uma janela curta para capturar SQL e binários Storage.
 
 ```sh
 node scripts/backup.mjs dump

@@ -12,8 +12,11 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   const buyerData = { name: text(buyer.name, 120), email: a?.userInfo.email || text(buyer.email, 254).toLowerCase(), document: text(buyer.document, 18).replace(/[.\-/]/g, ""), phone: buyer.phone == null || buyer.phone === "" ? "" : text(buyer.phone, 20).replace(/[()\s+-]/g, "") };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerData.email) || !/^(\d{11}|\d{14})$/.test(buyerData.document) || (buyerData.phone && !/^\d{10,13}$/.test(buyerData.phone))) throw new HttpError(422, "INVALID_INPUT", "Confira email, documento e telefone.");
   if (!Array.isArray(body.legal_version_ids) || body.legal_version_ids.length < 2 || body.legal_version_ids.length > 5 || typeof body.marketing_opt_in !== "boolean") throw new HttpError(422, "INVALID_INPUT", "Confira o aceite dos termos.");
-  const receipt = nonce(), admin = a?.admin || clients(d).admin;
-  const order = await rpc(admin, "app_checkout_begin", { p_actor_id: a?.userInfo.id || null, p_plan_id: uuid(body.plan_id), p_attempt_key: text(body.attempt_key, 128), p_method: method, p_installments: installments, p_buyer_data: buyerData, p_legal_version_ids: body.legal_version_ids.map(uuid), p_marketing_opt_in: body.marketing_opt_in, p_receipt_hash: await sha256(receipt) });
+  const receipt = body.receipt_hash === undefined ? nonce() : undefined;
+  const receiptHash = receipt ? await sha256(receipt) : body.receipt_hash;
+  if (typeof receiptHash !== "string" || receiptHash.length !== 64 || /[^a-f0-9]/.test(receiptHash)) throw new HttpError(422, "INVALID_INPUT", "Recibo inválido.");
+  const admin = a?.admin || clients(d).admin;
+  const order = await rpc(admin, "app_checkout_begin", { p_actor_id: a?.userInfo.id || null, p_plan_id: uuid(body.plan_id), p_attempt_key: text(body.attempt_key, 128), p_method: method, p_installments: installments, p_buyer_data: buyerData, p_legal_version_ids: body.legal_version_ids.map(uuid), p_marketing_opt_in: body.marketing_opt_in, p_receipt_hash: receiptHash });
   if (order.checkout_url) return { order_id: order.order_id, status: order.status, url: order.checkout_url };
   if (order.create_gateway !== true) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Tentativa já recebida. Consulte o pedido antes de tentar novamente.");
   if (!Number.isSafeInteger(order.amount_cents) || order.amount_cents <= 0) throw new HttpError(503, "INVALID_OFFER", "Oferta indisponível.");

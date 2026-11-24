@@ -6,6 +6,7 @@ Original Icarus application code is distributed under [MIT](LICENSE). Dependenci
 
 - **Inter Variable** — SIL Open Font License 1.1. Font: `public/brand/InterVariable.woff2`; license: [Inter-OFL.txt](public/brand/Inter-OFL.txt).
 - **Player.js 0.1.0** — BSD-3-Clause. Vendored file, provenance and original license: [public/vendor/playerjs](public/vendor/playerjs/README.md). Used for the configurable Bunny embed; this does not certify a provider configuration.
+- **Material Symbols Outlined 2.985** — Copyright 2026 Google LLC. Apache-2.0. Google Fonts WOFF2 subsets for the lesson player and the mobile member frame. [Provenance and integrity](public/vendor/material-symbols/README.md) · [Original license](public/vendor/material-symbols/LICENSE-APACHE.txt).
 - **Icarus visual assets** — supplied as the official visual system. The code license does not grant trademark rights.
 
 ## Direct runtime dependencies

@@ -1,0 +1,379 @@
+.student-account {
+  --account-panel: var(--stitch-surface-member-rail);
+  --account-control: var(--stitch-surface-control);
+  --account-button: var(--stitch-surface-control);
+  --account-divider: var(--stitch-border-subtle);
+  font: var(--stitch-type-body-md-weight) var(--stitch-type-body-md-size) / var(--stitch-type-body-md-line) var(--stitch-font-family);
+  color: var(--stitch-text-primary);
+  min-width: 0;
+}
+
+[data-theme="dark"] .workspace:has(> .content > .student-account) {
+  background: var(--stitch-canvas);
+}
+
+[data-theme="dark"] .student-account {
+  --account-button: var(--stitch-surface-panel);
+  --account-divider: transparent;
+}
+
+.student-account > .page-heading {
+  margin-bottom: var(--stitch-space-xl);
+}
+
+.student-account > .page-heading h1 {
+  margin-bottom: var(--stitch-space-xs);
+  font-size: var(--stitch-type-headline-lg-size);
+  line-height: var(--stitch-type-headline-lg-line);
+  font-weight: var(--stitch-type-headline-lg-weight);
+  letter-spacing: var(--stitch-type-headline-lg-tracking);
+}
+
+.student-account .page-heading p,
+.student-account .notification-email-note {
+  color: var(--stitch-text-muted);
+}
+
+.student-account > .tabs {
+  gap: var(--stitch-space-xs);
+  padding: 0.375rem;
+  margin: 0 0 var(--stitch-space-xl);
+  background: var(--account-panel);
+  border: var(--stitch-border-width) solid var(--account-divider);
+  border-radius: var(--stitch-radius-lg);
+}
+
+.student-account > .tabs .button {
+  gap: var(--stitch-space-xs);
+  padding-inline: var(--stitch-space-md);
+  min-width: 0;
+}
+
+.student-account > .tabs .button[aria-current] {
+  background: var(--stitch-surface-selection);
+  border-color: transparent;
+  color: var(--stitch-text-on-selection);
+  font-weight: var(--stitch-type-headline-sm-weight);
+  box-shadow: var(--stitch-shadow-active);
+}
+
+.student-account > .tabs .button:not([aria-current]) {
+  border-color: transparent;
+  background: transparent;
+  color: var(--stitch-text-muted);
+}
+
+.student-account > .tabs .button:not([aria-current]):hover {
+  background: var(--account-control);
+  color: var(--stitch-text-primary);
+}
+
+.student-account :is(.button, button, .text-action) {
+  min-block-size: var(--stitch-control-min-size);
+  font-size: var(--stitch-type-label-md-size);
+  line-height: var(--stitch-type-label-md-line);
+  border-radius: var(--stitch-radius-md);
+  overflow-wrap: anywhere;
+}
+
+.student-account :is(.button, button):not(.primary, .notification-switch, .password-toggle) {
+  background: var(--account-button);
+  border-color: var(--account-divider);
+}
+
+.student-account :is(.button, button):not(.primary, .notification-switch):hover {
+  background: var(--stitch-surface-hover);
+}
+
+.student-account :is(button.primary, button.primary:hover:disabled) {
+  background: var(--stitch-action);
+  border-color: var(--stitch-action);
+  color: var(--stitch-on-action);
+}
+
+.student-account button.primary:hover:enabled {
+  background: var(--stitch-action-hover-soft);
+  border-color: var(--stitch-action-hover-soft);
+}
+
+.student-account :is(.field input:not([type="radio"], [type="checkbox"]), .field textarea, .field select) {
+  padding-inline: var(--stitch-space-md);
+  background: var(--account-control);
+  border-color: var(--stitch-text-muted);
+  border-radius: var(--stitch-radius-md);
+  font-size: var(--stitch-input-min-size);
+  line-height: var(--stitch-type-body-lg-line);
+  caret-color: var(--stitch-text-primary);
+}
+
+.student-account .field :is(input, textarea, select):focus {
+  background: var(--account-button);
+}
+
+.student-account .field > span {
+  color: var(--stitch-text-secondary);
+  font-size: var(--stitch-type-label-md-size);
+  line-height: var(--stitch-type-label-md-line);
+  font-weight: var(--stitch-type-label-md-weight);
+}
+
+.student-account :focus-visible,
+.student-account .notice[role="alert"]:focus {
+  outline: var(--stitch-focus-width) solid var(--stitch-focus);
+  outline-offset: var(--stitch-focus-offset);
+}
+
+.student-account :is(.field-error, .notice[role="alert"]) {
+  color: var(--stitch-error);
+}
+
+.student-account :is(.field [aria-invalid="true"], .notice[role="alert"]) {
+  border-color: var(--stitch-error);
+}
+
+.student-account-layout:has(.student-account-overview) {
+  display: grid;
+  gap: var(--stitch-gutter);
+  align-items: start;
+}
+
+.student-account-main,
+.student-account-overview {
+  display: grid;
+  gap: var(--stitch-space-lg);
+  min-width: 0;
+}
+
+.student-account-panel {
+  padding: var(--stitch-space-lg);
+  background: var(--account-panel);
+  border: var(--stitch-border-width) solid var(--account-divider);
+  border-radius: var(--stitch-radius-lg);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.student-account-panel h2 {
+  margin: 0 0 var(--stitch-space-sm);
+  font-size: var(--stitch-type-headline-sm-size);
+  line-height: var(--stitch-type-headline-sm-line);
+  font-weight: var(--stitch-type-headline-sm-weight);
+  letter-spacing: var(--stitch-type-headline-sm-tracking);
+}
+
+.student-account-panel > p,
+.student-account-identity p,
+.student-account .field small:not(.field-error) {
+  color: var(--stitch-text-muted);
+  font-size: var(--stitch-type-body-sm-size);
+  line-height: var(--stitch-type-body-sm-line);
+  letter-spacing: var(--stitch-type-body-sm-tracking);
+}
+
+.student-account-panel > p,
+.student-account-identity p {
+  margin: 0 0 var(--stitch-space-sm);
+}
+
+.student-account-overview .text-action {
+  display: flex;
+  padding-inline: var(--stitch-space-md);
+  margin-top: var(--stitch-space-md);
+  background: var(--account-button);
+  text-decoration: none;
+}
+
+.student-account-overview .text-action:hover {
+  background: var(--stitch-surface-hover);
+  text-decoration: underline;
+}
+
+.student-account-overview > .student-account-panel > svg {
+  margin-bottom: var(--stitch-space-xs);
+  color: var(--stitch-text-secondary);
+}
+
+.student-account-panel > .form {
+  margin: var(--stitch-space-md) 0 0;
+}
+
+.student-account-security > .form,
+.student-account-security > .mfa {
+  padding-bottom: var(--stitch-space-lg);
+  margin-bottom: var(--stitch-space-lg);
+  border-bottom: 1px solid var(--stitch-border-subtle);
+}
+
+.student-account-identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--stitch-space-md);
+}
+
+.student-account-photo[open] {
+  grid-column: 1 / -1;
+}
+
+.student-account-photo summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.student-account-photo summary::-webkit-details-marker {
+  display: none;
+}
+
+.student-account-identity .upload {
+  padding: var(--stitch-gutter-mobile) 0 0;
+  margin: var(--stitch-gutter-mobile) 0 0;
+}
+
+.student-account-identity .upload .field {
+  margin-bottom: var(--stitch-space-sm);
+}
+
+.student-account-identity .upload > .actions {
+  margin: var(--stitch-space-sm) 0 0;
+}
+
+.student-account-identity :is(.profile-photo, .student-account-avatar) {
+  width: 5rem;
+  height: 5rem;
+  margin: 0;
+  border-radius: var(--stitch-radius-lg);
+  object-fit: cover;
+}
+
+.student-account-avatar {
+  display: grid;
+  place-items: center;
+  background: var(--account-control);
+  color: var(--stitch-text-secondary);
+}
+
+.student-account-profile-form > fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--stitch-space-md);
+}
+
+.student-account-profile-form
+  > fieldset
+  > :is(.field:has(textarea), .form-actions) {
+  grid-column: 1 / -1;
+}
+
+.student-account-profile-form > fieldset > :is(.field, .form-actions) {
+  margin: 0;
+}
+
+.student-account-company {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--stitch-space-md);
+}
+
+.student-account-company > div {
+  padding: var(--stitch-space-md);
+  border-radius: var(--stitch-radius-md);
+  background: var(--account-control);
+}
+
+.student-account-company dt {
+  color: var(--stitch-text-secondary);
+  font-size: var(--stitch-type-body-sm-size);
+}
+
+.student-account-company dd {
+  margin: var(--stitch-space-xs) 0 0;
+  font-weight: var(--stitch-type-headline-sm-weight);
+}
+
+.student-account-panel > .notification-preferences > .page-heading {
+  margin-bottom: var(--stitch-space-md);
+}
+
+.student-account .notification-preference-table :is(thead, .notification-preference-group) {
+  background: var(--account-control);
+  color: var(--stitch-text-secondary);
+}
+
+.student-account .notification-preference-table :is(th, td) {
+  border-color: var(--stitch-border-subtle);
+}
+
+.student-account .notification-preference-table :is(th, td):not(:first-child) {
+  overflow-wrap: normal;
+}
+
+.student-account .notification-switch {
+  background: transparent;
+}
+
+.student-account .notification-switch > span {
+  border-color: var(--stitch-border-strong);
+  border-radius: var(--stitch-radius-full);
+  background: var(--stitch-surface-raised-strong);
+}
+
+.student-account .notification-switch > span::after {
+  background: var(--stitch-text-primary);
+}
+
+.student-account .notification-switch[aria-checked="true"] > span {
+  border-color: var(--stitch-action);
+  background: var(--stitch-action);
+}
+
+.student-account .notification-switch[aria-checked="true"] > span::after {
+  background: var(--stitch-on-action);
+}
+
+@media (min-width: 1024px) {
+  .student-account-layout:has(.student-account-overview) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .student-account-layout:has(.student-account-overview) > .student-account-main {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 639px) {
+  .student-account > :is(.page-heading, .tabs) {
+    margin-bottom: var(--stitch-space-lg);
+  }
+
+  .student-account > .page-heading h1 {
+    font-size: var(--stitch-type-headline-lg-mobile-size);
+    line-height: var(--stitch-type-headline-lg-mobile-line);
+    letter-spacing: var(--stitch-type-headline-lg-mobile-tracking);
+  }
+
+  .student-account > .tabs .button {
+    flex: 1 1 calc(50% - var(--stitch-space-xs));
+    padding-inline: var(--stitch-space-sm);
+  }
+
+  .student-account > .tabs .button > svg {
+    flex: none;
+  }
+
+  .student-account-identity {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .student-account-photo {
+    grid-column: 1 / -1;
+  }
+
+  .student-account-profile-form > fieldset,
+  .student-account-company {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .student-account-panel {
+    padding: var(--stitch-space-md);
+  }
+}

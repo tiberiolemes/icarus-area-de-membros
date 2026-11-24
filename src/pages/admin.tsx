@@ -1,5 +1,5 @@
-import { Fragment, useState } from "react";
-import type { ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import {
   Link,
   useNavigate,
@@ -7,7 +7,29 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Plus } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  BookOpen,
+  Check,
+  ChevronRight,
+  CreditCard,
+  Download,
+  FileText,
+  FolderOpen,
+  History,
+  KeyRound,
+  ListOrdered,
+  Pencil,
+  Plus,
+  Presentation,
+  RefreshCw,
+  Shield,
+  Users,
+  Video,
+  X,
+} from "lucide-react";
 import {
   cache,
   date,
@@ -20,6 +42,7 @@ import {
   useRpc,
 } from "../api";
 import { buildAdminCsv, exportLimit } from "../admin-export";
+import { courseLessonPath } from "../course-paths";
 import type { Page, Plan, Course } from "../api";
 import {
   Action,
@@ -29,19 +52,26 @@ import {
   Form,
   Heading,
   Modal,
+  NavigationTabs,
   Notice,
   Pager,
   Progress,
   QueryState,
   Search,
+  SectionHeading,
   nullable,
   value,
 } from "../ui";
 import { RichEditor } from "../rich";
+import { AdminBrand } from "./admin-brand";
+import { AdminCatalogLaunch } from "./admin-catalog-launch";
 import { Reauth } from "./settings";
 import { Moderate, statusName } from "./community";
 import { useBootstrap } from "../auth";
 import { Upload } from "../upload";
+import "./admin-commercial.css";
+import "./admin-settings.css";
+import "../admin-content.css";
 
 type Row = { id: string; [key: string]: unknown };
 type MemberDetail = {
@@ -322,48 +352,61 @@ function OrderControl({
   }
   return (
     <div className="order-controls">
-      <span>Ordem {String(row.order_index ?? 0)}</span>
       <Action disabled={index <= 0} run={() => move(-1)}>
-        <ArrowUp size={18} />
-        Subir {text(row, "title")}
+        <ArrowUp size={18} aria-hidden="true" />
+        <span className="sr-only">Subir {text(row, "title")}</span>
       </Action>
       <Action disabled={index >= siblings.length - 1} run={() => move(1)}>
-        <ArrowDown size={18} />
-        Descer {text(row, "title")}
+        <ArrowDown size={18} aria-hidden="true" />
+        <span className="sr-only">Descer {text(row, "title")}</span>
       </Action>
     </div>
   );
 }
 export function AdminCourses() {
   return (
-    <AdminList
-      entity="courses"
-      title="Conteúdo"
-      action={
-        <Link className="button primary" to="/admin/cursos/novo">
-          <Plus size={18} />
-          Criar curso
-        </Link>
-      }
-    >
-      {(course) => (
-        <>
-          <div>
-            <h2>
-              <Link to={"/admin/cursos/" + course.id}>
-                {text(course, "title")}
-              </Link>
-            </h2>
-            <p>
-              {statusName(text(course, "status"))} · /{text(course, "slug")}
-            </p>
-          </div>
-          <Link className="button" to={"/admin/cursos/" + course.id}>
-            Editar curso
+    <div className="admin-content">
+      <AdminList
+        entity="courses"
+        title="Cursos e aulas"
+        action={
+          <Link className="button primary" to="/admin/cursos/novo">
+            <Plus size={18} aria-hidden="true" />
+            Criar curso
           </Link>
-        </>
-      )}
-    </AdminList>
+        }
+      >
+        {(course) => {
+          const editor = `/admin/cursos/${encodeURIComponent(course.id)}`;
+          return (
+            <>
+              <div className="course-list-title">
+                <span className="content-icon">
+                  <BookOpen size={20} aria-hidden="true" />
+                </span>
+                <div>
+                  <h2>
+                    <Link to={editor}>{text(course, "title")}</Link>
+                  </h2>
+                  <p>
+                    {statusName(text(course, "status"))} · /
+                    {text(course, "slug")}
+                  </p>
+                </div>
+              </div>
+              <div className="actions">
+                <Link className="button" to={editor}>
+                  Editar curso
+                </Link>
+                <Link className="button" to={`${editor}?aba=estrutura`}>
+                  Estrutura e aulas
+                </Link>
+              </div>
+            </>
+          );
+        }}
+      </AdminList>
+    </div>
   );
 }
 export function CourseEditor() {
@@ -372,10 +415,13 @@ export function CourseEditor() {
     courses = useAll("courses"),
     course = courses.data?.find((row) => row.id === id),
     navigate = useNavigate(),
-    [tab, setTab] = useState("course");
+    [params] = useSearchParams(),
+    [tab, setTab] = useState(() =>
+      params.get("aba") === "estrutura" ? "structure" : "course",
+    );
   return (
-    <>
-      <Back to="/admin/cursos" />
+    <div className="admin-content">
+      <Back to="/admin/cursos" label="Cursos e aulas" />
       <Heading
         title={
           isNew
@@ -384,36 +430,50 @@ export function CourseEditor() {
               ? text(course, "title")
               : "Editar curso"
         }
-      />
+      >
+        Organize o currículo, configure o acesso e revise o conteúdo publicado.
+      </Heading>
       <QueryState query={courses}>
         {(isNew || course) && (
           <>
-            <nav className="tabs" aria-label="Editor de curso">
-              {[
-                ["course", "Curso"],
-                ["structure", "Estrutura e aulas"],
-                ["certificate", "Certificado"],
-              ].map(([key, label]) => (
-                <button
-                  key={key}
-                  disabled={isNew && key !== "course"}
-                  aria-current={tab === key ? "page" : undefined}
-                  onClick={() => setTab(key)}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="content-context" data-tour="course-editor">
               {course && (
-                <Link
-                  className="button"
-                  to={"/app/cursos/" + text(course, "slug")}
-                >
-                  Prévia autorizada
-                </Link>
+                <div className="content-summary">
+                  <span className="content-icon">
+                    <BookOpen size={20} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <strong>{statusName(text(course, "status"))}</strong>
+                    <p>/{text(course, "slug")}</p>
+                  </div>
+                </div>
               )}
-            </nav>
+              <NavigationTabs
+                label="Editor de curso"
+                selected={tab}
+                items={[
+                  ["course", "Curso"],
+                  ["structure", "Estrutura e aulas"],
+                  ["certificate", "Certificado"],
+                ].map(([id, label]) => ({
+                  id,
+                  label,
+                  disabled: isNew && id !== "course",
+                  onClick: () => setTab(id),
+                }))}
+              >
+                {course && (
+                  <Link
+                    className="button"
+                    to={`/app/cursos/${encodeURIComponent(text(course, "slug"))}`}
+                  >
+                    Prévia autorizada
+                  </Link>
+                )}
+              </NavigationTabs>
+            </div>
             {tab === "course" && (
-              <div className="reading" data-tour="course-editor">
+              <div className="reading content-panel">
                 <Form
                   key={id}
                   label={isNew ? "Criar curso" : "Salvar curso"}
@@ -439,7 +499,10 @@ export function CourseEditor() {
                 </Form>
                 {course && (
                   <>
-                    <h2>Capa do curso</h2>
+                    {course.status === "draft" && (
+                      <AdminCatalogLaunch entity="courses" id={course.id} />
+                    )}
+                    <SectionHeading title="Capa do curso" />
                     <Upload
                       kind="course-cover"
                       resourceId={course.id}
@@ -450,9 +513,9 @@ export function CourseEditor() {
                 )}
               </div>
             )}
-            {tab === "structure" && course && <Structure course={course} />}{" "}
+            {tab === "structure" && course && <Structure course={course} />}
             {tab === "certificate" && course && (
-              <div className="reading">
+              <div className="reading content-panel">
                 <Form
                   label="Salvar configuração do certificado"
                   onSave={(data) =>
@@ -509,197 +572,355 @@ export function CourseEditor() {
           <Notice error>Curso não encontrado.</Notice>
         )}
       </QueryState>
-    </>
+    </div>
+  );
+}
+const structureLabels = {
+  modules: "módulo",
+  sections: "seção",
+  lessons: "aula",
+};
+type StructureSelection = {
+  entity: keyof typeof structureLabels;
+  row?: Row;
+  parent: string;
+};
+
+function StructureActions({
+  entity,
+  row,
+  siblings,
+  onEdit,
+  current,
+}: {
+  entity: StructureSelection["entity"];
+  row: Row;
+  siblings?: Row[];
+  onEdit: (event: MouseEvent<HTMLButtonElement>) => void;
+  current?: boolean;
+}) {
+  const label = `Editar ${structureLabels[entity]} ${text(row, "title")}`;
+  return (
+    <div className="actions">
+      <button
+        className="content-icon-action"
+        type="button"
+        title={label}
+        aria-label={label}
+        aria-current={current || undefined}
+        onClick={onEdit}
+      >
+        <Pencil size={18} aria-hidden="true" />
+      </button>
+      {siblings && <OrderControl entity={entity} row={row} siblings={siblings} />}
+    </div>
   );
 }
 function Structure({ course }: { course: Row }) {
   const modules = useAll("modules"),
     sections = useAll("sections"),
     lessons = useAll("lessons"),
-    [selected, setSelected] = useState<{
-      entity: "modules" | "sections" | "lessons";
-      row?: Row;
-      parent: string;
-    } | null>(null);
-  const ownModules =
-    modules.data
-      ?.filter((m) => m.course_id === course.id)
-      .sort((a, b) => Number(a.order_index) - Number(b.order_index)) ?? [];
+    [reordering, setReordering] = useState(false),
+    [selected, setSelected] = useState<StructureSelection | null>(null);
+  const opener = useRef<HTMLButtonElement>(null);
+  const focusPanel = useCallback((node: HTMLElement | null) => {
+    focusEditor(node);
+  }, []);
+  useEffect(() => {
+    if (!selected) opener.current?.focus();
+  }, [selected]);
+  function openEditor(target: StructureSelection) {
+    return (event: MouseEvent<HTMLButtonElement>) => {
+      opener.current = event.currentTarget;
+      setSelected(target);
+    };
+  }
+  const ownModules = (modules.data ?? [])
+    .filter((module) => module.course_id === course.id)
+    .sort((a, b) => Number(a.order_index) - Number(b.order_index));
+  const moduleIds = new Set(ownModules.map((module) => module.id));
+  const courseSections = (sections.data ?? []).filter((section) =>
+    moduleIds.has(text(section, "module_id")),
+  );
+  const sectionIds = new Set(courseSections.map((section) => section.id));
+  const courseLessons = (lessons.data ?? []).filter((lesson) =>
+    sectionIds.has(text(lesson, "section_id")),
+  );
+  const rows = {
+    modules: ownModules,
+    sections: courseSections,
+    lessons: courseLessons,
+  };
+  const currentRow =
+    selected?.row &&
+    (rows[selected.entity].find((row) => row.id === selected.row?.id) ??
+      selected.row);
+  const lessonSection =
+    selected?.entity === "lessons" &&
+    courseSections.find((row) => row.id === selected.parent);
+  const lessonModule =
+    lessonSection &&
+    ownModules.find((row) => row.id === lessonSection.module_id);
+
   return (
-    <>
-      <div className="section-heading">
-        <h2>Estrutura do curso</h2>
-        <button
-          onClick={() => setSelected({ entity: "modules", parent: course.id })}
-        >
-          <Plus size={18} />
-          Adicionar módulo
-        </button>
-      </div>
-      <Notice>
-        Crie módulos, seções e aulas nesta ordem. Os botões Subir e Descer
-        funcionam com teclado e mouse.
-      </Notice>
-      <QueryState query={modules}>
-        <QueryState query={sections}>
-          <QueryState query={lessons}>
-            <div className="editor-outline">
-              {ownModules.map((module) => {
-                const ownSections =
-                  sections.data
-                    ?.filter((s) => s.module_id === module.id)
+    <div className={`content-workbench${selected ? " has-editor" : ""}`}>
+      <section className="content-outline">
+        <SectionHeading
+          title="Estrutura do curso"
+          actions={
+            <div className="actions">
+              {ownModules.length > 0 && (
+                <button type="button" aria-pressed={reordering} onClick={() => setReordering(!reordering)}>
+                  <ListOrdered size={18} aria-hidden="true" />
+                  Reordenar
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={openEditor({ entity: "modules", parent: course.id })}
+              >
+                <Plus size={18} aria-hidden="true" />
+                Adicionar módulo
+              </button>
+            </div>
+          }
+        />
+        <p className="content-hint">
+          {reordering && "Use Subir e Descer para mudar a ordem dos itens. "}
+          <Link className="text-action" to="/ajuda/administracao">
+            Ajuda sobre conteúdo
+          </Link>
+        </p>
+        <QueryState query={modules}>
+          <QueryState query={sections}>
+            <QueryState query={lessons}>
+              <p className="content-totals">
+                {ownModules.length}{" "}
+                {ownModules.length === 1 ? "módulo" : "módulos"}
+                {" · "}
+                {courseLessons.length}{" "}
+                {courseLessons.length === 1 ? "aula" : "aulas"}
+              </p>
+              <div className="editor-outline">
+                {ownModules.map((module) => {
+                  const ownSections = courseSections
+                    .filter((section) => section.module_id === module.id)
                     .sort(
                       (a, b) => Number(a.order_index) - Number(b.order_index),
-                    ) ?? [];
-                return (
-                  <section key={module.id}>
-                    <div className="section-heading">
-                      <h3>
-                        {text(module, "title")}{" "}
-                        <span className="badge">
-                          {statusName(text(module, "status"))}
-                        </span>
-                      </h3>
-                      <button
-                        onClick={() =>
-                          setSelected({
-                            entity: "modules",
-                            row: module,
-                            parent: course.id,
-                          })
+                    );
+                  return (
+                    <section
+                      className="content-panel content-module"
+                      key={module.id}
+                    >
+                      <SectionHeading
+                        level={3}
+                        title={
+                          <>
+                            <span className="content-icon">
+                              <FolderOpen size={18} aria-hidden="true" />
+                            </span>
+                            {text(module, "title")}{" "}
+                            <span className="badge">
+                              {statusName(text(module, "status"))}
+                            </span>
+                          </>
                         }
-                      >
-                        Editar módulo
-                      </button>
-                    </div>
-                    <OrderControl
-                      entity="modules"
-                      row={module}
-                      siblings={ownModules}
-                    />
-                    {ownSections.map((section) => {
-                      const ownLessons =
-                        lessons.data
-                          ?.filter((l) => l.section_id === section.id)
+                        actions={
+                          <StructureActions
+                            entity="modules"
+                            row={module}
+                            siblings={reordering ? ownModules : undefined}
+                            current={selected?.row?.id === module.id}
+                            onEdit={openEditor({
+                              entity: "modules",
+                              row: module,
+                              parent: course.id,
+                            })}
+                          />
+                        }
+                      />
+                      {ownSections.map((section) => {
+                        const ownLessons = courseLessons
+                          .filter((lesson) => lesson.section_id === section.id)
                           .sort(
                             (a, b) =>
                               Number(a.order_index) - Number(b.order_index),
-                          ) ?? [];
-                      return (
-                        <div className="section-block" key={section.id}>
-                          <div className="section-heading">
-                            <h4>
-                              {text(section, "title")}
-                              {!!section.is_bonus && (
-                                <span className="badge">Bônus</span>
-                              )}
-                            </h4>
-                            <button
-                              onClick={() =>
-                                setSelected({
-                                  entity: "sections",
-                                  row: section,
-                                  parent: module.id,
-                                })
+                          );
+                        return (
+                          <div className="section-block" key={section.id}>
+                            <SectionHeading
+                              level={4}
+                              title={
+                                <>
+                                  {text(section, "title")}{" "}
+                                  {section.status === "archived" && (
+                                    <span className="badge">Arquivado</span>
+                                  )}{" "}
+                                  {!!section.is_bonus && (
+                                    <span className="badge">Bônus</span>
+                                  )}
+                                </>
                               }
-                            >
-                              Editar seção
-                            </button>
-                          </div>
-                          <OrderControl
-                            entity="sections"
-                            row={section}
-                            siblings={ownSections}
-                          />
-                          {ownLessons.map((lesson) => (
-                            <article
-                              className="lesson-editor-row"
-                              key={lesson.id}
-                            >
-                              <div className="section-heading">
-                                <strong>{text(lesson, "title")}</strong>
-                                <button
-                                  onClick={() =>
-                                    setSelected({
+                              actions={
+                                <StructureActions
+                                  entity="sections"
+                                  row={section}
+                                  siblings={reordering ? ownSections : undefined}
+                                  current={selected?.row?.id === section.id}
+                                  onEdit={openEditor({
+                                    entity: "sections",
+                                    row: section,
+                                    parent: module.id,
+                                  })}
+                                />
+                              }
+                            />
+                            {ownLessons.map((lesson) => {
+                              const editing =
+                                selected?.entity === "lessons" &&
+                                selected.row?.id === lesson.id;
+                              return (
+                                <article
+                                  className="lesson-editor-row"
+                                  data-selected={editing || undefined}
+                                  key={lesson.id}
+                                >
+                                  <div className="lesson-editor-title">
+                                    <span className="content-icon">
+                                      {lesson.type === "video" ? (
+                                        <Video size={16} aria-hidden="true" />
+                                      ) : (
+                                        <FileText
+                                          size={16}
+                                          aria-hidden="true"
+                                        />
+                                      )}
+                                    </span>
+                                    <div>
+                                      <strong>{text(lesson, "title")}</strong>{" "}
+                                      {lesson.is_preview ? (
+                                        <span className="badge">Prévia</span>
+                                      ) : null}{" "}
+                                      {editing && (
+                                        <span className="badge content-editing">
+                                          Editando
+                                        </span>
+                                      )}
+                                      <p>
+                                        {statusName(text(lesson, "status"))} ·{" "}
+                                        {lesson.type === "video"
+                                          ? "Vídeo"
+                                          : "Texto"}{" "}
+                                        ·{" "}
+                                        {Math.ceil(
+                                          Number(lesson.duration_seconds ?? 0) /
+                                            60,
+                                        )}{" "}
+                                        min
+                                        {lesson.is_required
+                                          ? " · Obrigatória"
+                                          : ""}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <StructureActions
+                                    entity="lessons"
+                                    row={lesson}
+                                    siblings={reordering ? ownLessons : undefined}
+                                    current={editing}
+                                    onEdit={openEditor({
                                       entity: "lessons",
                                       row: lesson,
                                       parent: section.id,
-                                    })
-                                  }
-                                >
-                                  Editar aula
-                                </button>
-                              </div>
-                              <p>
-                                {statusName(text(lesson, "status"))} ·{" "}
-                                {text(lesson, "type")} ·{" "}
-                                {Math.ceil(
-                                  Number(lesson.duration_seconds) / 60,
-                                )}{" "}
-                                min{lesson.is_required ? " · Obrigatória" : ""}
-                              </p>
-                              <OrderControl
-                                entity="lessons"
-                                row={lesson}
-                                siblings={ownLessons}
-                              />
-                            </article>
-                          ))}
-                          <button
-                            onClick={() =>
-                              setSelected({
+                                    })}
+                                  />
+                                </article>
+                              );
+                            })}
+                            <button
+                              className="content-append"
+                              type="button"
+                              onClick={openEditor({
                                 entity: "lessons",
                                 parent: section.id,
-                              })
-                            }
-                          >
-                            <Plus size={18} />
-                            Adicionar aula
-                          </button>
-                        </div>
-                      );
-                    })}
-                    <button
-                      onClick={() =>
-                        setSelected({ entity: "sections", parent: module.id })
-                      }
-                    >
-                      <Plus size={18} />
-                      Adicionar seção
-                    </button>
-                  </section>
-                );
-              })}
-            </div>
-            {!ownModules.length && (
-              <Empty>
-                Este curso ainda não tem módulos. Adicione o primeiro para
-                organizar o conteúdo.
-              </Empty>
-            )}
+                              })}
+                            >
+                              <Plus size={18} aria-hidden="true" />
+                              Adicionar aula
+                            </button>
+                          </div>
+                        );
+                      })}
+                      <button
+                        className="content-append"
+                        type="button"
+                        onClick={openEditor({
+                          entity: "sections",
+                          parent: module.id,
+                        })}
+                      >
+                        <Plus size={18} aria-hidden="true" />
+                        Adicionar seção
+                      </button>
+                    </section>
+                  );
+                })}
+              </div>
+              {!ownModules.length && (
+                <Empty>
+                  Este curso ainda não tem módulos. Adicione o primeiro para
+                  organizar o conteúdo.
+                </Empty>
+              )}
+            </QueryState>
           </QueryState>
         </QueryState>
-      </QueryState>
+      </section>
       {selected && (
         <section
-          className="inline-editor"
-          ref={focusEditor}
+          className="inline-editor content-panel"
+          ref={focusPanel}
           key={`${selected.entity}-${selected.row?.id ?? selected.parent}`}
         >
-          <div className="section-heading">
-            <h2>
-              {selected.row ? "Editar" : "Criar"}{" "}
-              {selected.entity === "modules"
-                ? "módulo"
-                : selected.entity === "sections"
-                  ? "seção"
-                  : "aula"}
-            </h2>
-            <button onClick={() => setSelected(null)}>Fechar editor</button>
-          </div>
+          <SectionHeading
+            title={`${currentRow ? "Editar" : "Criar"} ${structureLabels[selected.entity]}`}
+            actions={
+              <button
+                className="content-icon-action"
+                type="button"
+                title="Fechar editor"
+                aria-label="Fechar editor"
+                onClick={() => setSelected(null)}
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            }
+          />
+          {currentRow && (
+            <p className="content-selection">{text(currentRow, "title")}</p>
+          )}
+          {currentRow && lessonModule && (
+            <div className="actions content-editor-links">
+              <Link
+                className="button"
+                to={courseLessonPath(text(course, "slug"), text(lessonModule, "slug"), currentRow.id)}
+              >
+                Prévia autorizada da aula
+              </Link>
+              {currentRow.status !== "archived" && (
+                <Link className="button"
+                  to={`/admin/cursos/${encodeURIComponent(course.id)}/aulas/${encodeURIComponent(currentRow.id)}/apresentacao`}
+                >
+                  <Presentation size={18} aria-hidden="true" />
+                  Editar apresentação
+                </Link>
+              )}
+            </div>
+          )}
           <StructureForm
             entity={selected.entity}
-            row={selected.row}
+            row={currentRow}
             parent={selected.parent}
             after={async () => {
               await Promise.all([
@@ -707,12 +928,12 @@ function Structure({ course }: { course: Row }) {
                 sections.refetch(),
                 lessons.refetch(),
               ]);
-              setSelected(null);
+              setSelected((current) => (current === selected ? null : current));
             }}
           />
         </section>
       )}
-    </>
+    </div>
   );
 }
 function StructureForm({
@@ -726,10 +947,12 @@ function StructureForm({
   parent: string;
   after: () => Promise<void>;
 }) {
+  const [uploading, setUploading] = useState(false);
   return (
-    <div className="reading">
+    <>
       <Form
         label="Salvar conteúdo"
+        submitDisabled={uploading}
         onSave={async (data) => {
           let fields: Record<string, unknown> = {
             title: value(data, "title"),
@@ -767,22 +990,75 @@ function StructureForm({
       >
         {entity === "sections" ? (
           <Field label="Título">
-            <input name="title" required defaultValue={text(row, "title")} />
+            <input
+              name="title"
+              required
+              maxLength={200}
+              defaultValue={text(row, "title")}
+            />
           </Field>
         ) : (
           <IdentityFields row={row} />
         )}
-        <StatusField row={row} />
-        <Field label="Posição na lista">
-          <input
-            name="order_index"
-            type="number"
-            min="0"
-            max="100000"
-            defaultValue={Number(row?.order_index ?? 0)}
-            required
-          />
-        </Field>
+        {entity === "lessons" && (
+          <>
+            <fieldset className="content-media">
+              <legend>Mídia da aula</legend>
+              <div className="content-form-grid">
+                <Field label="Tipo de aula">
+                  <select name="type" defaultValue={text(row, "type", "video")}>
+                    <option value="video">Vídeo</option>
+                    <option value="text">Texto</option>
+                    {row?.type === "audio" && <option value="audio">Áudio</option>}
+                  </select>
+                </Field>
+                <Field label="Duração em segundos">
+                  <input
+                    name="duration_seconds"
+                    type="number"
+                    required
+                    min="0"
+                    max="86400"
+                    defaultValue={Number(row?.duration_seconds ?? 0)}
+                  />
+                </Field>
+              </div>
+              <Field
+                label="Identificador do vídeo no Bunny"
+                hint="Use o ID cadastrado na biblioteca do Bunny Stream."
+              >
+                <input
+                  name="video_id"
+                  defaultValue={text(row, "video_id")}
+                  maxLength={100}
+                />
+              </Field>
+              {row ? (
+                <div onInput={(event) => event.stopPropagation()}>
+                  <Upload kind="lesson" resourceId={row.id} onBusyChange={setUploading} />
+                </div>
+              ) : <p>Salve a aula para enviar um arquivo de vídeo.</p>}
+            </fieldset>
+            <RichEditor
+              name="body"
+              initial={text(row, "body")}
+              label="Descrição da aula"
+            />
+          </>
+        )}
+        <div className="content-form-grid">
+          <StatusField row={row} />
+          <Field label="Posição na lista">
+            <input
+              name="order_index"
+              type="number"
+              min="0"
+              max="100000"
+              defaultValue={Number(row?.order_index ?? 0)}
+              required
+            />
+          </Field>
+        </div>
         {entity === "modules" && <AccessFields row={row} inherit />}
         {entity === "sections" && (
           <label className="check">
@@ -796,34 +1072,6 @@ function StructureForm({
         )}
         {entity === "lessons" && (
           <>
-            <Field label="Tipo de aula">
-              <select name="type" defaultValue={text(row, "type", "video")}>
-                <option value="video">Vídeo</option>
-                <option value="text">Texto</option>
-              </select>
-            </Field>
-            <RichEditor
-              name="body"
-              initial={text(row, "body")}
-              label="Descrição da aula"
-            />
-            <Field label="Duração em segundos">
-              <input
-                name="duration_seconds"
-                type="number"
-                required
-                min="0"
-                max="86400"
-                defaultValue={Number(row?.duration_seconds ?? 0)}
-              />
-            </Field>
-            <Field label="Identificador do vídeo no Bunny">
-              <input
-                name="video_id"
-                defaultValue={text(row, "video_id")}
-                maxLength={100}
-              />
-            </Field>
             <label className="check">
               <input
                 name="is_preview"
@@ -845,11 +1093,13 @@ function StructureForm({
       </Form>
       {row && (
         <>
-          {entity === "lessons" && <Upload kind="lesson" resourceId={row.id} />}
+          {entity === "modules" && row.status === "draft" && (
+            <AdminCatalogLaunch entity="modules" id={row.id} />
+          )}
           <Archive entity={entity} row={row} />
         </>
       )}
-    </div>
+    </>
   );
 }
 export function AdminMaterials() {
@@ -1042,217 +1292,566 @@ export function AdminMaterials() {
     </>
   );
 }
-export function AdminMembers() {
+const orderStatuses = ["paid", "pending", "refunded", "chargeback", "expired", "cancelled"] as const;
+
+function orderStatusLabel(status: string) {
+  return status === "pending" ? "Aguardando pagamento" : statusName(status);
+}
+
+function CommercialList({
+  entity,
+  title,
+  description,
+  section,
+  searchHint,
+  summarize,
+  action,
+  children,
+}: {
+  entity: "profiles" | "plans" | "orders";
+  title: string;
+  description: string;
+  section: string;
+  searchHint: string;
+  summarize: (items: Row[]) => [label: string, value: number | string][];
+  action?: ReactNode;
+  children: (items: Row[]) => ReactNode;
+}) {
+  const [params, setParams] = useSearchParams();
+  const situation = entity === "orders"
+    ? orderStatuses.find((status) => status === params.get("situacao"))
+    : undefined;
+  const q = situation ? "" : params.get("q") ?? "";
+  // The orders RPC searches "uuid status amount_cents"; spaces match the full status.
+  const queryTerm = situation ? ` ${situation} ` : q;
+  const page = Number(params.get("page") || 1);
+  const query = useRpc<Page<Row>>("app_admin_list", {
+    p_entity: entity,
+    p_query: queryTerm,
+    p_page: page,
+  });
+  const total = query.data?.total ?? 0;
+  const search = (
+    <Search
+      variant="stitch"
+      placeholder={searchHint}
+      label={entity === "orders" ? "Buscar pedidos" : undefined}
+      initial={q}
+      onSearch={(q) => setParams({ q, page: "1" })}
+    />
+  );
+
   return (
-    <AdminList entity="profiles" title="Membros">
-      {(member) => (
-        <>
-          <div>
-            <h2>
-              <Link to={"/admin/membros/" + member.id}>
-                {memberName(member)}
-              </Link>
-            </h2>
-            <p>
-              {roleLabel(text(member, "role"))} ·{" "}
-              {member.suspended ? "Suspenso" : "Ativo"}
-            </p>
+    <>
+      <Heading
+        title={title}
+        action={
+          <div className="commercial-heading-actions">
+            {action}
+            {entity !== "plans" && (
+              <div className="commercial-export" data-tour="admin-export">
+                <Action
+                  disabled={!query.isSuccess || !total || total > exportLimit}
+                  run={async () => {
+                    const csv = await buildAdminCsv(entity, queryTerm);
+                    downloadBlob(
+                      new Blob([csv], { type: "text/csv;charset=utf-8" }),
+                      `${entity === "profiles" ? "membros" : "pedidos"}-icarus.csv`,
+                    );
+                  }}
+                >
+                  <Download size={16} aria-hidden="true" />
+                  Exportar resultado completo em CSV
+                </Action>
+                <small>
+                  {total > exportLimit ? "Refine a busca. " : ""}
+                  Limite de {exportLimit.toLocaleString("pt-BR")} registros.
+                </small>
+              </div>
+            )}
           </div>
-          <Link className="button" to={"/admin/membros/" + member.id}>
-            Abrir ficha
-          </Link>
-        </>
+        }
+      >
+        {description}
+      </Heading>
+      {query.isSuccess && (
+        <dl className="commercial-metrics" aria-label="Resumo dos resultados">
+          <div>
+            <dt>Total encontrado</dt>
+            <dd>
+              <strong>{total.toLocaleString("pt-BR")}</strong>
+              <small>{situation ? "Na situação selecionada" : q ? "Na busca atual" : "Em todo o cadastro"}</small>
+            </dd>
+          </div>
+          {summarize(query.data.items).map(([label, metric]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>
+                <strong>{metric.toLocaleString("pt-BR")}</strong>
+                <small>Nesta página</small>
+              </dd>
+            </div>
+          ))}
+        </dl>
       )}
-    </AdminList>
+      {entity !== "plans" && (
+        <div className="commercial-toolbar">
+          {search}
+          {entity === "orders" && (
+            <div className="commercial-order-filters" data-tour="order-filters">
+              <div className="commercial-statuses" role="group" aria-label="Situação dos pedidos">
+                <button type="button" aria-pressed={!queryTerm} onClick={() => setParams({})}>
+                  Todos
+                </button>
+                {orderStatuses.map((status) => (
+                  <button
+                    type="button"
+                    key={status}
+                    aria-pressed={situation === status}
+                    onClick={() => setParams({ situacao: status })}
+                  >
+                    {orderStatusLabel(status)}
+                  </button>
+                ))}
+              </div>
+              <small>Buscar por ID ou valor consulta todas as situações.</small>
+            </div>
+          )}
+        </div>
+      )}
+      <section className="commercial-results" aria-label={section}>
+        <header>
+          <h2>{section}</h2>
+          {entity === "plans" && search}
+        </header>
+        <QueryState query={query}>
+          {query.data && (
+            <>
+              {query.data.items.length ? (
+                children(query.data.items)
+              ) : (
+                <Empty>
+                  {situation
+                    ? "Nenhum pedido nesta situação."
+                    : q
+                    ? "Nenhum resultado para esta busca. Tente outro termo."
+                    : "Nenhum registro cadastrado."}
+                </Empty>
+              )}
+              <Pager
+                page={page}
+                total={total}
+                onChange={(page) => setParams({
+                  ...(situation ? { situacao: situation } : { q }),
+                  page: String(page),
+                })}
+              />
+            </>
+          )}
+        </QueryState>
+      </section>
+    </>
   );
 }
+
+function memberCompany(member: Row) {
+  return member.company as { name?: string; segment?: string } | undefined;
+}
+
+function CommercialTable({
+  label,
+  columns,
+  children,
+}: {
+  label: string;
+  columns: string[];
+  children: ReactNode;
+}) {
+  return (
+    <table className="commercial-table" role="table" aria-label={label}>
+      <thead role="rowgroup">
+        <tr role="row">
+          {columns.map((column) => (
+            <th key={column} scope="col" role="columnheader">
+              {column}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody role="rowgroup">{children}</tbody>
+    </table>
+  );
+}
+
+function CommercialCell({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <td role="cell">
+      <span className="commercial-cell-label" aria-hidden="true">
+        {label}
+      </span>
+      {children}
+    </td>
+  );
+}
+
+export function AdminMembers() {
+  return (
+    <div className="admin-commercial">
+      <CommercialList
+        entity="profiles"
+        title="Gestão de membros e CRM"
+        description="Consulte cadastros, planos e vigências. A ficha reúne o progresso e o histórico de cada membro."
+        section="Diretório de membros"
+        searchHint="Buscar por nome ou empresa"
+        summarize={(members) => [
+          [
+            "Sem suspensão",
+            members.filter((member) => !member.suspended).length,
+          ],
+          ["Suspensos", members.filter((member) => member.suspended).length],
+          [
+            "Com plano vigente",
+            members.filter((member) => member.plan_name).length,
+          ],
+        ]}
+        action={
+          <Link className="button" to="/admin/comunidade">
+            Moderação da comunidade
+          </Link>
+        }
+      >
+        {(members) => (
+          <CommercialTable
+            label="Tabela de membros"
+            columns={[
+              "Membro",
+              "Empresa",
+              "Plano e vigência",
+              "Situação",
+              "Ações",
+            ]}
+          >
+            {members.map((member) => {
+              const company = memberCompany(member);
+              const name = memberName(member);
+              return (
+                <tr key={member.id} role="row">
+                  <th scope="row" role="rowheader">
+                    <div className="commercial-identity">
+                      <span aria-hidden="true">
+                        {name
+                          .split(/\s+/)
+                          .slice(0, 2)
+                          .map((part) => part[0])
+                          .join("")
+                          .toUpperCase()}
+                      </span>
+                      <div>
+                        {name}
+                        <small>{roleLabel(text(member, "role"))}</small>
+                      </div>
+                    </div>
+                  </th>
+                  <CommercialCell label="Empresa">
+                    {company?.name || "—"}
+                    {company?.segment && <small>{company.segment}</small>}
+                  </CommercialCell>
+                  <CommercialCell label="Plano e vigência">
+                    {text(member, "plan_name", "Sem plano ativo")}
+                    {member.access_ends_at ? (
+                      <small>Até {date(text(member, "access_ends_at"))}</small>
+                    ) : null}
+                  </CommercialCell>
+                  <CommercialCell label="Situação">
+                    <span
+                      className="badge"
+                      data-tone={member.suspended ? "error" : "success"}
+                    >
+                      {member.suspended ? "Suspenso" : "Ativo"}
+                    </span>
+                  </CommercialCell>
+                  <td role="cell">
+                    <Link
+                      className="button"
+                      to={"/admin/membros/" + member.id}
+                      aria-label={"Abrir ficha de " + name}
+                    >
+                      Abrir ficha
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
+          </CommercialTable>
+        )}
+      </CommercialList>
+    </div>
+  );
+}
+
+function focusMemberReview(title: HTMLHeadingElement | null) {
+  if (!title) return;
+  const opener = document.activeElement;
+  title.focus();
+  return () => {
+    if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+  };
+}
+
 export function MemberEditor() {
-  const { id } = useParams(),
-    members = useRpc<MemberDetail>("app_admin_member_detail", { p_id: id }),
+  const { id } = useParams();
+  return <MemberDetailPanel key={id} id={id} />;
+}
+
+function MemberDetailPanel({ id }: { id?: string }) {
+  const members = useRpc<MemberDetail>("app_admin_member_detail", { p_id: id }),
     member = members.data?.profile,
     plans = useAll("plans"),
     [change, setChange] = useState<Record<string, unknown> | null>(null),
-    [reason, setReason] = useState("");
+    [reason, setReason] = useState(""),
+    [applied, setApplied] = useState(false);
   return (
-    <>
+    <div className="admin-commercial">
       <Back to="/admin/membros" />
       <Heading title={member ? memberName(member) : "Ficha do membro"} />
       <QueryState query={members}>
         {member ? (
-          <div className="reading">
-            <dl>
-              <dt>Papel</dt>
-              <dd>{roleLabel(text(member, "role"))}</dd>
-              <dt>Estado</dt>
-              <dd>{member.suspended ? "Suspenso" : "Ativo"}</dd>
-              <dt>Onboarding</dt>
-              <dd>{member.onboarding_complete ? "Concluído" : "Pendente"}</dd>
-            </dl>
+          <div className="commercial-detail">
+            <section className="commercial-panel">
+              <h2>Perfil e acesso</h2>
+              <dl>
+                <dt>Empresa</dt>
+                <dd>{memberCompany(member)?.name || "Não informada"}</dd>
+                <dt>Papel</dt>
+                <dd>{roleLabel(text(member, "role"))}</dd>
+                <dt>Estado</dt>
+                <dd>{member.suspended ? "Suspenso" : "Ativo"}</dd>
+                <dt>Onboarding</dt>
+                <dd>{member.onboarding_complete ? "Concluído" : "Pendente"}</dd>
+              </dl>
+            </section>
             {members.data && <MemberFacts detail={members.data} />}
-            <Notice>
-              Conceder acesso aqui é uma cortesia auditada. Esta ação não cria
-              um pagamento nem confirma uma venda.
-            </Notice>
-            <Form
-              label="Revisar alteração"
-              successMessage="Dados preparados. Confirme sua identidade para aplicar a alteração."
-              onSave={async (data) => {
-                setChange({
-                  role: value(data, "role"),
-                  suspended: check(data, "suspended"),
-                  ...(value(data, "plan_id")
-                    ? {
-                        plan_id: value(data, "plan_id"),
-                        access_ends_at: new Date(
-                          value(data, "access_ends_at"),
-                        ).toISOString(),
-                      }
-                    : {}),
-                  ...(check(data, "revoke_access")
-                    ? { revoke_access: true }
-                    : {}),
-                });
-                setReason(value(data, "reason"));
-              }}
-            >
-              <Field label="Papel">
-                <select name="role" defaultValue={text(member, "role")}>
-                  {Object.entries(roleLabels).map(([role, label]) => (
-                    <option key={role} value={role}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <label className="check">
-                <input
-                  name="suspended"
-                  type="checkbox"
-                  defaultChecked={!!member.suspended}
-                />
-                Suspender acesso
-              </label>
-              <Field label="Plano a conceder como cortesia">
-                <select name="plan_id">
-                  <option value="">Manter plano atual</option>
-                  {plans.data?.map((plan) => (
-                    <option key={plan.id} value={plan.id}>
-                      {text(plan, "name")}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Validade da cortesia">
-                <input name="access_ends_at" type="datetime-local" />
-              </Field>
-              <label className="check">
-                <input name="revoke_access" type="checkbox" />
-                Revogar concessões atuais
-              </label>
-              <Field label="Motivo obrigatório">
-                <textarea
-                  name="reason"
-                  required
-                  minLength={5}
-                  maxLength={2000}
-                />
-              </Field>
-            </Form>
-            {change && (
-              <section>
-                <h2>Confirme a alteração</h2>
-                <p>
-                  Papel: {roleLabel(String(change.role))}. Acesso:{" "}
-                  {change.suspended ? "suspenso" : "ativo"}.{" "}
-                  {change.plan_id ? "Cortesia solicitada." : ""}{" "}
-                  {change.revoke_access ? "Revogação solicitada." : ""}
-                </p>
-                <p>Motivo: {reason}</p>
-                <div className="actions">
-                  <Reauth>
-                    {async (token) => {
-                      await rpc("app_admin_member", {
-                        p_id: id,
-                        p_data: change,
-                        p_reason: reason,
-                        p_reauth_token: token,
-                      });
-                      setChange(null);
-                      await members.refetch();
-                    }}
-                  </Reauth>
-                  <button onClick={() => setChange(null)}>
-                    Cancelar alteração
-                  </button>
-                </div>
-              </section>
-            )}
+            <section className="commercial-panel commercial-access">
+              <h2>Alterar acesso</h2>
+              <Notice>
+                Conceder acesso aqui é uma cortesia auditada. Esta ação não cria
+                um pagamento nem confirma uma venda.
+              </Notice>
+              <Form
+                label="Revisar alteração"
+                successMessage={
+                  change
+                    ? "Dados preparados. Confirme sua identidade para aplicar a alteração."
+                    : ""
+                }
+                onSave={async (data) => {
+                  setApplied(false);
+                  const plan = value(data, "plan_id");
+                  const expires = new Date(value(data, "access_ends_at"));
+                  if (plan && Number.isNaN(expires.getTime())) {
+                    setChange(null);
+                    throw new Error("Informe a validade da cortesia.");
+                  }
+                  setChange({
+                    role: value(data, "role"),
+                    suspended: check(data, "suspended"),
+                    ...(plan
+                      ? {
+                          plan_id: plan,
+                          access_ends_at: expires.toISOString(),
+                        }
+                      : {}),
+                    ...(check(data, "revoke_access")
+                      ? { revoke_access: true }
+                      : {}),
+                  });
+                  setReason(value(data, "reason"));
+                }}
+              >
+                <Field label="Papel">
+                  <select name="role" defaultValue={text(member, "role")}>
+                    {Object.entries(roleLabels).map(([role, label]) => (
+                      <option key={role} value={role}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <label className="check">
+                  <input
+                    name="suspended"
+                    type="checkbox"
+                    defaultChecked={!!member.suspended}
+                  />
+                  Suspender acesso
+                </label>
+                <Field label="Plano a conceder como cortesia">
+                  <select name="plan_id">
+                    <option value="">Manter plano atual</option>
+                    {plans.data?.map((plan) => (
+                      <option key={plan.id} value={plan.id}>
+                        {text(plan, "name")}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Validade da cortesia">
+                  <input name="access_ends_at" type="datetime-local" />
+                </Field>
+                <label className="check">
+                  <input name="revoke_access" type="checkbox" />
+                  Revogar concessões atuais
+                </label>
+                <Field label="Motivo obrigatório">
+                  <textarea
+                    name="reason"
+                    required
+                    minLength={5}
+                    maxLength={2000}
+                  />
+                </Field>
+              </Form>
+              {applied && <Notice>Alteração de acesso registrada.</Notice>}
+              {change && (
+                <section className="commercial-review">
+                  <h2 tabIndex={-1} ref={focusMemberReview}>
+                    Confirme a alteração
+                  </h2>
+                  <dl>
+                    <dt>Papel</dt>
+                    <dd>{roleLabel(String(change.role))}</dd>
+                    <dt>Acesso</dt>
+                    <dd>{change.suspended ? "Suspenso" : "Ativo"}</dd>
+                    {!!change.plan_id && (
+                      <>
+                        <dt>Cortesia até</dt>
+                        <dd>{date(String(change.access_ends_at))}</dd>
+                      </>
+                    )}
+                    {!!change.revoke_access && (
+                      <>
+                        <dt>Concessões atuais</dt>
+                        <dd>Revogar</dd>
+                      </>
+                    )}
+                    <dt>Motivo</dt>
+                    <dd>{reason}</dd>
+                  </dl>
+                  <div className="actions">
+                    <Reauth>
+                      {async (token) => {
+                        await rpc("app_admin_member", {
+                          p_id: id,
+                          p_data: change,
+                          p_reason: reason,
+                          p_reauth_token: token,
+                        });
+                        setChange(null);
+                        setApplied(true);
+                        await Promise.all([
+                          members.refetch(),
+                          cache.invalidateQueries({
+                            queryKey: [
+                              "app_admin_list",
+                              { p_entity: "profiles" },
+                            ],
+                          }),
+                        ]);
+                      }}
+                    </Reauth>
+                    <button onClick={() => setChange(null)}>
+                      Cancelar alteração
+                    </button>
+                  </div>
+                </section>
+              )}
+            </section>
           </div>
         ) : (
           <Empty>Membro não encontrado.</Empty>
         )}
       </QueryState>
-    </>
+    </div>
   );
 }
 function MemberFacts({ detail }: { detail: MemberDetail }) {
+  const concessionStatus: Record<string, string> = {
+    active: "Ativa",
+    expired: "Expirada",
+    scheduled: "Agendada",
+    revoked: "Revogada",
+  };
   return (
     <>
-      <h2>Plano e vigência</h2>
-      <p>
-        {text(detail.profile, "plan_name", "Sem plano ativo")} · validade{" "}
-        {date(text(detail.profile, "access_ends_at") || null)}
-      </p>
-      <details className="member-concessions">
-        <summary>Concessões ({detail.subscriptions.total})</summary>
-        {detail.subscriptions.items.map((subscription) => (
-          <article className="plan-row" key={subscription.id}>
-            <h3>{text(subscription, "plan_name")}</h3>
+      <section className="commercial-panel">
+        <h2>Plano e vigência</h2>
+        <p>
+          {text(detail.profile, "plan_name", "Sem plano ativo")} · validade{" "}
+          {date(text(detail.profile, "access_ends_at") || null)}
+        </p>
+        <details className="member-concessions">
+          <summary>Concessões ({detail.subscriptions.total})</summary>
+          {detail.subscriptions.items.map((subscription) => (
+            <article className="plan-row" key={subscription.id}>
+              <h3>{text(subscription, "plan_name")}</h3>
+              <p>
+                {concessionStatus[text(subscription, "status")] ??
+                  text(subscription, "status")}{" "}
+                · {date(text(subscription, "starts_at"))} a{" "}
+                {date(text(subscription, "ends_at"))} ·{" "}
+                {subscription.source === "courtesy" ? "Cortesia" : "Pedido"}
+              </p>
+            </article>
+          ))}
+          {detail.subscriptions.total > 20 && (
             <p>
-              {text(subscription, "status")} ·{" "}
-              {date(text(subscription, "starts_at"))} a{" "}
-              {date(text(subscription, "ends_at"))} ·{" "}
-              {subscription.source === "manual"
-                ? "Cortesia"
-                : text(subscription, "source")}
+              Exibindo as 20 concessões mais recentes de{" "}
+              {detail.subscriptions.total}.
             </p>
-          </article>
+          )}
+        </details>
+      </section>
+      <section className="commercial-panel">
+        <h2>Aprendizado ({detail.courses.total} cursos)</h2>
+        {detail.courses.items.map((course) => (
+          <div className="plan-row" key={course.id}>
+            <h3>{course.title}</h3>
+            <Progress
+              value={course.progress_percent}
+              done={course.completed_lessons}
+              total={course.total_lessons}
+            />
+          </div>
         ))}
-        {detail.subscriptions.total > 20 && (
-          <p>
-            Exibindo as 20 concessões mais recentes de{" "}
-            {detail.subscriptions.total}.
+      </section>
+      <section className="commercial-panel">
+        <h2>Pedidos ({detail.orders.total})</h2>
+        {detail.orders.items.map((order) => (
+          <p key={order.id}>
+            <Link className="text-action" to={"/admin/pedidos/" + order.id}>
+              {order.id.slice(0, 8)} · {money(Number(order.amount_cents))} ·{" "}
+              {orderStatusLabel(text(order, "status"))}
+            </Link>
           </p>
-        )}
-      </details>
-      <h2>Aprendizado ({detail.courses.total} cursos)</h2>
-      {detail.courses.items.map((course) => (
-        <div className="plan-row" key={course.id}>
-          <h3>{course.title}</h3>
-          <Progress
-            value={course.progress_percent}
-            done={course.completed_lessons}
-            total={course.total_lessons}
-          />
-        </div>
-      ))}
-      <h2>Pedidos ({detail.orders.total})</h2>
-      {detail.orders.items.map((order) => (
-        <p key={order.id}>
-          <Link className="text-action" to={"/admin/pedidos/" + order.id}>
-            {order.id.slice(0, 8)} · {money(Number(order.amount_cents))} ·{" "}
-            {statusName(text(order, "status"))}
-          </Link>
-        </p>
-      ))}
-      <h2>Tickets ({detail.tickets.total})</h2>
-      {detail.tickets.items.map((ticket) => (
-        <p key={ticket.id}>
-          <Link className="text-action" to={"/admin/suporte/" + ticket.id}>
-            {text(ticket, "subject")} · {statusName(text(ticket, "status"))}
-          </Link>
-        </p>
-      ))}
+        ))}
+      </section>
+      <section className="commercial-panel">
+        <h2>Tickets ({detail.tickets.total})</h2>
+        {detail.tickets.items.map((ticket) => (
+          <p key={ticket.id}>
+            <Link className="text-action" to={"/admin/suporte/" + ticket.id}>
+              {text(ticket, "subject")} · {statusName(text(ticket, "status"))}
+            </Link>
+          </p>
+        ))}
+      </section>
       {[detail.courses.total, detail.orders.total, detail.tickets.total].some(
         (total) => total > 20,
       ) && (
@@ -1266,36 +1865,98 @@ function MemberFacts({ detail }: { detail: MemberDetail }) {
 }
 export function AdminPlans() {
   const [editing, setEditing] = useState<Row | null | undefined>(undefined);
+  const [saved, setSaved] = useState(false);
   return (
-    <>
-      <AdminList
+    <div className="admin-commercial admin-commercial-plans">
+      <CommercialList
         entity="plans"
-        title="Planos"
+        title="Planos e ofertas"
+        description="Gerencie os preços, a duração de acesso e os benefícios de cada plano."
+        section="Planos cadastrados"
+        searchHint="Buscar plano"
+        summarize={(plans) => [
+          ["Ativos", plans.filter((plan) => plan.active).length],
+          ["Inativos", plans.filter((plan) => !plan.active).length],
+        ]}
         action={
-          <button className="primary" onClick={() => setEditing(null)}>
+          <button
+            className="primary"
+            onClick={() => {
+              setSaved(false);
+              setEditing(null);
+            }}
+          >
+            <Plus size={16} aria-hidden="true" />
             Criar plano
           </button>
         }
       >
-        {(plan) => (
-          <>
-            <div>
-              <h2>{text(plan, "name")}</h2>
-              <p>
-                {money(Number(plan.price_cents))} · {String(plan.access_months)}{" "}
-                meses · {plan.active ? "Ativo" : "Inativo"}
-              </p>
-            </div>
-            <button onClick={() => setEditing(plan)}>Editar plano</button>
-          </>
+        {(plans) => (
+          <div className="commercial-plans">
+            {plans.map((plan) => (
+              <article
+                className="commercial-panel commercial-plan"
+                key={plan.id}
+              >
+                <span
+                  className="badge"
+                  data-tone={plan.active ? "success" : undefined}
+                >
+                  {plan.active ? "Ativo" : "Inativo"}
+                </span>
+                <h3>{text(plan, "name")}</h3>
+                <p className="commercial-price">
+                  {money(Number(plan.price_cents))}
+                </p>
+                <p className="commercial-plan-duration">
+                  {Number(plan.access_months) === 1
+                    ? "1 mês de acesso"
+                    : `${plan.access_months} meses de acesso`}
+                </p>
+                {Array.isArray(plan.benefits) && plan.benefits.length > 0 && (
+                  <ul aria-label="Benefícios">
+                    {(plan.benefits as string[]).map((benefit, position) => (
+                      <li key={position}>
+                        <Check size={16} aria-hidden="true" />
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <button
+                  onClick={() => {
+                    setSaved(false);
+                    setEditing(plan);
+                  }}
+                  aria-label={"Editar plano " + text(plan, "name")}
+                >
+                  <Pencil size={16} aria-hidden="true" />
+                  Editar plano
+                </button>
+              </article>
+            ))}
+          </div>
         )}
-      </AdminList>
+      </CommercialList>
+      {saved && <Notice>Plano salvo com sucesso.</Notice>}
       {editing !== undefined && (
-        <section className="inline-editor reading" key={editing?.id ?? "new"} ref={focusEditor}>
+        <section
+          className="commercial-panel commercial-plan-editor"
+          key={editing?.id ?? "new"}
+          ref={focusEditor}
+        >
           <h2>{editing ? "Editar plano" : "Criar plano"}</h2>
           <Form
             label="Salvar plano"
-            secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
+            onDone={() => {
+              setSaved(true);
+              setEditing(undefined);
+            }}
+            secondaryAction={
+              <button type="button" onClick={() => setEditing(undefined)}>
+                Fechar editor
+              </button>
+            }
             onSave={async (data) => {
               await save("plans", editing?.id ?? null, {
                 name: value(data, "name"),
@@ -1308,7 +1969,6 @@ export function AdminPlans() {
                   .filter(Boolean),
                 active: check(data, "active"),
               });
-              setEditing(undefined);
             }}
           >
             <Field label="Nome">
@@ -1368,66 +2028,184 @@ export function AdminPlans() {
           </Form>
         </section>
       )}
-    </>
+      <section className="commercial-panel commercial-campaigns">
+        <h2>Cupons e campanhas</h2>
+        <p>
+          Cupons, links UTM e textos de upgrade ainda não estão disponíveis.
+        </p>
+      </section>
+    </div>
   );
 }
-export function AdminOrders() {
-  const { id } = useParams(),
-    orders = useAll("orders"),
-    order = orders.data?.find((o) => o.id === id);
-  if (id)
-    return (
-      <>
-        <Back to="/admin/pedidos" />
-        <Heading title="Detalhes do pedido" />
+function orderMethod(order: Row) {
+  const method = text(order, "method");
+  return method === "CREDIT_CARD" ? "Cartão de crédito" : method;
+}
+
+function OrderBadge({ order }: { order: Row }) {
+  const status = text(order, "status");
+  const tone =
+    status === "paid"
+      ? "success"
+      : status === "chargeback"
+        ? "error"
+        : undefined;
+  return (
+    <span className="badge" data-tone={tone}>
+      {orderStatusLabel(status)}
+    </span>
+  );
+}
+
+function OrderDetail({ id }: { id: string }) {
+  const validId = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id);
+  const orders = useRpc<Page<Row>>(
+    "app_admin_list",
+    { p_entity: "orders", p_query: id, p_page: 1 },
+    validId,
+  );
+  const order = orders.data?.items.find((item) => item.id === id);
+  return (
+    <div className="admin-commercial">
+      <Back to="/admin/pedidos" />
+      <Heading title="Detalhes do pedido" />
+      {!validId ? (
+        <Empty>Pedido não encontrado.</Empty>
+      ) : (
         <QueryState query={orders}>
           {order ? (
-            <>
-              <dl>
-                <dt>Identificador</dt>
-                <dd>{order.id}</dd>
-                <dt>Estado confirmado pelo servidor</dt>
-                <dd>{statusName(text(order, "status"))}</dd>
-                <dt>Valor</dt>
-                <dd>{money(Number(order.amount_cents))}</dd>
-                <dt>Método</dt>
-                <dd>{text(order, "method")}</dd>
-                <dt>Data</dt>
-                <dd>{date(text(order, "created_at"))}</dd>
-                <dt>Acesso concedido</dt>
-                <dd>{order.finalized_at ? "Sim" : "Ainda não confirmado"}</dd>
-              </dl>
+            <div className="commercial-detail">
+              <section className="commercial-panel">
+                <OrderBadge order={order} />
+                <h2>Resumo do pagamento</h2>
+                <p className="commercial-price">
+                  {money(Number(order.amount_cents))}
+                </p>
+                <dl>
+                  <dt>Identificador</dt>
+                  <dd>{order.id}</dd>
+                  <dt>Método</dt>
+                  <dd>{orderMethod(order)}</dd>
+                  <dt>Concessão registrada</dt>
+                  <dd>{order.finalized_at ? "Sim" : "Ainda não confirmado"}</dd>
+                </dl>
+                {order.user_id ? (
+                  <Link
+                    className="button"
+                    to={"/admin/membros/" + text(order, "user_id")}
+                  >
+                    Abrir ficha do membro
+                  </Link>
+                ) : null}
+              </section>
+              <section className="commercial-panel">
+                <h2>Histórico do pedido</h2>
+                <ol
+                  className="commercial-timeline"
+                  aria-label="Eventos registrados"
+                >
+                  {[
+                    ["Pedido criado", text(order, "created_at")],
+                    ["Pagamento confirmado", text(order, "paid_at")],
+                    ["Acesso concedido", text(order, "finalized_at")],
+                  ]
+                    .filter(([, timestamp]) => timestamp)
+                    .map(([event, timestamp]) => (
+                      <li key={event}>
+                        {event}
+                        <time dateTime={timestamp}>{date(timestamp)}</time>
+                      </li>
+                    ))}
+                </ol>
+              </section>
               <Notice>
                 Estorno, documento fiscal e reenvio de convite dependem de
-                operações do provedor no servidor. Não existe ação para marcar
-                pagamento manualmente.
+                operações do provedor no servidor.
               </Notice>
-            </>
+            </div>
           ) : (
             <Empty>Pedido não encontrado.</Empty>
           )}
         </QueryState>
-      </>
-    );
-  return (
-    <AdminList entity="orders" title="Pedidos">
-      {(order) => (
-        <>
-          <div>
-            <h2>
-              <Link to={"/admin/pedidos/" + order.id}>
-                Pedido {order.id.slice(0, 8)}
-              </Link>
-            </h2>
-            <p>
-              {money(Number(order.amount_cents))} ·{" "}
-              {date(text(order, "created_at"))} · {text(order, "method")}
-            </p>
-          </div>
-          <span className="badge">{statusName(text(order, "status"))}</span>
-        </>
       )}
-    </AdminList>
+    </div>
+  );
+}
+
+export function AdminOrders() {
+  const { id } = useParams();
+  if (id) return <OrderDetail id={id} />;
+
+  return (
+    <div className="admin-commercial">
+      <CommercialList
+        entity="orders"
+        title="Pedidos e faturamento"
+        description="Consulte transações, valores dos pedidos e os estados confirmados pelo servidor."
+        section="Livro de vendas"
+        searchHint="ID ou valor em centavos"
+        summarize={(orders) => {
+          const paid = orders.filter((order) => order.status === "paid");
+          return [
+            ["Pedidos pagos", paid.length],
+            [
+              "Pedidos pendentes",
+              orders.filter((order) => order.status === "pending").length,
+            ],
+            [
+              "Valor dos pedidos pagos",
+              money(
+                paid.reduce(
+                  (total, order) => total + Number(order.amount_cents),
+                  0,
+                ),
+              ),
+            ],
+          ];
+        }}
+      >
+        {(orders) => (
+          <CommercialTable
+            label="Tabela de pedidos"
+            columns={[
+              "Pedido e data",
+              "Método",
+              "Valor do pedido",
+              "Status",
+              "Ações",
+            ]}
+          >
+            {orders.map((order) => (
+              <tr key={order.id} role="row">
+                <th scope="row" role="rowheader">
+                  {order.id.slice(0, 8)}
+                  <small>{date(text(order, "created_at"))}</small>
+                </th>
+                <CommercialCell label="Método">
+                  {orderMethod(order)}
+                </CommercialCell>
+                <CommercialCell label="Valor do pedido">
+                  {money(Number(order.amount_cents))}
+                </CommercialCell>
+                <CommercialCell label="Status">
+                  <OrderBadge order={order} />
+                </CommercialCell>
+                <td role="cell">
+                  <Link
+                    className="button"
+                    to={"/admin/pedidos/" + order.id}
+                    aria-label={"Detalhes do pedido " + order.id.slice(0, 8)}
+                  >
+                    Detalhes
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </CommercialTable>
+        )}
+      </CommercialList>
+    </div>
   );
 }
 export function AdminCommunity() {
@@ -1437,23 +2215,23 @@ export function AdminCommunity() {
     spaces = useAll("spaces");
   return (
     <>
-      <Heading title="Comunidade" />
-      <nav className="tabs" aria-label="Administração da comunidade">
-        {[
+      <Heading title="Comunidade" action={
+        <Link className="button" to="/admin/comentarios-aula">Comentários de aula</Link>
+      } />
+      <NavigationTabs
+        label="Administração da comunidade"
+        selected={tab}
+        items={[
           ["moderacao", "Publicações"],
           ["respostas", "Respostas"],
           ["denuncias", "Denúncias"],
           ["espacos", "Espaços"],
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            aria-current={tab === id ? "page" : undefined}
-            onClick={() => setParams({ aba: id })}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+        ].map(([id, label]) => ({
+          id,
+          label,
+          onClick: () => setParams({ aba: id }),
+        }))}
+      />
       {tab === "moderacao" && (
         <AdminList entity="posts" title="Fila de publicações" section>
           {(post) => (
@@ -1601,67 +2379,269 @@ export function AdminCommunity() {
     </>
   );
 }
+const settingsTabs = [
+  ["onboarding", "Onboarding"],
+  ["marca", "Plataforma e marca"],
+  ["integracoes", "Integrações"],
+  ["legal", "Documentos legais"],
+  ["equipe", "Equipe"],
+  ["auditoria", "Auditoria"],
+  ["privacidade", "Privacidade"],
+] as const;
+
+function AcademySettingsTabs({ tab }: { tab: string }) {
+  return (
+    <NavigationTabs
+      label="Configurações da academia"
+      selected={tab}
+      items={settingsTabs.map(([id, label]) => ({ id, label, to: `?aba=${id}` }))}
+    />
+  );
+}
+
+function SettingsSurface({ tab, sectionLabel, title, description, action, children }: {
+  tab: "equipe" | "auditoria" | "integracoes" | "marca";
+  sectionLabel?: string;
+  title: string;
+  description: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="admin-settings" data-section={tab}>
+      <p className="settings-breadcrumb">
+        <span>Administração</span><ChevronRight size={14} aria-hidden="true" />
+        <span>Configurações</span><ChevronRight size={14} aria-hidden="true" />
+        <span>{sectionLabel ?? settingsTabs.find(([id]) => id === tab)?.[1]}</span>
+      </p>
+      <Heading title={title} action={action}>{description}</Heading>
+      <AcademySettingsTabs tab={tab} />
+      {children}
+      <Link className="button settings-help" to="/ajuda/administracao">Ajuda da administração</Link>
+    </div>
+  );
+}
+
+const staffScopes = [
+  ["admin", "Configurações, equipe, auditoria e operação da academia"],
+  ["instructor", "Cursos, aulas e materiais"],
+  ["moderator", "Espaços, publicações, respostas e denúncias"],
+  ["support", "Fila de suporte e atendimento por tickets"],
+] as const;
+
+function AdminTeam() {
+  return (
+    <SettingsSurface
+      tab="equipe"
+      title="Equipe e controle de acesso"
+      description="Consulte os papéis da equipe e gerencie o acesso pela ficha de cada membro."
+      action={
+        <Link className="button primary" to="/admin/membros">
+          <Users size={18} aria-hidden="true" /> Gerenciar membros e equipe
+        </Link>
+      }
+    >
+      <section className="settings-panel" data-tour="admin-settings-team" aria-labelledby="settings-roles">
+        <header>
+          <h2 id="settings-roles"><Shield size={20} aria-hidden="true" /> Papéis da equipe</h2>
+          <p>O papel define responsabilidades administrativas. O acesso por assinatura segue as regras de cada conteúdo.</p>
+        </header>
+        <dl className="settings-roles">
+          {staffScopes.map(([role, scope]) => (
+            <div key={role}>
+              <dt>{roleLabel(role)}</dt><dd>{scope}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+      <section className="settings-panel settings-callout" aria-labelledby="settings-change">
+        <div>
+          <h2 id="settings-change"><History size={20} aria-hidden="true" /> Alterações de acesso</h2>
+          <p>Para alterar um papel, abra a ficha do membro, informe o motivo e reautentique. A alteração fica registrada na trilha de auditoria.</p>
+        </div>
+        <Link className="button" to="?aba=auditoria">Consultar trilha de auditoria</Link>
+      </section>
+    </SettingsSurface>
+  );
+}
+
+type AuditEvent = {
+  id: string;
+  action: string;
+  actor_id: string | null;
+  target_type: string;
+  target_id: string | null;
+  reason: string | null;
+  created_at: string;
+};
+
+function AdminAudit() {
+  const [params, setParams] = useSearchParams();
+  const q = params.get("q") ?? "";
+  const requestedPage = Number(params.get("page") ?? 1);
+  const page = Number.isInteger(requestedPage) && requestedPage >= 1 && requestedPage <= 100000 ? requestedPage : 1;
+  function navigate(nextQuery: string, nextPage: number) {
+    setParams({ aba: "auditoria", q: nextQuery, page: String(nextPage) });
+  }
+  const events = useRpc<Page<AuditEvent>>("app_admin_list", {
+    p_entity: "audit_events",
+    p_query: q,
+    p_page: page,
+  });
+
+  return (
+    <SettingsSurface
+      tab="auditoria"
+      title="Trilha de auditoria"
+      description="Consulte ações administrativas, responsáveis, alvos e motivos registrados."
+      action={<Link className="button" to="?aba=equipe">Voltar à equipe</Link>}
+    >
+      <section className="settings-panel" data-tour="admin-settings-audit" aria-labelledby="settings-events">
+        <header className="settings-toolbar">
+          <h2 id="settings-events"><History size={20} aria-hidden="true" /> Eventos registrados</h2>
+          <Search variant="stitch" initial={q} label="Buscar eventos de auditoria"
+            placeholder="Buscar por ação, ator ou alvo" onSearch={(query) => navigate(query, 1)} />
+        </header>
+        <QueryState query={events}>
+          {events.data && (
+            <>
+              {events.data.items.length ? (
+                <ul className="settings-events" aria-label="Resultados da auditoria">
+                  {events.data.items.map((event) => (
+                    <li key={event.id}>
+                      <dl>
+                        <div><dt>Data e hora</dt><dd><time dateTime={event.created_at}>{date(event.created_at)}</time></dd></div>
+                        <div><dt>Ator</dt><dd>{event.actor_id ?? "Sem ator identificado"}</dd></div>
+                        <div><dt>Ação</dt><dd><strong>{event.action}</strong></dd></div>
+                        <div><dt>Alvo</dt><dd>{event.target_type}{event.target_id && <small>{event.target_id}</small>}</dd></div>
+                        <div><dt>Motivo</dt><dd>{event.reason || "Sem motivo registrado"}</dd></div>
+                      </dl>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <Empty>{q ? "Nenhum evento encontrado para esta busca." : "Nenhum evento registrado."}</Empty>
+              )}
+              <Pager page={page} total={events.data.total} onChange={(nextPage) => navigate(q, nextPage)} />
+            </>
+          )}
+        </QueryState>
+      </section>
+    </SettingsSurface>
+  );
+}
+
+const integrationTabs = [
+  { id: "asaas", label: "Gateway Asaas", to: "?aba=integracoes&provedor=asaas" },
+  { id: "bunny", label: "Bunny Stream", to: "?aba=integracoes&provedor=bunny" },
+];
+
+async function getAdminCapabilities() {
+  const data = await edge<Record<string, unknown> | null>("capabilities");
+  return {
+    asaas: typeof data?.asaas === "boolean" ? data.asaas : undefined,
+    bunny: typeof data?.bunny === "boolean" ? data.bunny : undefined,
+    mode: data?.mode === "production" || data?.mode === "local" ? data.mode : undefined,
+    storage: data?.storage === true,
+    email: data?.email === "configured" || data?.email === "local" ? data.email : undefined,
+  };
+}
+
+function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
+  const capabilities = useQuery({ queryKey: ["admin-capabilities"], queryFn: getAdminCapabilities });
+  const asaas = provider === "asaas";
+  const configured = capabilities.data?.[provider];
+  const ProviderIcon = asaas ? CreditCard : Video;
+
+  return (
+    <SettingsSurface
+      tab="integracoes"
+      sectionLabel={asaas ? "Gateway Asaas" : "Bunny Stream"}
+      title={asaas ? "Gateway de pagamento Asaas" : "Integração Bunny Stream"}
+      description={asaas ? "Checkout hospedado para pagamentos por Pix e cartão." : "Reprodução de vídeos autorizada pelo servidor."}
+      action={
+        <button type="button" aria-controls="settings-provider-status" aria-disabled={capabilities.isFetching}
+          onClick={() => {
+            if (!capabilities.isFetching) void capabilities.refetch({ cancelRefetch: false });
+          }}>
+          <RefreshCw size={16} aria-hidden="true" /> Atualizar estado
+        </button>
+      }
+    >
+      <div className="settings-provider" data-tour="admin-settings-providers">
+        <NavigationTabs label="Provedores" selected={provider} items={integrationTabs} />
+        <section className="settings-panel settings-status" aria-labelledby="settings-provider-title">
+          <ProviderIcon size={22} aria-hidden="true" />
+          <div>
+            <h2 id="settings-provider-title">Configuração do provedor</h2>
+            <p id="settings-provider-status" role="status" data-configured={capabilities.isSuccess && configured === true}>
+              {capabilities.isFetching ? "Consultando configuração…" :
+                capabilities.isError || configured === undefined ? "Estado indisponível" :
+                configured ? "Configuração detectada" : "Não configurado"}
+            </p>
+            {capabilities.isError && <p role="alert">A consulta falhou. Use Atualizar estado para tentar novamente.</p>}
+            <p>O indicador informa a presença da configuração no servidor.</p>
+          </div>
+        </section>
+      </div>
+      <div className="settings-provider-grid">
+        <section className="settings-panel">
+          <h2><KeyRound size={20} aria-hidden="true" /> {asaas ? "API e autenticação" : "Credenciais e biblioteca"}</h2>
+          <p>{asaas
+            ? "O checkout usa o ambiente sandbox. Configure a chave da API, o token do webhook, a origem da aplicação e a imagem do item no servidor."
+            : "Configure o identificador da biblioteca, a chave de assinatura e o domínio permitido no servidor."}</p>
+        </section>
+        <section className="settings-panel">
+          <h2><Shield size={20} aria-hidden="true" /> {asaas ? "Webhooks e confirmação" : "Acesso e reprodução"}</h2>
+          <p>{asaas
+            ? "O servidor valida o token do webhook e processa a confirmação do pagamento antes de conceder acesso."
+            : "Associe o identificador do vídeo à aula. O servidor verifica o acesso antes de emitir um link de reprodução temporário."}</p>
+          <Link className="button" to={asaas ? "/admin/pedidos" : "/admin/cursos"}>
+            {asaas ? "Consultar pedidos" : "Gerenciar aulas"}
+          </Link>
+        </section>
+        <section className="settings-panel">
+          <h2><FileText size={20} aria-hidden="true" /> {asaas ? "Conciliação e operações fiscais" : "Processamento de vídeo"}</h2>
+          <p>{asaas
+            ? "Consulte taxas, conciliação e operações fiscais no painel do Asaas."
+            : "Consulte a biblioteca, o processamento e os perfis de vídeo no painel do Bunny Stream."}</p>
+        </section>
+      </div>
+      {capabilities.isSuccess && (
+        <details className="settings-panel settings-services">
+          <summary>Outros serviços da academia</summary>
+          <dl className="settings-roles">
+            <div><dt>Aplicação</dt><dd>{capabilities.data.mode === "production" ? "Produção" : capabilities.data.mode === "local" ? "Local" : "Indisponível"}</dd></div>
+            <div><dt>Armazenamento</dt><dd>{capabilities.data.storage ? "Disponível na configuração" : "Indisponível"}</dd></div>
+            <div><dt>E-mail</dt><dd>{capabilities.data.email === "configured" ? "Configuração detectada" : capabilities.data.email === "local" ? "Local" : "Indisponível"}</dd></div>
+          </dl>
+        </details>
+      )}
+    </SettingsSurface>
+  );
+}
+
 export function AdminSettings() {
-  const [params, setParams] = useSearchParams(),
-    tab = params.get("aba") ?? "onboarding",
-    [legal, setLegal] = useState<Row | null | undefined>(undefined),
-    config = useRpc<Page<Row>>("app_admin_list", {
-      p_entity: "onboarding",
-      p_query: "",
-      p_page: 1,
-    }),
-    capabilities = useQuery({
-      queryKey: ["capabilities"],
-      queryFn: () => edge<Record<string, unknown>>("capabilities"),
-    });
+  const [params] = useSearchParams();
+  const tab = params.get("aba") ?? "onboarding";
+  const [legal, setLegal] = useState<Row | null | undefined>(undefined);
+  if (tab === "marca") return (
+    <SettingsSurface
+      tab="marca"
+      title="Plataforma, marca e white label"
+      description="Gerencie o nome da instalação e os documentos legais da academia."
+    >
+      <AdminBrand />
+    </SettingsSurface>
+  );
+  if (tab === "equipe") return <AdminTeam />;
+  if (tab === "auditoria") return <AdminAudit />;
+  if (tab === "integracoes") return <AdminIntegrations provider={params.get("provedor") === "bunny" ? "bunny" : "asaas"} />;
   return (
     <>
       <Heading title="Configurações da academia" />
-      <nav className="tabs" aria-label="Configurações da academia">
-        {[
-          ["onboarding", "Onboarding"],
-          ["integracoes", "Integrações"],
-          ["legal", "Documentos legais"],
-          ["equipe", "Equipe"],
-          ["privacidade", "Privacidade"],
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            aria-current={tab === id ? "page" : undefined}
-            onClick={() => setParams({ aba: id })}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      <AcademySettingsTabs tab={tab} />
       {tab === "onboarding" && <OnboardingAdmin />}
-      {tab === "integracoes" && (
-        <div className="reading">
-          <h2>Situação dos provedores</h2>
-          <QueryState query={capabilities}>
-            {capabilities.data && (
-              <dl>
-                {Object.entries(capabilities.data).map(([key, v]) => (
-                  <Fragment key={key}>
-                    <dt>{key}</dt>
-                    <dd>
-                      {typeof v === "boolean"
-                        ? v
-                          ? "Configurado"
-                          : "Não configurado"
-                        : String(v)}
-                    </dd>
-                  </Fragment>
-                ))}
-              </dl>
-            )}
-          </QueryState>
-          <Notice>
-            Credenciais são configuradas exclusivamente no servidor. Esta tela
-            não lê nem armazena secrets.
-          </Notice>
-        </div>
-      )}
       {tab === "legal" && (
         <>
           <AdminList
@@ -1700,6 +2680,7 @@ export function AdminSettings() {
                     published: check(data, "published"),
                     demo: check(data, "demo"),
                   });
+                  void cache.invalidateQueries({ queryKey: ["app_public_context"] });
                   setLegal(undefined);
                 }}
               >
@@ -1758,17 +2739,6 @@ export function AdminSettings() {
               </Form>
             </div>
           )}
-        </>
-      )}
-      {tab === "equipe" && (
-        <>
-          <p>
-            Papéis são independentes de planos. Altere o papel na ficha de um
-            membro com reautenticação.
-          </p>
-          <Link className="button" to="/admin/membros">
-            Gerenciar membros e equipe
-          </Link>
         </>
       )}
       {tab === "privacidade" && (

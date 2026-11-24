@@ -13,7 +13,7 @@ if (local || outbox) {
   args.push(`--env-file=${env}`, '--allow-net=127.0.0.1:58521,127.0.0.1:58524');
   if (outbox) args.push(`--env-file=${resolve(root, '.local/edge.env')}`, '--allow-run=docker', '--allow-read=supabase/tests/fixtures', `--allow-write=${resolve(root, '.local')}`, 'tests/integration/outbox_http_test.ts');
   else args.push(`--allow-read=${resolve(root, '.local')}`, 'tests/integration/local_test.ts');
-} else args.push('tests/integration/edge_test.ts');
+} else args.push('tests/integration/edge_test.ts', 'tests/integration/feedback_edge_test.ts');
 const result = spawnSync('deno', args, { cwd: fileURLToPath(new URL('../', import.meta.url)), stdio: 'inherit', env: { ...process.env, ICARUS_LOCAL_WORKDIR: root, DEMO_ACCOUNTS_PATH: resolve(root, '.local/demo-accounts.json'), DEMO_RESOURCES_PATH: resolve(root, '.local/demo-resources.json') } });
 if (result.error) console.error('Deno2/SDK indisponível; testes não executados.');
 process.exitCode = result.status ?? 1;

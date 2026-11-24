@@ -1,0 +1,97 @@
+.lesson-presentation-editor {
+  max-inline-size: 48rem;
+  min-inline-size: 0;
+  color: var(--ic-text);
+}
+
+.lesson-presentation-editor__heading {
+  margin-block-end: 24px;
+}
+
+.lesson-presentation-editor__heading h2,
+.lesson-presentation-editor__heading p,
+.lesson-presentation-editor__block h3,
+.lesson-presentation-editor__item-bar h4 {
+  margin: 0;
+}
+
+.lesson-presentation-editor__heading p,
+.lesson-presentation-editor__hint {
+  color: var(--ic-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.lesson-presentation-editor__hint {
+  margin: 4px 0 12px;
+  max-inline-size: 70ch;
+}
+
+.lesson-presentation-editor__block {
+  margin-block-start: 24px;
+  padding-block-start: 24px;
+  border-block-start: 1px solid var(--ic-border);
+}
+
+.lesson-presentation-editor__block h3 {
+  margin-block-end: 8px;
+}
+
+.lesson-presentation-editor__items {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.lesson-presentation-editor__items > li {
+  min-inline-size: 0;
+  border: 1px solid var(--ic-border);
+  border-radius: var(--ic-radius-control);
+  padding: 12px;
+}
+
+.lesson-presentation-editor__item-bar,
+.lesson-presentation-editor__item-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lesson-presentation-editor__item-bar {
+  justify-content: space-between;
+  margin-block-end: 12px;
+}
+
+.lesson-presentation-editor__item-actions button {
+  padding-inline: 12px;
+}
+
+.lesson-presentation-editor__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 0 12px;
+}
+
+.lesson-presentation-editor__items .field {
+  margin-block-end: 12px;
+}
+
+.lesson-presentation-editor .field > label {
+  font-weight: 500;
+}
+
+.lesson-presentation-editor textarea {
+  resize: vertical;
+}
+
+.lesson-presentation-editor__footer {
+  margin-block-start: 24px;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--ic-border);
+}
+
+.lesson-presentation-editor__footer .form-actions {
+  margin-block-start: 12px;
+}

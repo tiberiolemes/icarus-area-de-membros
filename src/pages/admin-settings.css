@@ -20,6 +20,7 @@
 
 .admin-settings :is(p, h2, dl, dd, .tabs, .pagination) { margin: 0; }
 .admin-settings :is(p, summary, dd) { overflow-wrap: anywhere; }
+.admin-settings[data-section="equipe"] dd { text-wrap: balance; }
 
 .admin-settings .settings-breadcrumb {
   display: flex;

@@ -26,6 +26,12 @@ Aplicação nova em React, TypeScript, Vite e Supabase. A árvore desta versão 
 
 Papéis de equipe e direitos de assinatura são independentes. O servidor valida identidade, sessão, plano, titularidade e estado atual de cada recurso.
 
+## Demonstração navegável
+
+Baixe o [HTML da demonstração](demo/index.html) e abra o arquivo no navegador. Os acessos fictícios de aluno e administrador estão na tela de entrada. A demo funciona offline, sem instalação ou conexão com o Supabase, e apresenta a jornada de estudo, o editor de cursos, a moderação e os chamados.
+
+Ao alterar um fluxo apresentado na demo, atualize e teste o HTML no mesmo PR. A tag `icarus-source` identifica a revisão da aplicação usada como referência.
+
 ## Começar localmente
 
 Para instalar uma versão publicada, extraia o código-fonte da tag correspondente ou abra um checkout dessa tag. O `package.json` está marcado como privado e o procedimento usa o `package-lock.json` do repositório. [Versões publicadas no GitHub](https://github.com/tiberiolemes/icarus-area-de-membros/releases).
@@ -88,7 +94,9 @@ Icarus is an open-source membership and online course delivery platform for busi
 
 This release is a fresh implementation; it does not use Frappe. Git history is preserved. Staff roles and subscription entitlements are separate. Server-side authorization is required for every protected operation.
 
-Use the source archive or checkout for the intended GitHub tag. The npm package is private. Use Node.js 24+, npm and Supabase CLI `2.109.1`. Before running `local:start`, declare the [dedicated, empty Docker daemon](docs/operations.md#requisitos-do-docker-dedicado). Contract tests use Deno 2, database tests use Python 3, and the optional demo uses `ffmpeg` with `libx264`. Run the commands above and open `http://127.0.0.1:8088`. The local checkout uses a fixed Docker project and ports. For an empty academy follow the first-admin instructions. The optional `node scripts/bootstrap.mjs --demo` writes randomly generated demo credentials to the private, ignored `.local/ACESSOS.md` file.
+Download the [standalone HTML demo](demo/index.html) and open it in a browser. The sign-in screen includes fictional student and administrator accounts. It works offline with no backend. Update and test the demo in the same PR when a change affects one of its flows.
+
+Use the source archive or checkout for the intended GitHub tag. The npm package is private. Use Node.js 24+, npm and Supabase CLI `2.109.1`. Before running `local:start`, declare the [dedicated, empty Docker daemon](docs/operations.md#requisitos-do-docker-dedicado). Contract tests use Deno 2, database tests use Python 3, and the optional demo uses `ffmpeg` with `libx264`. Run the commands above and open `http://127.0.0.1:8088`. The local checkout uses a fixed Docker project and ports. For a new installation, follow the first-admin instructions. The optional `node scripts/bootstrap.mjs --demo` writes randomly generated demo credentials to the private, ignored `.local/ACESSOS.md` file.
 
 Apply all migrations for this source tree, then verify native Auth, Postgres, Storage, Edge Functions and local email. This tree includes course search, lesson notes, favorites, checklists, moderated comments, in-app notifications and catalog launch announcements. Members can browse podcasts, masterclasses and live events. Administrators manage the catalog and schedule. Podcast watch marks are included in the member data export.
 

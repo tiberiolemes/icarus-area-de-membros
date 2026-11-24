@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { HelpCircle } from "lucide-react";
@@ -186,6 +186,7 @@ export function Tour() {
     [available, setAvailable] = useState<typeof steps>([]),
     step = available[Math.min(index, available.length - 1)];
   const launch = useRef<HTMLDivElement>(null), panel = useRef<HTMLElement>(null);
+  const spotlight = useRef<HTMLDivElement>(null);
   const adminSettingsScreen = pathname === "/admin/configuracoes";
   const rankingScreen = pathname === "/app/ranking";
   const adminReport = pathname === "/admin/dashboard" || pathname === "/admin/analytics";
@@ -199,13 +200,70 @@ export function Tour() {
     setDone(false);
     setIndex(0);
   }, [pathname, settingsTab, provider, session?.user.id]);
-  useEffect(() => {
-    if (!active || !step) return;
-    const element = visibleTarget(step.target);
-    element?.classList.add("tour-target");
-    element?.scrollIntoView({ block: "center", behavior: "instant" });
-    return () => element?.classList.remove("tour-target");
-  }, [active, step?.target]);
+  useLayoutEffect(() => {
+    const hole = spotlight.current, card = panel.current;
+    if (!active || !step || !hole || !card) return;
+    let target: HTMLElement | undefined;
+    let frame = 0;
+    const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
+    function schedule() {
+      if (!frame) frame = requestAnimationFrame(measure);
+    }
+    const measure = () => {
+      frame = 0;
+      const next = visibleTarget(step.target);
+      if (next !== target) {
+        if (target) {
+          target.classList.remove("tour-target");
+          resize?.unobserve(target);
+        }
+        target = next;
+        if (target) {
+          target.classList.add("tour-target");
+          target.scrollIntoView({ block: "center", behavior: "instant" });
+          resize?.observe(target);
+        }
+      }
+      if (!target) {
+        setAvailable(available => available.filter(item => item.target !== step.target));
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      const left = Math.max(0, rect.left - 4), top = Math.max(0, rect.top - 4);
+      const right = Math.min(document.documentElement.clientWidth, rect.right + 4);
+      const bottom = Math.min(window.innerHeight, rect.bottom + 4);
+      hole.hidden = right <= left || bottom <= top;
+      Object.assign(hole.style, {
+        left: left + "px", top: top + "px", width: Math.max(0, right - left) + "px",
+        height: Math.max(0, bottom - top) + "px",
+      });
+      const panelRect = card.getBoundingClientRect();
+      const sharesColumn = !hole.hidden && right > panelRect.left && left < panelRect.right;
+      const below = window.innerHeight - bottom;
+      const room = Math.max(top, below) - 28;
+      card.toggleAttribute("data-at-top", sharesColumn && top > below);
+      if (sharesColumn && room >= 160) card.style.setProperty("--tour-room", room + "px");
+      else card.style.removeProperty("--tour-room");
+    };
+    measure();
+    resize?.observe(card);
+    resize?.observe(document.body);
+    const changes = new MutationObserver(schedule);
+    changes.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("scroll", schedule, true);
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule, true);
+      window.removeEventListener("resize", schedule);
+      changes.disconnect();
+      resize?.disconnect();
+      target?.classList.remove("tour-target");
+      card.removeAttribute("data-at-top");
+      card.style.removeProperty("--tour-room");
+      hole.hidden = true;
+    };
+  }, [active, step]);
   useEffect(() => {
     if (active || done) panel.current?.focus({ preventScroll: true });
   }, [active, done, step?.target]);
@@ -238,6 +296,8 @@ export function Tour() {
         </Action>
       </div>
       {(active || done) && createPortal(
+    <>
+    {active && step && <div className="tour-shade" aria-hidden="true"><div className="tour-spotlight" ref={spotlight} /></div>}
     <aside className="tour-panel" aria-label="Guia desta tela" ref={panel} tabIndex={-1} onKeyDown={(event) => {
       if (event.key === "Escape") { event.stopPropagation(); close(); }
     }}>
@@ -267,9 +327,9 @@ export function Tour() {
             {step?.body ??
               "Consulte a central de ajuda para ver os passos completos deste fluxo."}
           </p>
-          <p className="meta">
+          {step && <p className="meta">
             Passo {Math.min(index + 1, available.length)} de {available.length}
-          </p>
+          </p>}
           <div className="actions">
             <Action
               primary
@@ -305,7 +365,8 @@ export function Tour() {
       <Link className="text-action" to={adminSettingsScreen || adminReport || adminOrders ? "/ajuda/administracao" : rankingScreen ? "/ajuda/ranking" : podcastScreen ? "/ajuda/podcasts" : "/ajuda"}>
         Ajuda completa
       </Link>
-    </aside>,
+    </aside>
+    </>,
     document.body,
       )}
     </>

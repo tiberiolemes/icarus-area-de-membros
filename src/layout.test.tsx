@@ -48,6 +48,25 @@ it("o guia encontra alvos carregados após o render, ignora a navegação oculta
   expect(document.querySelector(".tour-target")).toBeNull();
 });
 
+it("alinha a abertura ao alvo após rolagem e a remove quando o alvo desaparece", async () => {
+  const { rerender } = show(<><Tour /><div data-tour="courses">Vitrine</div></>);
+  const target = screen.getByText("Vitrine");
+  const geometry = vi.spyOn(target, "getBoundingClientRect").mockReturnValue(new DOMRect(40, 100, 100, 80));
+  vi.spyOn(target, "getClientRects").mockReturnValue([target.getBoundingClientRect()] as unknown as DOMRectList);
+  vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(360);
+  fireEvent.click(screen.getByRole("button", { name: "Guia desta tela" }));
+  const panel = await screen.findByRole("complementary", { name: "Guia desta tela" });
+  const hole = document.querySelector<HTMLElement>(".tour-spotlight")!;
+  expect(hole).toHaveStyle({ left: "36px", top: "96px", width: "108px", height: "88px" });
+  geometry.mockReturnValue(new DOMRect(-10, 70, 100, 80));
+  fireEvent.scroll(window);
+  await waitFor(() => expect(hole).toHaveStyle({ left: "0px", top: "66px", width: "94px" }));
+  rerender(<QueryClientProvider client={cache}><MemoryRouter initialEntries={["/admin/planos"]}><Tour /></MemoryRouter></QueryClientProvider>);
+  await waitFor(() => expect(document.querySelector(".tour-shade")).toBeNull());
+  expect(within(panel).getByRole("heading", { name: "Conheça esta tela" })).toBeVisible();
+  expect(within(panel).getByRole("button", { name: "Concluir" })).toBeEnabled();
+});
+
 it("o guia mantém o erro de leitura visível e não abre um painel fictício", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ message: "Indisponível" }), { status: 503, headers: { "Content-Type": "application/json" } })));
   show(<Tour />);

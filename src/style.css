@@ -1307,14 +1307,29 @@ h2 > a,
   font-size: 14px;
   white-space: nowrap;
 }
+.tour-shade {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 41;
+}
+.tour-spotlight {
+  position: absolute;
+  box-shadow: 0 0 0 150vmax rgb(0 0 0 / 65%);
+}
+.tour-panel[data-at-top] {
+  top: 16px;
+  bottom: auto;
+}
 .tour-panel {
   position: fixed;
   bottom: 20px;
   right: 24px;
   width: min(440px, calc(100vw - 40px));
-  max-height: 70dvh;
+  max-height: min(70dvh, var(--tour-room, 70dvh));
   overflow: auto;
-  z-index: 40;
+  z-index: 42;
   background: var(--ic-surface);
   border: 1px solid var(--ic-border-control);
   border-radius: 12px;
@@ -1335,7 +1350,7 @@ h2 > a,
 }
 .tour-target {
   outline: 2px solid var(--ic-focus);
-  outline-offset: 6px;
+  outline-offset: 2px;
 }
 .session-warning {
   position: fixed;

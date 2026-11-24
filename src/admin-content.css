@@ -45,7 +45,7 @@
     .content-media p
   ) {
   margin: 0;
-  color: var(--stitch-text-muted);
+  color: var(--stitch-text-secondary);
 }
 
 .admin-content :is(.content-summary, .course-list-title, .lesson-editor-title) {

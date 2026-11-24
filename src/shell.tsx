@@ -69,6 +69,13 @@ const adminNav = [
   ["Configurações", "configuracoes", Settings, ["admin"]],
 ] as const;
 
+const staffEntryLabels: Readonly<Record<string, string | undefined>> = {
+  admin: "Administração",
+  instructor: "Painel de conteúdo",
+  moderator: "Moderação",
+  support: "Atendimento",
+};
+
 function AccountPhoto({ avatarId }: { avatarId: string }) {
   const { data } = usePrivateImageQuery("avatar", avatarId);
   const url = safeUrl(data?.url);
@@ -109,7 +116,7 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
   const staffRoutes = adminNav.filter((item) =>
     (item[3] as readonly string[]).includes(profile.role),
   );
-  const staffRoute = staffRoutes[0]?.[1];
+  const [staffEntry] = staffRoutes;
   const help = (
     <Link to="/ajuda" onClick={onNavigate}>
       <HelpCircle size={20} aria-hidden="true" />
@@ -146,6 +153,12 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
         aria-label={admin ? "Administração" : "Área de membros"}
         data-tour="navigation"
       >
+        {!admin && staffEntry && (
+          <Link to={`/admin/${staffEntry[1]}`} onClick={onNavigate}>
+            <ArrowUpRight size={20} aria-hidden="true" />
+            {staffEntryLabels[profile.role] ?? staffEntry[0]}
+          </Link>
+        )}
         {(admin ? staffRoutes : memberNav).map(([title, path, Icon]) => (
           <NavLink key={path} to={(admin ? "/admin/" : "/app/") + path} onClick={onNavigate}>
             <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
@@ -169,13 +182,10 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
             <span className="sr-only">. Mudar para tema {dark ? "claro" : "escuro"}</span>
           </Action>
         )}
-        {staffRoute && (
-          <Link
-            to={admin ? "/app/cursos" : "/admin/" + staffRoute}
-            onClick={onNavigate}
-          >
+        {admin && staffRoutes.length > 0 && (
+          <Link to="/app/cursos" onClick={onNavigate}>
             <ArrowUpRight size={20} aria-hidden="true" />
-            {admin ? "Área do aluno" : "Administração"}
+            Área do aluno
           </Link>
         )}
         {admin && help}

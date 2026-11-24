@@ -10,7 +10,7 @@ const steps = [
   {
     target: "navigation",
     title: "Encontre seu caminho",
-    body: "O menu reúne cursos, materiais, certificados, comunidade e suporte. No celular, abra o menu pelo topo. No catálogo e no fórum, a barra inferior também dá acesso ao Ranking. Materiais fica disponível no menu em ambos os temas.",
+    body: "O menu reúne cursos, materiais, certificados, comunidade e suporte. No celular, abra o menu pelo topo. Contas administradoras têm o atalho Administração no início do menu da área de membros. Instrutores, moderadores e suporte têm atalhos para suas ferramentas. No catálogo e no fórum, a barra inferior também dá acesso ao Ranking. Materiais fica disponível no menu em ambos os temas.",
   },
   {
     target: "member-search",
@@ -144,7 +144,7 @@ const steps = [
   },
   {
     target: "admin-settings-brand",
-    title: "Edite o nome da instalação",
+    title: "Edite o nome da plataforma",
     body: "Confira a prévia e use Salvar nome para publicar. Se outra sessão tiver alterado o nome, revise o valor publicado antes de reenviar.",
   },
   {

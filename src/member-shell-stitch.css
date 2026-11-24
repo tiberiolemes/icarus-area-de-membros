@@ -487,7 +487,7 @@
     font: var(--stitch-type-label-md-weight, 500) var(--stitch-type-label-md-size, 13px) / var(--stitch-type-label-md-line, 18px) var(--stitch-font-family, var(--ic-font-family));
   }
 
-  :is(nav[data-tour="navigation"] a, .rail-bottom > a, .rail-bottom > .action button):hover {
+  :is(nav[data-tour="navigation"] a, .rail-bottom > a, .rail-bottom > .action button):not([aria-current="page"]):hover {
     background: var(--admin-control);
     color: var(--admin-text);
   }
@@ -886,7 +886,7 @@
   [data-theme="dark"] .mobile-member-nav a {
     --mobile-glyph-size: var(--stitch-icon-lg);
     min-height: var(--stitch-control-min-size);
-    font-size: 10px;
+    font-size: var(--stitch-type-label-uppercase-size);
     font-weight: var(--stitch-type-label-uppercase-weight);
     line-height: var(--stitch-type-label-uppercase-line);
   }

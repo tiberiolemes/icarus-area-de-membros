@@ -18,7 +18,7 @@ const certificateCode = /^[a-f0-9]{48}$/i;
 
 function certificateStatus(certificate: Certificate) {
   if (certificate.revoked_at) return "Certificado revogado";
-  return certificate.demo ? "Demonstração sem validade acadêmica" : "Certificado válido";
+  return certificate.demo ? "Demonstração sem validade" : "Certificado válido";
 }
 
 function CertificateDocument({ certificate }: { certificate: Certificate }) {
@@ -99,7 +99,7 @@ function CertificateRecord({ certificate, publicResult = false }: { certificate:
         <div><dt>Carga horária</dt><dd>{certificate.duration_minutes} minutos</dd></div>
       </dl>
       {publicResult && certificate.revoked_at && (
-        <Notice>Consulte a academia para mais informações sobre a revogação.</Notice>
+        <Notice>Consulte o responsável pela emissão para saber mais sobre a revogação.</Notice>
       )}
     </section>
   );

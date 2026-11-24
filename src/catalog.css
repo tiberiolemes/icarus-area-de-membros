@@ -96,11 +96,6 @@
   border-radius: var(--stitch-radius-full);
   letter-spacing: var(--stitch-tracking-wider);
 }
-.catalog-feature .catalog-tag-primary {
-  background: var(--stitch-surface-selection-catalog);
-  color: var(--stitch-text-on-selection);
-  border-color: transparent;
-}
 .catalog-cover-type { min-width: 0; aspect-ratio: 1.8; display: flex; flex-direction: column; justify-content: space-between; gap: var(--stitch-space-md); padding: var(--stitch-space-lg); background: var(--ic-gray-900); color: var(--ic-white); border-radius: var(--stitch-radius-md); overflow: hidden; }
 .catalog-cover-brand { font-size: var(--stitch-type-body-md-size); font-weight: 600; }
 .catalog-cover-title { font-size: 30px; font-weight: 600; line-height: 1.08; letter-spacing: -.035em; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
@@ -225,7 +220,6 @@
   font-size: var(--stitch-type-label-uppercase-size);
   letter-spacing: var(--stitch-tracking-widest);
 }
-[data-theme="dark"] .catalog-feature .catalog-tag-primary { background: var(--stitch-surface-raised-strong); color: var(--stitch-text-heading); }
 [data-theme="dark"] .catalog-feature-visual > .catalog-cover-media { border-left: 0; }
 [data-theme="dark"] .catalog-feature-visual > .catalog-cover-media:has(img)::after {
   background: linear-gradient(to top, var(--stitch-canvas-admin-deep), color-mix(in srgb, var(--stitch-canvas-admin-deep) 60%, transparent), transparent);
@@ -371,7 +365,7 @@
 .showcase .primary { color:var(--stitch-on-action); background:var(--stitch-action); }
 .showcase-tools { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:20px; }
 .showcase-filters, .showcase-search { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
-.showcase-filters button { min-height:44px; padding:0 10px; background:transparent; border-color:transparent; font-size:13px; }
+.showcase-filters button { min-height:44px; padding:0 10px; background:transparent; border-color:transparent; color:var(--stitch-text-primary); font-size:13px; }
 .showcase-filters [aria-pressed=true] { background:var(--stitch-action); color:var(--stitch-on-action); }
 .showcase-search .search { margin:0; width:min(100%,230px); }
 .showcase-search select { max-width:100%; width:auto; margin:0; font-size:16px; min-height:44px; }

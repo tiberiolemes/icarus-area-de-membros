@@ -484,43 +484,13 @@
     align-items: center;
   }
 
-  /* Reserve the measured desktop card space for the editorial summary slot. */
-  .with-curriculum .stitch-lesson-media:not(.is-audio) ~ .stitch-lesson-meta {
-    min-block-size: 285px;
-  }
-
-  .with-curriculum .stitch-lesson-media:not(.is-audio) ~ .stitch-lesson-meta .stitch-lesson-facts {
-    min-block-size: 55px;
-    align-items: flex-start;
-  }
-
-  [data-theme="light"] .with-curriculum .stitch-lesson-media:not(.is-audio) ~ .stitch-lesson-meta :is(h1, .stitch-lesson-subtitle) {
-    position: relative;
-    inset-block-start: 1px;
-  }
-
   [data-theme="light"] .lesson-stitch .stitch-lesson-actions .lesson-engagement-icon {
     min-height: 47px;
   }
 
-  [data-theme="dark"] .with-curriculum .stitch-lesson-media:not(.is-audio) ~ .stitch-lesson-meta {
-    min-block-size: 172px;
-  }
-
-  [data-theme="dark"] .with-curriculum .stitch-lesson-media ~ .stitch-lesson-meta .stitch-lesson-facts {
-    min-block-size: auto;
-  }
-
   .with-curriculum .stitch-lesson-actions {
-    position: relative;
-    flex-wrap: nowrap;
+    justify-content: flex-end;
     align-items: center;
-  }
-
-  .with-curriculum .stitch-lesson-actions > .action:last-child {
-    position: absolute;
-    inset-block-start: calc(100% + 4px);
-    inset-inline-end: 0;
   }
 
   [data-theme="dark"] .with-curriculum .stitch-lesson-actions .action button.primary {
@@ -954,7 +924,10 @@
   text-transform: uppercase;
 }
 
-[data-theme="dark"] .stitch-module > summary small { line-height: 22px; }
+[data-theme="dark"] .stitch-module > summary small {
+  line-height: 22px;
+  color: var(--stitch-text-secondary);
+}
 
 .stitch-module[data-current="true"] > summary {
   border-block: 1px solid var(--lesson-line);

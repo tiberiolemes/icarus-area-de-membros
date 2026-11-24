@@ -14,14 +14,14 @@
     "product_tests_run": 0
   },
   "decisions": [
-    "Recomeço React + TypeScript + Vite, Supabase Postgres/Auth/Storage/RLS/Edge Functions e DS Icarus; uma academia, sem academy_id, sem código/overlays Frappe.",
+    "Recomeço React + TypeScript + Vite, Supabase Postgres/Auth/Storage/RLS/Edge Functions e DS Icarus, com uma organização por instalação e sem código ou overlays Frappe.",
     "Entrega = Fase 1 + comunidade com moderação humana prévia; integrações preparadas e testáveis localmente, desligadas para cobrança real.",
     "Limpeza integral Frappe é pré-condição da implementação coordenada; este worker não remove arquivos nem executa runtime."
   ],
   "conflicts": [
     {
       "ref": "§6 versus §1/§9",
-      "issue": "academy_id preventivo contradiz academia única e multi-tenant posterior.",
+      "issue": "O campo preventivo academy_id contraria o escopo de uma organização por instalação.",
       "resolution": "Não incluir tenancy nem abstração por cliente."
     },
     {

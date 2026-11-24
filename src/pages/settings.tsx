@@ -177,7 +177,7 @@ export function Settings() {
   return (
     <div className="student-account">
       <Heading title="Configurações da conta">
-        Gerencie seu perfil, suas preferências e o acesso à academia.
+        Gerencie seu perfil, suas preferências e seu acesso à área de membros.
       </Heading>
       <NavigationTabs
         label="Configurações"

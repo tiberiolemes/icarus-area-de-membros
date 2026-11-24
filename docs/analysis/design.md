@@ -4,11 +4,11 @@
 
 ## Autoridade e recorte
 
-- Decisão atual: aplicação nova React + TypeScript + Vite, uma academia, Fase 1 do PRD + comunidade com moderação manual. Não transportar Vue, Frappe, frappe-ui nem suas telas/framework.
+- Decisão atual: aplicação nova React + TypeScript + Vite, uma organização por instalação, Fase 1 do PRD + comunidade com moderação manual. Não transportar Vue, Frappe, frappe-ui nem suas telas/framework.
 - **Decisão direta do usuário nesta análise: claro por padrão inicial; escuro opcional, salvo na preferência de cada usuário e restaurado nos próximos acessos.** Isto substitui RF-NV-04 (escuro inicial), alinha-se ao DS e encerra a divergência.
 - PRD completo lido: `PRD fornecido pelo responsável`, sobretudo fases na seção 9. A lista geral das seções 4/5 não autoriza automaticamente todas as fases.
 - Identidade e contratos publicados: `fonte oficial do DS Icarus: {especificacao.md,tokens.json,tokens.css,index.html,ds.css}`; gerador `scripts/build-icarus-ds.py`, lido, não executado. O guia distingue marca oficial de propostas técnicas de UI.
-- A comunidade acrescida compreende espaços, feed, post, respostas, votos, denúncia e decisão humana. Não implica diretório, DMs, notificações completas, ranking/prêmios ou feedback in-app. Sem podcasts, encontros/RSVP, lista de espera, drip, automações, tutor, comentários por aula, quiz, conquistas ou multiacademia. Não exibir navegação ou botões para essas funções.
+- A comunidade acrescida compreende espaços, feed, post, respostas, votos, denúncia e decisão humana. Não implica diretório, DMs, notificações completas, ranking/prêmios ou feedback in-app. Sem podcasts, encontros/RSVP, lista de espera, drip, automações, tutor, comentários por aula, quiz, conquistas ou administração de múltiplas organizações na mesma instalação. Não exibir navegação ou botões para essas funções.
 - Community/Pro e preços da referência são exemplos do PRD, não preços aprovados do Icarus. Histórico menciona comunidade anual independente: não deduzir acesso gratuito à comunidade a partir do nome Community; avaliar direito por recurso/vigência. Não confundir comunidade com comentários de aula. Oferta e acesso reais precisam de configuração explícita, sem importar preços/copy da arr.academy.
 
 ## Rotas finitas e contratos por tela
@@ -35,7 +35,7 @@ Convenção proposta abaixo, sem promessa de URLs já implementadas. `/app` redi
 | Admin de pedidos | `/admin/pedidos`, `/admin/pedidos/:id` | Status vindo do gateway/servidor, valores, método, histórico e vínculo ao membro. Reembolso/reenvio de documento só quando suportado/configurado; não marcar pago manualmente para simular gateway. |
 | Admin da comunidade | `/admin/comunidade?aba=moderacao\|espacos`, `/admin/comunidade/:post` | Pendentes/denúncias e histórico de decisões; aprovar/rejeitar/ocultar/remover, fixar/mover/resolver conforme permissão, motivo e confirmação. Espaços com leitura/postagem por direito real de acesso. |
 | Admin de suporte | `/admin/suporte`, `/admin/suporte/:ticket` | Fila por status/prioridade/responsável, resposta com anexo, histórico e encerramento. Reaproveitar thread e formulário do aluno com ações autorizadas. |
-| Admin de configuração | `/admin/configuracoes?aba=onboarding\|integracoes\|legal\|equipe` | Perguntas, situação dos provedores, textos/versões e equipe/papéis. Configuração de secrets no servidor, nunca formulário que retorna segredo ao navegador; nenhuma ferramenta de rebranding/multiacademia. |
+| Admin de configuração | `/admin/configuracoes?aba=onboarding\|integracoes\|legal\|equipe` | Perguntas, situação dos provedores, textos/versões e equipe/papéis. Credenciais ficam no servidor. Configuração de marca e gestão de múltiplas organizações ficam fora do recorte inicial. |
 | Estados transversais | Tela de 403, 404 e falha recuperável dentro do shell | Não criar menu para estados; sessão ainda carregando não é 403; rota desconhecida oferece retorno real; recurso revogado não revela conteúdo anterior do cache. |
 
 O admin do PRD é inferido. O inventário acima é a recomendação mínima para a operação acordada; BI, funil, MRR, campanhas e automações não são pré-requisitos para cadastrar/entregar um curso. Papéis e plano são eixos independentes; suporte/moderador não recebem acesso financeiro ou editor de conteúdo por conveniência.
@@ -95,7 +95,7 @@ Análise não substitui UAT. Verificar o novo app depois de implementado, em lot
 
 ## Recomendação mínima de PRODUCT.md / DESIGN.md (não escritos)
 
-**PRODUCT.md:** marcador `impeccable:product-schema 1`, Platform `web`, Stack React/TS/Vite, alunos/admin/moderação/suporte, objetivo entregar curso com progresso/materiais/certificado e comunidade manual, uma academia, escopo/exclusões desta análise, fornecedores ainda sem conta e modo local sem cobrança. Registrar identidade Icarus já definida, preferência por usuário com claro inicial e decisões ainda abertas de oferta/acesso/conteúdo real. Não copiar persona SaaS da referência como público confirmado, valores da arr.academy ou metas como resultados.
+**PRODUCT.md:** marcador `impeccable:product-schema 1`, Platform `web`, Stack React/TS/Vite, alunos/admin/moderação/suporte, objetivo entregar curso com progresso/materiais/certificado e comunidade moderada, uma organização por instalação, escopo/exclusões desta análise, fornecedores ainda sem conta e modo local sem cobrança. Registrar identidade Icarus já definida, preferência por usuário com claro inicial e decisões ainda abertas de oferta/acesso/conteúdo real. Não copiar persona SaaS da referência como público confirmado, valores da arr.academy ou metas como resultados.
 
 **DESIGN.md:** autoridade e caminhos do DS/guia, marca versus propostas de interface, tabela dos tokens claro/escuro, Inter/licença, assinatura/proporções/mínimo e fallback compacto, escala/espaços/raios/layout, componentes pontuais e contratos de interação, estados e acessibilidade. Modo Operate e contrato por fluxo pertencem ao breve de superfície, sem transformar “Operate” em identidade de todo produto. Não reabrir escolha de mundo visual nem gravar preferência de comp-first.
 

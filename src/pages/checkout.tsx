@@ -95,8 +95,7 @@ export function Checkout() {
                     </Notice>
                   ) : !context.data?.legal_ready ? (
                     <Notice>
-                      O checkout depende da publicação dos documentos legais da
-                      academia.
+                      O pagamento ficará disponível após a publicação dos documentos legais.
                     </Notice>
                   ) : (
                     <Form
@@ -300,7 +299,7 @@ export function Checkout() {
                 <Heading title="Sua assinatura" />
                 <Notice>
                   Nenhum plano ativo foi encontrado para este link.{" "}
-                  <Link to="/entrar">Voltar ao início</Link>
+                  <Link className="text-action" to="/entrar">Voltar ao início</Link>
                 </Notice>
               </>
             )}

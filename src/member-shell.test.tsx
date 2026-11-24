@@ -202,6 +202,30 @@ it("mostra erro de gravação e mantém a aparência confirmada", async () => {
 });
 
 it.each([
+  ["admin", "Administração", "/admin/cursos"],
+  ["member", "Cursos", "/app/cursos"],
+  ["instructor", "Painel de conteúdo", "/admin/cursos"],
+  ["moderator", "Moderação", "/admin/comunidade"],
+  ["support", "Atendimento", "/admin/suporte"],
+])("mostra a entrada adequada ao papel %s na área de membros", (role, label, path) => {
+  profile.role = role;
+  mount("/app/cursos");
+  const sidebar = screen.getByRole("complementary");
+  const menu = within(sidebar).getByRole("navigation", { name: "Área de membros" });
+  expect(within(menu).getAllByRole("link")[0]).toHaveAccessibleName(label);
+  expect(within(menu).getAllByRole("link")[0]).toHaveAttribute("href", path);
+
+  fireEvent.click(screen.getByRole("button", { name: "Abrir navegação" }));
+  const drawer = screen.getByRole("dialog", { name: "Navegação" });
+  expect(within(drawer).getByRole("link", { name: label })).toHaveAttribute("href", path);
+
+  if (role !== "admin") {
+    expect(within(menu).queryByRole("link", { name: "Administração" })).toBeNull();
+    expect(within(drawer).queryByRole("link", { name: "Administração" })).toBeNull();
+  }
+});
+
+it.each([
   ["support", "/admin/suporte", "Suporte", ["/admin/suporte"]],
   ["moderator", "/admin/comunidade", "Moderador", ["/admin/comunidade"]],
   ["instructor", "/admin/cursos", "Instrutor", ["/admin/cursos", "/admin/materiais"]],

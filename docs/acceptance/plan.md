@@ -1,5 +1,5 @@
 # Aceite da versão nova
-Escopo: Fase1 mais comunidade manual, uma academia, MIT/GitHub público. Não herdar testes/aceites do projeto descartado. Integrações reais e implantação no servidor vêm depois, por decisão do usuário.
+Escopo: Fase 1 com comunidade moderada, uma organização por instalação e fonte pública sob licença MIT. Não herdar testes/aceites do projeto descartado. Integrações reais e implantação no servidor vêm depois, por decisão do usuário.
 Estado inicial deste plano: implementação em andamento. Cada linha exige evidência própria antes de conclusão.
 
 | Gate | Prova necessária |

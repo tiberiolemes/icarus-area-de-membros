@@ -121,8 +121,7 @@ export function Gate({
   if (boot.data.profile.suspended)
     return (
       <Notice error>
-        Seu acesso está suspenso. Procure o contato de suporte informado pela
-        academia.
+        Seu acesso está suspenso. Entre em contato com o suporte.
       </Notice>
     );
   if (boot.data.profile.password_setup_required) return <PasswordSetup />;

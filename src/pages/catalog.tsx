@@ -48,11 +48,8 @@ export function CourseFeature({ course, modules }: {course: Course; modules: Mod
           stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
       </svg>
       <div className="catalog-feature-copy">
-        <div className="catalog-tags">
-          <span className="catalog-tag catalog-tag-primary">Curso</span>
-          {!course.can_access && <span className="catalog-tag">Acesso restrito</span>}
-        </div>
         <h1 id={titleId} tabIndex={-1}>{course.title}</h1>
+        {!course.can_access && <div className="catalog-tags"><span className="catalog-tag">Acesso restrito</span></div>}
         <RichContent content={course.description} />
         <ul className="catalog-feature-meta">
           <li><Layers2 size={16} aria-hidden="true" />{modules.length} {modules.length === 1 ? "módulo" : "módulos"}</li>
@@ -157,7 +154,8 @@ export function Catalog() {
       <p>Retome seus estudos ou escolha um curso para começar.</p>
     </header>
     {data?.resume && <ResumeCourse course={data.resume} />}
-    <section aria-label="Catálogo de cursos">
+    <section aria-labelledby="showcase-catalog-title">
+      <h2 id="showcase-catalog-title">Catálogo de cursos</h2>
       <div className="showcase-tools">
         <div role="group" aria-label="Filtrar cursos" className="showcase-filters" data-tour="course-catalog">
           {(Object.keys(filters) as CatalogFilter[]).map(key =>

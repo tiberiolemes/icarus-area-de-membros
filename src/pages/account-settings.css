@@ -34,6 +34,10 @@
   color: var(--stitch-text-muted);
 }
 
+.student-account .plan-row li {
+  text-wrap: balance;
+}
+
 .student-account > .tabs {
   gap: var(--stitch-space-xs);
   padding: 0.375rem;
@@ -60,7 +64,7 @@
 .student-account > .tabs .button:not([aria-current]) {
   border-color: transparent;
   background: transparent;
-  color: var(--stitch-text-muted);
+  color: var(--stitch-text-secondary);
 }
 
 .student-account > .tabs .button:not([aria-current]):hover {

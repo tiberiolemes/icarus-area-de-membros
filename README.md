@@ -1,12 +1,6 @@
 # Icarus · Área de Membros
 
-```text
- ___
-|_ _|  ___ __ _ _ __ _   _ ___
- | |  / __/ _` | '__| | | / __|
- | | | (_| (_| | |  | |_| \__ \
-|___| \___\__,_|_|   \__,_|___/
-```
+![Icarus Área de Membros — plataforma de cursos de código aberto sob licença MIT](docs/assets/icarus-banner-github.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
 ![Version](https://img.shields.io/badge/version-0.2.0-black)

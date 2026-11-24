@@ -13,7 +13,7 @@ O Icarus pode dividir um projeto Supabase com outros sistemas. Por isso, toda ta
 | Instalação, primeiro admin, credenciais e backup | [Guia de operação](operations.md) |
 | Registro de rotas e clientes Supabase | [Rotas React](../src/main.tsx) e [cliente da aplicação](../src/api.ts) |
 
-O mapa acompanha as migrations até a **040**. Os diagramas mostram as relações centrais. O dicionário lista todas as chaves estrangeiras efetivas, inclusive compostas e autorreferentes.
+O mapa acompanha as migrations até a **041**. Os diagramas mostram as relações centrais. O dicionário lista todas as chaves estrangeiras efetivas, inclusive compostas e autorreferentes.
 
 ## Retomar aula
 

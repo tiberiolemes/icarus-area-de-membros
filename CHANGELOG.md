@@ -3,6 +3,7 @@
 ## Não lançado
 
 - As tabelas do Icarus em `public` passam a usar o prefixo `ica_` (por exemplo, `public.ica_profiles`), assim como os índices nomeados, e o esquema interno muda de `app_private` para `ica_private`. Isso permite instalar o Icarus em um projeto Supabase compartilhado sem misturar nem alterar tabelas de outros sistemas. A liberação de RLS e grants da migration 001 agora alcança só as tabelas `ica_`.
+- Projeto Supabase compartilhado: a migration 041 limita os gatilhos de `auth.users` aos usuários do Icarus. O perfil passa a nascer na validação final do cadastro, e só para contas com marcador do Icarus. Cadastros de outros sistemas não ganham perfil nem são recusados. Uma conta que já existia no projeto precisa de bootstrap manual.
 - As migrations foram editadas no lugar. Uma instalação criada antes desta mudança precisa ser recriada do zero, porque não existe migration de renomeação.
 
 ## 0.2.0 · Entrega 01

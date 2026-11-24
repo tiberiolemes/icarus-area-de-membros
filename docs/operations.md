@@ -95,7 +95,7 @@ Use este roteiro para o stack completo da v0.1.6 criado pelo Supabase CLI, com A
 
 ### Migrations e fluxos da árvore atual
 
-Aplique `202611230001` a `202611230040` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
+Aplique `202611230001` a `202611230041` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
 
 | Migration | O que configurar ou validar |
 | --- | --- |
@@ -119,6 +119,7 @@ Aplique `202611230001` a `202611230040` em ordem antes de servir este frontend. 
 | `038` | Verificar o retorno do checkout visitante no mesmo navegador, o prazo do recibo e a consulta da conta titular após expirar. |
 | `039` | Conferir no Dashboard e no Ranking o intervalo personalizado, incluindo eventos na data final em Brasília. |
 | `040` | Abrir a vitrine com aluno novo e com aluno em andamento. Iniciar e retomar uma aula pelo cartão e conferir o acesso para cursos e módulos restritos. |
+| `041` | Projeto Supabase compartilhado: só usuários com marcador do Icarus ganham perfil (`icarus_server_created` ou `icarus_local_demo` no `app_metadata`, ou `legal_version_ids` no cadastro do Icarus). Cadastros de outros sistemas passam sem perfil e sem recusa. Uma conta que já existia no projeto antes do Icarus não ganha perfil sozinha e precisa de bootstrap manual. |
 
 A validação de navegação também cobre entrada e confirmação de email, primeira senha, perguntas de onboarding, edição parcial do perfil e MFA opcional. A seed fornece perguntas iniciais editáveis. Cadastre os próprios cursos, aulas, materiais, planos, ofertas e documentos legais pelo fluxo administrativo apropriado.
 

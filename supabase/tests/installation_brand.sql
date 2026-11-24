@@ -25,6 +25,8 @@ from unnest(array['admin', 'admin_b', 'member', 'support', 'moderator', 'instruc
 grant select on actors to authenticated;
 insert into auth.users(id, email, email_confirmed_at, aud, role, raw_app_meta_data)
 select actor_id, actor_id || '@example.test', now(), 'authenticated', 'authenticated', '{"icarus_server_created":true}' from actors;
+-- O perfil nasce na validação final do Auth; antecipa-a para usar as fixtures nesta transação.
+set constraints all immediate;set constraints all deferred;
 update public.ica_profiles p set role = case a.role when 'admin_b' then 'admin' else a.role end from actors a where p.id = a.actor_id;
 insert into auth.sessions(id, user_id, created_at, updated_at, aal)
 select session_id, actor_id, now(), now(), 'aal2' from actors;

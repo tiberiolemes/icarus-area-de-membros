@@ -69,6 +69,8 @@ const adminNav = [
   ["Configurações", "configuracoes", Settings, ["admin"]],
 ] as const;
 
+const logoUrl = import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg";
+
 const staffEntryLabels: Readonly<Record<string, string | undefined>> = {
   admin: "Administração",
   instructor: "Painel de conteúdo",
@@ -128,15 +130,15 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
       <Link className="rail-brand" to="/app/cursos" onClick={onNavigate}>
         {admin ? (
           <>
-            <PlaneTakeoff size={32} aria-hidden="true" />
-            <div className={installationName === "Icarus" ? undefined : "installation-admin"}>
-              {installationName === "Icarus" ? "Icarus" :
+            {installationName !== "Icarus" && <PlaneTakeoff size={32} aria-hidden="true" />}
+            <div className="installation-admin">
+              {installationName === "Icarus" ? <img src={logoUrl} alt="Icarus" /> :
                 <strong className="installation-name" title={installationName}>{installationName}</strong>}
               <span>Painel admin</span>
             </div>
           </>
         ) : installationName === "Icarus" ? (
-          <img src={import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg"} alt="Icarus" />
+          <img src={logoUrl} alt="Icarus" />
         ) : <strong className="installation-name" title={installationName}>{installationName}</strong>}
       </Link>
       {drawerInitials && (
@@ -322,12 +324,18 @@ export function Shell() {
           {mobileFrame && (
             <div className="mobile-frame-label">
               {lesson ? <span>Aula</span> : installationName === "Icarus" ? (
-                <img src={import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg"} alt="Icarus" />
+                <img src={logoUrl} alt="Icarus" />
               ) : <span title={installationName}>{installationName}</span>}
               {!lesson && planBadge}
             </div>
           )}
-          {admin ? <span className="top-context">Administração</span> : <MemberSearch actorId={profile.id} drawerOpen={open} />}
+          {admin ? <>
+            <span className="top-context">Administração</span>
+            <div className="admin-topbar-brand">
+              {installationName === "Icarus" ? <img src={logoUrl} alt="Icarus" /> :
+                <strong className="installation-name" title={installationName}>{installationName}</strong>}
+            </div>
+          </> : <MemberSearch actorId={profile.id} drawerOpen={open} />}
           <div className="topbar-tools">
             <Tour />
             {!admin && <FeedbackButton key={JSON.stringify([profile.id, pathname])} />}

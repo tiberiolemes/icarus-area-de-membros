@@ -28,9 +28,12 @@ async function open(width) {
   const heading = (name) => page.getByRole("heading", { name, exact: true }).first();
   const button = (name) => page.getByRole("button", { name, exact: true }).first();
   async function capture(name) {
+    await page.waitForFunction(() => {
+      const title = document.querySelector("h1");
+      return title && getComputedStyle(title).fontFamily.includes("Inter");
+    });
     await page.evaluate(() => document.fonts.ready);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width, name);
-    assert.match(await page.locator("h1").first().evaluate((el) => getComputedStyle(el).fontFamily), /Inter/);
     assert.deepEqual(await page.locator("img").evaluateAll((images) =>
       images.filter((img) => img.getClientRects().length && img.complete && !img.naturalWidth).map((img) => img.getAttribute("src"))), []);
     await page.screenshot({ path: join(output, `${name}-${width}.png`), animations: "disabled" });
@@ -120,7 +123,25 @@ try {
       await button("Entrar como administrador").click();
       await heading("Dashboard Executivo & Métricas").waitFor();
       await page.locator(".reports-kpis").waitFor();
+      const adminLogo = page.getByRole("img", { name: "Icarus", exact: true });
+      await adminLogo.waitFor();
+      await adminLogo.evaluate(async (logo) => {
+        await logo.decode();
+        if (!logo.currentSrc.endsWith("/brand/icarus-horizontal-preto.svg"))
+          throw new Error("O painel precisa usar o SVG oficial.");
+      });
       await capture("dashboard");
+      await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; });
+      assert.equal(await adminLogo.evaluate((logo) => getComputedStyle(logo).filter), "invert(1)");
+      await capture("dashboard-escuro");
+      await page.evaluate(() => { document.documentElement.dataset.theme = "light"; });
+      if (width === 360) {
+        await button("Abrir navegação").press("Enter");
+        const drawer = page.getByRole("dialog", { name: "Navegação" });
+        await drawer.getByRole("img", { name: "Icarus", exact: true }).waitFor();
+        await page.keyboard.press("Escape");
+        await drawer.waitFor({ state: "hidden" });
+      }
       await visit("/admin/cursos");
       await heading("Cursos e aulas").waitFor();
       await page.getByRole("link", { name: "Editar curso", exact: true }).first().waitFor();

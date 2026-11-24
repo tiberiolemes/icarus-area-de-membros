@@ -7,7 +7,7 @@ Estado inicial deste plano: implementação em andamento. Cada linha exige evid�
 | A01 | Migração limpa, RLS/grants e RPCs com papéis reais anon/A/B/equipe; forja deowner/role/plano negada. |
 | A02 | Catálogo permitido versus conteúdo protegido; gratuito/Pro/expirado/suspenso e mídia/Storage por URL direta. |
 | A03 | Checkout servidor: config ausente, token errado, duplicata/corrida/timeout/evento antigo/refund; nenhum efeito financeiro real. |
-| A04 | Comprador novo e existente, convite e confirmação; email informado não autentica, reprocessamento não duplica concessão. |
+| A04 | Comprador novo e existente, convite e confirmação. Email informado não autentica e reprocessamento não duplica concessão. No checkout hospedado, a volta do visitante em um documento novo consulta o pedido no mesmo navegador durante o prazo do recibo. |
 | A05 | Certificado só com currículo obrigatório completo e não vazio, snapshot/código únicos; PDF/PNG corresponde à emissão. |
 | A06 | Arquivo/restauração mantém IDs e história; cancelamento não escreve; reauth/ator e sessão corretos. |
 | A07 | Comunidade pendente/aprovada/edição/reply/imagem; autor/outro/moderador; voto único e denúncia sem punição automática. |

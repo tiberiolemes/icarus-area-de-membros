@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { cache } from "./api";
-import { AuthProvider, Gate, RoleGate } from "./auth";
+import { AuthProvider, Gate, RoleGate, useBootstrap } from "./auth";
 import {
   Access,
   Callback,
@@ -15,7 +15,27 @@ import {
 import { Shell } from "./shell";
 import { Loading, Heading, Notice } from "./ui";
 import { Help } from "./pages/help";
+import { NotificationHistory } from "./pages/notifications";
 import "./style.css";
+
+function MemberNotifications() {
+  const { data } = useBootstrap();
+  return data && <NotificationHistory key={data.profile.id} memberId={data.profile.id} />;
+}
+
+function MemberRanking() {
+  const { data } = useBootstrap();
+  return data && <Ranking key={data.profile.id} memberId={data.profile.id} />;
+}
+
+const Ranking = lazy(() => import("./pages/ranking").then((m) => ({ default: m.Ranking })));
+const Events = lazy(() => import("./pages/events").then((m) => ({ default: m.Events })));
+const AdminEvents = lazy(() => import("./pages/admin-events").then((m) => ({ default: m.AdminEvents })));
+const Podcasts = lazy(() => import("./pages/podcasts").then((m) => ({ default: m.Podcasts })));
+const AdminPodcasts = lazy(() => import("./pages/admin-podcasts").then((m) => ({ default: m.AdminPodcasts })));
+const AdminFeedbacks = lazy(() => import("./pages/admin-feedbacks").then((m) => ({ default: m.AdminFeedbacks })));
+const AdminDashboard = lazy(() => import("./pages/admin-dashboard").then((m) => ({ default: m.AdminDashboard })));
+const AdminAnalytics = lazy(() => import("./pages/admin-analytics").then((m) => ({ default: m.AdminAnalytics })));
 
 const Catalog = lazy(() =>
     import("./pages/learning").then((m) => ({ default: m.Catalog })),
@@ -27,7 +47,7 @@ const Catalog = lazy(() =>
     import("./pages/learning").then((m) => ({ default: m.LessonPage })),
   ),
   Materials = lazy(() =>
-    import("./pages/learning").then((m) => ({ default: m.Materials })),
+    import("./pages/materials").then((m) => ({ default: m.Materials })),
   );
 const Settings = lazy(() =>
     import("./pages/settings").then((m) => ({ default: m.Settings })),
@@ -70,6 +90,9 @@ const AdminCourses = lazy(() =>
   CourseEditor = lazy(() =>
     import("./pages/admin").then((m) => ({ default: m.CourseEditor })),
   ),
+  AdminLessonPresentationPage = lazy(() =>
+    import("./pages/admin-lesson-presentation").then((m) => ({ default: m.AdminLessonPresentationPage })),
+  ),
   AdminMaterials = lazy(() =>
     import("./pages/admin").then((m) => ({ default: m.AdminMaterials })),
   ),
@@ -87,6 +110,9 @@ const AdminCourses = lazy(() =>
   ),
   AdminCommunity = lazy(() =>
     import("./pages/admin").then((m) => ({ default: m.AdminCommunity })),
+  ),
+  AdminLessonComments = lazy(() =>
+    import("./pages/admin-lesson-comments").then((m) => ({ default: m.AdminLessonComments })),
   ),
   AdminSettings = lazy(() =>
     import("./pages/admin").then((m) => ({ default: m.AdminSettings })),
@@ -130,6 +156,7 @@ function NotFound() {
 const restricted = (roles: string[], children: ReactNode) => (
   <RoleGate roles={roles}>{children}</RoleGate>
 );
+
 function App() {
   return (
     <ErrorBoundary>
@@ -174,7 +201,7 @@ function App() {
                   element={<CertificatePage />}
                 />
                 <Route
-                  path="/verificar/:codigo"
+                  path="/verificar/:codigo?"
                   element={<CertificatePage verify />}
                 />
                 <Route
@@ -198,7 +225,11 @@ function App() {
                   />
                   <Route path="materiais" element={<Materials />} />
                   <Route path="materiais/:pasta" element={<Materials />} />
+                  <Route path="podcasts" element={<Podcasts />} />
                   <Route path="certificados" element={<Certificates />} />
+                  <Route path="ranking" element={<MemberRanking />} />
+                  <Route path="encontros-ao-vivo" element={<Events />} />
+                  <Route path="notificacoes" element={<MemberNotifications />} />
                   <Route path="configuracoes" element={<Settings />} />
                   <Route path="comunidade" element={<Community />} />
                   <Route path="comunidade/novo" element={<Composer />} />
@@ -241,6 +272,10 @@ function App() {
                     )}
                   />
                   <Route
+                    path="cursos/:id/aulas/:lessonId/apresentacao"
+                    element={restricted(["admin", "instructor"], <AdminLessonPresentationPage />)}
+                  />
+                  <Route
                     path="materiais"
                     element={restricted(
                       ["admin", "instructor"],
@@ -255,6 +290,11 @@ function App() {
                     path="membros/:id"
                     element={restricted(["admin"], <MemberEditor />)}
                   />
+                  <Route path="encontros" element={restricted(["admin"], <AdminEvents />)} />
+                  <Route path="podcasts/:episodio?" element={restricted(["admin"], <AdminPodcasts />)} />
+                  <Route path="feedbacks" element={restricted(["admin"], <AdminFeedbacks />)} />
+                  <Route path="dashboard" element={restricted(["admin"], <AdminDashboard analyticsPath="/admin/analytics" />)} />
+                  <Route path="analytics" element={restricted(["admin"], <AdminAnalytics dashboardPath="/admin/dashboard" />)} />
                   <Route
                     path="planos"
                     element={restricted(["admin"], <AdminPlans />)}
@@ -280,6 +320,10 @@ function App() {
                       ["admin", "moderator"],
                       <PostPage admin />,
                     )}
+                  />
+                  <Route
+                    path="comentarios-aula/:curso?/:lessonId?"
+                    element={<AdminLessonComments />}
                   />
                   <Route
                     path="suporte"

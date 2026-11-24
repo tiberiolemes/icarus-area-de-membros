@@ -70,18 +70,20 @@ export function BunnyPlayer({
   initialPosition,
   onPosition,
   onPause,
+  onSeekReady,
 }: {
   url: string;
   title: string;
   initialPosition: number;
   onPosition: (seconds: number) => void;
   onPause: () => void;
+  onSeekReady?: (seek: ((seconds: number) => void) | null) => void;
 }) {
   const frame = useRef<HTMLIFrameElement>(null),
     [ready, setReady] = useState(false),
     [error, setError] = useState(""),
-    callbacks = useRef({ onPosition, onPause });
-  callbacks.current = { onPosition, onPause };
+    callbacks = useRef({ onPosition, onPause, onSeekReady });
+  callbacks.current = { onPosition, onPause, onSeekReady };
   const origin = new URL(url).origin;
   useEffect(() => {
     let active = true;
@@ -111,7 +113,11 @@ export function BunnyPlayer({
       return false;
     };
     const onReady = () => {
-        if (active) player.setCurrentTime(initialPosition);
+        if (!active) return;
+        player.setCurrentTime(initialPosition);
+        callbacks.current.onSeekReady?.((seconds) => {
+          if (active && playerSeconds(seconds) !== null) player.setCurrentTime(seconds);
+        });
       },
       onTime = (value: unknown) => {
         const seconds = playerSeconds(value);
@@ -137,6 +143,7 @@ export function BunnyPlayer({
       player.receive = () => false;
       iframe.onload = null;
       player.elem = null;
+      callbacks.current.onSeekReady?.(null);
     };
   }, [ready, url, origin]);
   if (error) return <Notice error>{error}</Notice>;

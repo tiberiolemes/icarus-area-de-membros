@@ -7,7 +7,7 @@ vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
 import { cache } from "./api";
-import type { Course, Page } from "./api";
+import type { Course, Lesson, Module, Page } from "./api";
 import { Catalog } from "./pages/learning";
 import { RouteFocus } from "./ui";
 
@@ -21,11 +21,16 @@ const course = (id: string, fields: Partial<Course> = {}): Course => ({
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json" },
 });
-function catalogFetch(items: Course[], total = items.length) {
+function catalogFetch(items: Course[], total = items.length, modules: Module[] = []) {
   const requests: { p_query: string; p_page: number }[] = [];
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-    expect(String(input)).toContain("/rest/v1/rpc/app_catalog");
     const args = JSON.parse(String(init?.body));
+    if (String(input).endsWith("/rpc/app_course")) {
+      const selected = items.find(item => item.slug === args.p_slug);
+      expect(selected).toBeDefined();
+      return json({ course: selected, modules });
+    }
+    expect(String(input)).toContain("/rest/v1/rpc/app_catalog");
     requests.push(args);
     return json({ items, total, page: args.p_page, page_size: 20 } satisfies Page<Course>);
   }));
@@ -57,8 +62,7 @@ describe("Catálogo real em fileiras", () => {
   it("mantém busca/página no SDK, explicita o recorte e não busca outras páginas antecipadamente", async () => {
     const requests = catalogFetch([course("a"), course("b")], 45);
     mount("/app/cursos?q=gest%C3%A3o&page=2");
-    await screen.findByText(/Exibindo 21–22 de 45 cursos/);
-    expect(screen.getByRole("status")).toHaveTextContent("página 2 de 3. Destaque e fileiras mostram somente os cursos desta página.");
+    expect(await screen.findByText(/Exibindo 21–22 de 45 cursos/)).toHaveTextContent("página 2 de 3. Destaque e fileiras mostram somente os cursos desta página.");
     expect(requests).toEqual([{ p_query: "gestão", p_page: 2 }]);
     fireEvent.click(screen.getByRole("button", { name: "Próxima" }));
     await waitFor(() => expect(requests.at(-1)).toEqual({ p_query: "gestão", p_page: 3 }));
@@ -78,7 +82,9 @@ describe("Catálogo real em fileiras", () => {
 
   it("mostra um único estado de erro e a tentativa usa novamente o SDK", async () => {
     let calls = 0;
-    vi.stubGlobal("fetch", vi.fn(async () => ++calls === 1
+    vi.stubGlobal("fetch", vi.fn(async input => String(input).endsWith("/rpc/app_course")
+      ? json({ course: course("recuperado"), modules: [] })
+      : ++calls === 1
       ? json({ message: "Serviço temporariamente indisponível" }, 503)
       : json({ items: [course("recuperado")], total: 1, page: 1, page_size: 20 })));
     mount();
@@ -145,6 +151,58 @@ describe("Catálogo real em fileiras", () => {
     expect(requests).toHaveLength(1);
   });
 
+  it("usa os módulos do RPC e retoma a primeira aula pendente que o servidor libera", async () => {
+    const featured = course("curso-real", { completed_lessons: 1, progress_percent: 25 });
+    const lesson = (id: string, fields: Partial<Lesson> = {}): Lesson => ({
+      id, slug: id, title: id, type: "video", duration_seconds: 120,
+      order_index: 0, can_access: true, completed: false, ...fields,
+    });
+    const module = (slug: string, can_access: boolean, lessons: Lesson[]): Module => ({
+      id: slug, slug, title: slug, order_index: 0, can_access,
+      sections: lessons.map((item, order_index) => ({
+        id: item.id, title: item.title, order_index, is_bonus: false, lessons: [item],
+      })),
+    });
+    catalogFetch([featured], 1, [
+      module("Restrito", false, [lesson("oculta")]),
+      module("Concluído", true, [lesson("finalizada", { completed: true })]),
+      module("Módulo & atual", true, [
+        lesson("vista", { slug: "mesma-aula", completed: true }),
+        lesson("ff9bd951-cfc7-4722-aeaf-c29bcec9b84b", { slug: "mesma-aula", title: "próxima #1" }),
+      ]),
+    ]);
+    mount();
+    const grid = await screen.findByRole("region", { name: "Módulos do curso" });
+    expect(within(grid).getByText("2 de 3 com acesso liberado")).toBeInTheDocument();
+    expect(within(grid).getByText("Bloqueado")).toBeInTheDocument();
+    expect(within(grid).getByRole("progressbar", { name: "100% concluído" })).toHaveAttribute("value", "100");
+    expect(within(grid).getByRole("link", { name: "Consultar assinatura" })).toHaveAttribute("href", "/app/configuracoes?aba=assinatura");
+    expect(within(grid).getByRole("progressbar", { name: "50% concluído" })).toHaveAttribute("value", "50");
+    expect(within(grid).getByText("2 aulas · 4 min")).toBeInTheDocument();
+    const hero = screen.getByRole("region", { name: "Curso curso-real" });
+    expect(within(hero).getByText("Próxima aula:").parentElement).toHaveTextContent("Próxima aula: próxima #1");
+    expect(within(hero).queryByText("oculta")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Continuar curso" })).toHaveAttribute("href", "/app/cursos/curso-real/M%C3%B3dulo%20%26%20atual/~ff9bd951-cfc7-4722-aeaf-c29bcec9b84b");
+    expect(within(grid).getAllByRole("link", { name: /^Retomar aula/ })).toHaveLength(1);
+    expect(within(grid).getByRole("link", { name: "Retomar aula próxima #1" })).toHaveAttribute("href", "/app/cursos/curso-real/M%C3%B3dulo%20%26%20atual/~ff9bd951-cfc7-4722-aeaf-c29bcec9b84b");
+  });
+
+  it("oferece consulta à assinatura quando há módulos restritos e respeita o acesso da próxima aula", async () => {
+    const featured = course("parcial", { completed_lessons: 1, progress_percent: 25 });
+    const watched: Lesson = { id: "vista", slug: "vista", title: "Vista", type: "video", duration_seconds: 120,
+      order_index: 0, can_access: true, completed: true };
+    catalogFetch([featured], 1, [{
+      id: "parcial", slug: "parcial", title: "Módulo parcial", order_index: 0, can_access: true,
+      sections: [{ id: "s", title: "Aulas", order_index: 0, is_bonus: false, lessons: [
+        watched, { ...watched, id: "restrita", slug: "restrita", title: "Aula restrita", can_access: false, completed: false },
+      ] }],
+    }, { id: "fechado", slug: "fechado", title: "Módulo restrito", order_index: 1, can_access: false, sections: [] }]);
+    mount();
+    expect(await screen.findByRole("link", { name: "Ver assinatura" })).toHaveAttribute("href", "/app/configuracoes?aba=assinatura");
+    expect(screen.getByRole("link", { name: "Continuar curso" })).toHaveAttribute("href", "/app/cursos/parcial");
+    expect(screen.queryByRole("link", { name: /^Retomar aula/ })).not.toBeInTheDocument();
+  });
+
   it("usa fallback com título real, escapa conteúdo malicioso e codifica slug como segmento", async () => {
     const title = '<img src=x onerror="alert(1)">Título';
     catalogFetch([course("seguro", { title, slug: "a/b?x=#fim", description: "<script>alert(1)</script><p>Texto seguro</p>" })]);
@@ -160,6 +218,7 @@ describe("Catálogo real em fileiras", () => {
     const mediaCalls: unknown[] = [];
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       if (String(input).includes("/rest/v1/rpc/app_catalog")) return json({ items: [course("privado", { cover_url: "javascript:raw-cover" })], total: 1, page: 1, page_size: 20 });
+      if (String(input).endsWith("/rpc/app_course")) return json({ course: course("privado", { cover_url: "javascript:raw-cover" }), modules: [] });
       expect(String(input)).toContain("/functions/v1/media");
       mediaCalls.push(JSON.parse(String(init?.body)));
       return json({ url: "https://media.example.test/signed-cover", expires_at: "2030-01-01" });

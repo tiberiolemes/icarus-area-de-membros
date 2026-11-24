@@ -11,8 +11,9 @@ import {
 import type { FormEvent, InputHTMLAttributes, ReactNode } from "react";
 import { Link, useLocation, useNavigationType } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
-import { AlertCircle, ArrowLeft, Check, Eye, EyeOff, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, Check, Eye, EyeOff, Search as SearchIcon, X } from "lucide-react";
 import { errorMessage } from "./api";
+import "./stitch-primitives.css";
 
 export function Heading({
   title,
@@ -36,6 +37,74 @@ export function Heading({
     </header>
   );
 }
+
+type NavigationTab = { id: string; label: ReactNode } & (
+  | { to: string; onClick?: () => void }
+  | { onClick: () => void; disabled?: boolean }
+);
+
+export function NavigationTabs({
+  label,
+  selected,
+  items,
+  children,
+}: {
+  label: string;
+  selected: string;
+  items: readonly NavigationTab[];
+  children?: ReactNode;
+}) {
+  return (
+    <nav className="tabs" aria-label={label}>
+      {items.map((item) => {
+        const current = item.id === selected ? "page" : undefined;
+        return "to" in item ? (
+          <Link
+            key={item.id}
+            className="button"
+            to={item.to}
+            aria-current={current}
+            onClick={item.onClick}
+          >
+            {item.label}
+          </Link>
+        ) : (
+          <button
+            key={item.id}
+            type="button"
+            disabled={item.disabled}
+            aria-current={current}
+            onClick={item.onClick}
+          >
+            {item.label}
+          </button>
+        );
+      })}
+      {children}
+    </nav>
+  );
+}
+
+export function SectionHeading({
+  title,
+  actions,
+  level = 2,
+  className = "section-heading",
+}: {
+  title: ReactNode;
+  actions?: ReactNode;
+  level?: 2 | 3 | 4;
+  className?: string;
+}) {
+  const Title = `h${level}` as const;
+  return (
+    <div className={className}>
+      <Title>{title}</Title>
+      {actions}
+    </div>
+  );
+}
+
 export function Notice({
   children,
   error = false,
@@ -183,6 +252,7 @@ export function Form({
   onDone,
   successMessage = "Salvo com sucesso.",
   disabled = false,
+  submitDisabled = false,
   secondaryAction,
 }: {
   children: ReactNode;
@@ -192,6 +262,7 @@ export function Form({
   onDone?: () => void;
   successMessage?: string;
   disabled?: boolean;
+  submitDisabled?: boolean;
   secondaryAction?: ReactNode;
 }) {
   const [busy, setBusy] = useState(false),
@@ -203,7 +274,7 @@ export function Form({
     summary = useRef<HTMLDivElement>(null);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (lock.current || disabled) return;
+    if (lock.current || disabled || submitDisabled) return;
     const form = e.currentTarget;
     setFields({});
     if (!form.checkValidity()) {
@@ -263,7 +334,7 @@ export function Form({
           <fieldset disabled={busy || disabled}>
             {children}
             <div className="form-actions">
-              <button className="primary" type="submit" disabled={busy || disabled}>
+              <button className="primary" type="submit" disabled={busy || disabled || submitDisabled}>
                 {busy ? "Enviando…" : label}
               </button>
               {secondaryAction}
@@ -295,13 +366,15 @@ export function Pager({
   page,
   total,
   onChange,
+  label = "Paginação",
 }: {
   page: number;
   total: number;
   onChange: (page: number) => void;
+  label?: string;
 }) {
   return (
-    <nav className="pagination" aria-label="Paginação">
+    <nav className="pagination" aria-label={label}>
       <span>
         {total} registro{total === 1 ? "" : "s"} · página {page} de{" "}
         {Math.max(1, Math.ceil(total / 20))}
@@ -318,33 +391,43 @@ export function Pager({
 export function Search({
   initial = "",
   onSearch,
+  label,
+  placeholder = "Buscar…",
+  variant = "default",
 }: {
   initial?: string;
   onSearch: (query: string) => void;
+  label?: string;
+  placeholder?: string;
+  variant?: "default" | "stitch";
 }) {
+  const id = useId();
   const [query, setQuery] = useState(initial);
   useEffect(() => setQuery(initial), [initial]);
   return (
     <form
-      className="search"
+      className={variant === "stitch" ? "search stitch-search" : "search"}
       role="search"
+      aria-label={label}
       onSubmit={(e) => {
         e.preventDefault();
         onSearch(value(new FormData(e.currentTarget), "q"));
       }}
     >
-      <label className="sr-only" htmlFor="search">
-        Buscar
+      <label className="sr-only" htmlFor={id}>
+        {label ?? "Buscar"}
       </label>
       <input
-        id="search"
+        id={id}
         name="q"
-        placeholder="Buscar…"
+        placeholder={placeholder}
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
-      <button>Buscar</button>
+      <button type="submit" aria-label={label ?? "Buscar"}>
+        {variant === "stitch" ? <SearchIcon size={18} aria-hidden="true" /> : "Buscar"}
+      </button>
     </form>
   );
 }
@@ -433,8 +516,26 @@ export function RouteFocus() {
     const searching = previousPath.current === pathname && navigation !== "POP" &&
       document.activeElement?.closest('form[role="search"]');
     previousPath.current = pathname;
+    let stopWaiting: (() => void) | undefined;
     if (!searching) {
-      document.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
+      const content = document.getElementById("main") ?? document.body;
+      function focusHeading() {
+        const heading = content.querySelector<HTMLElement>("h1");
+        heading?.focus({ preventScroll: true });
+        return heading === document.activeElement;
+      }
+      if (!focusHeading()) {
+        const observer = new MutationObserver(() => {
+          if (focusHeading()) stop();
+        });
+        function stop() {
+          observer.disconnect();
+          document.removeEventListener("focusin", stop, true);
+        }
+        observer.observe(content, { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "style", "tabindex"] });
+        document.addEventListener("focusin", stop, true);
+        stopWaiting = stop;
+      }
       window.scrollTo(
       0,
       navigation === "POP"
@@ -445,6 +546,7 @@ export function RouteFocus() {
       );
     }
     return () => {
+      stopWaiting?.();
       scrollPositions.set(key, window.scrollY);
       scrollPositions.set(pathname + search, window.scrollY);
     };

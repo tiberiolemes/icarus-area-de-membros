@@ -4,8 +4,11 @@ import { publicStorageUrl } from "../_shared/storage.ts";
 export const createHandler = (d: Dependencies = defaults) => endpoint(async (req) => {
   const a = (await actor(req, d))!, body = await json(req);
   const kind = text(body.kind, 32);
-  if (!["lesson", "material", "ticket-attachment", "post-image", "course-cover", "avatar"].includes(kind)) throw new HttpError(422, "INVALID_INPUT", "Tipo de arquivo inválido.");
-  const gate = await rpc(a.admin, "app_media_access", { p_actor_id: a.userInfo.id, p_kind: kind, p_id: uuid(body.id) });
+  if (!["lesson", "material", "ticket-attachment", "post-image", "course-cover", "avatar", "feedback-screenshot"].includes(kind)) throw new HttpError(422, "INVALID_INPUT", "Tipo de arquivo inválido.");
+  const id = uuid(body.id);
+  const gate = kind === "feedback-screenshot"
+    ? await rpc(a.admin, "app_feedback_screenshot_access", { p_actor_id: a.userInfo.id, p_id: id })
+    : await rpc(a.admin, "app_media_access", { p_actor_id: a.userInfo.id, p_kind: kind, p_id: id });
   if (!gate?.can_access) throw new HttpError(403, "FORBIDDEN", "Acesso não permitido.");
   const expires = Math.floor(Date.now() / 1000) + 120;
   if (gate.video_id && gate.provider === "bunny") {

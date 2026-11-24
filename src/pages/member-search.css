@@ -1,0 +1,183 @@
+.member-search {
+  position: relative;
+  flex: 1 1 448px;
+  min-width: 0;
+  max-width: 448px;
+}
+
+.member-search-field {
+  display: flex;
+  align-items: center;
+  background: color-mix(in srgb, var(--ic-surface) 92%, var(--ic-text));
+  border-radius: var(--ic-radius-card);
+}
+
+.member-search-field button {
+  flex: 0 0 var(--ic-accessibility-target-min);
+  color: var(--ic-text-secondary);
+  border: 0;
+  background: transparent;
+}
+
+.member-search .member-search-field input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--ic-accessibility-target-min);
+  padding: 0 var(--ic-space-2) 0 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--ic-accessibility-input-min);
+}
+
+.member-search-field input::placeholder {
+  color: var(--ic-text-secondary);
+  opacity: 1;
+  text-overflow: ellipsis;
+}
+
+.member-search-field input::-webkit-search-cancel-button {
+  filter: grayscale(1);
+}
+
+.member-search-field kbd {
+  flex-shrink: 0;
+  margin-inline-end: var(--ic-space-3);
+  padding-inline: var(--ic-space-1);
+  border: 1px solid var(--ic-border);
+  border-radius: var(--ic-space-1);
+  background: var(--ic-surface);
+  color: var(--ic-text-secondary);
+  font: 11px/1.5 var(--ic-font-family);
+}
+
+.member-search-mobile-hint {
+  display: none;
+}
+
+.member-search-panel {
+  position: absolute;
+  z-index: 1;
+  inset: calc(100% + var(--ic-space-2)) 0 auto;
+  display: flex;
+  flex-direction: column;
+  max-height: min(440px, calc(100dvh - 84px));
+  overflow: auto;
+  padding: var(--ic-space-2);
+  border: 1px solid var(--ic-border);
+  border-radius: var(--ic-radius-card);
+  background: var(--ic-surface);
+  box-shadow: var(--ic-elevation-overlay);
+}
+
+.member-search-status,
+.member-search-error {
+  margin: 0;
+  padding: var(--ic-space-2) var(--ic-space-3);
+  color: var(--ic-text-secondary);
+  font-size: var(--ic-type-caption);
+}
+
+.member-search-status:empty {
+  display: none;
+}
+
+.member-search-error p {
+  margin: 0 0 var(--ic-space-2);
+}
+
+.member-search-results {
+  overflow: auto;
+  min-height: min(60px, 18vh);
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: var(--ic-space-2);
+  list-style: none;
+}
+
+.member-search-results a,
+.member-search-catalog {
+  display: flex;
+  align-items: center;
+  gap: var(--ic-space-3);
+  min-height: var(--ic-accessibility-target-min);
+  padding: var(--ic-space-2) var(--ic-space-3);
+  border-radius: var(--ic-radius-control);
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.member-search-results a:hover,
+.member-search-results a:focus-visible,
+.member-search-catalog:hover {
+  background: color-mix(in srgb, var(--ic-surface) 92%, var(--ic-text));
+}
+
+.member-search-results svg,
+.member-search-catalog svg {
+  flex-shrink: 0;
+}
+
+.member-search-results strong,
+.member-search-results small {
+  display: block;
+  line-height: 1.4;
+}
+
+.member-search-results strong {
+  font-weight: 600;
+}
+
+.member-search-results small {
+  color: var(--ic-text-secondary);
+  font-size: var(--ic-type-caption);
+}
+
+.member-search-panel .pagination {
+  gap: var(--ic-space-2);
+  margin: 0;
+  padding: var(--ic-space-2) var(--ic-space-3);
+}
+
+.member-search-panel .pagination > span {
+  display: none;
+}
+
+.member-search-catalog {
+  justify-content: space-between;
+  font-size: var(--ic-type-caption);
+  font-weight: 600;
+  border-bottom: 1px solid var(--ic-border);
+}
+
+@media (max-width: 639px) {
+  .member-search {
+    position: static;
+  }
+
+  .member-search-field kbd {
+    display: none;
+  }
+
+  .member-search-field {
+    position: relative;
+  }
+
+  .member-search-field input::placeholder {
+    color: transparent;
+  }
+
+  .member-search-field input:placeholder-shown + .member-search-mobile-hint {
+    position: absolute;
+    display: block;
+    inset-inline: var(--ic-accessibility-target-min) var(--ic-space-2);
+    color: var(--ic-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .member-search-panel {
+    inset: calc(100% + var(--ic-space-1)) var(--ic-space-3) auto;
+  }
+}

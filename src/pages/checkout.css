@@ -1,0 +1,331 @@
+.public-layout:has(.icarus-checkout) {
+  max-width: var(--stitch-guide-content-max);
+  padding-inline: var(--stitch-margin);
+}
+
+body:has(.icarus-checkout) {
+  background: var(--stitch-canvas);
+}
+
+.public-layout:has(.icarus-checkout) :is(.public-top, footer) {
+  border-color: var(--stitch-border-subtle);
+}
+
+.public-layout:has(.icarus-checkout) .public-top {
+  border-bottom: 1px solid var(--stitch-border-subtle);
+  padding-block: var(--stitch-space-lg);
+}
+
+.public-layout:has(.icarus-checkout) .public-top img {
+  width: 145px;
+  height: auto;
+}
+
+.public-layout:has(.icarus-checkout) :is(.public-top, footer) a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--stitch-control-min-size);
+  min-width: var(--stitch-control-min-size);
+}
+
+.public-layout:has(.icarus-checkout) .public-main {
+  padding-block: var(--stitch-space-lg) var(--stitch-space-xl);
+}
+
+.icarus-checkout {
+  color: var(--stitch-text-body);
+  font-family: var(--stitch-font-family);
+  font-size: var(--stitch-type-body-md-size);
+  line-height: var(--stitch-type-body-md-line);
+  overflow-wrap: anywhere;
+}
+
+.icarus-checkout h1 {
+  color: var(--stitch-text-heading);
+  font-size: var(--stitch-type-headline-lg-size);
+  line-height: var(--stitch-type-headline-lg-line);
+  font-weight: var(--stitch-type-headline-lg-weight);
+  letter-spacing: var(--stitch-type-headline-lg-tracking);
+}
+
+.icarus-checkout .page-heading {
+  margin-bottom: var(--stitch-space-lg);
+}
+
+.icarus-checkout .page-heading p {
+  color: var(--stitch-text-secondary);
+  font-size: var(--stitch-type-body-lg-size);
+  line-height: var(--stitch-type-body-lg-line);
+}
+
+.icarus-checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(var(--stitch-gutter), 3.75vw, 3rem);
+  align-items: start;
+}
+
+.icarus-checkout-offer ul {
+  display: grid;
+  gap: var(--stitch-space-md);
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--stitch-space-lg);
+}
+
+.icarus-checkout-offer li,
+.icarus-checkout-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stitch-gutter-mobile);
+}
+
+.icarus-checkout-offer li svg {
+  margin-block-start: 2px;
+}
+
+.icarus-checkout-note {
+  padding: var(--stitch-space-md);
+  border-radius: var(--stitch-radius-md);
+  background: var(--stitch-surface-control);
+  color: var(--stitch-text-secondary);
+}
+
+.icarus-checkout-offer .icarus-checkout-note,
+.icarus-checkout-panel > :last-child {
+  margin-bottom: 0;
+}
+
+.icarus-checkout-panel {
+  padding: var(--stitch-margin);
+  border: 1px solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-lg);
+  background: var(--stitch-surface-card);
+}
+
+.icarus-checkout-summary,
+.icarus-checkout-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--stitch-space-sm) var(--stitch-space-md);
+  padding: var(--stitch-space-md);
+  border-radius: var(--stitch-radius-md);
+  background: var(--stitch-surface-control);
+}
+
+[data-theme="dark"] .icarus-checkout-summary {
+  background: var(--stitch-surface-panel);
+}
+
+.icarus-checkout-summary {
+  margin-bottom: var(--stitch-space-lg);
+}
+
+.icarus-checkout-summary h2,
+.icarus-checkout-total strong {
+  margin: 0;
+  color: var(--stitch-text-heading);
+  font-size: var(--stitch-type-headline-sm-size);
+  line-height: var(--stitch-type-headline-sm-line);
+  font-weight: var(--stitch-type-headline-sm-weight);
+}
+
+.icarus-checkout-summary strong,
+.icarus-checkout-total strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.icarus-checkout-step {
+  color: var(--stitch-text-secondary);
+  font-size: var(--stitch-type-label-uppercase-size);
+  line-height: var(--stitch-type-label-uppercase-line);
+  letter-spacing: var(--stitch-tracking-widest);
+  text-transform: uppercase;
+  font-weight: var(--stitch-type-label-uppercase-weight);
+  margin: 0 0 var(--stitch-space-md);
+}
+
+.icarus-checkout-buyer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--stitch-gutter-mobile);
+}
+
+.icarus-checkout-method {
+  margin-bottom: var(--stitch-space-md);
+}
+
+.icarus-checkout-method .icarus-checkout-buyer {
+  gap: var(--stitch-space-xs);
+  padding: var(--stitch-space-xs);
+  border-radius: var(--stitch-radius-md);
+  background: var(--stitch-surface-segment);
+}
+
+.icarus-checkout-method label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--stitch-space-sm);
+  padding: var(--stitch-space-sm) var(--stitch-gutter-mobile);
+  min-height: var(--stitch-control-min-size);
+  border-radius: var(--stitch-radius-base);
+  cursor: pointer;
+  text-align: center;
+}
+
+.icarus-checkout-method label:hover {
+  background: var(--stitch-surface-hover);
+}
+
+.icarus-checkout-method label:has(input:checked) {
+  background: var(--stitch-action);
+  color: var(--stitch-on-action);
+}
+
+.icarus-checkout :focus-visible,
+.icarus-checkout-method label:has(input:focus-visible),
+.icarus-checkout .check:has(input:focus-visible) {
+  outline: var(--stitch-focus-width) solid var(--stitch-focus);
+  outline-offset: var(--stitch-focus-offset);
+}
+
+.icarus-checkout-method input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+}
+
+.icarus-checkout :is(input:not([type="checkbox"], [type="radio"]), select) {
+  min-height: var(--stitch-control-min-size);
+  font-size: var(--stitch-input-min-size);
+  border-color: color-mix(in srgb, var(--stitch-text-muted) 75%, var(--stitch-border-control));
+  border-radius: var(--stitch-radius-base);
+  background: var(--stitch-surface-panel);
+  color: var(--stitch-text-primary);
+}
+
+.icarus-checkout .field {
+  margin-bottom: var(--stitch-space-md);
+}
+
+.icarus-checkout .field > span {
+  font-size: var(--stitch-type-label-md-size);
+  line-height: var(--stitch-type-label-md-line);
+  font-weight: var(--stitch-type-label-md-weight);
+}
+
+.icarus-checkout-total {
+  margin-block: var(--stitch-space-lg) var(--stitch-space-md);
+}
+
+.icarus-checkout .notice {
+  background: var(--stitch-surface-panel);
+  border-color: var(--stitch-border-subtle);
+}
+
+.icarus-checkout [role="alert"] {
+  color: var(--stitch-error);
+}
+
+.icarus-checkout-consent .check {
+  margin-block: 0;
+}
+
+.icarus-checkout-documents {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--stitch-space-md);
+}
+
+.icarus-checkout-documents a,
+.icarus-checkout-panel .notice a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--stitch-control-min-size);
+  min-width: var(--stitch-control-min-size);
+}
+
+.icarus-checkout .check input {
+  accent-color: var(--stitch-action);
+}
+
+.icarus-checkout-form {
+  margin-bottom: 0;
+}
+
+.icarus-checkout :is(button, .button) {
+  min-height: var(--stitch-control-min-size);
+  border-color: var(--stitch-border-subtle);
+  background: var(--stitch-surface-panel);
+  border-radius: var(--stitch-radius-base);
+}
+
+.icarus-checkout :is(button, .button):hover {
+  background: var(--stitch-surface-hover);
+}
+
+.icarus-checkout .primary {
+  background: var(--stitch-action);
+  border-color: var(--stitch-action);
+  color: var(--stitch-on-action);
+}
+
+.icarus-checkout .primary:hover {
+  background: var(--stitch-action-hover);
+}
+
+.icarus-checkout-form .form-actions > button {
+  width: 100%;
+  min-height: 3.5rem;
+  font-weight: var(--stitch-type-headline-lg-weight);
+}
+
+.icarus-order-status {
+  max-width: 42rem;
+  margin-inline: auto;
+}
+
+@media (max-width: 52.5rem) {
+  .public-layout:has(.icarus-checkout) {
+    padding-inline: var(--stitch-margin-tablet);
+  }
+
+  .icarus-checkout-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 28rem) {
+  .public-layout:has(.icarus-checkout) {
+    padding-inline: var(--stitch-margin-mobile);
+  }
+
+  .public-layout:has(.icarus-checkout) .public-top {
+    padding-block: var(--stitch-space-md);
+  }
+
+  .public-layout:has(.icarus-checkout) .public-top img {
+    width: 136px;
+  }
+
+  .icarus-checkout h1 {
+    font-size: var(--stitch-type-headline-lg-mobile-size);
+    line-height: var(--stitch-type-headline-lg-mobile-line);
+    letter-spacing: var(--stitch-type-headline-lg-mobile-tracking);
+  }
+
+  .icarus-checkout-panel {
+    padding: var(--stitch-space-md);
+  }
+
+  .icarus-checkout-form > fieldset > .icarus-checkout-buyer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}

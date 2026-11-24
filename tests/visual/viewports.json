@@ -1,0 +1,163 @@
+{
+  "analytics_funil_de_reten_o_de_aulas": {
+    "reason": "Os indicadores e as tabelas ficam espremidos no viewport exportado. A largura nativa do PNG ativa outra composição no HTML. A altura mantém o fim da barra fixa perto da posição observada no export, considerando a escala geométrica.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "central_de_suporte_atendimento": {
+    "reason": "A composição em colunas e as posições dos controles fixos são preservadas na dimensão nativa do PNG.",
+    "viewport": {
+      "height": 1860,
+      "width": 1280
+    }
+  },
+  "certificados_habilita_es": {
+    "reason": "A composição em colunas e as posições dos controles fixos são preservadas na dimensão nativa do PNG.",
+    "viewport": {
+      "height": 1536,
+      "width": 1280
+    }
+  },
+  "checkout_icarus_pro": {
+    "reason": "O ensaio em 1563 × 1600 px deixa o formulário mais estreito proporcionalmente e sobra área vazia ao pé. 1280 px recompõe as duas colunas e 1024 px deixa o conteúdo definir a altura capturada.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "comunidade_post_thread_de_respostas": {
+    "reason": "O export de 606 px mostra um trilho de 121 px onde o HTML usa 256 px. A escala aproximada de 47% corresponde a um viewport de 1280 × 1024 px com trilho e painel contextual visíveis.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "configura_es_da_conta_notifica_es": {
+    "reason": "A composição em colunas e as posições dos controles fixos são preservadas na dimensão nativa do PNG.",
+    "viewport": {
+      "height": 2414,
+      "width": 1280
+    }
+  },
+  "cursos_aulas": {
+    "reason": "A largura de 1280 px preserva as colunas. Em viewport com a altura do PNG, a barra lateral fixa acompanha o fim do PNG. No export, o último texto dessa barra termina perto de y=996 px, compatível com o viewport de 1024 px.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "dashboard_executivo": {
+    "reason": "Os indicadores e o painel de retenção voltam às colunas de desktop. A largura nativa do PNG ativa outra composição no HTML. A altura mantém o fim da barra fixa perto da posição observada no export, considerando a escala geométrica.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "encontros_ao_vivo_masterminds": {
+    "reason": "A composição em colunas e as posições dos controles fixos são preservadas na dimensão nativa do PNG.",
+    "viewport": {
+      "height": 2237,
+      "width": 1280
+    }
+  },
+  "feedbacks_dos_alunos": {
+    "reason": "O quadro e o painel de detalhe voltam à disposição de desktop. A largura nativa do PNG ativa outra composição no HTML. A altura mantém o fim da barra fixa perto da posição observada no export, considerando a escala geométrica.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "gateway_de_pagamento_asaas": {
+    "reason": "A largura de 1280 px preserva as colunas. Em viewport com a altura do PNG, a barra lateral fixa acompanha o fim do PNG. No export, o último texto dessa barra termina perto de y=996 px, compatível com o viewport de 1024 px.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "gest_o_de_equipe_logs_de_auditoria": {
+    "reason": "Os indicadores voltam à mesma linha e a tabela recupera a área útil. A largura nativa do PNG ativa outra composição no HTML. A altura mantém o fim da barra fixa perto da posição observada no export, considerando a escala geométrica.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "integra_o_bunny_stream_video_delivery": {
+    "reason": "Os indicadores e os painéis técnicos voltam às colunas de desktop. A largura nativa do PNG ativa outra composição no HTML. A altura mantém o fim da barra fixa perto da posição observada no export, considerando a escala geométrica.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "materiais_downloads": {
+    "reason": "A composição em colunas e as posições dos controles fixos são preservadas na dimensão nativa do PNG.",
+    "viewport": {
+      "height": 1867,
+      "width": 1280
+    }
+  },
+  "membros_crm": {
+    "reason": "As métricas e a lista recuperam a largura de desktop sem o extravasamento horizontal do ensaio nativo. A largura nativa do PNG ativa outra composição no HTML. A altura mantém o fim da barra fixa perto da posição observada no export, considerando a escala geométrica.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "onboarding_interativo_b2b": {
+    "reason": "Com a largura de 949 px, o painel auxiliar cai abaixo do formulário. A configuração de desktop volta a colocá-lo ao lado, e a altura final acompanha o fluxo do HTML.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "pedidos_faturamento": {
+    "reason": "Os indicadores, a tabela e o detalhe recuperam a largura de desktop. A largura nativa do PNG ativa outra composição no HTML. A altura mantém o fim da barra fixa perto da posição observada no export, considerando a escala geométrica.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "planos_ofertas_cupons_de_desconto": {
+    "reason": "A largura de 1280 px preserva as colunas. Em viewport com a altura do PNG, a barra lateral fixa acompanha o fim do PNG. No export, o último texto dessa barra termina perto de y=996 px, compatível com o viewport de 1024 px.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "plataforma_marca_white_label": {
+    "reason": "Os painéis de configuração e a prévia voltam a aparecer lado a lado. A largura nativa do PNG ativa outra composição no HTML. A altura mantém o fim da barra fixa perto da posição observada no export, considerando a escala geométrica.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "podcasts_masterclasses": {
+    "reason": "A composição em colunas e as posições dos controles fixos são preservadas na dimensão nativa do PNG.",
+    "viewport": {
+      "height": 2156,
+      "width": 1280
+    }
+  },
+  "ranking_premia_o_mensal": {
+    "reason": "A composição em colunas e as posições dos controles fixos são preservadas na dimensão nativa do PNG.",
+    "viewport": {
+      "height": 3057,
+      "width": 1280
+    }
+  },
+  "tickets_de_suporte": {
+    "reason": "A lista e o detalhe do ticket voltam a aparecer lado a lado. A largura nativa do PNG ativa outra composição no HTML. A altura mantém o fim da barra fixa perto da posição observada no export, considerando a escala geométrica.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  },
+  "valida_o_p_blica_de_certificado": {
+    "reason": "O ensaio de 1600 × 1582 px amplia as margens e desloca o certificado para baixo pela centralização vertical do HTML. 1280 × 1024 px preserva as duas colunas com o certificado ocupando maior área útil.",
+    "viewport": {
+      "height": 1024,
+      "width": 1280
+    }
+  }
+}

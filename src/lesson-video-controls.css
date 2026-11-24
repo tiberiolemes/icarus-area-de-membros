@@ -1,0 +1,571 @@
+.lesson-video-controls {
+  --lesson-video-white: var(--ic-white, #fff);
+  --lesson-video-black: var(--ic-black, #000);
+  --lesson-video-ink: rgb(255 255 255 / 0.8);
+  --lesson-video-muted: rgb(255 255 255 / 0.7);
+  --lesson-video-play-ink: rgb(255 255 255 / 0.9);
+  --lesson-video-track: rgb(255 255 255 / 0.3);
+  --lesson-video-volume-fill: var(--lesson-video-white);
+  --lesson-video-center-bg: rgb(255 255 255 / 0.95);
+  --lesson-video-center-hover: var(--lesson-video-white);
+  --lesson-video-center-ink: var(--lesson-video-black);
+  --lesson-video-center-ring: 0 0 0 4px rgb(0 0 0 / 0.2);
+  --lesson-video-rate-bg: rgb(255 255 255 / 0.1);
+  --lesson-video-rate-hover: rgb(255 255 255 / 0.2);
+  --lesson-video-rate-ink: var(--lesson-video-play-ink);
+  --lesson-video-right-ink: var(--lesson-video-ink);
+  --lesson-video-gradient-top: 56px;
+  --lesson-video-row-height: 41px;
+  --lesson-video-track-slot: 12px;
+  --lesson-video-icon-offset: -2.5px;
+  --lesson-video-clock-gap: 6px;
+  --lesson-video-time-leading: 20px;
+  --lesson-video-time-weight: 400;
+  --lesson-video-rate-padding: 8px;
+  --lesson-video-chip-leading: 20px;
+  --lesson-video-resolution-bg: var(--lesson-video-white);
+  --lesson-video-resolution-ink: var(--lesson-video-black);
+  --lesson-video-resolution-width: 50px;
+  --lesson-video-resolution-weight: 700;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  container: lesson-video / inline-size;
+  color: var(--lesson-video-ink);
+  font-family: var(--ic-font-family, Inter, sans-serif);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+[data-theme="dark"] .lesson-video-controls {
+  --lesson-video-ink: #e5e2e1;
+  --lesson-video-muted: var(--ic-gray-500, #8a8a8a);
+  --lesson-video-play-ink: var(--lesson-video-ink);
+  --lesson-video-track: #353534;
+  --lesson-video-volume-fill: var(--lesson-video-ink);
+  --lesson-video-center-bg: rgb(14 14 14 / 0.8);
+  --lesson-video-center-hover: var(--lesson-video-center-bg);
+  --lesson-video-center-ink: var(--lesson-video-white);
+  --lesson-video-center-ring: 0 0 0 0 transparent;
+  --lesson-video-rate-bg: #201f1f;
+  --lesson-video-rate-hover: #201f1f;
+  --lesson-video-rate-ink: var(--lesson-video-muted);
+  --lesson-video-right-ink: var(--lesson-video-muted);
+  --lesson-video-gradient-top: 48px;
+  --lesson-video-row-height: 42px;
+  --lesson-video-track-slot: 8px;
+  --lesson-video-icon-offset: -3px;
+  --lesson-video-clock-gap: 4px;
+  --lesson-video-time-leading: 16px;
+  --lesson-video-time-weight: 500;
+  --lesson-video-rate-padding: 4px;
+  --lesson-video-chip-leading: 22px;
+  --lesson-video-resolution-bg: #201f1f;
+  --lesson-video-resolution-ink: var(--lesson-video-ink);
+  --lesson-video-resolution-width: 60px;
+  --lesson-video-resolution-weight: 600;
+}
+
+.lesson-video-controls__ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+.lesson-video-controls button,
+.lesson-video-controls__select {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  color: inherit;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+  transform: none;
+}
+
+.lesson-video-controls button:hover,
+.lesson-video-controls__captions:focus-within,
+.lesson-video-controls__captions:hover {
+  color: var(--lesson-video-white);
+  background: transparent;
+}
+
+.lesson-video-controls button:disabled {
+  cursor: default;
+}
+
+.lesson-video-controls :is(button, input):focus-visible,
+.lesson-video-controls__select:has(select:focus-visible) {
+  outline: 2px solid var(--lesson-video-white);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px var(--lesson-video-black);
+}
+
+.lesson-video-controls svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.lesson-video-controls__left > button:first-child svg {
+  width: 24px;
+  height: 24px;
+}
+
+.lesson-video-controls__left > button:first-child {
+  color: var(--lesson-video-play-ink);
+}
+
+.lesson-video-controls__ambient button {
+  position: absolute;
+  top: min(50%, 100% - 128px);
+  left: 50%;
+  translate: -50% -50%;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  color: var(--lesson-video-center-ink);
+  background: var(--lesson-video-center-bg);
+  backdrop-filter: blur(24px);
+  box-shadow: var(--lesson-video-center-ring), 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+.lesson-video-controls__ambient button:hover,
+.lesson-video-controls__ambient button:active {
+  color: var(--lesson-video-center-ink);
+  background: var(--lesson-video-center-hover);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .lesson-video-controls__ambient button { transition: scale 150ms ease-out; }
+  :has(> .lesson-video-controls):hover > .lesson-video-controls .lesson-video-controls__ambient button { scale: 1.05; }
+  .lesson-video-controls__ambient button:active { scale: 0.95; }
+}
+
+.lesson-video-controls__ambient svg {
+  width: 36px;
+  height: 36px;
+  margin-inline-start: 4px;
+}
+
+.lesson-video-controls__bar {
+  position: absolute;
+  z-index: 20;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--lesson-video-gradient-top) 16px 8px;
+  background: linear-gradient(to top, #000, rgb(0 0 0 / 0.8), #0000);
+}
+
+.lesson-video-controls__row,
+.lesson-video-controls__left,
+.lesson-video-controls__right,
+.lesson-video-controls__volume {
+  display: flex;
+  align-items: center;
+}
+
+.lesson-video-controls__row {
+  justify-content: space-between;
+  height: var(--lesson-video-row-height);
+  padding-top: 4px;
+  margin-inline: -6px -8px;
+}
+
+.lesson-video-controls__right {
+  color: var(--lesson-video-right-ink);
+}
+
+.lesson-video-controls__timeline,
+.lesson-video-controls__volume-range {
+  position: relative;
+  display: grid;
+  align-items: center;
+}
+
+.lesson-video-controls__timeline {
+  --lesson-video-range-fill: var(--lesson-video-white);
+  height: var(--lesson-video-track-slot);
+}
+
+.lesson-video-controls__track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--lesson-video-track);
+  overflow: hidden;
+}
+
+.lesson-video-controls__track::before {
+  content: "";
+  display: block;
+  width: var(--lesson-video-fill);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--lesson-video-range-fill);
+}
+
+.lesson-video-controls input[type="range"] {
+  box-sizing: border-box;
+  position: absolute;
+  inset: auto 0 0;
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  appearance: none;
+  pointer-events: auto;
+  touch-action: pan-y;
+  cursor: pointer;
+}
+
+.lesson-video-controls input[type="range"]:disabled {
+  cursor: default;
+  pointer-events: none;
+}
+
+.lesson-video-controls input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+}
+
+.lesson-video-controls input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  background: transparent;
+}
+
+.lesson-video-controls__timeline::after,
+.lesson-video-controls__volume-range::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: clamp(6px, var(--lesson-video-fill), 100% - 6px);
+  translate: -50% -50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--lesson-video-white);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  opacity: 0;
+}
+
+.lesson-video-controls__timeline:focus-within::after,
+.lesson-video-controls__timeline:has(input:enabled:hover)::after,
+.lesson-video-controls__volume-range:focus-within::after,
+.lesson-video-controls__volume-range:has(input:hover)::after { opacity: 1; }
+
+.lesson-video-controls__volume-range {
+  --lesson-video-range-fill: var(--lesson-video-volume-fill);
+  width: 64px;
+  height: 44px;
+}
+
+.lesson-video-controls__time {
+  margin-inline-start: 4px;
+  color: var(--lesson-video-muted);
+  font-size: 12px;
+  font-weight: var(--lesson-video-time-weight);
+  line-height: var(--lesson-video-time-leading);
+  white-space: nowrap;
+}
+
+.lesson-video-controls__select {
+  position: relative;
+}
+
+.lesson-video-controls__select select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.lesson-video-controls__rate span,
+.lesson-video-controls__resolution {
+  padding: 2px var(--lesson-video-rate-padding);
+  border-radius: 4px;
+  background: var(--lesson-video-rate-bg);
+  color: var(--lesson-video-rate-ink);
+  font-size: 11px;
+  line-height: var(--lesson-video-chip-leading);
+}
+
+.lesson-video-controls__resolution {
+  min-width: var(--lesson-video-resolution-width);
+  background: var(--lesson-video-resolution-bg);
+  color: var(--lesson-video-resolution-ink);
+  font-weight: var(--lesson-video-resolution-weight);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.lesson-video-controls__rate:is(:hover, :focus-within) span {
+  color: var(--lesson-video-white);
+  background: var(--lesson-video-rate-hover);
+}
+
+.lesson-video-controls__captions[data-active="true"] svg {
+  color: var(--lesson-video-white);
+  filter: drop-shadow(0 2px 0 #fff);
+}
+
+.lesson-video-controls__feedback {
+  position: absolute;
+}
+
+.lesson-video-controls__feedback:not(:empty) {
+  inset: auto 16px calc(100% - 20px);
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: var(--lesson-video-white);
+  background: var(--lesson-video-black);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+@media (min-width: 640px) {
+  .lesson-video-controls__ambient button { width: 80px; height: 80px; top: min(50%, 100% - 136px); }
+  .lesson-video-controls__ambient svg { width: 44px; height: 44px; }
+}
+
+@container lesson-video (width > 560px) {
+  .lesson-video-controls__row { margin-inline-start: -16px; }
+  .lesson-video-controls__left > button:first-child:focus-visible { outline-offset: -3px; }
+  .lesson-video-controls__row svg { translate: 0 var(--lesson-video-icon-offset); }
+  .lesson-video-controls__left > button:first-child svg { translate: 10px var(--lesson-video-icon-offset); }
+  .lesson-video-controls__left > button:nth-child(2) svg { translate: 4px var(--lesson-video-icon-offset); }
+  .lesson-video-controls__volume button svg { translate: -4px var(--lesson-video-icon-offset); }
+  .lesson-video-controls__time { margin-inline-start: var(--lesson-video-clock-gap); }
+  .lesson-video-controls__right button:not(:last-child) svg,
+  .lesson-video-controls__captions svg { translate: 12px var(--lesson-video-icon-offset); }
+}
+
+@container lesson-video (max-width: 560px) {
+  .lesson-video-controls__volume-range {
+    position: absolute;
+    z-index: 1;
+    left: 16px;
+    bottom: 96px;
+    width: 76px;
+    padding-inline: 6px;
+    border-radius: 4px;
+    background: rgb(0 0 0 / 0.85);
+    visibility: hidden;
+  }
+
+  .lesson-video-controls__volume:focus-within .lesson-video-controls__volume-range {
+    visibility: visible;
+  }
+
+  .lesson-video-controls__time {
+    position: absolute;
+    right: 16px;
+    bottom: calc(56px + var(--lesson-video-track-slot));
+    padding-inline: 3px;
+    border-radius: 4px;
+    background: rgb(0 0 0 / 0.8);
+    line-height: 16px;
+  }
+
+  .lesson-video-controls__resolution {
+    position: absolute;
+    left: 16px;
+    bottom: calc(56px + var(--lesson-video-track-slot));
+    min-width: auto;
+    line-height: 16px;
+  }
+}
+
+@container lesson-video (max-width: 359px) {
+  .lesson-video-controls__row { margin-inline: -11px; }
+}
+
+@container lesson-video (max-width: 317px) {
+  .lesson-video-controls__ambient button { top: min(50%, 100% - 158px); }
+  .lesson-video-controls__row {
+    flex-wrap: wrap;
+    height: auto;
+  }
+}
+
+:has(> .lesson-video-controls):fullscreen {
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+:has(> .lesson-video-controls):fullscreen > video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+@media (max-width: 639px) {
+  .stitch-lesson-media:not(:fullscreen) > .lesson-video-controls {
+    --lesson-video-center-bg: rgb(255 255 255 / 0.9);
+    --lesson-video-center-hover: #fff;
+    --lesson-video-center-ring: 0 0 0 transparent;
+    --lesson-video-center-ink: #000;
+    --lesson-video-ink: #fff;
+    --lesson-video-right-ink: #fff;
+    --lesson-video-rate-ink: #fff;
+    --lesson-video-row-height: 44px;
+    --lesson-video-track-slot: 6px;
+  }
+
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) > .lesson-video-controls {
+    --lesson-video-center-bg: #fff;
+    --lesson-video-track-slot: 4px;
+    --lesson-video-track: rgb(53 53 52 / 0.8);
+  }
+
+  .stitch-lesson-media:fullscreen :is(.lesson-video-controls__source, .lesson-video-controls__mobile-clock) {
+    display: none;
+  }
+
+  [data-theme="light"] .stitch-lesson-cover { background: #1c1b1d; }
+
+  .stitch-lesson-cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.9), transparent, rgb(0 0 0 / 0.4));
+  }
+  [data-theme="dark"] .stitch-lesson-cover::after {
+    background: linear-gradient(to top, #000, rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.6));
+  }
+
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__source {
+    position: absolute;
+    z-index: 10;
+    inset: 12px auto auto 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgb(0 0 0 / 0.7);
+    font: 600 10px / 15px var(--stitch-font-family);
+    letter-spacing: 0.05em;
+  }
+
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__ambient { z-index: 21; }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__ambient button {
+    top: 38.5%;
+    width: 48px;
+    height: 48px;
+    backdrop-filter: none;
+  }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__ambient svg {
+    width: 28px;
+    height: 28px;
+    margin-inline-start: 0;
+  }
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__ambient button { top: 44%; }
+
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__bar {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-content: end;
+    height: 100%;
+    gap: 0;
+    padding: 0 12px;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.7), transparent 58%);
+  }
+  .stitch-lesson-media:not(:fullscreen):has(> .stitch-lesson-cover:not([hidden])) .lesson-video-controls__bar { background: transparent; }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__row {
+    flex-wrap: nowrap;
+    min-width: 0;
+    margin-inline: -6px;
+    padding: 0;
+  }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__left { display: contents; }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__time { display: none; }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__mobile-clock {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-block-end: 6px;
+    color: #fff;
+    font: 500 11px / 16.5px ui-monospace, monospace;
+    letter-spacing: -0.025em;
+  }
+  .lesson-video-controls__mobile-clock > span:last-child { opacity: 0.75; }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__track { height: var(--lesson-video-track-slot); }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__timeline input[type="range"] { z-index: 1; }
+
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__left > button:nth-child(2) {
+    position: absolute;
+    inset: 0 44px auto auto;
+    color: #fff;
+  }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls:has(.lesson-video-controls__ambient) .lesson-video-controls__left > button:first-child {
+    display: none;
+  }
+
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__resolution {
+    position: static;
+    order: 1;
+    margin-inline-start: auto;
+    padding: 0 4px;
+    background: rgb(255 255 255 / 0.2);
+    color: #fff;
+    font: 700 10px / 15px var(--stitch-font-family);
+  }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__rate { order: -1; }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__rate span {
+    padding: 2px 6px;
+    background: rgb(255 255 255 / 0.1);
+    font: 600 11px / 16.5px var(--stitch-font-family);
+  }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__right { display: contents; }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__right button { order: 2; }
+  .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__row svg { width: 18px; height: 18px; }
+
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__timeline {
+    grid-row: 1;
+  }
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__mobile-clock {
+    position: absolute;
+    justify-content: flex-start;
+    align-items: center;
+    inset: auto auto 19px 12px;
+    min-height: 16px;
+    margin: 0;
+  }
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__row { justify-content: flex-end; }
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__bar { padding-block-end: 8px; }
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__row > :first-child {
+    margin-inline-end: auto;
+  }
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__volume {
+    position: absolute;
+    inset: 0 88px auto auto;
+  }
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__volume-range {
+    inset: 44px 0 auto auto;
+  }
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__rate span,
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__resolution {
+    background: transparent;
+    font-weight: 400;
+  }
+  [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__resolution { margin: 0; }
+}

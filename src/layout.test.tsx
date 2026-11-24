@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { Link, MemoryRouter } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:58521");
@@ -55,6 +55,43 @@ it("o guia mantém o erro de leitura visível e não abre um painel fictício", 
   await screen.findByRole("alert");
   expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Guia desta tela" })).toBeEnabled();
+});
+
+it("o guia destaca a busca do cabeçalho e depois o filtro do currículo no player", async () => {
+  vi.spyOn(HTMLElement.prototype, "getClientRects").mockReturnValue([new DOMRect(0, 0, 44, 44)] as unknown as DOMRectList);
+  show(<><header className="topbar"><Tour /></header><div data-tour="member-search">Busca rápida</div><div data-tour="curriculum">Conteúdos</div></>,
+    "/app/cursos/curso/modulo/aula");
+  fireEvent.click(screen.getByRole("button", { name: "Guia desta tela" }));
+  const panel = await screen.findByRole("complementary", { name: "Guia desta tela" });
+  expect(panel.parentElement).toBe(document.body);
+  expect(within(panel).getByRole("heading", { name: "Encontre cursos, módulos e aulas" })).toBeVisible();
+  await waitFor(() => expect(screen.getByText("Busca rápida")).toHaveClass("tour-target"));
+  fireEvent.click(within(panel).getByRole("button", { name: "Próximo passo" }));
+  expect(await within(panel).findByText(/Filtrar tópicos e aulas/)).toBeVisible();
+  await waitFor(() => expect(screen.getByText("Conteúdos")).toHaveClass("tour-target"));
+  expect(screen.getByText("Busca rápida")).not.toHaveClass("tour-target");
+});
+
+it("o guia de auditoria acompanha a paginação e fecha ao mudar de superfície", async () => {
+  vi.spyOn(HTMLElement.prototype, "getClientRects").mockReturnValue([new DOMRect(0, 0, 44, 44)] as unknown as DOMRectList);
+  show(
+    <>
+      <Tour />
+      <section data-tour="admin-settings-audit">Eventos registrados</section>
+      <Link to="?aba=auditoria&q=curso&page=2">Próxima página</Link>
+      <Link to="?aba=integracoes&provedor=bunny">Bunny Stream</Link>
+    </>,
+    "/admin/configuracoes?aba=auditoria",
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Guia desta tela" }));
+  const panel = await screen.findByRole("complementary", { name: "Guia desta tela" });
+  expect(within(panel).getByRole("link", { name: "Ajuda completa" })).toHaveAttribute("href", "/ajuda/administracao");
+  await waitFor(() => expect(screen.getByText("Eventos registrados")).toHaveClass("tour-target"));
+  fireEvent.click(screen.getByRole("link", { name: "Próxima página" }));
+  expect(panel).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("link", { name: "Bunny Stream" }));
+  await waitFor(() => expect(panel).not.toBeInTheDocument());
+  expect(screen.getByText("Eventos registrados")).not.toHaveClass("tour-target");
 });
 
 it("abrir e fechar um editor abaixo de uma lista leva o foco à tarefa e retorna ao disparador sem gravar", async () => {

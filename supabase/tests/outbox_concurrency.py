@@ -1,13 +1,20 @@
 """Finite Icarus local/isolated-QA race check; cleans its own synthetic order/plan."""
 from concurrent.futures import ThreadPoolExecutor
 import os
+import re
 import subprocess
 import threading
 import uuid
 
-db_container = os.environ.get("ICARUS_DB_CONTAINER", "supabase_db_icarus-courses-local")
-if db_container not in ("supabase_db_icarus-courses-local", "supabase_db_icarus-courses-install-qa"):
-    raise SystemExit("Only the exact Icarus local or isolated-QA database container is allowed")
+db_container = os.environ.get("ICARUS_DB_CONTAINER", "")
+docker_host = os.environ.get("DOCKER_HOST", "")
+if not (
+    re.fullmatch(r"[a-f0-9]{64}", db_container)
+    and docker_host.startswith("unix:///")
+    and docker_host == os.environ.get("ICARUS_INSTALL_DOCKER_HOST")
+    and not os.environ.get("DOCKER_CONTEXT")
+):
+    raise SystemExit("Run npm run test:db or node scripts/clean-install.mjs verify")
 
 
 def sql(statement):

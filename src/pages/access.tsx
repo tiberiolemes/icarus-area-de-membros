@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Briefcase, Check, ClipboardList, ListChecks, TrendingUp, Users } from "lucide-react";
+import "./onboarding.css";
 import {
   cache,
   client,
@@ -38,16 +40,15 @@ type PublicContext = {
   plans: unknown[];
 };
 export function PublicFrame({ children }: { children: React.ReactNode }) {
+  const context = useRpc<PublicContext>("app_public_context");
+  const name = context.data?.name || "Icarus";
   return (
     <div className="public-layout">
       <header className="public-top">
-        <Link to="/entrar" aria-label="Icarus, início">
-          <img
-            src="/brand/icarus-horizontal-preto.svg"
-            alt="Icarus"
-            width="244"
-            height="64"
-          />
+        <Link to="/entrar" aria-label={`${name}, início`} className={name === "Icarus" ? undefined : "public-installation-name"}>
+          {name === "Icarus" ? (
+            <img src="/brand/icarus-horizontal-preto.svg" alt="Icarus" width="244" height="64" />
+          ) : <strong className="installation-name" title={name}>{name}</strong>}
         </Link>
         <Link to="/ajuda">Central de ajuda</Link>
       </header>
@@ -599,10 +600,74 @@ export const companyKeys = [
   "acquisition",
   "product_description",
 ] as const;
+
+function OnboardingChoices({
+  question,
+  current,
+  required,
+}: {
+  question: OnboardingQuestion;
+  current: string;
+  required: boolean;
+}) {
+  const id = useId();
+  const [invalid, setInvalid] = useState(false);
+  const options = [...new Set(question.options)];
+  const Icon = { role: Briefcase, size: Users, stage: TrendingUp }[
+    question.key
+  ];
+  const selected = options.includes(current) ? current : "";
+  return (
+    <fieldset
+      className="student-onboarding-choice"
+      data-question={question.key}
+      aria-describedby={required ? id + "-hint" : undefined}
+      onInvalid={() => setInvalid(true)}
+      onChange={() => setInvalid(false)}
+    >
+      <legend>{question.label}</legend>
+      {required && (
+        <small
+          id={id + "-hint"}
+          className={invalid ? "field-error" : undefined}
+        >
+          {invalid
+            ? "Selecione uma opção para continuar."
+            : "Resposta obrigatória"}
+        </small>
+      )}
+      <div className="student-onboarding-options">
+        {(required ? options : [...options, ""]).map((option) => (
+          <label key={option}>
+            <input
+              type="radio"
+              name={"company_" + question.key}
+              value={option}
+              defaultChecked={selected === option}
+              required={required}
+            />
+            <span>
+              {Icon && <Icon size={16} aria-hidden="true" />}
+              {option || "Sem resposta"}
+              <Check
+                className="student-onboarding-check"
+                size={14}
+                aria-hidden="true"
+              />
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 export function CompanyFields({
   company = {},
+  choiceCards = false,
 }: {
   company?: Record<string, unknown>;
+  choiceCards?: boolean;
 }) {
   const boot = useBootstrap(),
     questions =
@@ -638,58 +703,75 @@ export function CompanyFields({
             companyKeys.includes(q.key as (typeof companyKeys)[number]),
         )
         .sort((a, b) => a.order_index - b.order_index)
-        .map((question) => (
-          <Field
-            key={question.id}
-            label={
-              question.label +
-              (question.required || (question.key === "name" && companyRequired)
-                ? " *"
-                : "")
-            }
-            hint={
-              question.required || (question.key === "name" && companyRequired)
-                ? "Resposta obrigatória"
-                : undefined
-            }
-          >
-            {question.type === "select" ? (
-              <select
-                name={"company_" + question.key}
-                required={
-                  question.required ||
-                  (question.key === "name" && companyRequired)
-                }
-                defaultValue={String(company[question.key] ?? "")}
-              >
-                <option value="">Selecione</option>
-                {question.options.map((option) => (
-                  <option key={option}>{option}</option>
-                ))}
-              </select>
-            ) : question.type === "textarea" ? (
-              <textarea
-                name={"company_" + question.key}
-                required={
-                  question.required ||
-                  (question.key === "name" && companyRequired)
-                }
-                maxLength={1000}
-                defaultValue={String(company[question.key] ?? "")}
-              />
-            ) : (
-              <input
-                name={"company_" + question.key}
-                required={
-                  question.required ||
-                  (question.key === "name" && companyRequired)
-                }
-                maxLength={500}
-                defaultValue={String(company[question.key] ?? "")}
-              />
-            )}
-          </Field>
-        ))}
+        .map((question) =>
+          choiceCards &&
+          question.type === "select" &&
+          question.options.length > 0 &&
+          question.options.length <= 8 ? (
+            <OnboardingChoices
+              key={question.id}
+              question={question}
+              current={String(company[question.key] ?? "")}
+              required={
+                question.required ||
+                (question.key === "name" && companyRequired)
+              }
+            />
+          ) : (
+            <Field
+              key={question.id}
+              label={
+                question.label +
+                (question.required ||
+                (question.key === "name" && companyRequired)
+                  ? " *"
+                  : "")
+              }
+              hint={
+                question.required ||
+                (question.key === "name" && companyRequired)
+                  ? "Resposta obrigatória"
+                  : undefined
+              }
+            >
+              {question.type === "select" ? (
+                <select
+                  name={"company_" + question.key}
+                  required={
+                    question.required ||
+                    (question.key === "name" && companyRequired)
+                  }
+                  defaultValue={String(company[question.key] ?? "")}
+                >
+                  <option value="">Selecione</option>
+                  {question.options.map((option) => (
+                    <option key={option}>{option}</option>
+                  ))}
+                </select>
+              ) : question.type === "textarea" ? (
+                <textarea
+                  name={"company_" + question.key}
+                  required={
+                    question.required ||
+                    (question.key === "name" && companyRequired)
+                  }
+                  maxLength={1000}
+                  defaultValue={String(company[question.key] ?? "")}
+                />
+              ) : (
+                <input
+                  name={"company_" + question.key}
+                  required={
+                    question.required ||
+                    (question.key === "name" && companyRequired)
+                  }
+                  maxLength={500}
+                  defaultValue={String(company[question.key] ?? "")}
+                />
+              )}
+            </Field>
+          ),
+        )}
       {!companyRequired && !questions.some((q) => q.active) && (
         <Notice>Nenhuma pergunta de empresa configurada pela academia.</Notice>
       )}
@@ -707,43 +789,79 @@ export function Onboarding() {
     navigate = useNavigate(),
     [params] = useSearchParams();
   return (
-    <PublicFrame>
-      <div className="reading">
-        <Heading title="Vamos conhecer você">
-          Complete seu perfil para começar. Você pode atualizar os dados depois.
-        </Heading>
-        <QueryState query={boot}>
-          {boot.data && (
-            <Form
-              label="Concluir e continuar"
-              onSave={async (data) => {
-                await rpc<Profile>("app_profile", {
-                  p_data: {
-                    full_name: value(data, "full_name"),
-                    company: companyData(data),
-                    onboarding_complete: true,
-                  },
-                });
-                await cache.invalidateQueries({ queryKey: ["bootstrap"] });
-                navigate(internalPath(params.get("returnTo")), {
-                  replace: true,
-                });
-              }}
-            >
-              <Field label="Nome completo">
-                <input
-                  name="full_name"
-                  required
-                  defaultValue={boot.data.profile.full_name}
-                  maxLength={160}
-                />
-              </Field>
-              <CompanyFields company={boot.data.profile.company} />
-            </Form>
-          )}
-        </QueryState>
-      </div>
-    </PublicFrame>
+    <div
+      className="student-onboarding"
+      data-theme={boot.data?.profile.theme ?? "light"}
+    >
+      <PublicFrame>
+        <div className="student-onboarding-content">
+          <div className="student-onboarding-progress">
+            <div>
+              <ClipboardList size={20} aria-hidden="true" />
+              <strong>Configuração inicial</strong>
+              <span>Etapa 2 de 2 · Perfil</span>
+            </div>
+            <progress
+              aria-label="Etapas concluídas"
+              max={2}
+              value={boot.data?.profile.onboarding_complete ? 2 : 1}
+            />
+          </div>
+          <QueryState query={boot}>
+            {boot.data && (
+              <Form
+                label="Concluir e continuar"
+                onSave={async (data) => {
+                  await rpc<Profile>("app_profile", {
+                    p_data: {
+                      full_name: value(data, "full_name"),
+                      company: companyData(data),
+                      onboarding_complete: true,
+                    },
+                  });
+                  await cache.invalidateQueries({ queryKey: ["bootstrap"] });
+                  navigate(internalPath(params.get("returnTo")), {
+                    replace: true,
+                  });
+                }}
+              >
+                <div className="student-onboarding-questions">
+                  <Heading title="Personalize sua jornada no Icarus">
+                    Complete seu perfil e responda às perguntas da academia para
+                    começar.
+                  </Heading>
+                  <Field label="Nome completo" hint="Resposta obrigatória">
+                    <input
+                      name="full_name"
+                      autoComplete="name"
+                      required
+                      defaultValue={boot.data.profile.full_name}
+                      maxLength={160}
+                    />
+                  </Field>
+                  <CompanyFields
+                    company={boot.data.profile.company}
+                    choiceCards
+                  />
+                </div>
+                <aside className="student-onboarding-guide">
+                  <ListChecks size={22} aria-hidden="true" />
+                  <h2>Antes de continuar</h2>
+                  <p>
+                    Preencha os campos obrigatórios e selecione a opção que
+                    melhor descreve sua empresa.
+                  </p>
+                  <p>
+                    Você pode atualizar as respostas em Configurações, na aba
+                    Sua empresa.
+                  </p>
+                </aside>
+              </Form>
+            )}
+          </QueryState>
+        </div>
+      </PublicFrame>
+    </div>
   );
 }
 export function Legal({ kind }: { kind: "terms" | "privacy" }) {

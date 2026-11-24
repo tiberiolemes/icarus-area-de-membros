@@ -6,14 +6,20 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:58521");
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
+vi.mock("./checkout-receipt", () => ({
+  prepareReceipt: async () => ({}),
+  receiptHash: async () => "fixture-hash",
+  saveReceipt: async () => {},
+  loadReceipt: async () => "fixture-receipt",
+}));
 import { cache } from "./api";
-import { Checkout } from "./pages/checkout";
+import { Checkout, OrderStatus } from "./pages/checkout";
 afterEach(() => {
   cleanup();
   cache.clear();
@@ -27,6 +33,8 @@ it.each([
   "serializa $method com seleção $installments sem capturar cartão",
   async ({ installments, method }) => {
     let sent: Record<string, unknown> | undefined;
+    const attempts: unknown[] = [];
+    const statusRequests: unknown[] = [];
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -48,10 +56,26 @@ it.each([
             legal_versions: [{ id: "terms-id", kind: "terms" }],
           };
         else if (url.includes("capabilities")) result = { asaas: true };
-        else {
+        else if (url.endsWith("/order-status")) {
+          statusRequests.push(JSON.parse(String(init?.body)));
+          result = {
+            status: statusRequests.length === 1 ? "pending" : "paid",
+            amount_cents: 12345,
+            access_granted: statusRequests.length > 2,
+          };
+        } else if (url.endsWith("/checkout")) {
           sent = JSON.parse(String(init?.body));
-          result = { order_id: "test-order", status: "pending" };
-        }
+          attempts.push(sent?.attempt_key);
+          if (method === "PIX" && attempts.length === 1)
+            return Response.json(
+              { message: "Indisponível nesta tentativa." },
+              { status: 503 },
+            );
+          result = {
+            order_id: "test-order",
+            status: "pending",
+          };
+        } else throw new Error("Endpoint fora da fixture");
         return new Response(JSON.stringify(result), {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -61,7 +85,10 @@ it.each([
     render(
       <QueryClientProvider client={cache}>
         <MemoryRouter initialEntries={["/checkout?plano=demo"]}>
-          <Checkout />
+          <Routes>
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/pedido/:pedido" element={<OrderStatus />} />
+          </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -75,9 +102,7 @@ it.each([
     fireEvent.change(screen.getByLabelText("CPF ou CNPJ"), {
       target: { value: "00000000000" },
     });
-    fireEvent.change(screen.getByLabelText("Forma de pagamento"), {
-      target: { value: "CREDIT_CARD" },
-    });
+    fireEvent.click(screen.getByRole("radio", { name: "Cartão de crédito" }));
     expect(
       screen.getByLabelText("Parcelas").querySelectorAll("option"),
     ).toHaveLength(12);
@@ -85,19 +110,52 @@ it.each([
       target: { value: installments },
     });
     if (method === "PIX")
-      fireEvent.change(screen.getByLabelText("Forma de pagamento"), {
-        target: { value: "PIX" },
-      });
-    fireEvent.click(screen.getByRole("checkbox", { name: /Aceito os Termos/ }));
+      fireEvent.click(screen.getByRole("radio", { name: "Pix" }));
+    const terms = screen.getByRole("checkbox", { name: /Aceito os Termos/ });
+    expect(terms).not.toBeChecked();
+    fireEvent.click(terms);
     fireEvent.submit(
       screen.getByRole("button", { name: /Continuar/ }).closest("form")!,
     );
     await waitFor(() => expect(sent).toBeDefined());
+    if (method === "PIX") {
+      const alert = await screen.findByRole("alert");
+      await waitFor(() => expect(alert).toHaveFocus());
+      expect(screen.getByLabelText("CPF ou CNPJ")).toHaveValue("");
+      expect(screen.getByLabelText("Nome completo")).toHaveValue(
+        "DEMONSTRAÇÃO QA",
+      );
+      fireEvent.change(screen.getByLabelText("CPF ou CNPJ"), {
+        target: { value: "00000000000" },
+      });
+      fireEvent.submit(
+        screen.getByRole("button", { name: /Continuar/ }).closest("form")!,
+      );
+      await waitFor(() => expect(attempts).toEqual([attempts[0], attempts[0]]));
+      await screen.findByRole("heading", { name: "Aguardando pagamento" });
+      expect(screen.getByText(/123,45/)).toBeInTheDocument();
+      const consult = screen.getByRole("button", { name: "Consultar novamente" });
+      fireEvent.click(consult);
+      await screen.findByRole("heading", { name: "Pago" });
+      expect(screen.queryByRole("link", { name: "Abrir meus cursos" })).toBeNull();
+      fireEvent.click(consult);
+      expect(
+        await screen.findByRole("link", { name: "Abrir meus cursos" }),
+      ).toHaveAttribute("href", "/app/cursos");
+      expect(statusRequests).toEqual(Array(3).fill({
+        order_id: "test-order",
+        receipt_token: "fixture-receipt",
+      }));
+    }
     expect(sent).toMatchObject({
       plan_id: "plan-id",
       method,
       installments: method === "PIX" ? 1 : Number(installments),
+      legal_version_ids: ["terms-id"],
+      marketing_opt_in: false,
+      receipt_hash: "fixture-hash",
     });
     expect(sent).not.toHaveProperty("card");
+    expect(sent).not.toHaveProperty("price_cents");
   },
 );

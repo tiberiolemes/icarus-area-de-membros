@@ -154,7 +154,7 @@ it("trata capacidade revogada entre leitura e escrita sem invalidar feed", async
   fireEvent.click(within(dialog).getByRole("button", { name: "Fechar" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   expect(screen.queryByRole("button", { name: "Arquivar publicação" })).not.toBeInTheDocument();
-  await waitFor(() => expect(screen.getByText("Texto que precisa continuar legível.").closest(".reading")).toHaveFocus());
+  await waitFor(() => expect(screen.getByText("Texto que precisa continuar legível.").closest("article")).toHaveFocus());
 });
 
 it("a confirmação aberta não troca de arquivar para restaurar após mudança concorrente", async () => {

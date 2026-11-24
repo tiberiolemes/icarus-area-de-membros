@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Link,
   useNavigate,
@@ -6,8 +6,22 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { ArrowUp, Flag, MessageSquare } from "lucide-react";
-import { cache, date, rpc, useRpc } from "../api";
+import {
+  ArrowRight,
+  ArrowUp,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Flag,
+  ImageIcon,
+  MessageSquare,
+  PenLine,
+  Send,
+  ShieldCheck,
+  ThumbsUp,
+  Trophy,
+} from "lucide-react";
+import { cache, date, errorMessage, rpc, useRpc } from "../api";
 import type { Page, Post, Space } from "../api";
 import { useAuth } from "../auth";
 import {
@@ -26,6 +40,9 @@ import {
 } from "../ui";
 import { PrivateImage } from "../media";
 import { Upload } from "../upload";
+import "./community.css";
+
+type CommunityFeed = Page<Post> & { spaces: Space[] };
 
 export const statusName = (status: string) =>
   ({
@@ -49,27 +66,108 @@ export const statusName = (status: string) =>
     published: "Publicado",
     archived: "Arquivado",
   })[status] ?? status;
-export function PostMeta({ post }: { post: Post }) {
+function initials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => Array.from(word)[0])
+    .join("")
+    .toLocaleUpperCase("pt-BR");
+}
+
+function PostMeta({ post }: { post: Post & { avatar_id?: string | null } }) {
+  const role = {
+    instructor: "Instrutor",
+    moderator: "Moderação",
+    support: "Suporte",
+    admin: "Administração",
+  }[post.author_role];
   return (
-    <p className="meta">
-      {post.author_name}{" "}
-      <span className="badge">
-        {post.author_role === "member"
-          ? post.plan_name || "Membro"
-          : post.author_role}
-      </span>{" "}
-      · {date(post.created_at)} · <span>{statusName(post.status)}</span>
-    </p>
+    <div className="community-author">
+      <span className="community-avatar" aria-hidden="true">
+        {initials(post.author_name)}
+      </span>
+      {post.avatar_id && (
+        <PrivateImage
+          kind="avatar"
+          id={post.avatar_id}
+          className="community-avatar community-avatar-image"
+        />
+      )}
+      <div className="community-author-details">
+        <div className="community-byline">
+          <strong>{post.author_name}</strong>
+          <span className="badge">{role ?? (post.plan_name || "Membro")}</span>
+        </div>
+        <time dateTime={post.created_at}>{date(post.created_at)}</time>
+      </div>
+    </div>
   );
 }
+
+function ReviewInfo({ guide = false }: { guide?: boolean }) {
+  return (
+    <aside
+      className="community-card community-info"
+      aria-label="Moderação da comunidade"
+    >
+      <h2>
+        <ShieldCheck size={18} aria-hidden="true" /> Revisão humana
+      </h2>
+      <p>
+        Publicações e respostas passam pela revisão da equipe antes de ficarem
+        visíveis aos demais membros.
+      </p>
+      <p>Denúncias são analisadas pela equipe de moderação.</p>
+      {guide && (
+        <Link className="community-context-link" to="/ajuda/comunidade">
+          Como publicar na comunidade <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      )}
+    </aside>
+  );
+}
+
+function SpaceInfo({ space, link = false }: { space: Space; link?: boolean }) {
+  return (
+    <aside
+      className="community-card community-info community-side-context"
+      aria-label="Espaço da comunidade"
+    >
+      <h2>
+        <MessageSquare size={18} aria-hidden="true" /> {space.name}
+      </h2>
+      {space.description && <p>{space.description}</p>}
+      {link && (
+        <Link
+          className="community-context-link"
+          to={{
+            pathname: "/app/comunidade",
+            search: "?" + new URLSearchParams({ space: space.id }),
+          }}
+        >
+          Ver publicações do espaço <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      )}
+    </aside>
+  );
+}
+
+function ThreadSpace({ id }: { id: string }) {
+  const feed = useRpc<CommunityFeed>("app_feed");
+  const space = feed.isSuccess && feed.data.spaces.find((item) => item.id === id);
+  return space ? <SpaceInfo space={space} link /> : null;
+}
+
 export function Vote({
   post,
   type = "post",
-  onVoted,
+  compact = false,
 }: {
   post: Post;
   type?: "post" | "reply";
-  onVoted?: () => void;
+  compact?: boolean;
 }) {
   return post.status !== "approved" ? (
     <span className="badge">{statusName(post.status)}</span>
@@ -81,11 +179,26 @@ export function Vote({
           cache.invalidateQueries({ queryKey: ["app_feed"] }),
           cache.invalidateQueries({ queryKey: ["app_post"] }),
         ]);
-        onVoted?.();
       }}
     >
-      <ArrowUp size={18} aria-hidden="true" />
-      {post.voted ? "Retirar voto" : "Votar"} ({post.vote_count})
+      {compact ? (
+        <>
+          <ChevronUp size={18} aria-hidden="true" />
+          <ThumbsUp className="community-vote-thumb" size={18} aria-hidden="true" />
+          <span className="sr-only">
+            {post.voted ? "Retirar voto" : "Votar"}
+          </span>
+          <strong>{post.vote_count}</strong>
+          <span className="community-vote-label">
+            {post.vote_count === 1 ? "voto" : "votos"}
+          </span>
+        </>
+      ) : (
+        <>
+          <ArrowUp size={18} aria-hidden="true" />
+          {post.voted ? "Retirar voto" : "Votar"} ({post.vote_count})
+        </>
+      )}
     </Action>
   );
 }
@@ -95,7 +208,7 @@ export function Report({ id, type }: { id: string; type: "post" | "reply" }) {
       title="Denunciar conteúdo"
       trigger={
         <button>
-          <Flag size={18} />
+          <Flag size={18} aria-hidden="true" />
           Denunciar
         </button>
       }
@@ -125,127 +238,256 @@ export function Community() {
     query = useInfiniteQuery({
       queryKey: ["app_feed", { space, q }],
       queryFn: ({ pageParam }) =>
-        rpc<Page<Post> & { spaces: Space[] }>("app_feed", {
+        rpc<CommunityFeed>("app_feed", {
           p_space_id: space || null,
           p_query: q,
           p_page: pageParam,
         }),
       initialPageParam: 1,
       getNextPageParam: (page) =>
-        page.page * 20 < page.total ? page.page + 1 : undefined,
+        page.page * page.page_size < page.total ? page.page + 1 : undefined,
     }),
     items = query.data?.pages.flatMap((page) => page.items) ?? [],
     first = query.data?.pages[0];
+  const revealActiveSpace = useCallback((link: HTMLAnchorElement | null) => {
+    const strip = link?.parentElement;
+    if (!link || !strip || strip.scrollWidth <= strip.clientWidth) return;
+    const { left, right } = link.getBoundingClientRect();
+    const bounds = strip.getBoundingClientRect();
+    strip.scrollLeft +=
+      Math.min(0, left - bounds.left) + Math.max(0, right - bounds.right);
+  }, []);
+  const currentSpace = first?.spaces.find((item) => item.id === space);
+  const feedError = query.isFetchNextPageError && first ? null : query.error;
+  const canCompose =
+    Boolean(first?.spaces.some((item) => item.can_post !== false)) &&
+    currentSpace?.can_post !== false &&
+    !feedError;
+  const composerUrl =
+    "/app/comunidade/novo" +
+    (space ? "?" + new URLSearchParams({ space }) : "");
+  const spacesById = new Map(first?.spaces.map((item) => [item.id, item.name]));
   return (
-    <>
-      <Heading
-        title="Comunidade"
-        action={
-          <Link
-            className="button primary"
-            to={"/app/comunidade/novo" + (space ? "?space=" + space : "")}
-          >
-            Escrever publicação
-          </Link>
-        }
-      >
-        Compartilhe aprendizados e tire dúvidas. Publicações passam por revisão
-        humana.
+    <section className="community community-feed">
+      <Heading title="Comunidade">
+        Compartilhe aprendizados e tire dúvidas com outros membros.
       </Heading>
-      <div className="filters">
-        <Search initial={q} onSearch={(q) => setParams({ q, space })} />
-        <label className="field">
-          <span>Espaço</span>
-          <select
-            value={space}
-            onChange={(e) => setParams({ q, space: e.target.value })}
-          >
-            <option value="">Todos os espaços</option>
-            {first?.spaces.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <QueryState query={query}>
-        <div className="feed" data-tour="community">
-          {items.map((post) => (
-            <article key={post.id} className="post-row">
-              <div>
-                <PostMeta post={post} />
-                <h2>
-                  <Link to={`/app/comunidade/${post.id}?${params}`}>
-                    {post.title}
-                  </Link>
-                </h2>
-                <p className="clamp prose">{post.body}</p>
-              </div>
-              <footer>
-                <Vote post={post} />
-                <Link to={`/app/comunidade/${post.id}?${params}`}>
-                  <MessageSquare size={18} />
-                  {post.reply_count ?? 0} respostas
-                </Link>
-              </footer>
-            </article>
-          ))}
-        </div>
-        {!items.length && (
-          <Empty>
-            {q
-              ? "Nenhuma publicação encontrada. Tente outra busca."
-              : "Este espaço ainda não tem publicações disponíveis. Escreva a primeira para revisão."}
-          </Empty>
-        )}
-        {first && (
-          <div className="pagination">
-            <span>
-              {items.length} de {first.total} publicações
-            </span>
-            {query.hasNextPage && (
-              <button
-                disabled={query.isFetchingNextPage}
-                onClick={() => query.fetchNextPage()}
+      <div className="community-controls">
+        {Boolean(first?.spaces.length) && (
+          <nav className="community-spaces" aria-label="Espaços da comunidade">
+            <Link
+              ref={!space ? revealActiveSpace : undefined}
+              to={{ search: "?" + new URLSearchParams({ q }) }}
+              aria-current={!space ? "true" : undefined}
+            >
+              Todos
+            </Link>
+            {first?.spaces.map((item) => (
+              <Link
+                key={item.id}
+                ref={space === item.id ? revealActiveSpace : undefined}
+                to={{ search: "?" + new URLSearchParams({ q, space: item.id }) }}
+                aria-current={space === item.id ? "true" : undefined}
               >
-                {query.isFetchingNextPage ? "Carregando…" : "Carregar mais 20"}
-              </button>
-            )}
-          </div>
+                {item.name}
+              </Link>
+            ))}
+          </nav>
         )}
-      </QueryState>
-    </>
+        {!first && space && query.error && (
+          <Link
+            className="button"
+            to={{ search: "?" + new URLSearchParams({ q }) }}
+          >
+            Todos os espaços
+          </Link>
+        )}
+        <div className="community-toolbar">
+          <span>
+            <Clock size={16} aria-hidden="true" /> Mais recentes
+          </span>
+          <Search
+            initial={q}
+            label="Buscar discussões"
+            placeholder="Buscar discussões…"
+            variant="stitch"
+            onSearch={(q) => setParams({ q, space })}
+          />
+        </div>
+      </div>
+      <div className="community-columns">
+        <div className="community-stack" data-tour="community">
+          <QueryState
+            query={{
+              isPending: query.isPending,
+              error: feedError,
+              refetch: query.refetch,
+            }}
+          >
+            {canCompose && (
+              <div className="community-card community-compose">
+                <span className="community-compose-icon" aria-hidden="true">
+                  <PenLine size={20} />
+                </span>
+                <p>Compartilhe uma dúvida ou um aprendizado.</p>
+                <Link className="button primary" to={composerUrl}>
+                  Escrever publicação <Send size={16} aria-hidden="true" />
+                </Link>
+              </div>
+            )}
+            {currentSpace?.can_post === false && (
+              <Notice>Você tem acesso de leitura a este espaço.</Notice>
+            )}
+            {items.map((post) => {
+              const postUrl = {
+                pathname: `/app/comunidade/${post.id}`,
+                search: params.toString(),
+              };
+              const spaceName = post.space_id && spacesById.get(post.space_id);
+              return (
+                <article
+                  key={post.id}
+                  className="community-card community-preview"
+                >
+                  {(spaceName || post.status !== "approved") && (
+                    <div className="community-preview-tags">
+                      {spaceName && <span className="badge">{spaceName}</span>}
+                      {post.status !== "approved" && (
+                        <span className="badge">{statusName(post.status)}</span>
+                      )}
+                    </div>
+                  )}
+                  <div className="community-preview-content">
+                    {post.status === "approved" && (
+                      <div
+                        className="community-vote-rail"
+                        data-voted={post.voted}
+                      >
+                        <Vote post={post} compact />
+                      </div>
+                    )}
+                    <div className="community-preview-body">
+                      <h2>
+                        <Link to={postUrl}>{post.title ?? "Publicação"}</Link>
+                      </h2>
+                      <p className="prose community-excerpt">{post.body}</p>
+                      {post.image_id && (
+                        <p className="community-preview-attachment">
+                          <ImageIcon size={16} aria-hidden="true" /> Imagem na publicação
+                        </p>
+                      )}
+                      <footer className="community-preview-footer">
+                        <PostMeta post={post} />
+                        <Link className="community-replies-link" to={postUrl}>
+                          <MessageSquare size={16} aria-hidden="true" />
+                          <span>
+                            {post.reply_count ?? 0}{" "}
+                            <span className="community-replies-label">
+                              {(post.reply_count ?? 0) === 1
+                                ? "resposta"
+                                : "respostas"}
+                            </span>
+                          </span>
+                        </Link>
+                      </footer>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+            {!items.length && (
+              <Empty>
+                {q
+                  ? "Nenhuma publicação encontrada. Tente outra busca."
+                  : canCompose
+                    ? "Ainda não há publicações disponíveis. Escreva a primeira para revisão."
+                    : "Ainda não há publicações disponíveis para você."}
+              </Empty>
+            )}
+            {first && items.length > 0 && (
+              <div className="community-pagination">
+                <span role="status">
+                  {items.length} de {first.total} publicações
+                </span>
+                {query.isFetchNextPageError && (
+                  <Notice error>{errorMessage(query.error)}</Notice>
+                )}
+                {query.hasNextPage && (
+                  <button
+                    disabled={query.isFetchingNextPage}
+                    onClick={() => query.fetchNextPage()}
+                  >
+                    {query.isFetchingNextPage
+                      ? "Carregando…"
+                      : query.isFetchNextPageError
+                        ? "Tentar carregar mais"
+                        : "Carregar mais discussões"}
+                    <ChevronDown size={16} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            )}
+          </QueryState>
+        </div>
+        <div className="community-sidebar">
+          {currentSpace?.description && <SpaceInfo space={currentSpace} />}
+          <aside className="community-card community-info community-side-context">
+            <h2>
+              <Trophy size={18} aria-hidden="true" /> Ranking
+            </h2>
+            <p>Acompanhe sua colocação e consulte a classificação por período.</p>
+            <Link className="community-context-link" to="/app/ranking">
+              Consultar ranking <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          </aside>
+          <ReviewInfo guide />
+        </div>
+      </div>
+    </section>
   );
 }
 export function Composer() {
-  const { post: id } = useParams(),
-    [params] = useSearchParams(),
+  const { post: id } = useParams();
+  const { session } = useAuth();
+  const draftKey = `icarus:draft:${session?.user.id}:post:${id ?? "new"}`;
+  return <PostComposer key={draftKey} id={id} draftKey={draftKey} />;
+}
+
+function PostComposer({ id, draftKey }: { id?: string; draftKey: string }) {
+  const [params] = useSearchParams(),
     navigate = useNavigate(),
-    { session } = useAuth(),
     query = useRpc<{ post: Post; replies: Post[] }>(
       "app_post",
       { p_id: id },
       !!id,
     ),
-    spaces = useRpc<Page<Post> & { spaces: Space[] }>("app_feed"),
+    spaces = useRpc<CommunityFeed>("app_feed"),
     [dirty, setDirty] = useState(false),
     [created, setCreated] = useState<string | null>(null),
-    [draft, setDraft] = useState<{
+    [chosenSpace, setChosenSpace] = useState<string | null>(null),
+    [draft] = useState<{
       title: string;
       body: string;
-      space: string;
-    } | null>(null),
-    draftKey = `icarus:draft:${session?.user.id}:post:${id ?? "new"}`;
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(draftKey);
-      if (stored) setDraft(JSON.parse(stored));
-    } catch {
-      /* Storage can be unavailable. */
-    }
-  }, [draftKey]);
+      space?: string;
+    } | null>(() => {
+      try {
+        return JSON.parse(sessionStorage.getItem(draftKey) ?? "null");
+      } catch {
+        return null;
+      }
+    });
   const data = query.data?.post;
+  const postableSpaces = spaces.data?.spaces.filter(
+    (space) => space.can_post !== false,
+  );
+  const requestedSpace =
+    chosenSpace ??
+    draft?.space ??
+    (id ? data?.space_id : params.get("space")) ??
+    "";
+  const selectedSpace = postableSpaces?.some((space) => space.id === requestedSpace)
+    ? requestedSpace
+    : "";
   function preserve(form: HTMLFormElement) {
     const f = new FormData(form);
     setDirty(true);
@@ -255,7 +497,9 @@ export function Composer() {
         JSON.stringify({
           title: value(f, "title"),
           body: value(f, "body"),
-          space: value(f, "space"),
+          space: postableSpaces
+            ? value(f, "space")
+            : chosenSpace ?? draft?.space ?? data?.space_id,
         }),
       );
     } catch {
@@ -287,14 +531,12 @@ export function Composer() {
           }}
         >
           <Form
-            key={id ?? draftKey}
             label="Enviar para revisão"
             secondaryAction={
               <button
                 type="button"
                 onClick={() => {
                   sessionStorage.removeItem(draftKey);
-                  setDraft(null);
                   setDirty(false);
                   navigate("/app/comunidade");
                 }}
@@ -331,18 +573,15 @@ export function Composer() {
               <select
                 name="space"
                 required
-                defaultValue={
-                  draft?.space ?? data?.space_id ?? params.get("space") ?? ""
-                }
+                value={selectedSpace}
+                onChange={(event) => setChosenSpace(event.currentTarget.value)}
               >
                 <option value="">Selecione um espaço</option>
-                {spaces.data?.spaces
-                  .filter((s) => s.can_post !== false)
-                  .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
+                {postableSpaces?.map((space) => (
+                  <option key={space.id} value={space.id}>
+                    {space.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="Sua publicação">
@@ -391,7 +630,7 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
     [archiveAction, setArchiveAction] = useState(true),
     [archiving, setArchiving] = useState(false),
     [archiveNotice, setArchiveNotice] = useState(""),
-    postFocus = useRef<HTMLDivElement>(null);
+    postFocus = useRef<HTMLElement>(null);
   const canArchive = !!data?.post.can_archive,
     canRestore = !!data?.post.can_restore;
   function closeArchive(open: boolean) {
@@ -402,158 +641,247 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
       requestAnimationFrame(() => postFocus.current?.focus());
   }
   return (
-    <>
+    <section
+      className={
+        admin
+          ? "community community-thread"
+          : "community community-thread community-member-thread"
+      }
+    >
       <Back
         to={admin ? "/admin/comunidade" : "/app/comunidade?" + params}
         label={admin ? "Fila de moderação" : "Voltar à comunidade"}
       />
       <QueryState query={query}>
         {data && (
-          <div className="reading" ref={postFocus} tabIndex={-1}>
-            <PostMeta post={data.post} />
-            <Heading title={data.post.title ?? "Publicação"} />
-            {archiveNotice && <Notice>{archiveNotice}</Notice>}
-            {data.post.status !== "approved" && (
-              <Notice>
-                {data.post.status === "archived"
-                  ? "Publicação arquivada. O texto, a imagem, as respostas e os votos foram preservados. Novas interações ficam desativadas."
-                  : `${statusName(data.post.status)}. A publicação não está visível aos demais membros.`}
-              </Notice>
-            )}
-            <div className="prose">{data.post.body}</div>
-            {data.post.image_id && (
-              <PrivateImage
-                kind="post-image"
-                id={data.post.image_id}
-                className="post-image"
-                alt="Imagem anexada à publicação"
-              />
-            )}
-            <div className="actions">
-              <Vote post={data.post} />
-              {data.post.status === "approved" && (
-                <Report type="post" id={data.post.id} />
-              )}
-              {data.post.can_edit && (
-                <Link to={"/app/comunidade/" + post + "/editar"}>
-                  Editar publicação
-                </Link>
-              )}
-              {(canArchive || canRestore || archiveOpen) && (
-                <Modal
-                  title={archiveAction ? "Arquivar publicação" : "Restaurar publicação"}
-                  open={archiveOpen}
-                  onOpenChange={closeArchive}
-                  trigger={
-                    <button disabled={!canArchive && !canRestore}>
-                      {canRestore ? "Restaurar publicação" : "Arquivar publicação"}
-                    </button>
-                  }
-                  description={!archiveAction
-                    ? "A publicação volta ao estado anterior ao arquivamento. Conteúdo pendente ou não aprovado continua nesse estado. Texto, imagem, respostas e votos são preservados."
-                    : "A publicação deixa de aparecer aos demais membros. Você e a equipe mantêm acesso ao histórico. Texto, imagem, respostas e votos são preservados; você poderá restaurar o que arquivou."}
-                >
-                  <Form
-                    label={archiveAction ? "Confirmar arquivamento" : "Confirmar restauração"}
-                    disabled={archiveAction ? !canArchive : !canRestore}
-                    secondaryAction={<button type="button" onClick={() => closeArchive(false)}>Cancelar</button>}
-                    onSave={async () => {
-                      setArchiving(true);
-                      try {
-                        const result = await rpc<{ id: string; status: string; archived: boolean }>("app_archive_post", {
-                          p_id: data.post.id,
-                          p_archived: archiveAction,
-                        });
-                        const refreshed = await query.refetch();
-                        await cache.invalidateQueries({ queryKey: ["app_feed"] });
-                        const state = refreshed.isSuccess ? refreshed.data.post.status : result.status;
-                        setArchiveNotice(result.archived
-                          ? "Publicação arquivada. Seu histórico foi preservado."
-                          : `Publicação restaurada. Estado atual: ${statusName(state)}.`);
-                        setArchiveOpen(false);
-                        if (!refreshed.data?.post.can_archive && !refreshed.data?.post.can_restore)
-                          requestAnimationFrame(() => postFocus.current?.focus());
-                      } catch (error) {
-                        await query.refetch();
-                        throw error;
-                      } finally {
-                        setArchiving(false);
+          <div className="community-columns">
+            <div className="community-stack">
+              <article
+                className="community-card community-topic"
+                ref={postFocus}
+                tabIndex={-1}
+              >
+                <PostMeta post={data.post} />
+                <Heading title={data.post.title ?? "Publicação"} />
+                {archiveNotice && <Notice>{archiveNotice}</Notice>}
+                {data.post.status !== "approved" && (
+                  <Notice>
+                    {data.post.status === "archived"
+                      ? "Publicação arquivada. O texto, a imagem, as respostas e os votos foram preservados. Novas interações ficam desativadas."
+                      : `${statusName(data.post.status)}. A publicação não está visível aos demais membros.`}
+                  </Notice>
+                )}
+                <div className="prose">{data.post.body}</div>
+                {data.post.image_id && (
+                  <PrivateImage
+                    kind="post-image"
+                    id={data.post.image_id}
+                    className="post-image"
+                    alt="Imagem anexada à publicação"
+                  />
+                )}
+                <div className="actions community-topic-actions">
+                  <Vote post={data.post} />
+                  <span className="community-replies-link">
+                    <MessageSquare size={16} aria-hidden="true" />
+                    {data.replies.length}{" "}
+                    {data.replies.length === 1 ? "resposta" : "respostas"}
+                  </span>
+                  {data.post.status === "approved" && (
+                    <Report type="post" id={data.post.id} />
+                  )}
+                  {data.post.can_edit && (
+                    <Link to={"/app/comunidade/" + post + "/editar"}>
+                      Editar publicação
+                    </Link>
+                  )}
+                  {(canArchive || canRestore || archiveOpen) && (
+                    <Modal
+                      title={
+                        archiveAction
+                          ? "Arquivar publicação"
+                          : "Restaurar publicação"
                       }
+                      open={archiveOpen}
+                      onOpenChange={closeArchive}
+                      trigger={
+                        <button disabled={!canArchive && !canRestore}>
+                          {canRestore
+                            ? "Restaurar publicação"
+                            : "Arquivar publicação"}
+                        </button>
+                      }
+                      description={
+                        !archiveAction
+                          ? "A publicação volta ao estado anterior ao arquivamento. Conteúdo pendente ou não aprovado continua nesse estado. Texto, imagem, respostas e votos são preservados."
+                          : "A publicação deixa de aparecer aos demais membros. Você e a equipe mantêm acesso ao histórico. Texto, imagem, respostas e votos são preservados; você poderá restaurar o que arquivou."
+                      }
+                    >
+                      <Form
+                        label={
+                          archiveAction
+                            ? "Confirmar arquivamento"
+                            : "Confirmar restauração"
+                        }
+                        disabled={archiveAction ? !canArchive : !canRestore}
+                        secondaryAction={
+                          <button
+                            type="button"
+                            onClick={() => closeArchive(false)}
+                          >
+                            Cancelar
+                          </button>
+                        }
+                        onSave={async () => {
+                          setArchiving(true);
+                          try {
+                            const result = await rpc<{
+                              id: string;
+                              status: string;
+                              archived: boolean;
+                            }>("app_archive_post", {
+                              p_id: data.post.id,
+                              p_archived: archiveAction,
+                            });
+                            const refreshed = await query.refetch();
+                            await cache.invalidateQueries({
+                              queryKey: ["app_feed"],
+                            });
+                            const state = refreshed.isSuccess
+                              ? refreshed.data.post.status
+                              : result.status;
+                            setArchiveNotice(
+                              result.archived
+                                ? "Publicação arquivada. Seu histórico foi preservado."
+                                : `Publicação restaurada. Estado atual: ${statusName(state)}.`,
+                            );
+                            setArchiveOpen(false);
+                            if (
+                              !refreshed.data?.post.can_archive &&
+                              !refreshed.data?.post.can_restore
+                            )
+                              requestAnimationFrame(() =>
+                                postFocus.current?.focus(),
+                              );
+                          } catch (error) {
+                            await query.refetch();
+                            throw error;
+                          } finally {
+                            setArchiving(false);
+                          }
+                        }}
+                      >
+                        <p>
+                          Confirme para continuar. Nenhum conteúdo será
+                          excluído.
+                        </p>
+                      </Form>
+                    </Modal>
+                  )}
+                </div>
+                {data.can_moderate && data.post.status !== "archived" && (
+                  <Moderate
+                    type="post"
+                    id={data.post.id}
+                    after={() => query.refetch()}
+                  />
+                )}
+              </article>
+              <section
+                className="community-stack"
+                aria-labelledby="community-discussion"
+              >
+                <h2
+                  id="community-discussion"
+                  className="community-discussion-heading"
+                >
+                  Discussão da comunidade
+                  {!admin && (
+                    <span className="badge" aria-hidden="true">
+                      {data.replies.length}
+                    </span>
+                  )}
+                </h2>
+                {!data.replies.length && (
+                  <Empty>Ainda não há respostas para esta publicação.</Empty>
+                )}
+                {data.replies.map((reply) => (
+                  <article
+                    key={reply.id}
+                    className="community-card community-reply"
+                  >
+                    <PostMeta post={reply} />
+                    <div className="prose">{reply.body}</div>
+                    {data.post.status === "approved" && (
+                      <div className="actions">
+                        <Vote post={reply} type="reply" />
+                        {reply.status === "approved" && (
+                          <Report type="reply" id={reply.id} />
+                        )}
+                      </div>
+                    )}
+                    {data.can_moderate && (
+                      <Moderate
+                        type="reply"
+                        id={reply.id}
+                        after={() => query.refetch()}
+                      />
+                    )}
+                  </article>
+                ))}
+              </section>
+              {data.post.status === "approved" ? (
+                <section
+                  className="community-card community-contribution"
+                  aria-labelledby="community-contribution"
+                >
+                  <h2 id="community-contribution">Sua contribuição</h2>
+                  <Form
+                    label="Enviar resposta para revisão"
+                    successMessage="Resposta enviada para revisão."
+                    onSave={async (data, form) => {
+                      await rpc("app_reply", {
+                        p_post_id: post,
+                        p_body: value(data, "body"),
+                      });
+                      form.reset();
+                      await Promise.all([
+                        query.refetch(),
+                        cache.invalidateQueries({ queryKey: ["app_feed"] }),
+                      ]);
                     }}
                   >
-                    <p>Confirme para continuar. Nenhum conteúdo será excluído.</p>
+                    <Field label="Escreva uma resposta">
+                      <textarea
+                        name="body"
+                        rows={5}
+                        required
+                        minLength={3}
+                        maxLength={10_000}
+                      />
+                    </Field>
                   </Form>
-                </Modal>
+                </section>
+              ) : (
+                <Notice>
+                  {data.post.status === "archived"
+                    ? "Esta publicação está arquivada e mantém as respostas apenas para leitura."
+                    : "As respostas ficam disponíveis quando a publicação está aprovada."}
+                </Notice>
               )}
             </div>
-            {data.can_moderate && data.post.status !== "archived" && (
-              <Moderate
-                type="post"
-                id={data.post.id}
-                after={() => query.refetch()}
-              />
-            )}
-            <h2>
-              {data.replies.length} resposta
-              {data.replies.length === 1 ? "" : "s"}
-            </h2>
-            <div className="thread">
-              {data.replies.map((reply) => (
-                <article key={reply.id}>
-                  <PostMeta post={reply} />
-                  <div className="prose">{reply.body}</div>
-                  {data.post.status === "approved" && <div className="actions">
-                    <Vote post={reply} type="reply" />
-                    {reply.status === "approved" && (
-                      <Report type="reply" id={reply.id} />
-                    )}
-                  </div>}
-                  {data.can_moderate && (
-                    <Moderate
-                      type="reply"
-                      id={reply.id}
-                      after={() => query.refetch()}
-                    />
-                  )}
-                </article>
-              ))}
-            </div>
-            {data.post.status === "approved" ? (
-              <Form
-                label="Enviar resposta para revisão"
-                onSave={async (data, form) => {
-                  await rpc("app_reply", {
-                    p_post_id: post,
-                    p_body: value(data, "body"),
-                  });
-                  form.reset();
-                  await Promise.all([
-                    query.refetch(),
-                    cache.invalidateQueries({ queryKey: ["app_feed"] }),
-                  ]);
-                }}
-              >
-                <Field label="Escreva uma resposta">
-                  <textarea
-                    name="body"
-                    rows={5}
-                    required
-                    minLength={3}
-                    maxLength={10_000}
-                  />
-                </Field>
-              </Form>
+            {admin ? (
+              <ReviewInfo />
             ) : (
-              <Notice>
-                {data.post.status === "archived"
-                  ? "Esta publicação está arquivada e mantém as respostas apenas para leitura."
-                  : "As respostas ficam disponíveis quando a publicação está aprovada."}
-              </Notice>
+              <div className="community-sidebar">
+                {data.post.space_id && <ThreadSpace id={data.post.space_id} />}
+                <ReviewInfo guide />
+              </div>
             )}
           </div>
         )}
       </QueryState>
-    </>
+    </section>
   );
 }
 export function Moderate({

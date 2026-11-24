@@ -56,6 +56,15 @@ jobs:
       - name: Integration contracts
         if: steps.scope.outputs.full == 'true'
         run: node scripts/test-integrations.mjs
+      - name: Installer safety tests
+        if: steps.scope.outputs.full == 'true'
+        run: node --test scripts/clean-install.test.mjs scripts/local.test.mjs
+      # Adapt this native path to an ephemeral runner before publishing this template.
+      - name: Require a dedicated daemon for the native path
+        if: steps.scope.outputs.full == 'true'
+        run: |
+          : "${ICARUS_INSTALL_DOCKER_HOST:?Prepare the dedicated Linux Docker socket as documented in docs/ci/README.md}"
+          : "${ICARUS_INSTALL_DOCKER_ID:?Export the dedicated daemon ID as documented in docs/ci/README.md}"
       - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1
         if: steps.scope.outputs.full == 'true'
         with:
@@ -75,5 +84,5 @@ jobs:
           node scripts/bootstrap.mjs --demo
           node scripts/test-integrations.mjs --local
       - name: Stop only this project's local services
-        if: always() && steps.scope.outputs.full == 'true'
+        if: always() && steps.scope.outputs.full == 'true' && hashFiles('.local/local-installation.json') != ''
         run: npm run local:stop

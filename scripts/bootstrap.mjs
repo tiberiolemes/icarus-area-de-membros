@@ -2,19 +2,24 @@ import { createClient } from '@supabase/supabase-js';
 import { existsSync, readFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';
-import { assertProject, command, privateWrite, project, root, status } from './local.mjs';
+import { command, localCredentials, onLocalDatabase, privateWrite, root } from './local.mjs';
+import { isEntrypoint } from './installer-docker.mjs';
 
-export function localClient() {
-  assertProject();
-  process.loadEnvFile(resolve(root, '.local/service.env'));
-  if (process.env.ICARUS_MODE !== 'local' || !['http://127.0.0.1:58521', 'http://localhost:58521'].includes(process.env.SUPABASE_URL)) throw Error('Somente Icarus local.');
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+export function localClient(target) {
+  const { api, service } = localCredentials(target);
+  return createClient(api, service, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: (input, init) => { target.assertSocket(); return fetch(input, { ...init, redirect: 'error' }); } },
+  });
 }
 export async function bootstrap() {
   if (!process.argv.includes('--demo')) throw Error('Bootstrap exige --demo explícito.');
-  await status();
-  const admin = localClient(), path = resolve(root, '.local/demo-accounts.json');
-  const guard = (enabled) => command('docker', ['exec', `supabase_db_${project}`, 'psql', '-X', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', `update app_private.local_demo_guard set enabled=${enabled ? 'true' : 'false'} where singleton;`]);
+  return onLocalDatabase(seedDemo);
+}
+
+async function seedDemo(target) {
+  const admin = localClient(target), path = resolve(root, '.local/demo-accounts.json');
+  const guard = (enabled) => target.docker(['exec', target.database, 'psql', '-X', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', `update app_private.local_demo_guard set enabled=${enabled ? 'true' : 'false'} where singleton;`]);
   const accounts = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {};
   for (const role of ['admin', 'member', 'pro', 'moderator', 'support']) {
     if (accounts[role]) {
@@ -38,7 +43,7 @@ export async function bootstrap() {
     finally { guard(false); }
   };
   const seeded = await seed();
-  privateWrite(resolve(root, '.local/ACESSOS.md'), `# Icarus LOCAL: demonstração\n\nCredenciais sintéticas, privadas. Não usar em produção.\n\n${Object.entries(accounts).map(([role, user]) => `- ${role}: ${user.email} | ${user.password}`).join('\n')}\n\nEquipe exige matrícula e verificação MFA nativas antes de operar.\n`);
+  privateWrite(resolve(root, '.local/ACESSOS.md'), `# Icarus LOCAL: demonstração\n\nCredenciais sintéticas, privadas. Não usar em produção.\n\n${Object.entries(accounts).map(([role, user]) => `- ${role}: ${user.email} | ${user.password}`).join('\n')}\n\nMFA é opcional. Contas com fator verificado precisam do código no login.\n`);
   const fixture = resolve(root, '.local/demo-8s.mp4');
   if (!existsSync(fixture)) command('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=gray:s=640x360:r=24:d=8', '-an', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', fixture]);
   for (const [path, content, type] of [[seeded.lesson_path, readFileSync(fixture), 'video/mp4'], [seeded.material_path, 'DEMONSTRAÇÃO: material sintético local do Icarus.\nNão representa conteúdo ou cliente real.\n', 'text/plain']]) {
@@ -51,4 +56,4 @@ export async function bootstrap() {
   privateWrite(resolve(root, '.local/demo-resources.json'), JSON.stringify({ ...seeded, storage_path: seeded.lesson_path }, null, 2));
   console.log('Demonstração local criada/preservada; acessos em .local/ACESSOS.md (600), vídeo privado de 8s.');
 }
-if (process.argv[1] && resolve(process.argv[1]) === new URL(import.meta.url).pathname) bootstrap().catch((error) => { console.error(`Bootstrap incompleto: ${error.message} Dados preservados; credenciais omitidas.`); process.exitCode = 1; });
+if (isEntrypoint(import.meta.url)) bootstrap().catch((error) => { console.error(`Bootstrap incompleto: ${error.message} Credenciais omitidas.`); process.exitCode = 1; });

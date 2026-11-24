@@ -1,0 +1,47 @@
+@font-face {
+  font-family: "Material Symbols Outlined";
+  src: url("/vendor/material-symbols/outlined-forward-10-add1efca.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: block;
+  /* Include space so the line box uses the icon font metrics. */
+  unicode-range: U+20, U+E056;
+}
+
+@font-face {
+  font-family: "Material Symbols Outlined Mobile";
+  src: url("/vendor/material-symbols/outlined-mobile-023b40ef.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  unicode-range: U+20, U+E038, U+E0BF, U+E5C4, U+E5D2, U+E71A, U+E7F4, U+E7FD, U+E80C, U+E98B, U+F048, U+F20C, U+F233;
+}
+
+.stitch-icon {
+  display: block;
+  inline-size: 20px;
+  block-size: 20px;
+  font-family: "Material Symbols Outlined";
+  font-size: 20px;
+  font-weight: 400;
+  font-optical-sizing: none;
+  font-variation-settings: "wght" 400, "FILL" 0;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.stitch-icon--mobile {
+  inline-size: var(--mobile-glyph-size, 20px);
+  block-size: var(--mobile-glyph-size, 20px);
+  font-family: "Material Symbols Outlined Mobile";
+  font-size: var(--mobile-glyph-size, 20px);
+  font-variation-settings: normal;
+}
+
+@container lesson-video (width > 560px) {
+  .lesson-video-controls__left > button:nth-child(2) .stitch-icon {
+    translate: 4px var(--lesson-video-icon-offset);
+  }
+}

@@ -104,6 +104,45 @@ Deno.test("guest checkout reserves order before provider; existing attempt never
     if (reserved) { const body = await result.json(); equal(body.status, "pending"); assert(body.receipt_token.length === 64); assert(!JSON.stringify(body).includes(buyer.email)); }
   }
 });
+Deno.test("guest browser receipt is bound by hash and stays outside provider request and responses", async () => {
+  const token = "synthetic-browser-receipt", hash = await sha256(token);
+  let reserved = false;
+  const { d, requests } = deps((url, init) => {
+    if (url.pathname.endsWith("app_checkout_begin")) {
+      const { p_receipt_hash } = JSON.parse(String(init.body));
+      equal(p_receipt_hash, hash);
+      if (reserved) return response({ order_id: id, status: "pending", checkout_url: "https://sandbox.asaas.com/checkoutSession/show?id=fixture" });
+      reserved = true;
+      return response({ order_id: id, amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: true });
+    }
+    if (url.hostname === "api-sandbox.asaas.com") return response({ id: other });
+    if (url.pathname.endsWith("app_checkout_gateway")) return response({ id });
+    if (url.pathname.endsWith("app_order_status")) {
+      assert(!String(init.body).includes(token));
+      return JSON.parse(String(init.body)).p_receipt_hash === hash
+        ? response({ order_id: id, status: "pending", amount_cents: 1000, access_granted: false })
+        : response({ code: "P0001" }, 400);
+    }
+  }, billing);
+  for (const invalid of [null, "invalid", hash + "\n"])
+    equal((await checkout(d)(request({ ...purchase, receipt_hash: invalid }, { token: null }))).status, 422);
+  equal(requests.length, 0);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const result = await checkout(d)(request({ ...purchase, receipt_hash: hash }, { token: null }));
+    equal(result.status, 200);
+    equal(result.headers.get("cache-control"), "no-store");
+    assert(!(await result.text()).includes("receipt"));
+  }
+  const provider = requests.filter((r) => r.url.includes("api-sandbox.asaas.com"));
+  equal(provider.length, 1);
+  assert(!JSON.stringify(provider[0]).includes(hash) && !JSON.stringify(provider[0]).includes(token));
+  const denied = await orderStatus(d)(request({ order_id: id, receipt_token: hash }, { token: null }));
+  equal(denied.status, 422);
+  const accepted = await orderStatus(d)(request({ order_id: id, receipt_token: token }, { token: null }));
+  equal(accepted.status, 200);
+  equal(accepted.headers.get("cache-control"), "no-store");
+  equal(await accepted.json(), { order_id: id, status: "pending", amount_cents: 1000, access_granted: false });
+});
 Deno.test("authenticated checkout email is native Auth email", async () => {
   const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, status: "pending", checkout_url: "https://sandbox.asaas.com/checkoutSession/show?id=test" }) : undefined, billing);
   equal((await checkout(d)(request(purchase))).status, 200);
@@ -252,8 +291,9 @@ Deno.test("signed Storage origin is translated only for the configured internal 
 Deno.test("checkout optional phone and callback use the real /pedido route", async () => {
   const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: true }) : url.hostname === "api-sandbox.asaas.com" ? response({ id: other }) : url.pathname.endsWith("app_checkout_gateway") ? response({ id }) : undefined, billing);
   equal((await checkout(d)(request({ ...purchase, buyer: { ...buyer, phone: "" } }, { token: null }))).status, 200);
-  const posted = requests.find((r) => r.url.includes("api-sandbox.asaas.com"))!.body as { callback: { successUrl: string } };
-  equal(posted.callback.successUrl, `http://127.0.0.1:8088/pedido/${id}`);
+  const posted = requests.find((r) => r.url.includes("api-sandbox.asaas.com"))!.body as { callback: Record<string, string> };
+  const callback = `http://127.0.0.1:8088/pedido/${id}`;
+  equal(posted.callback, { successUrl: callback, cancelUrl: callback, expiredUrl: callback });
 });
 Deno.test("paid webhook schedules claimed invitation after persistence and acknowledges before email completes", async () => {
   const tasks: Promise<unknown>[] = []; let release!: (value: Response) => void; let started!: () => void;

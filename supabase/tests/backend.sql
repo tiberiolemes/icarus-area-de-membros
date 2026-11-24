@@ -21,6 +21,7 @@ select pg_temp.assert((select count(*)=0 from pg_tables t where schemaname='publ
 select pg_temp.assert((select count(*)=0 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and (has_table_privilege('anon',c.oid,'SELECT,INSERT,UPDATE,DELETE') or has_table_privilege('authenticated',c.oid,'SELECT,INSERT,UPDATE,DELETE'))),'browser table grants closed');
 select pg_temp.assert((select count(*)=2 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and proname like 'app_%' and has_function_privilege('anon',p.oid,'EXECUTE')),'exactly two anonymous RPCs');
 select pg_temp.assert((select count(*)=0 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and proname in ('app_checkout_begin','app_process_payment','app_confirm_reauth','app_finalize_paid_order','app_upload_access') and has_function_privilege('authenticated',p.oid,'EXECUTE')),'service RPCs closed to member');
+select pg_temp.assert(has_function_privilege('service_role','public.app_order_status(uuid,uuid,text)','EXECUTE') and not has_function_privilege('anon','public.app_order_status(uuid,uuid,text)','EXECUTE') and not has_function_privilege('authenticated','public.app_order_status(uuid,uuid,text)','EXECUTE'),'order status remains service only');
 select pg_temp.denied($q$do $body$ begin insert into auth.users(id,email,raw_user_meta_data) values('00000000-0000-4000-8000-000000000099','signup@example.test','{}');set constraints all immediate;end $body$$q$,'native signup blocked without real legal');
 insert into auth.users(id,instance_id,email,email_confirmed_at,aud,role,raw_user_meta_data,raw_app_meta_data) select pg_temp.uid(n),'00000000-0000-0000-0000-000000000000','fixture'||n||'@example.test',now(),'authenticated','authenticated',jsonb_build_object('full_name','DEMONSTRAÇÃO pessoa '||n),'{"icarus_server_created":true}'::jsonb from generate_series(1,8)n;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal) select ('10000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,pg_temp.uid(n),now(),now(),case when n between 3 and 6 then 'aal2'::auth.aal_level else 'aal1'::auth.aal_level end from generate_series(1,8)n;
@@ -176,6 +177,7 @@ select pg_temp.assert((public.app_checkout_begin(null,'20000000-0000-4000-8000-0
 select pg_temp.assert(public.app_order_status((:'neworder'::jsonb->>'id')::uuid,null,repeat('a',64))->>'status'='pending','original receipt works');
 select pg_temp.denied(format('select public.app_order_status(%L,null,%L)',:'neworder'::jsonb->>'id',repeat('b',64)),'retry cannot replace receipt hash');
 select public.app_checkout_gateway((:'neworder'::jsonb->>'id')::uuid,'checkout-demo-01','https://example.test/checkout-demo');
+select pg_temp.assert(not (public.app_order_status((:'neworder'::jsonb->>'id')::uuid,null,repeat('a',64)) ?| array['checkout_url','buyer_data','receipt_hash','attempt_key']),'receipt response excludes sensitive fields and gateway link');
 select pg_temp.denied(format('select public.app_checkout_gateway(%L,%L,%L)',:'neworder'::jsonb->>'id','checkout-other','https://example.test/other'),'gateway immutable');
 select pg_temp.denied(format('select public.app_process_payment(%L::jsonb)',jsonb_build_object('id','event-wrong-value','type','paid','order_id',:'neworder'::jsonb->>'id','gateway_id','checkout-demo-01','amount_cents',1,'method','PIX')::text),'wrong value event denied');
 select pg_temp.denied(format('select public.app_process_payment(%L::jsonb)',jsonb_build_object('id','event-wrong-method','type','paid','order_id',:'neworder'::jsonb->>'id','gateway_id','checkout-demo-01','amount_cents',12345,'method','CREDIT_CARD')::text),'wrong method event denied');
@@ -183,14 +185,28 @@ select pg_temp.assert(public.app_process_payment(jsonb_build_object('id','event-
 select pg_temp.assert((public.app_process_payment(jsonb_build_object('id','event-paid-demo-01','type','paid','order_id',:'neworder'::jsonb->>'id','gateway_id','checkout-demo-01','amount_cents',12345,'method','PIX'))->>'duplicate')::boolean,'duplicate event idempotent');
 select pg_temp.assert(not (public.app_finalize_paid_order((:'neworder'::jsonb->>'id')::uuid,pg_temp.uid(2))->>'finalized')::boolean,'beneficiary wrong email denied');
 select pg_temp.assert((public.app_finalize_paid_order((:'neworder'::jsonb->>'id')::uuid)->>'finalized')::boolean,'confirmed matching email finalized');
+select pg_temp.assert((public.app_order_status((:'neworder'::jsonb->>'id')::uuid,null,repeat('a',64))->>'access_granted')::boolean,'guest receipt still works after paid order is linked to its owner');
 select pg_temp.assert(public.app_process_payment(jsonb_build_object('id','event-refund-demo-01','type','refunded','order_id',:'neworder'::jsonb->>'id','gateway_id','checkout-demo-01','amount_cents',12345,'method','PIX'))->>'status'='refunded','refund terminal');
 select pg_temp.assert(public.app_process_payment(jsonb_build_object('id','event-paid-old-demo-01','type','paid','order_id',:'neworder'::jsonb->>'id','gateway_id','checkout-demo-01','amount_cents',12345,'method','PIX'))->>'status'='refunded','old paid cannot reactivate refund');
 reset role;
 select pg_temp.assert((select count(*)=1 from public.subscriptions where order_id=(:'neworder'::jsonb->>'id')::uuid),'single payment entitlement');
 select pg_temp.assert((select revoked_at is not null from public.subscriptions where order_id=(:'neworder'::jsonb->>'id')::uuid),'refund revokes matching entitlement');
+update public.orders set created_at=now()-interval '2 hours' where id=(:'neworder'::jsonb->>'id')::uuid;
+select pg_temp.login(8);
+set local role authenticated;
+select public.app_touch_session(false);
+reset role;
+set local role service_role;
+select pg_temp.denied(format('select public.app_order_status(%L,null,%L)',:'neworder'::jsonb->>'id',repeat('a',64)),'receipt denied at two-hour boundary');
+select pg_temp.service_headers(8);
+select pg_temp.assert(public.app_order_status((:'neworder'::jsonb->>'id')::uuid,pg_temp.uid(8),null)->>'status'='refunded','owner still sees order after receipt expires');
+select pg_temp.service_headers(2);
+select pg_temp.denied(format('select public.app_order_status(%L,%L,null)',:'neworder'::jsonb->>'id',pg_temp.uid(2)),'different owner cannot see order');
+reset role;
 -- Safe invitation boundary: payment for an unknown buyer never authenticates a browser by email.
 set local role service_role;
 select public.app_checkout_begin(null,'20000000-0000-4000-8000-000000000001','demo-guest-attempt-02','PIX',1,'{"name":"DEMONSTRAÇÃO convidado","email":"uncreated@example.test","document":"00000000000"}',array['80000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002']::uuid[],false,repeat('c',64)) as guestorder \gset
+select pg_temp.denied(format('select public.app_order_status(%L,null,%L)',:'guestorder'::jsonb->>'id',repeat('a',64)),'receipt from another order denied');
 select public.app_checkout_gateway((:'guestorder'::jsonb->>'id')::uuid,'checkout-demo-02','https://example.test/guest');
 select pg_temp.assert((public.app_process_payment(jsonb_build_object('id','event-paid-demo-02','type','paid','order_id',:'guestorder'::jsonb->>'id','gateway_id','checkout-demo-02','amount_cents',12345,'method','PIX'))->>'invite_pending')::boolean,'paid guest invitation pending');
 select pg_temp.assert(not (public.app_finalize_paid_order((:'guestorder'::jsonb->>'id')::uuid)->>'finalized')::boolean,'guest no account no entitlement');

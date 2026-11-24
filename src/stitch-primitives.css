@@ -1,0 +1,55 @@
+.search.stitch-search {
+  --stitch-search-hint: var(--stitch-text-secondary, var(--ic-text-secondary));
+  position: relative;
+}
+
+[data-theme="dark"] .search.stitch-search {
+  --stitch-search-hint: var(--stitch-text-muted, var(--ic-gray-500));
+}
+
+.search.stitch-search input[type="search"] {
+  min-block-size: var(--stitch-control-min-size, var(--ic-accessibility-target-min));
+  padding-block: var(--stitch-space-sm, var(--ic-space-2));
+  padding-inline: var(--stitch-control-min-size, var(--ic-accessibility-target-min)) var(--stitch-space-md, var(--ic-space-4));
+  border: 0;
+  border-radius: var(--stitch-radius-md, var(--ic-radius-card));
+  background: var(--stitch-surface-control, var(--ic-surface-muted));
+  color: var(--stitch-text-primary, var(--ic-text));
+  font-family: var(--stitch-font-family, var(--ic-font-family));
+  font-size: var(--stitch-input-min-size, var(--ic-accessibility-input-min));
+  line-height: var(--stitch-type-body-lg-line, 1.5);
+}
+
+.stitch-search input::placeholder {
+  color: var(--stitch-search-hint);
+}
+
+.search.stitch-search:focus-within input[type="search"] {
+  background: var(--stitch-surface-panel, var(--ic-surface));
+}
+
+.stitch-search button {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: var(--stitch-control-min-size, var(--ic-accessibility-target-min));
+  padding: 0;
+  border: 0;
+  border-radius: var(--stitch-radius-md, var(--ic-radius-card));
+  background: transparent;
+  color: var(--stitch-search-hint);
+}
+
+.stitch-search button:hover {
+  background: transparent;
+  color: var(--stitch-text-primary, var(--ic-text));
+}
+
+.stitch-search :is(input, button):focus-visible {
+  outline: var(--stitch-focus-width, var(--ic-accessibility-focus-width)) solid var(--stitch-focus, var(--ic-focus));
+  outline-offset: var(--stitch-focus-offset, var(--ic-accessibility-focus-offset));
+}
+
+.stitch-search button:focus-visible {
+  outline-offset: calc(-1 * var(--stitch-focus-offset, var(--ic-accessibility-focus-offset)));
+}

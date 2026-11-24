@@ -171,20 +171,20 @@ export function RoleGate({
 }
 export function AccountAssurance({ children }: { children: ReactNode }) {
   const { session } = useAuth(), location = useLocation();
-  const [verified, setVerified] = useState<boolean | null>(null),
+  const [assurance, setAssurance] = useState<"verified" | "challenge" | null>(null),
     [error, setError] = useState("");
   useEffect(() => {
     let active = true;
-    setVerified(null);
+    setAssurance(null);
     setError("");
     client().auth.mfa.getAuthenticatorAssuranceLevel().then(
       ({ data, error }) => {
         if (!active) return;
         if (error) setError(errorMessage(error));
-        else {setVerified(
-            data.currentLevel === "aal2" ||
-              (data.currentLevel === "aal1" && data.nextLevel === "aal1"),
-          );}
+        else if (data.currentLevel === "aal2") setAssurance("verified");
+        else if (data.currentLevel === "aal1" && data.nextLevel === "aal1") {
+          setAssurance("verified");
+        } else setAssurance("challenge");
       },
     );
     return () => {
@@ -192,8 +192,8 @@ export function AccountAssurance({ children }: { children: ReactNode }) {
     };
   }, [session?.access_token]);
   if (error) return <Notice error>{error}</Notice>;
-  if (verified === null) return <Loading />;
-  return verified
+  if (assurance === null) return <Loading />;
+  return assurance === "verified"
     ? <>{children}</>
     : (
       <Navigate

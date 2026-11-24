@@ -22,7 +22,7 @@ import { Catalog, MaterialList } from "./pages/learning";
 import { Moderate, Composer } from "./pages/community";
 import { pdfWithImage } from "./certificate";
 import { Mfa } from "./pages/settings";
-import { Access, CompanyFields, companyData } from "./pages/access";
+import { Access, CompanyFields, PublicFrame, companyData } from "./pages/access";
 
 function wrap(node: React.ReactNode) {
   return render(
@@ -47,6 +47,14 @@ afterEach(() => {
   cache.clear();
   vi.unstubAllGlobals();
 });
+it("a moldura pública usa o nome publicado pela instalação", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => json({ name: "Academia de teste" })));
+  wrap(<PublicFrame><p>Área pública</p></PublicFrame>);
+  const brand = await screen.findByRole("link", { name: "Academia de teste, início" });
+  expect(brand).toHaveTextContent("Academia de teste");
+  expect(brand).toHaveAttribute("href", "/entrar");
+});
+
 describe("Formulários reais", () => {
   it("permite mostrar a senha, bloqueia o toggle no envio e limpa inclusive senha visível na falha", async () => {
     let resolve!: (response: Response) => void;
@@ -254,9 +262,13 @@ describe("Confiança na fronteira do browser", () => {
   });
 });
 describe("SDK e componentes do domínio com fetch controlado", () => {
-  it.each([false, true])(
-    "exige o desafio do membro apenas quando há fator nativo verificado=%s",
-    async (hasFactor) => {
+  it.each([
+    { hasFactor: false, aal: "aal1" },
+    { hasFactor: true, aal: "aal1" },
+    { hasFactor: true, aal: "aal2" },
+  ])(
+    "aplica o segundo fator quando a conta tem autenticador: $hasFactor/$aal",
+    async ({ hasFactor, aal }) => {
       const id = "00000000-0000-4000-8000-000000000004",
         user = {
           id,
@@ -273,7 +285,7 @@ describe("SDK e componentes do domínio com fetch controlado", () => {
           btoa(
             JSON.stringify({
               sub: id,
-              aal: "aal1",
+              aal,
               exp: Math.floor(Date.now() / 1000) + 3600,
             }),
           ),
@@ -296,7 +308,7 @@ describe("SDK e componentes do domínio com fetch controlado", () => {
           <Route path="/entrar" element={<h1>Login no mesmo formulário</h1>} />
         </Routes>,
       );
-      if (hasFactor) {
+      if (hasFactor && aal === "aal1") {
         await screen.findByRole("heading", { name: "Login no mesmo formulário" });
         expect(
           screen.queryByText("Conteúdo autorizado"),

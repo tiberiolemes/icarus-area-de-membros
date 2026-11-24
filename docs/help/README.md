@@ -10,7 +10,7 @@ A ajuda pública é servida em `/ajuda`, com busca e oito artigos. A fonte únic
 | `/ajuda/certificados` | Elegibilidade, emissão, PDF/PNG e verificação pública |
 | `/ajuda/comunidade` | Espaços, composição, aprovação humana, edição, resposta, voto e denúncia |
 | `/ajuda/suporte` | Abertura, conversa, arquivos e reabertura |
-| `/ajuda/conta` | Perfil, empresa, tema, segurança, assinatura e privacidade |
+| `/ajuda/conta` | Perfil, empresa, tema, segurança, assinatura, retorno do checkout e privacidade |
 | `/ajuda/administracao` | Conteúdo, estrutura por teclado, materiais, cortesia, filas e configuração |
 
 `src/tour.tsx` é o único guia React. O usuário inicia o guia da tela atual; são apresentados somente alvos presentes, com próximo passo, pausa, pulo, conclusão e avaliação. Eventos usam `app_help_feedback` com ator validado no servidor. Feedback de artigo é oferecido somente após login. Não há envio anônimo falso nem dependência de Vue.

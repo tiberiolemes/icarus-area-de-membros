@@ -1,0 +1,241 @@
+.lesson-engagement-actions,
+.lesson-engagement-favorite,
+.lesson-engagement-panel {
+  --engagement-fill: color-mix(in srgb, var(--ic-text) 4%, var(--ic-surface));
+  --engagement-line: var(--lesson-line, var(--ic-border));
+  --engagement-muted: var(--lesson-muted, var(--ic-text-secondary));
+}
+
+.lesson-engagement-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ic-space-2);
+  min-width: 0;
+}
+
+.lesson-engagement-actions .lesson-engagement-icon,
+.lesson-engagement-favorite .lesson-engagement-icon {
+  width: var(--ic-accessibility-target-min);
+  height: var(--ic-accessibility-target-min);
+  padding: 0;
+  border-color: var(--engagement-line);
+  border-radius: var(--ic-radius-card);
+  background: var(--engagement-fill);
+  color: var(--ic-text);
+}
+
+.lesson-engagement-actions .lesson-engagement-icon:hover:not([aria-disabled="true"]),
+.lesson-engagement-favorite .lesson-engagement-icon:hover:not([aria-disabled="true"]) {
+  background: var(--ic-surface);
+  border-color: var(--ic-border-control);
+}
+
+.lesson-engagement-icon[aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.lesson-engagement-favorite {
+  min-width: 0;
+}
+
+.lesson-engagement-favorite-feedback {
+  display: block;
+  max-width: 18ch;
+  margin-top: var(--ic-space-2);
+  color: var(--engagement-muted);
+  font-size: var(--ic-type-caption);
+  overflow-wrap: anywhere;
+}
+
+.lesson-stitch .stitch-lesson-deck .tabs .lesson-engagement-tab {
+  gap: var(--ic-space-1);
+}
+
+.lesson-engagement-tab-notes {
+  max-inline-size: 132px;
+  text-wrap: balance;
+}
+
+.lesson-engagement-tab-count,
+.lesson-engagement-tag {
+  border: 1px solid var(--lesson-line, var(--ic-border));
+  border-radius: 999px;
+  padding: 0 var(--ic-space-2);
+  background: var(--lesson-selected, var(--ic-surface-muted));
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.lesson-engagement-panel {
+  display: grid;
+  min-width: 0;
+  gap: var(--ic-space-4);
+  overflow-wrap: anywhere;
+}
+
+.lesson-engagement-panel .lesson-engagement-form {
+  margin: 0;
+  min-width: 0;
+}
+
+.lesson-engagement-form .field {
+  margin-bottom: var(--ic-space-3);
+}
+
+.lesson-engagement-form .field > span {
+  color: var(--engagement-muted);
+  font-size: var(--ic-type-caption);
+  font-weight: 600;
+}
+
+.lesson-engagement-note-form .field > span {
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.lesson-engagement-comment-form .field > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.lesson-engagement-form textarea {
+  display: block;
+  border-color: var(--ic-border-control);
+  border-radius: var(--ic-radius-card);
+  background: var(--engagement-fill);
+  padding: var(--ic-space-4);
+  font-size: var(--ic-accessibility-input-min);
+  resize: vertical;
+}
+
+.lesson-engagement-form .form-actions {
+  margin-top: var(--ic-space-2);
+  gap: var(--ic-space-2);
+}
+
+.lesson-engagement-form .form-actions button,
+.lesson-engagement-row-actions button,
+.lesson-engagement-pagination button {
+  min-height: var(--ic-accessibility-target-min);
+  font-size: var(--ic-type-caption);
+}
+
+.lesson-engagement-composer {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--ic-space-4);
+}
+
+.lesson-engagement-avatar {
+  display: grid;
+  width: 40px;
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ic-action);
+  color: var(--ic-on-action);
+  font-size: var(--ic-type-caption);
+  font-weight: 700;
+}
+
+[data-theme="dark"] .lesson-engagement-avatar {
+  background: var(--lesson-selected, var(--ic-surface-muted));
+  color: var(--ic-text);
+}
+
+.lesson-engagement-list {
+  min-width: 0;
+  border-top: 1px solid var(--engagement-line);
+  padding-top: var(--ic-space-2);
+}
+
+.lesson-engagement-panel .empty {
+  margin-top: 0;
+  border: 0;
+  padding: var(--ic-space-4) 0;
+}
+
+.lesson-engagement-items {
+  display: grid;
+  gap: var(--ic-space-3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lesson-engagement-item {
+  min-width: 0;
+  padding: var(--ic-space-4);
+  border: 1px solid var(--engagement-line);
+  border-radius: var(--ic-radius-card);
+  background: var(--lesson-card, var(--ic-surface));
+}
+
+[data-theme="dark"] .lesson-engagement-item,
+.lesson-engagement-item[data-reply="true"] {
+  background: var(--engagement-fill);
+}
+
+.lesson-engagement-item[data-reply="true"] {
+  margin-inline-start: var(--ic-space-4);
+}
+
+.lesson-engagement-item-header,
+.lesson-engagement-row-actions,
+.lesson-engagement-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ic-space-2);
+  font-size: var(--ic-type-caption);
+}
+
+.lesson-engagement-item-header {
+  color: var(--engagement-muted);
+}
+
+.lesson-engagement-item-header strong {
+  color: var(--ic-text);
+}
+
+.lesson-engagement-body {
+  color: var(--engagement-muted);
+  max-width: var(--ic-layout-reading-max);
+  white-space: pre-wrap;
+  margin: var(--ic-space-2) 0;
+}
+
+.lesson-engagement-time {
+  margin-inline-start: auto;
+  padding-inline: var(--ic-space-2);
+  font-size: var(--ic-type-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-engagement-pagination {
+  justify-content: space-between;
+  margin-top: var(--ic-space-4);
+}
+
+.lesson-engagement-feedback {
+  display: flex;
+  align-items: center;
+  gap: var(--ic-space-2);
+  margin: 0;
+  color: var(--engagement-muted);
+  font-size: var(--ic-type-caption);
+}
+
+@media (max-width: 480px) {
+  .lesson-engagement-composer {
+    gap: var(--ic-space-2);
+  }
+}

@@ -28,7 +28,7 @@ Papéis de equipe e direitos de assinatura são independentes. O servidor valida
 
 ## Demonstração navegável
 
-A demonstração usa as telas, rotas e estilos da aplicação, com dados fictícios e acessos de aluno e administrador. Progresso e alterações ficam na sessão do navegador. Ela roda em hospedagem estática, sem banco, Supabase, configuração de chaves ou processamento de pagamentos.
+[Abra a demonstração pública](https://tiberiolemes.github.io/icarus-area-de-membros/). A demonstração usa as telas, rotas e estilos da aplicação, com dados fictícios e acessos de aluno e administrador. Progresso e alterações ficam na sessão do navegador. Ela roda em hospedagem estática, sem banco, Supabase, configuração de chaves ou processamento de pagamentos.
 
 ```sh
 npm ci
@@ -36,7 +36,7 @@ npm run build:demo
 python3 -m http.server 8111 --bind 127.0.0.1 --directory demo-dist
 ```
 
-Abra [a demonstração local](http://127.0.0.1:8111/). Para a página de vendas, sirva todo o diretório `demo-dist/` por HTTPS. A simulação reaproveita o código da aplicação em cada build. Ajuste as fixtures em [demo/](demo/) no mesmo PR se o contrato de um fluxo demonstrado mudar.
+Abra [a demonstração local](http://127.0.0.1:8111/). Para a página de vendas, sirva todo o diretório `demo-dist/` por HTTPS. O GitHub Pages compila e publica a demonstração quando mudanças relevantes entram na `main`. O arquivo `revisao.txt` identifica o commit servido. Ajuste as fixtures em [demo/](demo/) no mesmo PR se o contrato de um fluxo demonstrado mudar.
 
 ## Começar localmente
 
@@ -100,7 +100,7 @@ Icarus is an open-source membership and online course delivery platform for busi
 
 This release is a fresh implementation; it does not use Frappe. Git history is preserved. Staff roles and subscription entitlements are separate. Server-side authorization is required for every protected operation.
 
-Build the demo with `npm run build:demo` and serve the entire `demo-dist/` folder over HTTP on loopback or HTTPS on a static host. The demo uses the application’s routes, components and styles with fictional student and admin sessions and no backend. Update the [fixtures](demo/) when a demonstrated flow changes.
+[Try the public demo](https://tiberiolemes.github.io/icarus-area-de-membros/). Build the demo with `npm run build:demo` and serve the entire `demo-dist/` folder over HTTP on loopback or HTTPS on a static host. The demo uses the application’s routes, components and styles with fictional student and admin sessions and no backend. Update the [fixtures](demo/) when a demonstrated flow changes.
 
 Use the source archive or checkout for the intended GitHub tag. The npm package is private. Use Node.js 24+, npm and Supabase CLI `2.109.1`. Before running `local:start`, declare the [dedicated, empty Docker daemon](docs/operations.md#requisitos-do-docker-dedicado). Contract tests use Deno 2, database tests use Python 3, and the optional demo uses `ffmpeg` with `libx264`. Run the commands above and open `http://127.0.0.1:8088`. The local checkout uses a fixed Docker project and ports. For a new installation, follow the first-admin instructions. The optional `node scripts/bootstrap.mjs --demo` writes randomly generated demo credentials to the private, ignored `.local/ACESSOS.md` file.
 

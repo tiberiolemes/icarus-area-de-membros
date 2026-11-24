@@ -15,6 +15,7 @@ import {
 } from "../api";
 import type { Profile } from "../api";
 import { useAuth, useBootstrap } from "../auth";
+import { Captcha, captchaToken, resetCaptcha } from "../captcha";
 import {
   Action,
   Field,
@@ -216,6 +217,7 @@ function Login({ target }: { target: string }) {
                 const { error } = await client().auth.signInWithPassword({
                   email: value(data, "email"),
                   password: String(data.get("password") ?? ""),
+                  options: { captchaToken: captchaToken(data) },
                 });
                 if (error?.code === "email_not_confirmed") {
                   setNeedsConfirmation(true);
@@ -224,6 +226,7 @@ function Login({ target }: { target: string }) {
                 if (error) throw error;
               }
             } finally {
+              resetCaptcha();
               form.querySelectorAll<HTMLInputElement>(
                 "input[data-sensitive=password], input[name=code]",
               ).forEach((input) => {
@@ -294,6 +297,7 @@ function Login({ target }: { target: string }) {
                       </div>
                     )}
                   </div>
+                  <Captcha />
                 </>
               )}
           </>
@@ -401,6 +405,7 @@ export function Access({
                       ),
                       marketing_opt_in: data.has("marketing"),
                     },
+                    captchaToken: captchaToken(data),
                     emailRedirectTo:
                       location.origin +
                       "/auth/callback?returnTo=" +
@@ -414,6 +419,7 @@ export function Access({
               }
               if (mode === "forgot") {
                 const { error } = await auth.resetPasswordForEmail(email, {
+                  captchaToken: captchaToken(data),
                   redirectTo:
                     location.origin +
                     "/auth/callback?returnTo=/app/configuracoes?aba=seguranca",
@@ -436,6 +442,7 @@ export function Access({
                   type: "signup",
                   email,
                   options: {
+                    captchaToken: captchaToken(data),
                     emailRedirectTo:
                       location.origin +
                       "/auth/callback?returnTo=" +
@@ -448,6 +455,7 @@ export function Access({
                 );
               }
             } finally {
+              if (mode !== "reset") resetCaptcha();
               form
                 .querySelectorAll<HTMLInputElement>(
                   "input[data-sensitive=password]",
@@ -529,6 +537,7 @@ export function Access({
               </label>
             </>
           )}
+          {mode !== "reset" && <Captcha />}
         </Form>
         <nav className="access-links">
           <Link to={"/entrar?returnTo=" + encodeURIComponent(target)}>Voltar para entrar</Link>

@@ -4,8 +4,9 @@ export type Dependencies = { env: Env; fetch: typeof fetch; client: typeof creat
 export const defaults: Dependencies = { env, fetch, client: createClient };
 export function clients(d: Dependencies, token?: string, session?: { id: string; aal: string }) {
   const [url, anon, service] = required(d.env, "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY");
+  // O verifier confere senha com a chave de serviço: com o CAPTCHA do Auth ligado, a chave pública é recusada sem token do navegador.
   const options = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }, global: { fetch: d.fetch } };
-  return { admin: d.client(url, service, { ...options, global: { ...options.global, ...(session ? { headers: { "x-icarus-session-id": session.id, "x-icarus-aal": session.aal } } : {}) } }), user: d.client(url, anon, { ...options, global: { ...options.global, ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}) } }), verifier: () => d.client(url, anon, options) };
+  return { admin: d.client(url, service, { ...options, global: { ...options.global, ...(session ? { headers: { "x-icarus-session-id": session.id, "x-icarus-aal": session.aal } } : {}) } }), user: d.client(url, anon, { ...options, global: { ...options.global, ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}) } }), verifier: () => d.client(url, service, options) };
 }
 export async function rpc(client: SupabaseClient, name: string, args: Record<string, unknown> = {}) {
   const { data, error } = await client.rpc(name, args);

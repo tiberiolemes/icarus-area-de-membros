@@ -1,6 +1,6 @@
 # Instalação e operação do Icarus
 
-Fonte MIT React/Vite + Supabase para uma academia. Os comandos de desenvolvimento usam o projeto Docker `icarus-courses-local` e as portas `58521` (API), `58522` (Postgres), `58524` (Mailpit) e `8088` (Vite). A instalação hospedada exige domínio, TLS, SMTP, configuração e credenciais próprias.
+O Icarus é uma plataforma de área de membros e cursos online em React/Vite e Supabase, com licença MIT. Cada instalação atende uma organização. Os comandos de desenvolvimento usam o projeto Docker `icarus-courses-local` e as portas `58521` (API), `58522` (Postgres), `58524` (Mailpit) e `8088` (Vite). A instalação hospedada exige domínio, TLS, SMTP, configuração e credenciais próprias.
 
 ## Requisitos do Docker dedicado
 
@@ -163,7 +163,7 @@ O config declara `verify_jwt=false` para os handlers que fazem autorização pr�
 ## Instalação hospedada e recursos comerciais
 
 - Provisione um projeto Supabase próprio e [aplique as migrations](#aplicar-migrações-no-supabase-hospedado). Configure `ICARUS_MODE=production`, o `APP_ORIGIN` exato, a URL pública HTTPS da API, a Site URL do Auth e a URL absoluta de `/auth/callback` na allowlist. Publique as Edge Functions de `supabase/functions/` com a política de JWT do `supabase/config.toml`. Homologue convite, recuperação e confirmação de email com o SMTP real. `EMAIL_CONFIGURED=true` apenas sinaliza a configuração no aplicativo.
-- Gere `dist/` com a URL do seu projeto e sua chave pública em `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. Sirva por HTTPS com fallback das rotas para `index.html`. Ao redistribuir, acompanhe a aplicação com o [texto MIT](../LICENSE) e preservação das licenças de terceiros indicadas em [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). Nome, marca e conteúdo da academia exigem autorização própria.
+- Gere `dist/` com a URL do seu projeto e sua chave pública em `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. Sirva por HTTPS com fallback das rotas para `index.html`. Ao redistribuir, acompanhe a aplicação com o [texto MIT](../LICENSE) e preservação das licenças de terceiros indicadas em [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). Use nomes, marcas e conteúdos para os quais você tenha autorização.
 - Publique os textos legais aprovados e configure planos, preços e ofertas reais no admin antes de abrir cadastro ou compra. O Asaas funciona apenas em Sandbox neste código. A homologação exige `ASAAS_ENV=sandbox`, `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKEN` e `ASAAS_ITEM_IMAGE_BASE64` no servidor, URL HTTPS do webhook e prova de pedido, confirmação e convite reconciliados. Cobrança real e emissão fiscal continuam pendentes.
 - Para Bunny, configure biblioteca, chave de assinatura e hostname autorizado (`BUNNY_LIBRARY_ID`, `BUNNY_TOKEN_KEY`, `BUNNY_ALLOWED_DOMAIN`). Confirme token, política de domínio/referrer e acesso aos arquivos originais no provedor. Mídia externa, links de encontros e vídeos de terceiros dependem de autorização e teste na instalação de destino.
 - Configure o [primeiro administrador](#primeiro-administrador-hospedado) em uma instalação vazia. Configure o consumidor de convites no servidor com credencial de serviço e valide entrega real em ambiente autorizado.

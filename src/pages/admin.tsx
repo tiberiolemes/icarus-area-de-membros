@@ -2389,10 +2389,10 @@ const settingsTabs = [
   ["privacidade", "Privacidade"],
 ] as const;
 
-function AcademySettingsTabs({ tab }: { tab: string }) {
+function PlatformSettingsTabs({ tab }: { tab: string }) {
   return (
     <NavigationTabs
-      label="Configurações da academia"
+      label="Configurações da plataforma"
       selected={tab}
       items={settingsTabs.map(([id, label]) => ({ id, label, to: `?aba=${id}` }))}
     />
@@ -2415,7 +2415,7 @@ function SettingsSurface({ tab, sectionLabel, title, description, action, childr
         <span>{sectionLabel ?? settingsTabs.find(([id]) => id === tab)?.[1]}</span>
       </p>
       <Heading title={title} action={action}>{description}</Heading>
-      <AcademySettingsTabs tab={tab} />
+      <PlatformSettingsTabs tab={tab} />
       {children}
       <Link className="button settings-help" to="/ajuda/administracao">Ajuda da administração</Link>
     </div>
@@ -2423,7 +2423,7 @@ function SettingsSurface({ tab, sectionLabel, title, description, action, childr
 }
 
 const staffScopes = [
-  ["admin", "Configurações, equipe, auditoria e operação da academia"],
+  ["admin", "Configurações, equipe, auditoria e operação da plataforma"],
   ["instructor", "Cursos, aulas e materiais"],
   ["moderator", "Espaços, publicações, respostas e denúncias"],
   ["support", "Fila de suporte e atendimento por tickets"],
@@ -2609,7 +2609,7 @@ function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
       </div>
       {capabilities.isSuccess && (
         <details className="settings-panel settings-services">
-          <summary>Outros serviços da academia</summary>
+          <summary>Outros serviços da plataforma</summary>
           <dl className="settings-roles">
             <div><dt>Aplicação</dt><dd>{capabilities.data.mode === "production" ? "Produção" : capabilities.data.mode === "local" ? "Local" : "Indisponível"}</dd></div>
             <div><dt>Armazenamento</dt><dd>{capabilities.data.storage ? "Disponível na configuração" : "Indisponível"}</dd></div>
@@ -2629,7 +2629,7 @@ export function AdminSettings() {
     <SettingsSurface
       tab="marca"
       title="Plataforma, marca e white label"
-      description="Gerencie o nome da instalação e os documentos legais da academia."
+      description="Gerencie o nome da plataforma e seus documentos legais."
     >
       <AdminBrand />
     </SettingsSurface>
@@ -2639,8 +2639,8 @@ export function AdminSettings() {
   if (tab === "integracoes") return <AdminIntegrations provider={params.get("provedor") === "bunny" ? "bunny" : "asaas"} />;
   return (
     <>
-      <Heading title="Configurações da academia" />
-      <AcademySettingsTabs tab={tab} />
+      <Heading title="Configurações da plataforma" />
+      <PlatformSettingsTabs tab={tab} />
       {tab === "onboarding" && <OnboardingAdmin />}
       {tab === "legal" && (
         <>
@@ -2733,8 +2733,7 @@ export function AdminSettings() {
                 </label>
                 <Notice>
                   Documentos de demonstração não liberam cadastro ou cobrança.
-                  Publique somente textos realmente aprovados para esta
-                  academia.
+                  Publique somente documentos aprovados para esta operação.
                 </Notice>
               </Form>
             </div>

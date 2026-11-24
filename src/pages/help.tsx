@@ -61,7 +61,7 @@ export const articles = [
       "Abra Certificados para consultar o documento emitido. Se a configuração foi completada depois, use Emitir certificado quando essa ação estiver disponível.",
       "O documento usa o nome, curso, carga horária, responsável e data registrados na emissão. Uma edição posterior não reescreve esse registro.",
       "Use Baixar PDF ou Baixar PNG. Informe o código em Verificar certificado para consultar a validade. A consulta pública funciona sem email ou documento pessoal.",
-      "Um certificado de demonstração é identificado como sem validade acadêmica. Um certificado revogado informa seu estado e não oferece exportação como válido.",
+      "Um certificado de demonstração é identificado como sem validade. Um certificado revogado informa seu estado e não oferece exportação como válido.",
     ],
   },
   {
@@ -157,7 +157,7 @@ export const articles = [
       "Em Membros e Pedidos, a exportação CSV percorre todas as páginas do resultado atual, até 5.000 registros. Refine a consulta acima desse limite. Uma falha interrompe a exportação sem gerar arquivo parcial; o CSV contém somente as colunas autorizadas exibidas nessas listas.",
       "Em Dashboard, abra o filtro de período e escolha um atalho ou Personalizado. Digite as datas ou selecione-as no calendário e clique em Aplicar. A consulta inclui a data final e usa o horário de Brasília. Administradores podem ativar a verificação em duas etapas em Sua conta → Segurança.",
       "Em Analytics, escolha um curso publicado para consultar o funil e a conclusão por aula. A retenção por trecho depende de telemetria de vídeo.",
-      "Em Configurações, abra Marca para editar o nome da instalação. Confira a prévia e salve para publicar. O nome aparece na área pública e nos cabeçalhos da plataforma.",
+      "Em Configurações, abra Plataforma e marca para editar o nome exibido. Confira a prévia e salve para publicar. O nome aparece na área pública e nos cabeçalhos da plataforma.",
       "Em Configurações, revise perguntas e versões legais. Na aba Equipe, consulte os papéis e abra Gerenciar membros e equipe para alterar o acesso pela ficha.",
       "Em Auditoria, busque eventos por ação, ator ou alvo e navegue entre as páginas. A trilha mostra o motivo quando registrado.",
       "Em Integrações, escolha Gateway Asaas ou Bunny Stream. Atualizar estado consulta se há configuração no servidor. Configure as credenciais no servidor.",

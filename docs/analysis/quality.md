@@ -2,7 +2,7 @@
 
 23/11/2026. **Somente análise; nenhum aceite do Frappe reaproveitado.**
 
-- Recomeço React + TypeScript + Vite, Supabase Postgres/Auth/Storage/RLS/Edge Functions e DS Icarus; uma academia, sem academy_id, sem código/overlays Frappe.
+- Recomeço React + TypeScript + Vite, Supabase Postgres/Auth/Storage/RLS/Edge Functions e DS Icarus, com uma organização por instalação e sem código ou overlays Frappe.
 - Entrega = Fase 1 + comunidade com moderação humana prévia; integrações preparadas e testáveis localmente, desligadas para cobrança real.
 - Limpeza integral Frappe é pré-condição da implementação coordenada; este worker não remove arquivos nem executa runtime.
 
@@ -25,7 +25,7 @@ Ausente = requisito não especificado. Parcial = intenção presente, sem contra
 
 ## Inconsistências que precisam de adaptação
 
-- **§6 versus §1/§9:** academy_id preventivo contradiz academia única e multi-tenant posterior. **Resolução:** Não incluir tenancy nem abstração por cliente.
+- **§6 versus §1/§9:** O campo preventivo `academy_id` contraria o escopo de uma organização por instalação. **Resolução:** Não incluir tenancy nem abstração por cliente.
 - **RF-NV-04 versus VI-05:** PRD pede escuro padrão; regra pétrea pede claro. **Resolução:** Claro padrão; escuro opcional salvo por usuário; medir AA em ambos.
 - **RF-CM-09/15, IA-06 versus decisão atual:** Título por IA e ocultação por contagem de denúncias contradizem ausência de IA e moderação manual. **Resolução:** Título digitado; post/resposta/edição entram pendentes até aprovação humana; denúncia abre fila, não condena nem bane automaticamente.
 - **RNF-03:** Assinatura genérica de webhook não descreve o mecanismo do Asaas. **Resolução:** Validar authToken via asaas-access-token, não HMAC de Stripe; autenticação precede persistência/processamento.

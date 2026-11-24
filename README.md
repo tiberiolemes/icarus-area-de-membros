@@ -1,6 +1,6 @@
 # Icarus · Área de Membros
 
-![Icarus Área de Membros — plataforma de cursos de código aberto sob licença MIT](docs/assets/icarus-banner-github.png)
+![Icarus · Área de membros e cursos online · Código aberto sob licença MIT](docs/assets/icarus-banner-github.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
 ![Version](https://img.shields.io/badge/version-0.2.0-black)
@@ -8,7 +8,7 @@
 
 **Português brasileiro** · [English](#english)
 
-Uma plataforma de cursos para uma academia, com materiais privados, certificados, suporte e comunidade com moderação humana. Interface com o **Design System Icarus**, Inter auto-hospedada, tema claro inicial e preferência escura por usuário.
+O Icarus é uma plataforma de código aberto para empresas e infoprodutores criarem sua área de membros e entregarem cursos online. Reúne materiais privados, certificados, suporte por chamados e comunidade com moderação humana. A interface segue o **Design System Icarus**, com Inter auto-hospedada, tema claro inicial e preferência escura por usuário.
 
 Aplicação nova em React, TypeScript, Vite e Supabase. A árvore desta versão foi criada do zero; não usa Frappe nem depende da instalação anterior. O histórico Git continua preservado.
 
@@ -38,7 +38,7 @@ npm run local:start
 npm run dev
 ```
 
-Abra **http://127.0.0.1:8088**. Para configurar uma academia vazia, siga o fluxo de primeiro administrador no [guia de operação](docs/operations.md#primeiro-administrador-sem-conteúdo-demo). Para experimentar com dados sintéticos, execute `node scripts/bootstrap.mjs --demo` após `local:start`. O script gera senhas aleatórias em `.local/ACESSOS.md`, com permissão privada. A demonstração é rotulada e não habilita venda ou cadastro com documentos jurídicos fictícios.
+Abra **http://127.0.0.1:8088**. Para configurar uma nova instalação, siga o fluxo de primeiro administrador no [guia de operação](docs/operations.md#primeiro-administrador-sem-conteúdo-demo). Para experimentar com dados sintéticos, execute `node scripts/bootstrap.mjs --demo` após `local:start`. O script gera senhas aleatórias em `.local/ACESSOS.md`, com permissão privada. A demonstração é rotulada e não habilita venda ou cadastro com documentos jurídicos fictícios.
 
 API, banco e caixa de email local usam `58521`, `58522` e `58524`. Reserve essas portas e `8088` na máquina de teste. As partidas e paradas seguintes usam os IDs Docker registrados neste checkout.
 
@@ -84,7 +84,7 @@ Veja [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) e [CHANGELOG
 
 ## English
 
-Icarus is a single-academy course delivery app with private learning materials, certificates, support tickets and a manually moderated community. It uses React, TypeScript, Vite and Supabase, with the official Icarus Design System, self-hosted Inter and per-user light/dark preferences.
+Icarus is an open-source membership and online course delivery platform for businesses and digital course creators. It includes private learning materials, certificates, support tickets and a human-moderated community. It uses React, TypeScript, Vite and Supabase, with the official Icarus Design System, self-hosted Inter and per-user light/dark preferences.
 
 This release is a fresh implementation; it does not use Frappe. Git history is preserved. Staff roles and subscription entitlements are separate. Server-side authorization is required for every protected operation.
 

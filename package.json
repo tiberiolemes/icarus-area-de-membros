@@ -43,7 +43,7 @@
   "engines": {
     "node": ">=24"
   },
-  "description": "Plataforma Icarus de cursos e comunidade com moderação manual",
+  "description": "Área de membros e entrega de cursos online para empresas e infoprodutores",
   "repository": {
     "type": "git",
     "url": "https://github.com/tiberiolemes/icarus-area-de-membros.git"

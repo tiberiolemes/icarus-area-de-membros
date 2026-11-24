@@ -144,7 +144,7 @@ const steps = [
   },
   {
     target: "admin-settings-brand",
-    title: "Edite o nome da instalação",
+    title: "Edite o nome da plataforma",
     body: "Confira a prévia e use Salvar nome para publicar. Se outra sessão tiver alterado o nome, revise o valor publicado antes de reenviar.",
   },
   {

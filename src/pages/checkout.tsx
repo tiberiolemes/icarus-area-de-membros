@@ -95,8 +95,7 @@ export function Checkout() {
                     </Notice>
                   ) : !context.data?.legal_ready ? (
                     <Notice>
-                      O checkout depende da publicação dos documentos legais da
-                      academia.
+                      O pagamento ficará disponível após a publicação dos documentos legais.
                     </Notice>
                   ) : (
                     <Form

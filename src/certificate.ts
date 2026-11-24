@@ -28,7 +28,7 @@ export async function certificateCanvas(certificate: Certificate) {
   ctx.font = "500 24px Inter";
   ctx.fillText(
     certificate.demo
-      ? "DEMONSTRAÇÃO · SEM VALIDADE ACADÊMICA"
+      ? "DEMONSTRAÇÃO · SEM VALIDADE"
       : "CERTIFICADO DE CONCLUSÃO",
     100,
     248,
@@ -54,7 +54,7 @@ export async function certificateCanvas(certificate: Certificate) {
     const url = safeUrl(certificate.signature_url);
     if (!url)
       throw new Error(
-        "A assinatura do certificado tem um endereço inválido. Consulte a academia.",
+        "A assinatura do certificado tem um endereço inválido. Consulte o responsável pela emissão.",
       );
     const signature = new Image();
     signature.crossOrigin = "anonymous";
@@ -71,7 +71,7 @@ export async function certificateCanvas(certificate: Certificate) {
       );
     } catch {
       throw new Error(
-        "Não foi possível carregar a assinatura para exportar o certificado. Tente novamente ou consulte a academia.",
+        "Não foi possível carregar a assinatura para exportar o certificado. Tente novamente ou consulte o responsável pela emissão.",
       );
     }
   }

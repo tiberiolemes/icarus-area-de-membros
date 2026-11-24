@@ -159,7 +159,7 @@ export function Upload({
         }
         hint={
           kind === "lesson"
-            ? "MP4 até 500 MiB no armazenamento da academia."
+            ? "MP4 de até 500 MiB no armazenamento da plataforma."
             : kind === "material"
             ? "Até 500 MiB, conforme o tipo permitido pelo servidor. O andamento abaixo não estima percentual."
             : "Imagem raster até 5 MiB; anexos até 20 MiB, conforme o tipo permitido."

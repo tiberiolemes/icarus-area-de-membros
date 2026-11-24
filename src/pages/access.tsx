@@ -67,7 +67,7 @@ export function PasswordSetup() {
     <PublicFrame>
       <div className="access">
         <Heading title="Defina sua primeira senha">
-          Confirme uma senha para concluir seu convite e acessar a academia.
+          Conclua o convite para acessar a área de membros.
         </Heading>
         <Form
           label="Definir senha e continuar"
@@ -773,7 +773,7 @@ export function CompanyFields({
           ),
         )}
       {!companyRequired && !questions.some((q) => q.active) && (
-        <Notice>Nenhuma pergunta de empresa configurada pela academia.</Notice>
+        <Notice>Não há perguntas sobre a empresa.</Notice>
       )}
     </>
   );
@@ -826,9 +826,8 @@ export function Onboarding() {
                 }}
               >
                 <div className="student-onboarding-questions">
-                  <Heading title="Personalize sua jornada no Icarus">
-                    Complete seu perfil e responda às perguntas da academia para
-                    começar.
+                  <Heading title="Complete seu perfil">
+                    Preencha os campos abaixo para acessar sua área de membros.
                   </Heading>
                   <Field label="Nome completo" hint="Resposta obrigatória">
                     <input
@@ -888,8 +887,8 @@ export function Legal({ kind }: { kind: "terms" | "privacy" }) {
             ))
           ) : (
             <Notice>
-              Este documento ainda não foi publicado pela academia. Cadastro e
-              checkout dependem da publicação dos documentos legais.
+              A equipe responsável ainda precisa publicar este documento. O cadastro
+              e o pagamento só ficam disponíveis após a publicação dos documentos legais.
             </Notice>
           )}
         </QueryState>

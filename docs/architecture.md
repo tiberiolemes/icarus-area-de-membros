@@ -1,6 +1,8 @@
 # Mapa técnico do Icarus
 
-O Icarus usa React e Vite no navegador, Supabase Auth para identidade e PostgreSQL para autorizar operações e manter os dados. O frontend consulta RPCs pelo PostgREST. As Edge Functions coordenam operações que precisam de credenciais de servidor, integrações ou URLs temporárias para arquivos.
+O Icarus oferece área de membros e entrega de cursos online para empresas e infoprodutores. Cada instalação atende uma organização.
+
+A aplicação usa React e Vite no navegador, Supabase Auth para identidade e PostgreSQL para autorizar operações e manter os dados. O frontend consulta RPCs pelo PostgREST. As Edge Functions coordenam operações que precisam de credenciais de servidor, integrações ou URLs temporárias para arquivos.
 
 | Para consultar | Fonte |
 | --- | --- |

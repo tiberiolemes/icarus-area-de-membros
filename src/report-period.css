@@ -1,0 +1,179 @@
+.period-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  justify-content: center;
+  width: fit-content;
+}
+.period-dialog {
+  position: fixed;
+  z-index: 81;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: min(55rem,calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--stitch-surface-card);
+  color: var(--stitch-text-primary);
+  border: 1px solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-lg);
+}
+.period-dialog h2,.period-dialog h3 {
+  margin: 0;
+}
+.period-dialog h2 {
+  font-size: 1.2rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--stitch-border-subtle);
+}
+.period-body {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 10rem minmax(0,1fr);
+}
+.period-shortcuts,.period-scroll {
+  overflow: auto;
+  overscroll-behavior: contain;
+  min-width: 0;
+}
+.period-shortcuts {
+  display: flex;
+  flex-direction: column;
+  padding: .5rem;
+  max-height: 29rem;
+  border-right: 1px solid var(--stitch-border-subtle);
+}
+.period-dialog button {
+  min-height: 44px;
+  min-width: 44px;
+  color: var(--stitch-text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+}
+.period-shortcuts button {
+  text-align: left;
+  justify-content: start;
+  flex-shrink: 0;
+  padding: 0 .65rem;
+}
+.period-dialog button[aria-pressed=true],.period-dialog button.primary {
+  color: var(--stitch-on-action);
+  background: var(--stitch-action);
+}
+.period-dialog button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+.period-dialog button:not(:disabled):hover {
+  outline: 1px solid currentColor;
+  outline-offset: -2px;
+}
+.period-scroll {
+  padding: .75rem;
+  position: relative;
+}
+.period-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.period-months {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: .5rem;
+}
+.period-month h3 {
+  font-size: .95rem;
+  text-align: center;
+  margin: .15rem 0 .5rem;
+  text-transform: capitalize;
+}
+.period-days {
+  display: grid;
+  grid-template-columns: repeat(7,minmax(0,1fr));
+  align-items: center;
+  text-align: center;
+}
+.period-days button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.period-days button[data-between] {
+  background: var(--stitch-surface-control);
+}
+.period-days button[aria-current=date] {
+  box-shadow: inset 0 -2px currentColor;
+}
+.period-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  margin-top: 1rem;
+}
+.period-inputs label {
+  display: grid;
+  gap: .25rem;
+}
+.period-inputs input {
+  min-width: 0;
+  width: 100%;
+  font-size: 16px;
+}
+.period-dialog footer {
+  padding: .75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  border-top: 1px solid var(--stitch-border-subtle);
+}
+.period-dialog footer div {
+  display: flex;
+  gap: .5rem;
+  flex-shrink: 0;
+}
+.period-dialog footer span {
+  font-size: .85rem;
+}
+.period-dialog footer button,.period-nav button {
+  border: 1px solid var(--stitch-border-subtle);
+}
+@media(max-width:850px) {
+  .period-dialog {
+    width: min(25rem,calc(100% - 8px));
+    max-height: calc(100dvh - 8px);
+  }
+  .period-body {
+    display: flex;
+    flex-direction: column;
+  }
+  .period-shortcuts {
+    flex-direction: row;
+    max-height: none;
+    flex-shrink: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--stitch-border-subtle);
+  }
+  .period-extra-month {
+    display: none;
+  }
+  .period-months {
+    grid-template-columns: 1fr;
+  }
+  .period-scroll {
+    padding: .5rem;
+  }
+  .period-dialog footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .period-dialog footer div {
+    justify-content: flex-end;
+  }
+}

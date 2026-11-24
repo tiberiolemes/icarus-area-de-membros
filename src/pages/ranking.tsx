@@ -2,15 +2,10 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Award, BookOpenCheck, Crown, Heart, MessageSquare, Reply, Timer, Trophy, UserRound } from "lucide-react";
 import { rpc } from "../api";
-import { Empty, Heading, Loading, NavigationTabs, Notice, Pager } from "../ui";
+import { Empty, Heading, Loading, Notice, Pager } from "../ui";
+import { periodArgs, ReportPeriodPicker, type ReportPeriod } from "../report-period";
 import "./ranking.css";
 
-const periods = [
-  { id: "current", label: "Mês atual" },
-  { id: "previous", label: "Mês anterior" },
-  { id: "overall", label: "Geral" },
-] as const;
-type Period = (typeof periods)[number]["id"];
 const actions = {
   post: { label: "Post aprovado", Icon: MessageSquare },
   reply: { label: "Resposta aprovada", Icon: Reply },
@@ -38,6 +33,7 @@ const number = new Intl.NumberFormat("pt-BR");
 const month = new Intl.DateTimeFormat("pt-BR", {
   month: "long", year: "numeric", timeZone: "America/Sao_Paulo",
 });
+const civilDate = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" });
 const pointsLabel = (points: number) => `${number.format(points)} ${points === 1 ? "ponto" : "pontos"}`;
 
 function Countdown({ endsAt, onEnd }: { endsAt: string; onEnd: () => void }) {
@@ -116,11 +112,11 @@ export function Ranking({ memberId }: { memberId: string }) {
   const rulesId = `ranking-regras-${useId()}`;
   const listHeading = useRef<HTMLHeadingElement>(null);
   const focusList = useRef(false);
-  const [selection, setSelection] = useState<{ period: Period; page: number }>({ period: "current", page: 1 });
+  const [selection, setSelection] = useState<{ period: ReportPeriod; page: number }>({ period: { id: "current" }, page: 1 });
   const { period, page } = selection;
   const query = useQuery({
     queryKey: ["app_ranking", memberId, period, page],
-    queryFn: () => rpc<RankingSnapshot>("app_ranking", { p_period: period, p_page: page }),
+    queryFn: () => rpc<RankingSnapshot>("app_ranking", { ...periodArgs(period), p_page: page }),
   });
   const data = query.data;
   useEffect(() => {
@@ -128,19 +124,21 @@ export function Ranking({ memberId }: { memberId: string }) {
     focusList.current = false;
     listHeading.current?.focus();
   }, [query.isSuccess, page]);
-  const monthLabel = data?.starts_at && month.format(new Date(data.starts_at));
-  const title = monthLabel ? `Ranking mensal · ${monthLabel}` : period === "overall" ? "Ranking geral" : "Ranking mensal";
+  const monthly = period.id === "current" || period.id === "previous";
+  const monthLabel = monthly && data?.starts_at && month.format(new Date(data.starts_at));
+  const title = monthLabel ? `Ranking mensal · ${monthLabel}` : period.id === "overall" ? "Ranking geral" : monthly ? "Ranking mensal" : "Ranking do período";
 
   return (
-    <div className="ranking-page" data-tour="ranking">
-      <Heading title={title} action={period === "current" && data?.ends_at
+    <div className="ranking-page">
+      <Heading title={title} action={period.id === "current" && data?.ends_at
         ? <Countdown endsAt={data.ends_at} onEnd={query.refetch} /> : undefined}>Classificação preliminar</Heading>
-      <NavigationTabs label="Período do ranking" selected={period} items={periods.map((item) => ({
-        ...item, onClick: () => {
-          focusList.current = false;
-          setSelection({ period: item.id, page: 1 });
-        },
-      }))} />
+      <ReportPeriodPicker tour="ranking" value={period} overall onChange={next => {
+        focusList.current = false;
+        setSelection({ period: next, page: 1 });
+      }} />
+      {!monthly && data?.starts_at && data.ends_at && <p role="status">
+        {civilDate.format(new Date(data.starts_at))} a {civilDate.format(new Date(Date.parse(data.ends_at) - 1))} · Horário de Brasília
+      </p>}
       {query.isPending && <Loading />}
       {query.isError && (
         <div>

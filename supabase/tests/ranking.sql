@@ -247,6 +247,11 @@ select pg_temp.ok((select jsonb_array_length(j->'items') = 1 and j->>'page' = '2
   and j->'items'->0 = '{"position":1,"points":8,"tied":true,"is_self":false}'
   and j->'own'->>'position' = '1'
   from (select public.app_ranking('current', 2) j) s), 'paginação estável e colocação própria fora da página');
+select pg_temp.ok((select j->'own'->>'points' = '8' and j->>'page' = '2'
+  from (select public.app_ranking('custom',2,(now() at time zone 'America/Sao_Paulo')::date,
+    (now() at time zone 'America/Sao_Paulo')::date) j) s), 'intervalo personalizado preserva pontos e paginação');
+select pg_temp.ok((public.app_ranking('custom',1,date '2001-01-01',date '2001-01-01')->'own'->>'status') = 'unranked',
+  'intervalo histórico exclui pontos recentes');
 reset role;
 
 insert into auth.users(id, email, email_confirmed_at, raw_app_meta_data)

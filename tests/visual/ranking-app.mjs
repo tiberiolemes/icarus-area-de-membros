@@ -57,7 +57,8 @@ async function open(browser, viewport, theme, role, failure = false) {
     assert.equal(url.pathname, "/rest/v1/rpc/app_ranking");
     assert.equal(request.method(), "POST");
     const { p_period, p_page, ...unexpected } = request.postDataJSON();
-    assert.deepEqual(unexpected, {});
+    if (p_period === "custom") assert.deepEqual(unexpected, { p_from: "2026-11-01", p_through: "2026-11-02" });
+    else assert.deepEqual(unexpected, {});
     calls.push([p_period, p_page]);
     if (failure) {
       failure = false;
@@ -131,16 +132,25 @@ try {
     await page.getByText("21 registros · página 2 de 2").waitFor();
     assert.equal(await page.locator("tbody tr").count(), 1);
     assert.equal(await page.evaluate(() => document.activeElement?.textContent), "Lista de classificação");
-    const previous = page.getByRole("button", { name: "Mês anterior" });
+    await page.getByRole("button", { name: "Período: Mês atual" }).click();
+    const previous = page.getByRole("button", { name: "Mês passado", exact: true });
     await previous.focus();
     await page.keyboard.press("Enter");
     await page.getByText("Você está sem colocação neste período.").waitFor();
-    assert.equal(await previous.getAttribute("aria-current"), "page");
-    await page.getByRole("button", { name: "Geral" }).click();
+    await page.getByRole("button", { name: "Período: Mês passado" }).click();
+    await page.getByRole("button", { name: "Todo o período", exact: true }).click();
     await page.getByRole("heading", { name: "Ranking geral" }).waitFor();
     await page.getByRole("link", { name: "Como pontuar" }).click();
     assert.equal(await page.evaluate(() => document.activeElement?.textContent), "Regras de pontuação");
-    assert.deepEqual(calls, [["current", 1], ["current", 1], ["current", 2], ["previous", 1], ["overall", 1]]);
+    await page.getByRole("button", { name: "Período: Todo o período" }).click();
+    await page.getByRole("button", { name: "01/11/2026" }).click();
+    assert.equal(await page.getByRole("button", { name: "Aplicar" }).isEnabled(), false);
+    await page.getByRole("button", { name: "02/11/2026" }).click();
+    await page.getByRole("button", { name: "Aplicar" }).click();
+    await page.getByRole("heading", { name: "Ranking do período" }).waitFor();
+    await page.getByText("4º lugar (empate) · 5 pontos").waitFor();
+    assert.equal(await page.getByText("Encerramento em").count(), 0);
+    assert.deepEqual(calls, [["current", 1], ["current", 1], ["current", 2], ["previous", 1], ["overall", 1], ["custom", 1]]);
     assert.deepEqual(errors, []);
   } finally { await member.context.close(); }
 

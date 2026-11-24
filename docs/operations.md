@@ -235,12 +235,12 @@ declare
   target_id constant uuid := '00000000-0000-0000-0000-000000000000';
   target_email constant text := 'responsavel@example.invalid';
 begin
-  lock table public.profiles in share row exclusive mode;
-  if exists (select 1 from public.profiles where role = 'admin') then
+  lock table public.ica_profiles in share row exclusive mode;
+  if exists (select 1 from public.ica_profiles where role = 'admin') then
     raise exception 'Já existe um administrador nesta instalação.';
   end if;
 
-  update public.profiles p
+  update public.ica_profiles p
      set role = 'admin'
     from auth.users u
    where u.id = target_id and p.id = u.id and lower(u.email) = lower(target_email)
@@ -249,14 +249,14 @@ begin
      and u.raw_app_meta_data @> '{"icarus_server_created": true, "icarus_password_setup_required": false}'::jsonb
      and not p.password_setup_required
      and exists (
-       select 1 from public.audit_events e
+       select 1 from public.ica_audit_events e
        where e.actor_id = p.id and e.target_id = p.id and e.target_type = 'profiles'
          and e.action = 'password-setup-complete'
      );
   if not found then
     raise exception 'Confirme UUID, e-mail, convite e primeira senha do titular.';
   end if;
-  perform app_private.audit(null, 'first-admin-bootstrap', 'profiles', target_id);
+  perform ica_private.audit(null, 'first-admin-bootstrap', 'profiles', target_id);
 end $$;
 ```
 
@@ -285,7 +285,7 @@ node scripts/backup.mjs dump
 node scripts/backup.mjs verify-restore
 ```
 
-O primeiro comando produz `.local/backups/icarus.dump`, `icarus-storage.tar.gz` e manifesto de hashes600. O dump preserva owners e ACLs (REVOKE/GRANT); não usar `--no-privileges` no dump ou restore. O segundo restaura SQL em banco novo isolado e binários em diretório temporário isolado, compara contagens/hashes SQL, conteúdo binário, owners, RLS, policies, default ACLs e privilégios efetivos de todas as funções/tabelas dos schemas public/app_private/auth/storage para anon/authenticated/service_role. Preserva a origem e remove somente os destinos QA criados. O teste negativo `verify-restore --omit-acl-negative` deve falhar mesmo com linhas/binários iguais, comprovando que a guarda detecta a perda de grants.
+O primeiro comando produz `.local/backups/icarus.dump`, `icarus-storage.tar.gz` e manifesto de hashes600. O dump preserva owners e ACLs (REVOKE/GRANT); não usar `--no-privileges` no dump ou restore. O segundo restaura SQL em banco novo isolado e binários em diretório temporário isolado, compara contagens/hashes SQL, conteúdo binário, owners, RLS, policies, default ACLs e privilégios efetivos de todas as funções/tabelas dos schemas public/ica_private/auth/storage para anon/authenticated/service_role. Preserva a origem e remove somente os destinos QA criados. O teste negativo `verify-restore --omit-acl-negative` deve falhar mesmo com linhas/binários iguais, comprovando que a guarda detecta a perda de grants.
 
 O pacote contém aplicação/Auth/Storage/extensions e histórico nativo quando existente; não inclui serviços externos nem configuração/roles do cluster Supabase. O restore exige cluster Supabase compatível, roles nativas já criadas e operador `supabase_admin` privilegiado para preservar ownership/ACL. Não substituir roles nem afrouxar default privileges para fazê-lo passar. Para servidor futuro, manter também uma cópia criptografada separada dos secrets/configs e executar o mesmo ensaio de restauração com imagens/roles compatíveis.
 

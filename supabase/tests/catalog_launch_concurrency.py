@@ -101,9 +101,9 @@ def race(holder_actor, holder_sql, waiter_actor, waiter_sql, finish="commit"):
 
 def assert_state(key, enrolled, sent):
     result = sql(f"""
-      select (select count(*) from app_private.catalog_launch_signups where launch_id='{key}'),
-             (select count(*) from public.notifications where event_key='catalog_launch' and source_id='{key}'),
-             (select released_at is not null from app_private.catalog_launches where id='{key}');
+      select (select count(*) from ica_private.catalog_launch_signups where launch_id='{key}'),
+             (select count(*) from public.ica_notifications where event_key='catalog_launch' and source_id='{key}'),
+             (select released_at is not null from ica_private.catalog_launches where id='{key}');
     """)
     assert result == f"{enrolled}|{sent}|t", result
 
@@ -119,9 +119,9 @@ def main():
     sql(f"""
       insert into auth.users(id,email,email_confirmed_at,raw_app_meta_data,raw_user_meta_data) values {users};
       insert into auth.sessions(id,user_id,created_at,updated_at,aal) values {sessions};
-      update public.profiles set role='instructor' where id in ('{uid(2)}','{uid(3)}');
-      insert into public.courses(id,slug,title,status,access_mode) values {courses};
-      insert into public.modules(id,course_id,slug,title) values
+      update public.ica_profiles set role='instructor' where id in ('{uid(2)}','{uid(3)}');
+      insert into public.ica_courses(id,slug,title,status,access_mode) values {courses};
+      insert into public.ica_modules(id,course_id,slug,title) values
        ('{uid(201)}','{uid(105)}','module-a','Módulo A'),
        ('{uid(202)}','{uid(106)}','module-b','Módulo B');
     """)
@@ -130,12 +130,12 @@ def main():
         column = "course_id" if entity == "courses" else "module_id"
         for n in numbers:
             call(2, f"select public.app_admin_save_catalog_launch('{entity}','{uid(n)}','Título','Resumo',null,true)")
-            keys[n] = sql(f"select id from app_private.catalog_launches where {column}='{uid(n)}';")
+            keys[n] = sql(f"select id from ica_private.catalog_launches where {column}='{uid(n)}';")
 
     with Session("profile-lock") as holder, Session("editor") as editor:
         holder.send(f"""begin;
-          select from public.profiles where id='{uid(2)}' for update;
-          select from public.courses where id='{uid(104)}' for update;
+          select from public.ica_profiles where id='{uid(2)}' for update;
+          select from public.ica_courses where id='{uid(104)}' for update;
           \\echo holding""")
         holder.wait("holding")
         editor.send(f"""begin; {actor(2)}
@@ -152,8 +152,8 @@ def main():
         holder.send("rollback;\n\\echo released")
         holder.wait("released")
     assert sql(f"""select title,enabled,
-      (select count(*) from public.audit_events where action='catalog_launch_update' and target_id='{uid(104)}')
-      from app_private.catalog_launches where id='{keys[104]}';""") == "Título|t|0"
+      (select count(*) from public.ica_audit_events where action='catalog_launch_update' and target_id='{uid(104)}')
+      from ica_private.catalog_launches where id='{keys[104]}';""") == "Título|t|0"
     print("perfil e recurso travados: a guarda retorna erro recuperável antes de editar ou auditar")
 
     race(1, subscribe(keys[101]), 2, status("courses", 101))

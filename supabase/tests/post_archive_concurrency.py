@@ -103,7 +103,7 @@ class RaceCheck:
                    "and coalesce((select lower(prosrc) like '%for key share nowait%' from pg_proc "
                    "where oid=to_regprocedure('public.app_archive_post(uuid,boolean)')),false) "
                    "and (select count(*)=2 from information_schema.columns where table_schema='public' "
-                   "and table_name='posts' and (column_name,data_type) in "
+                   "and table_name='ica_posts' and (column_name,data_type) in "
                    "(('archived_by','uuid'),('archive_source','text')))"), "schema_ready")
         users = ",".join(
             f"('{user}','archive-{self.tag}-{n}@example.test',now(),"
@@ -127,21 +127,21 @@ class RaceCheck:
         self.sql(f"""
           insert into auth.users(id,email,email_confirmed_at,raw_app_meta_data,raw_user_meta_data) values {users};
           set constraints all immediate;
-          update public.profiles set role='admin' where id='{self.users[1]}';
+          update public.ica_profiles set role='admin' where id='{self.users[1]}';
           insert into auth.sessions(id,user_id,created_at,updated_at,aal) values {sessions};
-          insert into public.app_sessions(id,user_id,expires_at) values {app_sessions};
-          insert into public.reauth_nonces(token_hash,actor_id,session_id,expires_at) values
+          insert into public.ica_app_sessions(id,user_id,expires_at) values {app_sessions};
+          insert into public.ica_reauth_nonces(token_hash,actor_id,session_id,expires_at) values
             (encode(extensions.digest('{self.nonces[0]}','sha256'),'hex'),'{self.users[1]}','{self.sids[2]}',now()+interval '5 minutes'),
             (encode(extensions.digest('{self.nonces[1]}','sha256'),'hex'),'{self.users[1]}','{self.sids[2]}',now()+interval '5 minutes');
-          insert into public.spaces(id,name,status,access_mode) values('{self.space}','DEMONSTRAÇÃO {self.tag}','published','members');
-          insert into public.posts(id,space_id,author_id,title,body,status) values {posts};
-          insert into public.replies(id,post_id,author_id,body,status) values {replies};
-          insert into public.votes(actor_id,post_id) values('{self.users[1]}','{self.posts[0]}');
-          insert into public.votes(actor_id,reply_id) values('{self.users[0]}','{self.replies[0]}');
-          insert into public.uploads(id,actor_id,kind,resource_id,post_id,path,file_name,content_type,size_bytes,state) values {uploads};
+          insert into public.ica_spaces(id,name,status,access_mode) values('{self.space}','DEMONSTRAÇÃO {self.tag}','published','members');
+          insert into public.ica_posts(id,space_id,author_id,title,body,status) values {posts};
+          insert into public.ica_replies(id,post_id,author_id,body,status) values {replies};
+          insert into public.ica_votes(actor_id,post_id) values('{self.users[1]}','{self.posts[0]}');
+          insert into public.ica_votes(actor_id,reply_id) values('{self.users[0]}','{self.replies[0]}');
+          insert into public.ica_uploads(id,actor_id,kind,resource_id,post_id,path,file_name,content_type,size_bytes,state) values {uploads};
           insert into storage.objects(bucket_id,name,metadata) select 'icarus-private',path,'{{"size":100,"mimetype":"image/png"}}'::jsonb
-            from public.uploads where id in ({quoted(self.uploads)});
-          update public.posts set image_path='{self.paths[0]}' where id='{self.posts[0]}'
+            from public.ica_uploads where id in ({quoted(self.uploads)});
+          update public.ica_posts set image_path='{self.paths[0]}' where id='{self.posts[0]}'
         """)
 
     def archive(self, index, archived=True):
@@ -184,15 +184,15 @@ class RaceCheck:
 
     def run(self):
         self.setup()
-        original = self.sql(f"select md5(row(id,space_id,author_id,title,body,image_path,created_at)::text) from public.posts where id='{self.posts[0]}'", readonly=True)
+        original = self.sql(f"select md5(row(id,space_id,author_id,title,body,image_path,created_at)::text) from public.ica_posts where id='{self.posts[0]}'", readonly=True)
         first, second = self.race(self.archive(0), self.archive(0))
         expected = {"id": self.posts[0], "status": "archived", "archived": True}
         self.check(first == second == expected, "duplicate_archive_results")
-        self.check(self.boolean(f"(select count(*)=1 from public.audit_events where target_type='posts' and target_id='{self.posts[0]}' and action='archive')"), "duplicate_audit_once")
-        self.check(original == self.sql(f"select md5(row(id,space_id,author_id,title,body,image_path,created_at)::text) from public.posts where id='{self.posts[0]}'", readonly=True), "duplicate_content_preserved")
-        self.check(self.boolean(f"(select count(*)=1 from public.replies where post_id='{self.posts[0]}') and "
-                               f"(select count(*)=1 from public.votes where post_id='{self.posts[0]}') and "
-                               f"(select count(*)=1 from public.votes where reply_id='{self.replies[0]}')"), "duplicate_relations_preserved")
+        self.check(self.boolean(f"(select count(*)=1 from public.ica_audit_events where target_type='posts' and target_id='{self.posts[0]}' and action='archive')"), "duplicate_audit_once")
+        self.check(original == self.sql(f"select md5(row(id,space_id,author_id,title,body,image_path,created_at)::text) from public.ica_posts where id='{self.posts[0]}'", readonly=True), "duplicate_content_preserved")
+        self.check(self.boolean(f"(select count(*)=1 from public.ica_replies where post_id='{self.posts[0]}') and "
+                               f"(select count(*)=1 from public.ica_votes where post_id='{self.posts[0]}') and "
+                               f"(select count(*)=1 from public.ica_votes where reply_id='{self.replies[0]}')"), "duplicate_relations_preserved")
         actions = [
             (1, f"public.app_reply('{self.posts[1]}','DEMONSTRAÇÃO resposta nova')", 2, False),
             (2, f"public.app_vote('reply','{self.replies[2]}')", 2, False),
@@ -202,24 +202,24 @@ class RaceCheck:
             result, _ = self.race(self.archive(index), operation, second_session=session,
                                   service_second=service, denied=True)
             self.check(result["status"] == "archived" and self.boolean(
-                f"(select status='archived' from public.posts where id='{self.posts[index]}') and "
-                f"(select count(*)=1 from public.replies where post_id='{self.posts[index]}') and "
-                f"not exists(select 1 from public.votes where reply_id='{self.replies[index]}') and "
-                f"not exists(select 1 from public.uploads where post_id='{self.posts[index]}')"), "archive_winner_no_interaction")
+                f"(select status='archived' from public.ica_posts where id='{self.posts[index]}') and "
+                f"(select count(*)=1 from public.ica_replies where post_id='{self.posts[index]}') and "
+                f"not exists(select 1 from public.ica_votes where reply_id='{self.replies[index]}') and "
+                f"not exists(select 1 from public.ica_uploads where post_id='{self.posts[index]}')"), "archive_winner_no_interaction")
         self.race(self.archive(4), self.finalize(1), service_second=True, denied=True)
-        self.check(self.boolean(f"(select status='archived' and image_path is null from public.posts where id='{self.posts[4]}') and "
-                               f"(select state='pending' from public.uploads where id='{self.uploads[1]}')"), "archive_winner_no_finalize")
+        self.check(self.boolean(f"(select status='archived' and image_path is null from public.ica_posts where id='{self.posts[4]}') and "
+                               f"(select state='pending' from public.ica_uploads where id='{self.uploads[1]}')"), "archive_winner_no_finalize")
         finalized, archived = self.race(self.finalize(2), self.archive(5), first_session=1,
                                         second_session=0, service_first=True)
         self.check(finalized["state"] == "ready" and archived["status"] == "archived" and self.boolean(
-            f"(select status='archived' and previous_status='pending' and image_path='{self.paths[2]}' from public.posts where id='{self.posts[5]}')"), "finalize_winner_previous_pending")
+            f"(select status='archived' and previous_status='pending' and image_path='{self.paths[2]}' from public.ica_posts where id='{self.posts[5]}')"), "finalize_winner_previous_pending")
         restore = Session(self, 0, False)
         try:
             restore.start(self.archive(5, False))
             result = restore.result()
             restore.commit()
             self.check(result["status"] == "pending" and not result["archived"] and self.boolean(
-                f"(select status='pending' from public.posts where id='{self.posts[5]}')"), "restore_not_approved")
+                f"(select status='pending' from public.ica_posts where id='{self.posts[5]}')"), "restore_not_approved")
         finally:
             restore.close()
         self.suspension_races()
@@ -233,7 +233,7 @@ class RaceCheck:
         try:
             # Force the old cycle: actor holds A's preexisting session, then admin
             # holds A's profile and waits on that session before archive continues.
-            author.send("reset role;select app_private.actor();set local role authenticated;\n\\echo actor_ready\n")
+            author.send("reset role;select ica_private.actor();set local role authenticated;\n\\echo actor_ready\n")
             self.check(author.until("actor_ready") == [self.users[0]], "author_session_locked")
             admin.start(suspend(self.nonces[0]))
             self.observe_wait(author, admin)
@@ -242,11 +242,11 @@ class RaceCheck:
             suspended = admin.result()
             admin.commit()
             self.check(suspended["suspended"] and self.boolean(
-                f"(select suspended from public.profiles where id='{self.users[0]}') and "
-                f"(select bool_and(revoked_at is not null) from public.app_sessions where user_id='{self.users[0]}') and "
-                f"(select status='approved' and archived_by is null from public.posts where id='{self.posts[6]}') and "
-                f"not exists(select 1 from public.audit_events where target_id='{self.posts[6]}') and "
-                f"(select count(*)=1 from public.audit_events where actor_id='{self.users[1]}' and target_id='{self.users[0]}' and action='member-change')"
+                f"(select suspended from public.ica_profiles where id='{self.users[0]}') and "
+                f"(select bool_and(revoked_at is not null) from public.ica_app_sessions where user_id='{self.users[0]}') and "
+                f"(select status='approved' and archived_by is null from public.ica_posts where id='{self.posts[6]}') and "
+                f"not exists(select 1 from public.ica_audit_events where target_id='{self.posts[6]}') and "
+                f"(select count(*)=1 from public.ica_audit_events where actor_id='{self.users[1]}' and target_id='{self.users[0]}' and action='member-change')"
             ), "nowait_releases_session_without_partial_archive")
             self.cases += 1
         finally:
@@ -254,8 +254,8 @@ class RaceCheck:
             author.close()
 
         # Reset only our fixture to stage the inverse order with its second nonce.
-        self.sql(f"update public.profiles set suspended=false where id='{self.users[0]}';"
-                 f"update public.app_sessions set revoked_at=null where user_id='{self.users[0]}'")
+        self.sql(f"update public.ica_profiles set suspended=false where id='{self.users[0]}';"
+                 f"update public.ica_app_sessions set revoked_at=null where user_id='{self.users[0]}'")
         author, admin = Session(self, 0, False), Session(self, 2, False)
         try:
             author.start(self.archive(7))
@@ -267,10 +267,10 @@ class RaceCheck:
             admin.commit()
             self.check(archived["status"] == "archived" and suspended["suspended"] and self.boolean(
                 f"(select status='archived' and archived_by='{self.users[0]}' and previous_status='approved' "
-                f"from public.posts where id='{self.posts[7]}') and "
-                f"(select bool_and(revoked_at is not null) from public.app_sessions where user_id='{self.users[0]}') and "
-                f"(select count(*)=1 from public.audit_events where target_id='{self.posts[7]}' and action='archive') and "
-                f"(select count(*)=2 from public.audit_events where actor_id='{self.users[1]}' and target_id='{self.users[0]}' and action='member-change')"
+                f"from public.ica_posts where id='{self.posts[7]}') and "
+                f"(select bool_and(revoked_at is not null) from public.ica_app_sessions where user_id='{self.users[0]}') and "
+                f"(select count(*)=1 from public.ica_audit_events where target_id='{self.posts[7]}' and action='archive') and "
+                f"(select count(*)=2 from public.ica_audit_events where actor_id='{self.users[1]}' and target_id='{self.users[0]}' and action='member-change')"
             ), "archive_then_suspension_complete")
             self.cases += 1
         finally:
@@ -284,11 +284,11 @@ class RaceCheck:
             return
         users, posts, replies, sids = map(quoted, [self.users, self.posts, self.replies, self.sids])
         relations = [f"select id from {table} where id in ({ids})" for table, ids in [
-            ("auth.users", users), ("public.profiles", users), ("auth.sessions", sids),
-            ("public.app_sessions", sids), ("public.posts", posts), ("public.replies", replies),
-            ("public.spaces", f"'{self.space}'"), ("public.uploads", quoted(self.uploads))]]
+            ("auth.users", users), ("public.ica_profiles", users), ("auth.sessions", sids),
+            ("public.ica_app_sessions", sids), ("public.ica_posts", posts), ("public.ica_replies", replies),
+            ("public.ica_spaces", f"'{self.space}'"), ("public.ica_uploads", quoted(self.uploads))]]
         relations += [f"select actor_id from {table} where actor_id in ({users})" for table in
-                      ["public.votes", "public.reports", "public.audit_events", "public.rate_limits", "public.uploads", "public.reauth_nonces", "public.moderation_events"]]
+                      ["public.ica_votes", "public.ica_reports", "public.ica_audit_events", "public.ica_rate_limits", "public.ica_uploads", "public.ica_reauth_nonces", "public.ica_moderation_events"]]
         relations += [f"select id from storage.objects where bucket_id='icarus-private' and name in ({quoted(self.paths)})"]
         empty = "not exists(" + " union all ".join(relations) + ")"
         owned = self.sql(f"select count(*) from auth.users where id in ({users}) and raw_app_meta_data->>'icarus_archive_race'='{self.tag}'", readonly=True)
@@ -302,27 +302,27 @@ class RaceCheck:
           do $$ begin
             if exists(select 1 from auth.users where id in ({users}) and
               (raw_app_meta_data->>'icarus_archive_race' is distinct from '{self.tag}' or email not like 'archive-{self.tag}-%@example.test'))
-              or exists(select 1 from public.spaces where id='{self.space}' and name<>'DEMONSTRAÇÃO {self.tag}')
-              or exists(select 1 from public.posts where id in ({posts}) and
+              or exists(select 1 from public.ica_spaces where id='{self.space}' and name<>'DEMONSTRAÇÃO {self.tag}')
+              or exists(select 1 from public.ica_posts where id in ({posts}) and
                 (author_id<>'{self.users[0]}' or space_id<>'{self.space}' or title<>'DEMONSTRAÇÃO {self.tag}'))
             then raise exception 'Fixture ownership mismatch';end if;
           end $$;
           -- Supabase protects direct deletes; scope its supported flag to our metadata-only fixtures.
           set local storage.allow_delete_query='true';
           delete from storage.objects where bucket_id='icarus-private' and name in ({quoted(self.paths)});
-          delete from public.votes where actor_id in ({users}) and (post_id in ({posts}) or reply_id in ({replies}));
-          delete from public.reports where actor_id in ({users}) and (post_id in ({posts}) or reply_id in ({replies}));
-          delete from public.moderation_events where actor_id in ({users}) and target_id in ({posts},{replies});
-          delete from public.audit_events where actor_id in ({users}) and target_id in ({posts},{replies},{users});
-          delete from public.uploads where actor_id='{self.users[0]}' and post_id in ({posts});
-          delete from public.replies where id in ({replies}) and author_id='{self.users[1]}' and post_id in ({posts});
-          delete from public.posts where id in ({posts}) and author_id='{self.users[0]}' and space_id='{self.space}';
-          delete from public.spaces where id='{self.space}' and name='DEMONSTRAÇÃO {self.tag}';
-          delete from public.rate_limits where actor_id in ({users});
-          delete from public.reauth_nonces where actor_id in ({users}) and session_id in ({sids});
-          delete from public.app_sessions where id in ({sids}) and user_id in ({users});
+          delete from public.ica_votes where actor_id in ({users}) and (post_id in ({posts}) or reply_id in ({replies}));
+          delete from public.ica_reports where actor_id in ({users}) and (post_id in ({posts}) or reply_id in ({replies}));
+          delete from public.ica_moderation_events where actor_id in ({users}) and target_id in ({posts},{replies});
+          delete from public.ica_audit_events where actor_id in ({users}) and target_id in ({posts},{replies},{users});
+          delete from public.ica_uploads where actor_id='{self.users[0]}' and post_id in ({posts});
+          delete from public.ica_replies where id in ({replies}) and author_id='{self.users[1]}' and post_id in ({posts});
+          delete from public.ica_posts where id in ({posts}) and author_id='{self.users[0]}' and space_id='{self.space}';
+          delete from public.ica_spaces where id='{self.space}' and name='DEMONSTRAÇÃO {self.tag}';
+          delete from public.ica_rate_limits where actor_id in ({users});
+          delete from public.ica_reauth_nonces where actor_id in ({users}) and session_id in ({sids});
+          delete from public.ica_app_sessions where id in ({sids}) and user_id in ({users});
           delete from auth.sessions where id in ({sids}) and user_id in ({users});
-          delete from public.profiles where id in ({users});
+          delete from public.ica_profiles where id in ({users});
           delete from auth.users where id in ({users}) and raw_app_meta_data->>'icarus_archive_race'='{self.tag}'
         """)
         self.check(self.boolean(empty), "cleanup_empty")

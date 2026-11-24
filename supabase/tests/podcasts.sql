@@ -39,8 +39,8 @@ insert into auth.users(id,email,email_confirmed_at,raw_app_meta_data,raw_user_me
 select pg_temp.uid(n), 'podcast-test-' || n || '@example.test', now(), '{"icarus_server_created":true}',
   jsonb_build_object('full_name','Demonstração ' || n) from generate_series(1,4) n;
 set constraints all immediate;
-update public.profiles set role = 'admin' where id = pg_temp.uid(1);
-update public.profiles set role = 'instructor' where id = pg_temp.uid(4);
+update public.ica_profiles set role = 'admin' where id = pg_temp.uid(1);
+update public.ica_profiles set role = 'instructor' where id = pg_temp.uid(4);
 insert into auth.mfa_factors(id,user_id,friendly_name,factor_type,status,created_at,updated_at)
 values(pg_temp.uid(21),pg_temp.uid(1),'Demonstração','totp','verified',now(),now());
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
@@ -59,7 +59,7 @@ select pg_temp.assert((
     and not has_table_privilege('authenticated', oid, 'SELECT, INSERT, UPDATE, DELETE')
     and not has_table_privilege('anon', oid, 'SELECT, INSERT, UPDATE, DELETE')
     and not has_table_privilege('service_role', oid, 'SELECT, INSERT, UPDATE, DELETE'))
-  from pg_class where relnamespace='public'::regnamespace and relname in ('podcast_episodes','podcast_watches')
+  from pg_class where relnamespace='public'::regnamespace and relname in ('ica_podcast_episodes','ica_podcast_watches')
 ), 'tabelas: RLS e acesso direto fechado');
 
 select pg_temp.login(1);
@@ -89,7 +89,7 @@ select pg_temp.denied($q$select pg_temp.save('00000000004','published',false,'[]
   'Episódio indisponível ou vídeo alterado. Cadastre outro episódio para usar um novo vídeo.', 'ID do vídeo imutável');
 reset role;
 
-insert into public.podcast_episodes (youtube_id, kind, title, description, published_at, status)
+insert into public.ica_podcast_episodes (youtube_id, kind, title, description, published_at, status)
 select 'paged_' || lpad(n::text,5,'0'), 'masterclass', 'Masterclass paginada ' || n, '', '2026-12-01T00:00:00Z'::timestamptz + make_interval(days=>n), 'published'
 from generate_series(1,21) n;
 
@@ -129,7 +129,7 @@ select pg_temp.login(1, 'aal1');
 select pg_temp.denied('select public.app_podcasts(p_admin=>true)', 'Confirme o segundo fator para continuar.', 'admin sem segundo fator negado');
 reset role;
 
-update public.app_sessions set revoked_at = now() where id = pg_temp.uid(12);
+update public.ica_app_sessions set revoked_at = now() where id = pg_temp.uid(12);
 select pg_temp.login(2);
 set local role authenticated;
 select pg_temp.denied('select public.app_podcasts()', 'Sessão expirada. Entre novamente.', 'sessão revogada negada');

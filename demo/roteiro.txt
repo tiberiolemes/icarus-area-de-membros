@@ -1,0 +1,6 @@
+Roteiro de curso · Demonstração Icarus
+
+1. Defina o resultado da trilha.
+2. Separe os conteúdos em módulos.
+3. Inclua uma atividade por objetivo.
+4. Revise cada aula como aluno.

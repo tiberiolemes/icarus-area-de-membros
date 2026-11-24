@@ -23,7 +23,7 @@ function loadPlayer() {
   if (!loaded)
     loaded = new Promise<void>((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = "/vendor/playerjs/player-0.1.0.min.js";
+      script.src = import.meta.env.BASE_URL + "vendor/playerjs/player-0.1.0.min.js";
       script.integrity = "sha256-SMT5kSicbUhP39YhtiLSMxeHqhWkOqJ6CBzahjZP2J4=";
       script.onload = () => {
         if (window.playerjs) {

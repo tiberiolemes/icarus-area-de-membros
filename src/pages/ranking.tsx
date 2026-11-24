@@ -103,7 +103,10 @@ function OwnStanding({ own, rulesId }: { own: OwnPlacement; rulesId: string }) {
           : own.status === "excluded" ? "A equipe fica fora da classificação."
           : "Você está sem colocação neste período."}</p>
       </div>
-      <a className="button" href={`#${rulesId}`}>Como pontuar</a>
+      <a className="button" href={`#${rulesId}`} onClick={(event) => {
+        event.preventDefault();
+        document.getElementById(rulesId)?.focus();
+      }}>Como pontuar</a>
     </section>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BadgeCheck, CircleAlert, Copy, Download, Hourglass, Image, ShieldCheck, UserRound } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useHref, useNavigate, useParams } from "react-router-dom";
 import { useRpc, date, rpc } from "../api";
 import type { Certificate, Course } from "../api";
 import { useAuth } from "../auth";
@@ -26,7 +26,7 @@ function CertificateDocument({ certificate }: { certificate: Certificate }) {
     <article className="certificate-document" data-tour="certificate">
       <header className="certificate-document-header">
         <span className="certificate-brand">
-          <img src="/brand/icarus-horizontal-preto.svg" alt="Icarus" width="244" height="64" />
+          <img src={import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg"} alt="Icarus" width="244" height="64" />
         </span>
         <span className="certificate-code">Código de verificação <code>{certificate.code}</code></span>
       </header>
@@ -58,20 +58,22 @@ function CertificateDocument({ certificate }: { certificate: Certificate }) {
 
 function CertificateActions({ certificate }: { certificate: Certificate }) {
   const [copied, setCopied] = useState(false);
+  const verifyHref = useHref(verificationPath(certificate.code));
+  const verificationUrl = new URL(verifyHref, window.location.href).href;
   return (
     <div className="certificate-actions">
       {!certificate.revoked_at && (
         <>
-          <Action primary run={() => exportCertificate(certificate, "pdf")}>
+          <Action primary run={() => exportCertificate(certificate, "pdf", verificationUrl)}>
             <Download size={18} aria-hidden="true" /> Baixar PDF
           </Action>
-          <Action run={() => exportCertificate(certificate, "png")}>
+          <Action run={() => exportCertificate(certificate, "png", verificationUrl)}>
             <Image size={18} aria-hidden="true" /> Baixar PNG
           </Action>
         </>
       )}
       <Action run={async () => {
-        await navigator.clipboard.writeText(window.location.origin + verificationPath(certificate.code));
+        await navigator.clipboard.writeText(verificationUrl);
         setCopied(true);
       }}>
         <Copy size={18} aria-hidden="true" /> Copiar link de verificação

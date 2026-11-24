@@ -1,25 +1,30 @@
 import { createClient } from "@supabase/supabase-js";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 
-const env = import.meta.env;
+const demo = import.meta.env.MODE === "demo" ? await import("../demo/transport") : null;
+export const demoAccounts = demo?.demoAccounts;
+const connectionUrl = demo?.url ?? (import.meta.env.MODE === "demo" ? undefined : import.meta.env.VITE_SUPABASE_URL);
+const connectionKey = demo?.key ?? (import.meta.env.MODE === "demo" ? undefined : import.meta.env.VITE_SUPABASE_ANON_KEY);
 export const isRecoveryLink =
   new URLSearchParams(location.hash.slice(1)).get("type") === "recovery";
 const configured = (() => {
   try {
-    if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY)
+    if (!connectionUrl || !connectionKey)
       throw new Error();
-    const url = new URL(env.VITE_SUPABASE_URL);
+    const url = new URL(connectionUrl);
     if (
       url.username ||
       url.password ||
       !["https:", "http:"].includes(url.protocol)
     )
       throw new Error();
-    return createClient(url.href, env.VITE_SUPABASE_ANON_KEY, {
+    return createClient(url.href, connectionKey, {
+      global: demo ? { fetch: demo.transport } : undefined,
       auth: {
         autoRefreshToken: false,
         persistSession: true,
-        detectSessionInUrl: true,
+        detectSessionInUrl: !demo,
+        ...(demo ? { storage: sessionStorage, storageKey: "icarus-static-demo-auth" } : {}),
       },
     });
   } catch {
@@ -32,8 +37,8 @@ export const configurationError = configured
   : "Conexão não configurada. Defina uma URL válida e a chave pública do Supabase para esta instalação.";
 export const cache = new QueryClient({
   defaultOptions: {
-    queries: { retry: false, staleTime: 15_000, refetchOnWindowFocus: false },
-    mutations: { retry: false },
+    queries: { retry: false, staleTime: 15_000, refetchOnWindowFocus: false, networkMode: demo ? "always" : "online" },
+    mutations: { retry: false, networkMode: demo ? "always" : "online" },
   },
 });
 export class AppError extends Error {
@@ -57,13 +62,13 @@ export async function signOut() {
   cache.clear();
 }
 export function uploadStorage(signal: AbortSignal) {
-  return createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+  return createClient(connectionUrl, connectionKey, {
     accessToken: async () => {
       const { data, error } = await client().auth.getSession();
       if (error) throw error;
       return data.session?.access_token ?? null;
     },
-    global: { fetch: (input, init) => fetch(input, { ...init, signal }) },
+    global: { fetch: (input, init) => (demo?.transport ?? fetch)(input, { ...init, signal }) },
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -172,6 +177,7 @@ export function safeUrl(value: unknown): string | undefined {
     const url = new URL(value, location.origin);
     if (
       url.protocol === "https:" ||
+      (demo && url.protocol === "blob:" && url.origin === location.origin) ||
       (url.protocol === "http:" &&
         ["127.0.0.1", "localhost"].includes(url.hostname))
     )

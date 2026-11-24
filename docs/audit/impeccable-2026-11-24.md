@@ -33,6 +33,6 @@ Revisão do Icarus com capturas em Chromium a 360 e 1280 px. O detector do Impec
 | Coerência da implementação | 3/4 | Mantidos componentes, tokens e os dois papéis simulados da demo. Inter, a área editável do editor rico e as amostras claro/escuro de marca são escolhas funcionais do produto. |
 | **Total** | **16/20** | Pontuação restrita à evidência desta rodada. |
 
-Passaram a compilação, os 256 testes de interface e a jornada de demonstração no Chrome com aluno, administrador e abertura offline. A revisão independente conferiu os atalhos de equipe, a cascata de estilos e a preservação dos controles de acesso. A demo fica versionada em [demo/index.html](../../demo/index.html) e deve acompanhar mudanças nos mesmos fluxos.
+Passaram a compilação, os 256 testes de interface e a jornada de demonstração no Chrome com aluno, administrador e abertura offline. A revisão independente conferiu os atalhos de equipe, a cascata de estilos e a preservação dos controles de acesso. A evidência desta linha se refere à versão de demonstração do PR #3. A [demonstração atual](../../README.md#demonstração-navegável) é compilada das telas da aplicação.
 
 O banco local forneceu conteúdo de demonstração e estados indisponíveis. A discussão sem publicação disponível e o pedido sem registro foram verificados nesse estado. Checkout e integrações externas foram vistos sem a configuração do provedor. A evidência cobre as rotas e os estados acima.

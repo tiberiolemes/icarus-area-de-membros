@@ -1,4 +1,8 @@
-# Ativar GitHub Actions
+# GitHub Actions
+
+[Publicar demo do Icarus](../../.github/workflows/demo-pages.yml) executa somente o build estático de demonstração. Alterações em código, dependências e assets da demo na `main` disparam a publicação no GitHub Pages. O arquivo `revisao.txt` identifica o commit publicado.
+
+## Verificação da plataforma
 
 O pipeline permanece como modelo em [verify.yml](verify.yml). A trilha nativa precisa de um runner com Docker dedicado para executar a instalação limpa no GitHub Actions.
 

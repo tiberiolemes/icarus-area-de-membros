@@ -299,7 +299,7 @@ export function Checkout() {
                 <Heading title="Sua assinatura" />
                 <Notice>
                   Nenhum plano ativo foi encontrado para este link.{" "}
-                  <Link to="/entrar">Voltar ao início</Link>
+                  <Link className="text-action" to="/entrar">Voltar ao início</Link>
                 </Notice>
               </>
             )}

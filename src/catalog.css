@@ -371,7 +371,7 @@
 .showcase .primary { color:var(--stitch-on-action); background:var(--stitch-action); }
 .showcase-tools { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:20px; }
 .showcase-filters, .showcase-search { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
-.showcase-filters button { min-height:44px; padding:0 10px; background:transparent; border-color:transparent; font-size:13px; }
+.showcase-filters button { min-height:44px; padding:0 10px; background:transparent; border-color:transparent; color:var(--stitch-text-primary); font-size:13px; }
 .showcase-filters [aria-pressed=true] { background:var(--stitch-action); color:var(--stitch-on-action); }
 .showcase-search .search { margin:0; width:min(100%,230px); }
 .showcase-search select { max-width:100%; width:auto; margin:0; font-size:16px; min-height:44px; }

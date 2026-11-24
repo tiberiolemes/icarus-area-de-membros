@@ -60,7 +60,7 @@
 .student-account > .tabs .button:not([aria-current]) {
   border-color: transparent;
   background: transparent;
-  color: var(--stitch-text-muted);
+  color: var(--stitch-text-secondary);
 }
 
 .student-account > .tabs .button:not([aria-current]):hover {

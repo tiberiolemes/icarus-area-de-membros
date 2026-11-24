@@ -387,6 +387,7 @@
   border-color: var(--stitch-border-control);
   border-radius: var(--stitch-radius-base);
   background: var(--stitch-surface-card);
+  color: var(--stitch-text-primary);
   line-height: var(--stitch-type-label-md-line);
 }
 
@@ -455,6 +456,16 @@
   border-color: var(--stitch-border-subtle);
   background: var(--stitch-surface-panel);
   color: var(--stitch-text-primary);
+}
+
+.admin-commercial .commercial-access > .notice {
+  border: 0;
+  background: transparent;
+  padding-inline: 0;
+}
+
+.admin-commercial > .empty {
+  padding-inline: var(--stitch-space-md);
 }
 
 .admin-commercial .notice[role="alert"] {

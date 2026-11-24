@@ -90,7 +90,10 @@
 }
 
 .admin-settings :where(button, .button):not(:where(.primary, .search button)):hover { background: var(--stitch-surface-hover); }
-.admin-settings .tabs .button { border-color: transparent; }
+.admin-settings .tabs .button {
+  border-color: transparent;
+  color: var(--stitch-text-heading);
+}
 .admin-settings .tabs .button:not([aria-current], :hover) { background: transparent; }
 .admin-settings .tabs .button[aria-current="page"] {
   border-color: var(--stitch-border-strong);

@@ -156,8 +156,7 @@ body:has(.support-page) {
   margin-bottom: 0;
 }
 
-.support-faq a,
-.support-attachment-hint {
+.support-faq a {
   background: var(--stitch-surface-panel);
   border: 1px solid var(--stitch-border-subtle);
   border-radius: var(--stitch-radius-md);
@@ -217,6 +216,7 @@ body:has(.support-page) {
   padding-inline: var(--stitch-space-sm);
   border-color: transparent;
   background: transparent;
+  color: var(--stitch-text-primary);
 }
 
 .support-page .support-member-filters button:hover,
@@ -326,10 +326,8 @@ body:has(.support-page) {
 }
 
 .support-conversation .thread article {
-  padding: var(--stitch-space-md);
-  background: var(--stitch-surface-panel);
-  border: 1px solid var(--stitch-border-subtle);
-  border-radius: var(--stitch-radius-md);
+  border-block-start-color: var(--stitch-border-subtle);
+  padding: var(--stitch-space-md) 0 0;
 }
 
 .support-conversation .thread .meta {

@@ -924,7 +924,10 @@
   text-transform: uppercase;
 }
 
-[data-theme="dark"] .stitch-module > summary small { line-height: 22px; }
+[data-theme="dark"] .stitch-module > summary small {
+  line-height: 22px;
+  color: var(--stitch-text-secondary);
+}
 
 .stitch-module[data-current="true"] > summary {
   border-block: 1px solid var(--lesson-line);

@@ -19,8 +19,8 @@ const steps = [
   },
   {
     target: "courses",
-    title: "Continue seu curso",
-    body: "Abra o destaque ou acesse um módulo na grade. A busca e a paginação consultam o catálogo. Depois da grade, procure Lançamento em breve e Próximos módulos. Use Quero ser avisado para receber o aviso no sino quando houver publicação.",
+    title: "Escolha um curso ou retome sua aula",
+    body: "Abra a aula pelo botão de iniciar ou continuar. Use a busca e os filtros para encontrar outro curso, ou abra a ementa para escolher entre as aulas.",
   },
   {
     target: "curriculum",
@@ -115,12 +115,12 @@ const steps = [
   {
     target: "ranking",
     title: "Consulte sua colocação",
-    body: "Escolha o período e veja seus pontos e posição. Use Como pontuar para ver as ações consideradas.",
+    body: "Use um atalho de período ou escolha Personalizado para consultar seus pontos e sua posição entre duas datas. Use Como pontuar para ver as ações consideradas.",
   },
   {
     target: "dashboard-periodo",
     title: "Escolha o período do Dashboard",
-    body: "Compare cadastros, pagamentos, aulas concluídas e tickets nos últimos 30 ou 90 dias ou no ano atual.",
+    body: "Use os atalhos de período ou selecione Personalizado. Escolha as duas datas e clique em Aplicar para consultar os indicadores do intervalo.",
   },
   {
     target: "analytics-curso",

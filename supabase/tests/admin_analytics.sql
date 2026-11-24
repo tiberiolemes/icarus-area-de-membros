@@ -149,16 +149,20 @@ from (values
   (2,133,300,pg_temp.from_30d()-interval '1 microsecond')
 ) x(member_id,lesson_id,position_seconds,completed);
 
-select pg_temp.ok((select count(*)=3 and bool_and(
+select pg_temp.ok((select count(*)=5 and bool_and(
  has_function_privilege('authenticated',signature,'EXECUTE')
  and not has_function_privilege('anon',signature,'EXECUTE')
  and not has_function_privilege('service_role',signature,'EXECUTE')
-) from unnest(array['public.app_admin_dashboard(text)','public.app_admin_analytics_courses(integer)',
+) from unnest(array['public.app_admin_dashboard(text)','public.app_admin_dashboard(text,date,date)','public.app_ranking(text,integer,date,date)','public.app_admin_analytics_courses(integer)',
  'public.app_admin_course_analytics(uuid,integer)']) signature), 'ACL exclusiva de authenticated');
 
+select pg_temp.ok((select bool_and(upper(span)-lower(span)=n)
+  from (values('today',1),('yesterday',1),('7d',7),('14d',14),('30d',30),('90d',90)) preset(id,n)
+  cross join lateral (select app_private.report_days(id,null,null) span) d), 'atalhos contam dias civis incluindo ambas as pontas');
 select pg_temp.ok(not exists (
   select from unnest(array['anon','authenticated','service_role']) role_name
   where has_function_privilege(role_name,'app_private.admin_reporting_actor()','EXECUTE')
+    or has_function_privilege(role_name,'app_private.report_days(text,date,date)','EXECUTE')
 ), 'helper privado sem execução explícita ou herdada');
 set local role anon;
 select pg_temp.denied('select public.app_admin_dashboard()','permission','anon recusado pelo dashboard');
@@ -213,6 +217,20 @@ insert into analytics_results values ('30d',public.app_admin_dashboard()),
   ('first',public.app_admin_course_analytics(pg_temp.id(100))),
   ('second',public.app_admin_course_analytics(pg_temp.id(100),2)),
   ('empty',public.app_admin_course_analytics(pg_temp.id(101)));
+-- The day just before the 30-day window contains events one microsecond before midnight in Brasília.
+insert into analytics_results values ('single_day',public.app_admin_dashboard('custom',
+  (pg_temp.from_30d() at time zone 'America/Sao_Paulo')::date-1,
+  (pg_temp.from_30d() at time zone 'America/Sao_Paulo')::date-1));
+select pg_temp.ok(pg_temp.result('single_day') @> '{"new_members":1,"completions":1,"acquisition":[{"new_members":1}]}'
+  and pg_temp.result('single_day')->'from_day'=pg_temp.result('single_day')->'through_day'
+  and (pg_temp.result('single_day')->>'revenue_cents')::int = 1234,
+  'janela histórica inclui o último microssegundo e exclui a meia-noite seguinte');
+select pg_temp.ok(public.app_admin_dashboard('current')->>'from_day'=to_char(now() at time zone 'America/Sao_Paulo','YYYY-MM-01'),
+  'mês atual desde o primeiro dia civil');
+select pg_temp.denied('select public.app_admin_dashboard(''custom'',''2024-02-02'',''2024-02-01'')','Período inválido.','datas invertidas');
+select pg_temp.denied('select public.app_admin_dashboard(''custom'',''2024-01-01'',null)','Período inválido.','data final ausente');
+select pg_temp.denied('select public.app_admin_dashboard(''custom'',''2024-01-01'',''infinity'')','Período inválido.','data futura');
+select pg_temp.denied('select public.app_admin_dashboard(''30d'',''2024-01-01'',''2024-01-31'')','Período inválido.','atalho não aceita datas externas');
 select pg_temp.ok(pg_temp.result('30d') @> '{"new_members":2,"first_activations":2,"revenue_cents":213000,"mrr_cents":36000,"renewals_due":1}',
   'vendas, bordas da janela, exclusões, sobreposição e antecipação');
 select pg_temp.ok(pg_temp.result('90d') @> '{"new_members":3,"first_activations":3,"revenue_cents":232234,"mrr_cents":36000,"renewals_due":1}',

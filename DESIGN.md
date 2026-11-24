@@ -4,6 +4,8 @@ O Stitch define o design system e a aparência das telas. Os cinco arquivos `DES
 
 O PRD, o [contrato](docs/CONTRACT.md) e a [análise de fluxos](docs/analysis/design.md) definem dados, acesso por papel e plano, estados da aplicação e persistência. Para aparência, as medidas dos guias e dos HTMLs substituem as propostas visuais anteriores da análise. O claro é inicial. A aplicação restaura a preferência salva por usuário e aplica `data-theme` na raiz.
 
+A vitrine em `/app/cursos` segue os exports `cursos_aprendizagem_vitrine_eficiente_tema_claro` e `cursos_aprendizagem_vitrine_eficiente_tema_escuro`. O destaque de retomada usa a última atividade elegível do aluno. Os cartões representam cursos e a ementa reúne os módulos.
+
 ## Tokens e migração
 
 [src/stitch-tokens.css](src/stitch-tokens.css) oferece `--stitch-*` em `:root` e as variantes em `[data-theme="dark"]`. O [CSS global](src/style.css) disponibiliza os tokens. Cada componente escolhe os tokens por função e aplica a variante da sua referência. Migrar o consumidor ao trabalhar na sua frente, conferindo as dependências e os estados nos dois temas. O arquivo anterior `public/brand/icarus-tokens.css` continua fornecendo `--ic-*` às telas e controles que ainda os usam. Substituições globais de `--ic-*` mudariam consumidores com composições próprias.

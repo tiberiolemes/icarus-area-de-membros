@@ -66,34 +66,6 @@
   outline-offset: var(--stitch-focus-offset);
 }
 
-.reports-periods {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--stitch-space-xs);
-  padding: var(--stitch-space-xs);
-  border-radius: var(--stitch-radius-base);
-  background: var(--stitch-surface-control);
-}
-
-.reports-periods button {
-  flex: 1 1 auto;
-  padding: var(--stitch-space-sm);
-  border: 0;
-  border-radius: var(--stitch-radius-6);
-  background: transparent;
-  color: var(--stitch-text-primary);
-  font-size: var(--stitch-type-label-md-size);
-}
-
-.reports-periods button:hover {
-  background: var(--stitch-surface-hover);
-}
-
-.reports-periods button[aria-pressed="true"] {
-  background: var(--stitch-action);
-  color: var(--stitch-on-action);
-}
-
 .admin-dashboard .reports-date {
   display: flex;
   align-items: center;
@@ -535,7 +507,7 @@
   }
 
   .admin-dashboard .page-heading > div:first-child,
-  .admin-dashboard .reports-periods {
+  .admin-dashboard #dashboard-periodo {
     flex-basis: 100%;
   }
 

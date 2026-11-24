@@ -416,7 +416,7 @@ describe("SDK e componentes do domínio com fetch controlado", () => {
   it("consulta busca e paginação no RPC real do SDK, sem lista de cursos fictícia", async () => {
     const fetcher = vi.fn(
       async (input: RequestInfo | URL, init?: RequestInit) => {
-        expect(String(input)).toContain("/rest/v1/rpc/app_catalog");
+        expect(String(input)).toContain("/rest/v1/rpc/app_catalog_showcase");
         const args = JSON.parse(String(init?.body));
         return json({
           items: args.p_query
@@ -424,6 +424,7 @@ describe("SDK e componentes do domínio com fetch controlado", () => {
                 {
                   id: "course",
                   slug: "curso-real",
+                  state: "ongoing", module_count: 1, target: null,
                   title: "Curso retornado pelo servidor",
                   description: "Descrição",
                   total_lessons: 2,

@@ -4,13 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { date, money, rpc } from "../api";
 import { Empty, Heading, QueryState } from "../ui";
+import { periodArgs, ReportPeriodPicker, type ReportPeriod } from "../report-period";
 import "./admin-analytics.css";
-
-const periods = [
-  ["30d", "Últimos 30 dias"],
-  ["90d", "Últimos 90 dias"],
-  ["year", "Ano atual"],
-] as const;
 
 type Acquisition = {
   starts_on: string;
@@ -98,8 +93,8 @@ function AcquisitionChart({ data }: { data: Dashboard }) {
 }
 
 export function AdminDashboard({ analyticsPath }: { analyticsPath: string }) {
-  const [period, setPeriod] = useState<(typeof periods)[number][0]>("30d");
-  const args = { p_period: period };
+  const [period, setPeriod] = useState<ReportPeriod>({ id: "current" });
+  const args = periodArgs(period);
   const query = useQuery({
     queryKey: ["app_admin_dashboard", args],
     queryFn: () => rpc<Dashboard>("app_admin_dashboard", args),
@@ -111,9 +106,8 @@ export function AdminDashboard({ analyticsPath }: { analyticsPath: string }) {
   return (
     <div className="admin-reports admin-dashboard">
       <Heading title="Dashboard Executivo & Métricas" action={
-        <div className="reports-periods" role="group" aria-label="Período do dashboard" id="dashboard-periodo" data-tour="dashboard-periodo">
-          {periods.map(([value, label]) => <button type="button" key={value} aria-pressed={period === value}
-            onClick={() => setPeriod(value)}>{label}</button>)}
+        <div id="dashboard-periodo">
+          <ReportPeriodPicker tour="dashboard-periodo" value={period} onChange={setPeriod} />
         </div>
       }>Receita, aprendizagem, comunidade e atendimento em uma visão consolidada.</Heading>
       <QueryState query={query}>
@@ -127,7 +121,7 @@ export function AdminDashboard({ analyticsPath }: { analyticsPath: string }) {
             <div><dt>Membros ativos <Users aria-hidden="true" /></dt><dd>Sem medição</dd><dd className="reports-note">Atividade geral em 7 e 30 dias</dd></div>
             <div><dt>Community → Pro <TrendingUp aria-hidden="true" /></dt><dd>Sem medição</dd><dd className="reports-note">Histórico de transições de plano indisponível</dd></div>
             <div><dt>Receita de pedidos <CreditCard aria-hidden="true" /></dt><dd className="reports-number reports-currency">{kpiMoney(data.revenue_cents)}</dd><dd className="reports-note">Pagos no período, com status pago</dd></div>
-            <div><dt>Vencimentos em 30 dias <Repeat2 aria-hidden="true" /></dt><dd className="reports-number">{numbers.format(data.renewals_due)}</dd><dd className="reports-note">Membros com acesso pago a vencer</dd></div>
+            <div><dt>Vencimentos em 30 dias <Repeat2 aria-hidden="true" /></dt><dd className="reports-number">{numbers.format(data.renewals_due)}</dd><dd className="reports-note">Membros com acesso pago a vencer nos próximos 30 dias a partir de hoje</dd></div>
           </dl>
           <div className="reports-overview">
             <AcquisitionChart data={data} />
@@ -135,8 +129,8 @@ export function AdminDashboard({ analyticsPath }: { analyticsPath: string }) {
               <h2>Progresso da aprendizagem</h2>
               <p><strong className="reports-large">{numbers.format(data.completions)}</strong> conclusões de aula no período</p>
               <dl className="reports-facts">
-                <div><dt>Membros com conclusão em 7 dias</dt><dd>{numbers.format(data.completing_members_7d)}</dd></div>
-                <div><dt>Membros com conclusão em 30 dias</dt><dd>{numbers.format(data.completing_members_30d)}</dd></div>
+                <div><dt>Membros com conclusão nos 7 dias até o fim do período</dt><dd>{numbers.format(data.completing_members_7d)}</dd></div>
+                <div><dt>Membros com conclusão nos 30 dias até o fim do período</dt><dd>{numbers.format(data.completing_members_30d)}</dd></div>
               </dl>
               <Link className="button reports-link" to={analyticsPath}>Analisar cursos <ArrowRight size={18} aria-hidden="true" /></Link>
             </section>

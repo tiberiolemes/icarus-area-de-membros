@@ -9,7 +9,7 @@ assert(process.argv[2], "Uso: node tests/visual/admin-reports.mjs DIRETORIO");
 const out = resolve(process.argv[2]);
 mkdirSync(out, { mode: 0o700 });
 const path = "/tests/fixtures/admin-reports.html";
-const periods = ["2026-10-26", "2026-11-02", "2026-11-09", "2026-11-16", "2026-11-23", "2026-11-25"];
+const periods = ["2026-11-01", "2026-11-06", "2026-11-11", "2026-11-16", "2026-11-21", "2026-11-25"];
 const courses = [
   { id: "10000000-0000-4000-8000-000000000001", title: "Demonstração · Fundamentos de aprendizagem" },
   { id: "10000000-0000-4000-8000-000000000002", title: "Demonstração · Curso sem progresso" },
@@ -20,7 +20,7 @@ const lessons = Array.from({ length: 21 }, (_, index) => ({
   duration_seconds: 256 + index * 30, registered: 72 - index, completed: 51 - index,
 }));
 const dashboard = {
-  from_day: "2026-10-26", through_day: "2026-11-24", observed_at: "2026-11-24T12:00:00Z",
+  from_day: "2026-11-01", through_day: "2026-11-24", observed_at: "2026-11-24T12:00:00Z",
   new_members: 206, first_activations: 31,
   revenue_cents: 1490000, mrr_cents: 550000, renewals_due: 13,
   completions: 191, completing_members_7d: 27, completing_members_30d: 58,
@@ -36,7 +36,8 @@ const dashboard = {
 
 function reply(name, args) {
   if (name === "app_admin_dashboard") {
-    assert(["30d", "90d", "year"].includes(args.p_period));
+    assert(["current", "90d", "year", "custom"].includes(args.p_period));
+    if (args.p_period === "custom") return { ...dashboard, from_day: args.p_from, through_day: args.p_through };
     return args.p_period === "90d"
       ? { ...dashboard, from_day: "2026-08-27", new_members: 0, first_activations: 0, revenue_cents: 0,
         acquisition: [], payments: [], first_response_seconds: null, answered_tickets: 0 } : dashboard;
@@ -68,7 +69,7 @@ const vite = await createServer({
 
 async function exercise(browser, view, theme, width) {
   const started = performance.now();
-  const viewport = { width, height: width === 360 ? 880 : 1024 };
+  const viewport = { width, height: width < 640 ? 880 : 1024 };
   const context = await browser.newContext({ ...browserContext, viewport, screen: viewport });
   const calls = [], errors = [], unexpected = [];
   let failNextDashboard = false;
@@ -92,6 +93,7 @@ async function exercise(browser, view, theme, width) {
     });
     const page = await context.newPage();
     page.on("pageerror", (error) => errors.push(error.message));
+    await page.clock.setFixedTime(new Date("2026-11-24T12:00:00Z"));
     await page.goto(origin + path + `?theme=${theme}&view=${view}`);
     const title = page.getByRole("heading", { level: 1 });
     const loaded = page.locator(".reports-kpis");
@@ -110,7 +112,7 @@ async function exercise(browser, view, theme, width) {
       return {
         document: [document.documentElement.scrollWidth, document.documentElement.scrollHeight],
         heading: rect("h1"), metrics: rect(".reports-kpis"), firstPanel: rect(".reports-panel"),
-        kpiColumns: getComputedStyle(document.querySelector(".reports-kpis")).gridTemplateColumns.split(" ").length,
+        kpiColumns: [...document.querySelectorAll(".reports-kpis > div")].filter(node => node.offsetTop === document.querySelector(".reports-kpis > div").offsetTop).length,
         font: getComputedStyle(document.querySelector("h1")).fontFamily,
         theme: document.documentElement.dataset.theme,
         controls: [...document.querySelectorAll(".admin-reports button, .admin-reports select, .admin-reports a, .admin-reports summary")]
@@ -120,7 +122,7 @@ async function exercise(browser, view, theme, width) {
       };
     });
     assert.equal(geometry.document[0], width);
-    assert.equal(geometry.kpiColumns, width === 360 ? 2 : 5);
+    assert.equal(geometry.kpiColumns, width < 640 ? 2 : 5);
     assert.equal(geometry.theme, theme);
     assert.match(geometry.font, /^Inter/);
     assert(geometry.controls.every((control) => control.width >= 44 && control.height >= 44), JSON.stringify(geometry.controls));
@@ -130,16 +132,31 @@ async function exercise(browser, view, theme, width) {
     if (view === "dashboard") {
       await page.getByText("Ver dados do gráfico").press("Enter");
       await page.getByRole("columnheader", { name: "Primeiras ativações" }).waitFor();
-      const next = page.getByRole("button", { name: "Últimos 90 dias" });
+      await page.getByRole("button", { name: "Período: Mês atual" }).press("Enter");
+      const next = page.getByRole("button", { name: "Últimos 90 dias", exact: true });
       failNextDashboard = true;
       await next.press("Enter");
       await page.getByRole("alert").getByText("Falha temporária da fixture.").waitFor();
-      assert.equal(await next.evaluate((node) => document.activeElement === node), true);
+      assert.equal(await page.getByRole("button", { name: "Período: Últimos 90 dias" }).evaluate((node) => document.activeElement === node), true);
       await page.getByRole("button", { name: "Tentar novamente" }).press("Enter");
       await page.getByText("Nenhum pedido pago no período.").waitFor();
       await page.getByText("Sem respostas", { exact: true }).waitFor();
-      assert.equal(await next.getAttribute("aria-pressed"), "true");
-      assert.deepEqual(calls.map((call) => call.args.p_period), ["30d", "90d", "90d"]);
+      assert.equal(await page.getByRole("button", { name: "Período: Últimos 90 dias" }).getAttribute("aria-expanded"), "false");
+      assert.deepEqual(calls.map((call) => call.args.p_period), ["current", "90d", "90d"]);
+      await page.getByRole("button", { name: "Período: Últimos 90 dias" }).press("Enter");
+      const dialog = page.getByRole("dialog");
+      await page.getByRole("button", { name: "Personalizado", exact: true }).click();
+      await dialog.getByLabel("Data inicial").fill("19112026");
+      await dialog.getByLabel("Data final").fill("21112026");
+      assert(await dialog.getByRole("status").innerText() === "19/11/2026 a 21/11/2026 · 3 dias");
+      assert.equal(await dialog.locator(".period-month:visible").count(), width < 640 ? 1 : 2);
+      const apply = dialog.getByRole("button", { name: "Aplicar" });
+      const bounds = await apply.boundingBox();
+      assert(bounds && bounds.y >= 0 && bounds.y + bounds.height <= viewport.height);
+      await page.screenshot({ path: join(out, base + "-periodo.png") });
+      await apply.press("Enter");
+      await page.getByText("19/11/2026 a 21/11/2026 · Horário de Brasília").waitFor();
+      assert.deepEqual(calls.at(-1).args, { p_period: "custom", p_from: "2026-11-19", p_through: "2026-11-21" });
       await page.getByRole("link", { name: "Analisar cursos" }).press("Enter");
       await page.getByRole("heading", { name: "Analytics de Aprendizagem & Funil de Retenção" }).waitFor();
     } else {
@@ -177,7 +194,7 @@ try {
   const measurements = [];
   for (const view of ["dashboard", "analytics"]) {
     for (const theme of ["dark", "light"]) {
-      for (const width of [1280, 360]) {
+      for (const width of (view === "dashboard" ? [1280, 390, 360] : [1280, 360])) {
         const measurement = await exercise(browser, view, theme, width);
         measurements.push(measurement);
         console.log(view, theme, width, measurement.durationMs + " ms", measurement.document);

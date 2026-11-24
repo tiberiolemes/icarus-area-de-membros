@@ -7,8 +7,8 @@ vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
 import { cache } from "./api";
-import type { Course, Lesson, Module, Page } from "./api";
-import { Catalog } from "./pages/learning";
+import type { Course } from "./api";
+import { Catalog, CoursePage } from "./pages/learning";
 import { RouteFocus } from "./ui";
 
 const course = (id: string, fields: Partial<Course> = {}): Course => ({
@@ -21,18 +21,13 @@ const course = (id: string, fields: Partial<Course> = {}): Course => ({
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "Content-Type": "application/json" },
 });
-function catalogFetch(items: Course[], total = items.length, modules: Module[] = []) {
+function catalogFetch(items: Course[], total = items.length, resume: object | null = null) {
   const requests: { p_query: string; p_page: number }[] = [];
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const args = JSON.parse(String(init?.body));
-    if (String(input).endsWith("/rpc/app_course")) {
-      const selected = items.find(item => item.slug === args.p_slug);
-      expect(selected).toBeDefined();
-      return json({ course: selected, modules });
-    }
-    expect(String(input)).toContain("/rest/v1/rpc/app_catalog");
-    requests.push(args);
-    return json({ items, total, page: args.p_page, page_size: 20 } satisfies Page<Course>);
+    expect(String(input)).toContain("/rest/v1/rpc/app_catalog_showcase");
+    requests.push({ p_query: args.p_query, p_page: args.p_page });
+    return json({ items, total, page: args.p_page, page_size: 20, resume, counts: {all: total, ongoing: 0, completed: 0, restricted: 0} });
   }));
   return requests;
 }
@@ -45,7 +40,7 @@ function mount(url = "/app/cursos", routeFocus = false) {
 beforeEach(() => { cache.clear(); localStorage.clear(); sessionStorage.clear(); vi.stubGlobal("scrollTo", vi.fn()); });
 afterEach(() => { cleanup(); cache.clear(); vi.unstubAllGlobals(); });
 
-describe("Catálogo real em fileiras", () => {
+describe("Vitrine de cursos", () => {
   it("preserva o foco na busca ao enviar e sincroniza o campo ao limpar", async () => {
     const requests = catalogFetch([]);
     mount("/app/cursos", true);
@@ -56,17 +51,17 @@ describe("Catálogo real em fileiras", () => {
     await waitFor(() => expect(requests.at(-1)).toEqual({ p_query: "sem resultado", p_page: 1 }));
     expect(screen.getByRole("searchbox")).toBe(input);
     expect(input).toHaveFocus();
-    fireEvent.click(await screen.findByRole("button", { name: "Limpar busca" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Limpar busca e filtros" }));
     await waitFor(() => expect(input).toHaveValue(""));
   });
   it("mantém busca/página no SDK, explicita o recorte e não busca outras páginas antecipadamente", async () => {
     const requests = catalogFetch([course("a"), course("b")], 45);
     mount("/app/cursos?q=gest%C3%A3o&page=2");
-    expect(await screen.findByText(/Exibindo 21–22 de 45 cursos/)).toHaveTextContent("página 2 de 3. Destaque e fileiras mostram somente os cursos desta página.");
+    expect(await screen.findByText(/45 registros · página 2 de 3/)).toBeInTheDocument();
     expect(requests).toEqual([{ p_query: "gestão", p_page: 2 }]);
     fireEvent.click(screen.getByRole("button", { name: "Próxima" }));
     await waitFor(() => expect(requests.at(-1)).toEqual({ p_query: "gestão", p_page: 3 }));
-    await screen.findByRole("heading", { name: "Curso a", level: 2 });
+    await screen.findByRole("heading", { name: "Curso a", level: 3 });
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "nova busca" } });
     fireEvent.submit(screen.getByRole("search"));
     await waitFor(() => expect(requests.at(-1)).toEqual({ p_query: "nova busca", p_page: 1 }));
@@ -91,7 +86,7 @@ describe("Catálogo real em fileiras", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Serviço temporariamente indisponível");
     expect(screen.getAllByRole("button", { name: "Tentar novamente" })).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
-    await screen.findByRole("heading", { name: "Curso recuperado", level: 2 });
+    await screen.findByRole("heading", { name: "Curso recuperado", level: 3 });
     expect(calls).toBe(2);
   });
 
@@ -104,16 +99,16 @@ describe("Catálogo real em fileiras", () => {
     await waitFor(() => expect(resolve).toBeTypeOf("function"));
     await act(async () => resolve(json({ items: [], total: 0, page: 1, page_size: 20 })));
     await screen.findByText("Nenhum curso publicado para seu perfil. Os cursos liberados aparecerão aqui.");
-    expect(screen.queryByRole("button", { name: "Limpar busca" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Limpar busca e filtros" })).not.toBeInTheDocument();
   });
 
   it("recupera busca sem resultados sem reload ou filtro fictício", async () => {
     const requests = catalogFetch([]);
     mount("/app/cursos?q=inexistente&page=2");
-    fireEvent.click(await screen.findByRole("button", { name: "Limpar busca" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Limpar busca e filtros" }));
     await waitFor(() => expect(requests.at(-1)).toEqual({ p_query: "", p_page: 1 }));
     expect(screen.getByRole("searchbox")).toHaveValue("");
-    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", {name: "Ordenar cursos"})).toHaveValue("recent");
   });
 
   it("oferece retornar à página1 quando o resultado existe em outra página", async () => {
@@ -123,93 +118,64 @@ describe("Catálogo real em fileiras", () => {
     await waitFor(() => expect(requests.at(-1)).toEqual({ p_query: "curso", p_page: 1 }));
   });
 
-  it("prefere andamento acessível real e não trata requisitos100% com bônus restante como retomada", async () => {
-    catalogFetch([
-      course("novo"),
-      course("principal", { completed_lessons: 2, progress_percent: 50 }),
-      course("bonus", { completed_lessons: 4, total_lessons: 6, progress_percent: 100 }),
-      course("andamento", { completed_lessons: 1, progress_percent: 0 }),
-    ]);
+  it("mantém todos os cursos na grade, omite módulos e aponta à aula liberada por ID", async () => {
+    const target = { id: "id2", title: "Aula duplicada", module_slug: "Módulo & atual", module_title: "Introdução", position_seconds: 614 };
+    const ongoing = { ...course("andamento"), state: "ongoing", module_count: 1, target };
+    const available = { ...course("novo"), state: "available", module_count: 1, target: { ...target, position_seconds: 0 } };
+    catalogFetch([available, ongoing], 2, ongoing);
     mount();
-    const hero = await screen.findByRole("region", { name: "Curso principal" });
-    expect(within(hero).getByText("2/8 aulas · 50%")).toBeInTheDocument();
-    expect(within(hero).getByRole("link", { name: "Continuar curso" })).toHaveAttribute("href", "/app/cursos/principal");
-    const ongoing = screen.getByRole("region", { name: "Continue aprendendo" });
-    expect(within(ongoing).getByRole("heading", { name: "Curso andamento" })).toBeInTheDocument();
-    expect(within(ongoing).queryByRole("heading", { name: "Curso bonus" })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("heading", { name: "Curso principal" })).toHaveLength(1);
+    const resume = await screen.findByRole("region", {name: "Continuar aprendendo"});
+    const direct = "/app/cursos/andamento/M%C3%B3dulo%20%26%20atual/~id2";
+    expect(within(resume).getByRole("link", { name: "Retomar aula (10:14)" })).toHaveAttribute("href", direct);
+    expect(screen.getByRole("link", { name: "Continuar curso" })).toHaveAttribute("href", direct);
+    expect(screen.getByRole("link", { name: "Começar curso" })).toHaveAttribute("href", direct.replace("andamento","novo"));
+    expect(screen.getAllByRole("article")).toHaveLength(2);
+    expect(screen.queryByRole("heading", {name: "Módulos do curso"})).not.toBeInTheDocument();
   });
 
-  it("mantém curso negado visível com Consultar acesso, sem conceder retomada", async () => {
-    const requests = catalogFetch([course("negado", { can_access: false, completed_lessons: 2, progress_percent: 50 }), course("liberado")]);
-    mount();
-    await screen.findByRole("region", { name: "Curso liberado" });
-    expect(screen.getByRole("link", { name: "Consultar acesso" })).toHaveAttribute("href", "/app/cursos/negado");
-    expect(screen.queryByRole("link", { name: "Continuar curso" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("link", { name: "Consultar acesso" }));
-    expect(await screen.findByRole("heading", { name: "Detalhes reais do curso" })).toBeInTheDocument();
-    expect(requests).toHaveLength(1);
+  it("abre o módulo indicado na ementa, mostra o progresso curricular e mantém o destino de prévia", async () => {
+    const lesson = {id:"l1",title:"Aula de prévia",duration_seconds:90,can_access:true,is_preview:true};
+    const item = course("ementa", {total_lessons:2, completed_lessons:1, required_lessons:0, progress_percent:0});
+    const modules = ["primeiro","segundo"].map((slug,i) => ({
+      slug, id:slug, title:slug, can_access:i === 0,
+      sections:[{id:"s"+i,title:"Conteúdo",lessons:[{...lesson,id:"l"+i}]}],
+    }));
+    vi.stubGlobal("fetch", vi.fn(async () => json({course:item,modules})));
+    render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={["/app/cursos/ementa?modulo=segundo"]}>
+      <Routes><Route path="/app/cursos/:curso" element={<CoursePage />} /></Routes>
+    </MemoryRouter></QueryClientProvider>);
+    await screen.findByRole("heading", {name:"Curso ementa"});
+    expect(screen.getByRole("progressbar", {name:"50% concluído"})).toHaveValue(50);
+    expect(screen.getByText("primeiro").closest("details")).not.toHaveAttribute("open");
+    const expanded = screen.getByText("segundo").closest("details")!;
+    expect(expanded).toHaveAttribute("open");
+    expect(within(expanded).getByRole("link", {name:/Aula de prévia/})).toHaveAttribute("href", "/app/cursos/ementa/segundo/~l1");
   });
 
-  it("usa os módulos do RPC e retoma a primeira aula pendente que o servidor libera", async () => {
-    const featured = course("curso-real", { completed_lessons: 1, progress_percent: 25 });
-    const lesson = (id: string, fields: Partial<Lesson> = {}): Lesson => ({
-      id, slug: id, title: id, type: "video", duration_seconds: 120,
-      order_index: 0, can_access: true, completed: false, ...fields,
-    });
-    const module = (slug: string, can_access: boolean, lessons: Lesson[]): Module => ({
-      id: slug, slug, title: slug, order_index: 0, can_access,
-      sections: lessons.map((item, order_index) => ({
-        id: item.id, title: item.title, order_index, is_bonus: false, lessons: [item],
-      })),
-    });
-    catalogFetch([featured], 1, [
-      module("Restrito", false, [lesson("oculta")]),
-      module("Concluído", true, [lesson("finalizada", { completed: true })]),
-      module("Módulo & atual", true, [
-        lesson("vista", { slug: "mesma-aula", completed: true }),
-        lesson("ff9bd951-cfc7-4722-aeaf-c29bcec9b84b", { slug: "mesma-aula", title: "próxima #1" }),
-      ]),
-    ]);
+  it("oferece somente a consulta de acesso ao curso restrito", async () => {
+    catalogFetch([course("negado", {can_access: false})]);
     mount();
-    const grid = await screen.findByRole("region", { name: "Módulos do curso" });
-    expect(within(grid).getByText("2 de 3 com acesso liberado")).toBeInTheDocument();
-    expect(within(grid).getByText("Bloqueado")).toBeInTheDocument();
-    expect(within(grid).getByRole("progressbar", { name: "100% concluído" })).toHaveAttribute("value", "100");
-    expect(within(grid).getByRole("link", { name: "Consultar assinatura" })).toHaveAttribute("href", "/app/configuracoes?aba=assinatura");
-    expect(within(grid).getByRole("progressbar", { name: "50% concluído" })).toHaveAttribute("value", "50");
-    expect(within(grid).getByText("2 aulas · 4 min")).toBeInTheDocument();
-    const hero = screen.getByRole("region", { name: "Curso curso-real" });
-    expect(within(hero).getByText("Próxima aula:").parentElement).toHaveTextContent("Próxima aula: próxima #1");
-    expect(within(hero).queryByText("oculta")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Continuar curso" })).toHaveAttribute("href", "/app/cursos/curso-real/M%C3%B3dulo%20%26%20atual/~ff9bd951-cfc7-4722-aeaf-c29bcec9b84b");
-    expect(within(grid).getAllByRole("link", { name: /^Retomar aula/ })).toHaveLength(1);
-    expect(within(grid).getByRole("link", { name: "Retomar aula próxima #1" })).toHaveAttribute("href", "/app/cursos/curso-real/M%C3%B3dulo%20%26%20atual/~ff9bd951-cfc7-4722-aeaf-c29bcec9b84b");
+    fireEvent.click(await screen.findByRole("link", {name: "Consultar acesso"}));
+    expect(await screen.findByRole("heading", {name: "Detalhes reais do curso"})).toBeInTheDocument();
   });
 
-  it("oferece consulta à assinatura quando há módulos restritos e respeita o acesso da próxima aula", async () => {
-    const featured = course("parcial", { completed_lessons: 1, progress_percent: 25 });
-    const watched: Lesson = { id: "vista", slug: "vista", title: "Vista", type: "video", duration_seconds: 120,
-      order_index: 0, can_access: true, completed: true };
-    catalogFetch([featured], 1, [{
-      id: "parcial", slug: "parcial", title: "Módulo parcial", order_index: 0, can_access: true,
-      sections: [{ id: "s", title: "Aulas", order_index: 0, is_bonus: false, lessons: [
-        watched, { ...watched, id: "restrita", slug: "restrita", title: "Aula restrita", can_access: false, completed: false },
-      ] }],
-    }, { id: "fechado", slug: "fechado", title: "Módulo restrito", order_index: 1, can_access: false, sections: [] }]);
-    mount();
-    expect(await screen.findByRole("link", { name: "Ver assinatura" })).toHaveAttribute("href", "/app/configuracoes?aba=assinatura");
-    expect(screen.getByRole("link", { name: "Continuar curso" })).toHaveAttribute("href", "/app/cursos/parcial");
-    expect(screen.queryByRole("link", { name: /^Retomar aula/ })).not.toBeInTheDocument();
+  it("filtra e ordena no servidor desde a primeira página e preserva a busca", async () => {
+    catalogFetch([]);
+    mount("/app/cursos?q=marketing&page=3");
+    fireEvent.click(screen.getByRole("button", {name: /^Em andamento/}));
+    fireEvent.change(screen.getByRole("combobox"), {target: {value: "progress"}});
+    await waitFor(() => expect(fetch).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({
+      body: JSON.stringify({p_query:"marketing",p_page:1,p_filter:"ongoing",p_sort:"progress"})
+    })));
   });
-
   it("usa fallback com título real, escapa conteúdo malicioso e codifica slug como segmento", async () => {
     const title = '<img src=x onerror="alert(1)">Título';
     catalogFetch([course("seguro", { title, slug: "a/b?x=#fim", description: "<script>alert(1)</script><p>Texto seguro</p>" })]);
     const { container } = mount();
     await screen.findByRole("heading", { name: title });
     expect(container.querySelector("img,script")).toBeNull();
-    expect(screen.getByRole("link", { name: "Conhecer curso" })).toHaveAttribute("href", "/app/cursos/a%2Fb%3Fx%3D%23fim");
+    expect(screen.getByText("Sem aula disponível")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ver ementa" })).toHaveAttribute("href", "/app/cursos/a%2Fb%3Fx%3D%23fim");
     expect(container.querySelector(".catalog-cover-title")).toHaveTextContent(title);
     expect(container.querySelector(".catalog-description")).toHaveTextContent("Texto seguro");
   });
@@ -217,7 +183,7 @@ describe("Catálogo real em fileiras", () => {
   it("pede a capa pelo PrivateImage real e nunca usa cover_url como src", async () => {
     const mediaCalls: unknown[] = [];
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      if (String(input).includes("/rest/v1/rpc/app_catalog")) return json({ items: [course("privado", { cover_url: "javascript:raw-cover" })], total: 1, page: 1, page_size: 20 });
+      if (String(input).includes("/rest/v1/rpc/app_catalog")) return json({ items: [{ ...course("privado"), has_cover:true }], total: 1, page: 1, page_size: 20 });
       if (String(input).endsWith("/rpc/app_course")) return json({ course: course("privado", { cover_url: "javascript:raw-cover" }), modules: [] });
       expect(String(input)).toContain("/functions/v1/media");
       mediaCalls.push(JSON.parse(String(init?.body)));
@@ -229,29 +195,4 @@ describe("Catálogo real em fileiras", () => {
     expect(container.innerHTML).not.toContain("javascript:raw-cover");
   });
 
-  it("atualiza setas pelos limites do trilho e resize sem depender de layout JSDOM", async () => {
-    catalogFetch([course("hero"), course("a"), course("b"), course("c")]);
-    mount();
-    const track = await screen.findByRole("region", { name: "Explore os cursos: fileira horizontal" });
-    let width = 320;
-    Object.defineProperties(track, { clientWidth: { get: () => width }, scrollWidth: { get: () => 900 } });
-    const scrollBy = vi.fn((options: ScrollToOptions) => { track.scrollLeft += Number(options.left); fireEvent.scroll(track); });
-    Object.defineProperty(track, "scrollBy", { value: scrollBy, configurable: true });
-    fireEvent(window, new Event("resize"));
-    const next = screen.getByRole("button", { name: "Próximos cursos: Explore os cursos" });
-    const previous = screen.getByRole("button", { name: "Cursos anteriores: Explore os cursos" });
-    expect(previous).toBeDisabled();
-    expect(next).toBeEnabled();
-    fireEvent.click(next);
-    expect(scrollBy).toHaveBeenCalledWith({ left: 272, behavior: "smooth" });
-    expect(previous).toBeEnabled();
-    track.scrollLeft = 580;
-    fireEvent.scroll(track);
-    expect(next).toBeDisabled();
-    width = 1000; track.scrollLeft = 0;
-    fireEvent(window, new Event("resize"));
-    expect(previous).toBeDisabled();
-    expect(next).toBeDisabled();
-    expect(next).toBeInTheDocument();
-  });
 });

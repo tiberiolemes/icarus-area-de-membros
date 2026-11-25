@@ -471,6 +471,7 @@ Deno.test("imageSize lê as dimensões do cabeçalho PNG e WebP", () => {
   equal(imageSize("image/webp", webpLogo("VP8L", 962, 242)), { width: 962, height: 242 });
   equal(imageSize("image/webp", webpLogo("VP8X", 4096, 1024)), { width: 4096, height: 1024 });
   equal(imageSize("image/png", pngLogo(960, 240).slice(0, 20)), null);
+  equal(imageSize("image/webp", webpLogo("VP8X", 960, 240).slice(0, 30)), null);
   equal(imageSize("image/jpeg", new Uint8Array(64)), null);
 });
 Deno.test("logo recusa tipo, tamanho, dimensões e variante antes do banco e do Storage", async () => {
@@ -484,6 +485,7 @@ Deno.test("logo recusa tipo, tamanho, dimensões e variante antes do banco e do 
     [new File([pngLogo(240, 59)], "logo.png", { type: "image/png" }), "light"],
     [new File([pngLogo(4097, 100)], "logo.png", { type: "image/png" }), "light"],
     [new File([pngLogo(960, 240)], "logo.png", { type: "image/png" }), "sepia"],
+    [new File([webpLogo("VP8X", 960, 240).slice(0, 30)], "curta.webp", { type: "image/webp" }), "light"],
   ] as const) {
     const { d, requests } = brandDeps();
     equal((await sendLogo(d, file, variant)).status, 422);

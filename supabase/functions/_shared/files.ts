@@ -16,7 +16,7 @@ export function matchesSignature(mime: string, bytes: Uint8Array) {
   if (mime === "text/plain") return bytes.length > 0 && bytes.every((b) => b >= 32 || [9, 10, 13].includes(b));
   return false;
 }
-/** Dimensões lidas do cabeçalho (PNG IHDR; WebP VP8, VP8L ou VP8X), sem decodificar a imagem. Precisa dos 30 primeiros bytes. */
+/** Dimensões lidas do cabeçalho (PNG IHDR; WebP VP8, VP8L ou VP8X), sem decodificar a imagem. Precisa dos 30 primeiros bytes (31 no VP8X). */
 export function imageSize(mime: string, bytes: Uint8Array): { width: number; height: number } | null {
   if (bytes.length < 30) return null;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength), chunk = new TextDecoder().decode(bytes.slice(12, 16));
@@ -24,6 +24,7 @@ export function imageSize(mime: string, bytes: Uint8Array): { width: number; hei
   if (mime !== "image/webp") return null;
   if (chunk === "VP8 " && bytes[23] === 0x9d && bytes[24] === 0x01 && bytes[25] === 0x2a) return { width: view.getUint16(26, true) & 0x3fff, height: view.getUint16(28, true) & 0x3fff };
   if (chunk === "VP8L" && bytes[20] === 0x2f) { const bits = view.getUint32(21, true); return { width: (bits & 0x3fff) + 1, height: ((bits >>> 14) & 0x3fff) + 1 }; }
-  if (chunk === "VP8X") return { width: (view.getUint32(24, true) & 0xffffff) + 1, height: (view.getUint32(27, true) & 0xffffff) + 1 };
+  // A altura do VP8X é lida com getUint32 a partir do byte 27, então precisa de 31 bytes.
+  if (chunk === "VP8X") return bytes.length < 31 ? null : { width: (view.getUint32(24, true) & 0xffffff) + 1, height: (view.getUint32(27, true) & 0xffffff) + 1 };
   return null;
 }

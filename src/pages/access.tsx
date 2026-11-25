@@ -27,6 +27,7 @@ import {
   Loading,
   Notice,
   QueryState,
+  RouteFocus,
   value,
 } from "../ui";
 
@@ -60,6 +61,7 @@ export function PublicFrame({ children }: { children: React.ReactNode }) {
         {readModules(context.data?.modules).help && <Link to="/ajuda">Central de ajuda</Link>}
       </header>
       <main id="main" className="public-main">
+        <RouteFocus name={name} />
         {children}
       </main>
       <footer>

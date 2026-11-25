@@ -512,7 +512,7 @@ export function Action({
   );
 }
 const scrollPositions = new Map<string, number>();
-export function RouteFocus() {
+export function RouteFocus({ name = "Icarus" }: { name?: string }) {
   const { pathname, search, key, state } = useLocation(),
     navigation = useNavigationType();
   const previousPath = useRef(pathname);
@@ -525,6 +525,8 @@ export function RouteFocus() {
       const content = document.getElementById("main") ?? document.body;
       function focusHeading() {
         const heading = content.querySelector<HTMLElement>("h1");
+        // Cada tela ganha título próprio (WCAG 2.4.2): o H1 que recebe o foco e o nome da instalação.
+        if (heading?.textContent) document.title = `${heading.textContent.trim()} · ${name}`;
         heading?.focus({ preventScroll: true });
         return heading === document.activeElement;
       }

@@ -49,3 +49,22 @@ it("abandona o foco tardio se a pessoa já seguiu para outro controle", async ()
   expect(input).toHaveFocus();
   expect(input).toHaveValue("Continuo escrevendo");
 });
+
+it("dá a cada tela o título do H1 com o nome da instalação", async () => {
+  vi.stubGlobal("scrollTo", vi.fn());
+  render(
+    <MemoryRouter>
+      <main id="main">
+        <RouteFocus name="Escola Demo" />
+        <Routes>
+          <Route path="/" element={<><h1 tabIndex={-1}>Entre na sua área</h1><Link to="/cadastro">Criar conta</Link></>} />
+          <Route path="/cadastro" element={<h1 tabIndex={-1}>Crie sua conta</h1>} />
+        </Routes>
+      </main>
+    </MemoryRouter>,
+  );
+  await waitFor(() => expect(document.title).toBe("Entre na sua área · Escola Demo"));
+  fireEvent.click(screen.getByRole("link", { name: "Criar conta" }));
+  await waitFor(() => expect(document.title).toBe("Crie sua conta · Escola Demo"));
+  expect(screen.getByRole("heading", { name: "Crie sua conta" })).toHaveFocus();
+});

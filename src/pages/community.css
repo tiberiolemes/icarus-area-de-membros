@@ -1086,6 +1086,8 @@
 
   [data-theme="dark"] .community-feed .community-preview-tags {
     grid-area: 1 / 3;
+    /* Largura para uma palavra inteira do selo sem espremer o nome do autor. */
+    max-inline-size: 40vw;
     justify-content: end;
     align-self: center;
   }

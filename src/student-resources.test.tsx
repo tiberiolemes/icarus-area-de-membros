@@ -121,6 +121,14 @@ it("o certificado mostra a assinatura da emissão e o nome da instalação como 
   await waitFor(() => expect(screen.getByText("Emitido por").nextElementSibling).toHaveTextContent("Academia de teste"));
 });
 
+it("a verificação pública não carrega a URL externa de assinatura de certificados antigos", async () => {
+  vi.stubGlobal("fetch", async (url: RequestInfo | URL) =>
+    String(url).endsWith("/app_public_context") ? json({ name: "Icarus" }) : json({ ...certificate, signer_name: "Pessoa Responsável", signature_url: "https://externo.example/rubrica.png" }));
+  mount("/verificar/" + validCode);
+  expect(await screen.findByText("Pessoa Responsável")).toBeInTheDocument();
+  expect(screen.queryByRole("img", { name: "Assinatura de Pessoa Responsável" })).not.toBeInTheDocument();
+});
+
 it("revalida o código atual e distingue falha de consulta de revogação", async () => {
   const request = vi.fn()
     .mockImplementationOnce(async () => json(certificate))

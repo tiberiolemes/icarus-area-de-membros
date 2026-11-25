@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BadgeCheck, CircleAlert, Copy, Download, Hourglass, Image, ShieldCheck, UserRound } from "lucide-react";
 import { Link, useHref, useNavigate, useParams } from "react-router-dom";
-import { useRpc, date, rpc, safeUrl } from "../api";
+import { useRpc, date, rpc } from "../api";
 import type { Certificate, Course } from "../api";
 import { useAuth } from "../auth";
 import { Action, Empty, Field, Form, Heading, Notice, Progress, QueryState, value } from "../ui";
@@ -26,8 +26,8 @@ type PublicBrand = { name?: string; logo_light?: string | null; logo_dark?: stri
 
 function CertificateDocument({ certificate }: { certificate: Certificate }) {
   const brand = useRpc<PublicBrand>("app_public_context").data;
-  // A assinatura é a da emissão: o caminho enviado ou, em certificados antigos, a URL cadastrada no curso.
-  const signature = brandAssetUrl(certificate.signature_path) ?? safeUrl(certificate.signature_url);
+  // Só a assinatura enviada ao bucket de marca: a URL externa de certificados antigos não é carregada na página pública.
+  const signature = brandAssetUrl(certificate.signature_path);
   return (
     <article className="certificate-document" data-tour="certificate">
       <header className="certificate-document-header">

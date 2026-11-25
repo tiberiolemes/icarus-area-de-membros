@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   cache,
@@ -19,8 +19,8 @@ import {
   signOut,
 } from "./api";
 import type { Bootstrap } from "./api";
-import { Action, Loading, Notice } from "./ui";
-import { PasswordSetup } from "./pages/access";
+import { Action, Heading, Loading, Notice } from "./ui";
+import { PasswordSetup, PublicFrame } from "./pages/access";
 const AuthContext = createContext<{
   session: Session | null;
   loading: boolean;
@@ -97,39 +97,27 @@ export function Gate({
       />
     );
   if (boot.isPending) return <Loading />;
-  if (boot.error)
+  if (boot.error) {
+    // actor() recusa conta suspensa ou sem perfil com esta frase; nos dois casos não adianta tentar de novo.
+    const unavailable = (boot.error as { message?: string }).message === "Acesso indisponível.";
     return (
-      <>
-        <Notice error>{errorMessage(boot.error)}</Notice>
-        <Action
-          run={async () => {
-            await boot.refetch();
-          }}
-        >
-          Tentar novamente
-        </Action>
-        <Action
-          run={async () => {
-            await signOut();
-          }}
-        >
-          Sair
-        </Action>
-      </>
+      <Blocked title={unavailable ? "Acesso indisponível" : "Não foi possível abrir sua área"}
+        retry={unavailable ? undefined : async () => { await boot.refetch(); }}>
+        {unavailable ? suspendedText : errorMessage(boot.error)}
+      </Blocked>
     );
+  }
   if (!boot.data) return null;
   if (boot.data.profile.suspended)
-    return (
-      <Notice error>
-        Seu acesso está suspenso. Entre em contato com o suporte.
-      </Notice>
-    );
+    return <Blocked title="Acesso indisponível">{suspendedText}</Blocked>;
   if (boot.data.profile.password_setup_required) return <PasswordSetup />;
   if (roles && !roles.includes(boot.data.profile.role))
     return (
-      <Notice error>
-        Acesso restrito. Você não tem permissão para abrir esta área.
-      </Notice>
+      <PublicFrame>
+        <div className="access">
+          <Restricted role={boot.data.profile.role} />
+        </div>
+      </PublicFrame>
     );
   if (
     !boot.data.profile.onboarding_complete &&
@@ -165,7 +153,35 @@ export function RoleGate({
   return boot.data && roles.includes(boot.data.profile.role) ? (
     <>{children}</>
   ) : (
-    <Notice error>Você não tem permissão para esta área.</Notice>
+    <Restricted role={boot.data?.profile.role} />
+  );
+}
+const suspendedText = "Sua conta está suspensa ou sem acesso à área de membros. Para entender o motivo ou pedir a revisão, fale com a equipe responsável pela plataforma.";
+/** Bloqueio antes da moldura da área: título, explicação e sempre a saída para outra conta. */
+function Blocked({ title, children, retry }: { title: string; children: ReactNode; retry?: () => Promise<void> }) {
+  return (
+    <PublicFrame>
+      <div className="access">
+        <Heading title={title}>{children}</Heading>
+        {retry && <Action run={retry}>Tentar novamente</Action>}
+        <Action run={signOut}>Sair e usar outra conta</Action>
+      </div>
+    </PublicFrame>
+  );
+}
+/** Primeira área do painel de cada papel da equipe; membro não tem painel. */
+export const staffHome = (role?: string): string | undefined =>
+  ({ admin: "/admin/dashboard", instructor: "/admin/cursos", moderator: "/admin/comunidade", support: "/admin/suporte" } as Record<string, string>)[role ?? ""];
+function Restricted({ role }: { role?: string }) {
+  const home = staffHome(role);
+  return (
+    <>
+      <Heading title="Acesso restrito" />
+      <Notice error>Você não tem permissão para esta área.</Notice>
+      <Link className="button" to={home ?? "/app/cursos"}>
+        {home ? "Voltar ao painel" : "Voltar aos cursos"}
+      </Link>
+    </>
   );
 }
 export function AccountAssurance({ children }: { children: ReactNode }) {

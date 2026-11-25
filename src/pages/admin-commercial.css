@@ -420,7 +420,7 @@
   font-size: var(--stitch-input-min-size);
 }
 
-.admin-commercial :focus-visible {
+.admin-commercial :focus-visible:not([tabindex="-1"]) {
   outline: var(--stitch-focus-width) solid var(--stitch-focus);
   outline-offset: var(--stitch-focus-offset);
 }
@@ -466,10 +466,6 @@
 
 .admin-commercial > .empty {
   padding-inline: var(--stitch-space-md);
-}
-
-.admin-commercial .notice[role="alert"] {
-  color: var(--stitch-error);
 }
 
 .admin-commercial .commercial-results > .notice {

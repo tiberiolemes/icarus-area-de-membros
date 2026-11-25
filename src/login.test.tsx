@@ -13,7 +13,7 @@ vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
 import { cache, client } from "./api";
-import { AuthProvider, Gate } from "./auth";
+import { AuthProvider, Gate, RoleGate } from "./auth";
 import { Access } from "./pages/access";
 const id = "00000000-0000-4000-8000-000000000090";
 const factor = {
@@ -47,6 +47,9 @@ function Location() {
   );
 }
 let touchReply: { seconds: number; remembered?: boolean } = { seconds: 1800 };
+let profileOverride: Record<string, unknown> = {};
+let bootstrapError = false;
+let startAt = "/entrar?returnTo=/admin/cursos";
 function setup(hasFactor: boolean, failCode = false, loginError?: string, rememberFails = false) {
   const user = {
     id,
@@ -71,6 +74,7 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string, rememb
       const url = String(input);
       requests.push(url);
       if (url.includes("app_bootstrap")) {
+        if (bootstrapError) return json({ code: "P0001", message: "Acesso indisponível." }, 400);
         return json({
           profile: {
             id,
@@ -78,6 +82,7 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string, rememb
             onboarding_complete: true,
             suspended: false,
             password_setup_required: false,
+            ...profileOverride,
           },
         });
       }
@@ -122,7 +127,7 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string, rememb
   );
   const result = render(
     <QueryClientProvider client={cache}>
-      <MemoryRouter initialEntries={["/entrar?returnTo=/admin/cursos"]}>
+      <MemoryRouter initialEntries={[startAt]}>
         <AuthProvider>
           <Location />
           <Routes>
@@ -132,6 +137,14 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string, rememb
             <Route
               path="/confirmar-email"
               element={<Access mode="confirm" />}
+            />
+            <Route
+              path="/admin/membros"
+              element={
+                <Gate>
+                  <RoleGate roles={["admin"]}><h1>Membros</h1></RoleGate>
+                </Gate>
+              }
             />
             <Route
               path="/admin/cursos"
@@ -150,6 +163,9 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string, rememb
 }
 beforeEach(() => {
   touchReply = { seconds: 1800 };
+  profileOverride = {};
+  bootstrapError = false;
+  startAt = "/entrar?returnTo=/admin/cursos";
   localStorage.clear();
   sessionStorage.clear();
   cache.clear();
@@ -318,4 +334,43 @@ it.each([
   await screen.findByText("Destino autorizado");
   expect(await screen.findByRole("alert")).toHaveTextContent(text);
   expect(screen.queryByRole("button", { name: "Continuar conectado" }) !== null).toBe(extend);
+});
+
+it("conta suspensa vê título, orientação e a saída, que encerra a sessão", async () => {
+  profileOverride = { suspended: true };
+  const { requests } = setup(false);
+  await password();
+  expect(await screen.findByRole("heading", { level: 1, name: "Acesso indisponível" })).toBeVisible();
+  expect(screen.queryByText("Destino autorizado")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Sair e usar outra conta" }));
+  await waitFor(() => expect(requests.some((url) => url.includes("/logout"))).toBe(true));
+});
+it("papel sem permissão vê título e o caminho para a própria área do painel", async () => {
+  profileOverride = { role: "moderator" };
+  startAt = "/entrar?returnTo=/admin/membros";
+  setup(false);
+  await password();
+  expect(await screen.findByRole("heading", { level: 1, name: "Acesso restrito" })).toBeVisible();
+  expect(screen.getByRole("alert")).toHaveTextContent("Você não tem permissão para esta área.");
+  expect(screen.getByRole("link", { name: "Voltar ao painel" })).toHaveAttribute("href", "/admin/comunidade");
+});
+
+it("cadastro fechado mostra um aviso com a saída e não oferece o formulário", async () => {
+  startAt = "/cadastro";
+  setup(false);
+  expect(await screen.findByText(/Os documentos legais ainda não foram publicados/)).toBeVisible();
+  expect(document.querySelectorAll(".notice")).toHaveLength(1);
+  expect(screen.getByRole("link", { name: "Voltar para entrar" })).toHaveAttribute("href", expect.stringContaining("/entrar"));
+  expect(screen.queryByRole("button", { name: "Criar conta" })).not.toBeInTheDocument();
+});
+
+it("conta suspensa recusada pelo servidor vê a explicação com moldura e a saída", async () => {
+  bootstrapError = true;
+  const { requests } = setup(false);
+  await password();
+  expect(await screen.findByRole("heading", { level: 1, name: "Acesso indisponível" })).toBeVisible();
+  expect(screen.getByText(/conta está suspensa ou sem acesso/)).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Tentar novamente" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Sair e usar outra conta" }));
+  await waitFor(() => expect(requests.some((url) => url.includes("/logout"))).toBe(true));
 });

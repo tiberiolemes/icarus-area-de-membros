@@ -121,7 +121,7 @@ button.feedback-card:hover { background: var(--stitch-surface-hover); }
   -webkit-box-orient: vertical;
 }
 
-.admin-feedbacks > :is(.notice, .loading, .empty, .pagination, button) { margin-inline: var(--feedback-gutter); }
+.admin-feedbacks > :is(.notice, .loading, .empty, .pagination, button, .query-error) { margin-inline: var(--feedback-gutter); }
 
 .feedback-description { white-space: pre-wrap; overflow-wrap: anywhere; }
 

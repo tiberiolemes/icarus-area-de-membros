@@ -20,6 +20,7 @@ import { BrandLogo, brandAssetUrl, defaultLogo } from "../brand";
 import { readModules } from "../modules";
 import {
   Action,
+  CheckField,
   Field,
   Password,
   Form,
@@ -27,6 +28,7 @@ import {
   Loading,
   Notice,
   QueryState,
+  RouteFocus,
   value,
 } from "../ui";
 
@@ -60,6 +62,7 @@ export function PublicFrame({ children }: { children: React.ReactNode }) {
         {readModules(context.data?.modules).help && <Link to="/ajuda">Central de ajuda</Link>}
       </header>
       <main id="main" className="public-main">
+        <RouteFocus name={name} />
         {children}
       </main>
       <footer>
@@ -366,6 +369,8 @@ export function Access({
   const target = internalPath(params.get("returnTo")),
     context = useRpc<PublicContext>("app_public_context");
   if (mode === "login") return <Login target={target} />;
+  // Os dois indicadores vêm da mesma regra no banco; fechado, o cadastro mostra só o aviso e a saída.
+  const registerClosed = !context.data?.registration_enabled || !context.data?.legal_ready;
   const titles = {
     login: "Entre na sua área de membros",
     register: "Crie sua conta",
@@ -380,18 +385,16 @@ export function Access({
         {message && <Notice>{message}</Notice>}
         {mode === "register" && (
           <QueryState query={context}>
-            {!context.data?.registration_enabled && (
-              <Notice>O cadastro está indisponível nesta instalação.</Notice>
-            )}
-            {!context.data?.legal_ready && (
+            {registerClosed && (
               <Notice>
-                Os documentos legais ainda não foram publicados. O cadastro será
-                liberado após essa configuração.
+                {context.data?.legal_ready
+                  ? "O cadastro está indisponível nesta instalação."
+                  : "Os documentos legais ainda não foram publicados. O cadastro será liberado após essa configuração."}
               </Notice>
             )}
           </QueryState>
         )}
-        <Form
+        {(mode !== "register" || (context.data && !registerClosed)) && <Form
           label={
             {
               login: "Entrar",
@@ -542,16 +545,10 @@ export function Access({
           )}
           {mode === "register" && (
             <>
-              <label className="check">
-                <input
-                  type="checkbox"
-                  name="legal"
-                  required
-                  disabled={!context.data?.legal_ready}
-                />
+              <CheckField name="legal" required disabled={!context.data?.legal_ready}>
                 Li e aceito os <Link to="/termos">Termos de uso</Link> e a{" "}
                 <Link to="/privacidade">Política de privacidade</Link>.
-              </label>
+              </CheckField>
               <label className="check">
                 <input type="checkbox" name="marketing" />
                 Quero receber comunicações de marketing (opcional).
@@ -559,7 +556,7 @@ export function Access({
             </>
           )}
           {mode !== "reset" && <Captcha />}
-        </Form>
+        </Form>}
         <nav className="access-links">
           <Link to={"/entrar?returnTo=" + encodeURIComponent(target)}>Voltar para entrar</Link>
         </nav>
@@ -904,6 +901,7 @@ export function Onboarding() {
               </Form>
             )}
           </QueryState>
+          <Action run={signOut}>Sair e usar outra conta</Action>
         </div>
       </PublicFrame>
     </div>

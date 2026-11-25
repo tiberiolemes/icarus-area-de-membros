@@ -917,6 +917,7 @@ export function Moderate({
             cache.invalidateQueries({ queryKey: ["app_feed"] }),
             cache.invalidateQueries({ queryKey: ["app_post"] }),
             cache.invalidateQueries({ queryKey: ["app_admin_list"] }),
+            cache.invalidateQueries({ queryKey: ["app_admin_reports"] }),
           ]);
         }}
       >

@@ -188,7 +188,7 @@ body:has(.icarus-checkout) {
   color: var(--stitch-on-action);
 }
 
-.icarus-checkout :focus-visible,
+.icarus-checkout :focus-visible:not([tabindex="-1"]),
 .icarus-checkout-method label:has(input:focus-visible),
 .icarus-checkout .check:has(input:focus-visible) {
   outline: var(--stitch-focus-width) solid var(--stitch-focus);
@@ -228,10 +228,6 @@ body:has(.icarus-checkout) {
 .icarus-checkout .notice {
   background: var(--stitch-surface-panel);
   border-color: var(--stitch-border-subtle);
-}
-
-.icarus-checkout [role="alert"] {
-  color: var(--stitch-error);
 }
 
 .icarus-checkout-consent .check {

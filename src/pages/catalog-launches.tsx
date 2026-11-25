@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check } from "lucide-react";
 import { errorMessage, rpc } from "../api";
 import { useAuth } from "../auth";
-import { QueryState } from "../ui";
 
 type Launch = {
   key: string;
@@ -54,42 +53,41 @@ export function CatalogLaunches({ courseSlug }: { courseSlug?: string }) {
     enabled: Boolean(session),
   });
   const items = query.data ?? [];
-  if (!session || (!query.error && !items.length)) return null;
+  // Seção secundária: sem dados ou com falha, some e deixa o erro só no catálogo.
+  if (!session || query.error || !items.length) return null;
 
   return (
     <section className={courseSlug ? "catalog-launches" : "catalog-launches catalog-course-launches"} aria-labelledby={id}>
       <h2 id={id}>{courseSlug ? "Próximos módulos" : "Lançamento em breve"}</h2>
-      <QueryState query={query}>
-        <ul className="catalog-launch-grid">
-          {items.map(item => (
-            <li className="catalog-launch-card" key={item.key}>
-              <div className="catalog-launch-copy">
-                <div className="catalog-launch-head">
-                  {item.planned_on && <p className="catalog-launch-date">Previsão: <time dateTime={item.planned_on}>
-                    {dateFormat.format(new Date(item.planned_on + "T00:00:00Z"))}
-                  </time></p>}
-                  <h3>{item.title}</h3>
-                </div>
-                <p>{item.summary}</p>
+      <ul className="catalog-launch-grid">
+        {items.map(item => (
+          <li className="catalog-launch-card" key={item.key}>
+            <div className="catalog-launch-copy">
+              <div className="catalog-launch-head">
+                {item.planned_on && <p className="catalog-launch-date">Previsão: <time dateTime={item.planned_on}>
+                  {dateFormat.format(new Date(item.planned_on + "T00:00:00Z"))}
+                </time></p>}
+                <h3>{item.title}</h3>
               </div>
-              <footer>
-                <LaunchSubscription item={item} subscribe={async () => {
-                  try {
-                    await rpc("app_subscribe_catalog_launch", { p_key: item.key });
-                    cache.setQueryData<Launch[]>(queryKey, old =>
-                      old?.map(launch => launch.key === item.key ? { ...launch, subscribed: true } : launch));
-                  } finally {
-                    void query.refetch();
-                  }
-                }} />
-                <span role="status" className="sr-only">
-                  {item.subscribed ? `Aviso ativado sobre ${item.title}.` : ""}
-                </span>
-              </footer>
-            </li>
-          ))}
-        </ul>
-      </QueryState>
+              <p>{item.summary}</p>
+            </div>
+            <footer>
+              <LaunchSubscription item={item} subscribe={async () => {
+                try {
+                  await rpc("app_subscribe_catalog_launch", { p_key: item.key });
+                  cache.setQueryData<Launch[]>(queryKey, old =>
+                    old?.map(launch => launch.key === item.key ? { ...launch, subscribed: true } : launch));
+                } finally {
+                  void query.refetch();
+                }
+              }} />
+              <span role="status" className="sr-only">
+                {item.subscribed ? `Aviso ativado sobre ${item.title}.` : ""}
+              </span>
+            </footer>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

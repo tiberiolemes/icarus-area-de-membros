@@ -64,6 +64,12 @@ button,
     background var(--ic-motion-fast),
     color var(--ic-motion-fast);
 }
+/* Rótulo de botão e selo não parte palavra ao meio, mesmo dentro de área com overflow-wrap: anywhere. */
+button,
+.button,
+.badge {
+  overflow-wrap: normal;
+}
 button:hover,
 .button:hover {
   background: var(--ic-surface-muted);
@@ -436,6 +442,21 @@ h2 > a,
 .notice > svg {
   margin-top: 3px;
 }
+/* Padrão único de erro: aviso, erro de campo e erro de ação usam a cor de erro do tema. */
+.notice[role="alert"] {
+  border-color: var(--stitch-error);
+  color: var(--stitch-error);
+}
+.field-error,
+.action > [role="alert"] {
+  color: var(--stitch-error);
+}
+.query-error {
+  display: grid;
+}
+.query-error > button {
+  justify-self: start;
+}
 .notice p:last-child {
   margin-bottom: 0;
 }
@@ -447,9 +468,7 @@ h2 > a,
 .empty {
   padding: 40px 0;
   color: var(--ic-text-secondary);
-  border-top: 1px solid var(--ic-border);
   margin-top: 24px;
-  max-width: 70ch;
 }
 .badge {
   display: inline-flex;
@@ -480,10 +499,14 @@ h2 > a,
 }
 .skeleton span {
   display: block;
-  background: var(--ic-surface-muted);
+  background: var(--stitch-surface-control);
   height: 20px;
   border-radius: 4px;
   margin: 16px 0;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-pulse {
+  50% { opacity: 0.45; }
 }
 .skeleton span:nth-child(1) {
   width: 40%;
@@ -545,6 +568,10 @@ h2 > a,
 }
 .check a {
   display: inline;
+}
+.check-error {
+  display: block;
+  margin: -8px 0 12px 28px;
 }
 .plan-options {
   margin: 24px 0;

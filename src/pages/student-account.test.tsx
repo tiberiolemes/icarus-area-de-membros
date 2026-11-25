@@ -275,3 +275,8 @@ it("salva uma preferência pelo contrato integrado e lê o estado confirmado", a
     screen.queryByRole("columnheader", { name: "E-mail" }),
   ).not.toBeInTheDocument();
 });
+
+it("oferece sair e usar outra conta no onboarding obrigatório", async () => {
+  mount("/onboarding");
+  expect(await screen.findByRole("button", { name: "Sair e usar outra conta" })).toBeVisible();
+});

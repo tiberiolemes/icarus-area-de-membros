@@ -16,7 +16,7 @@ import {
   receiptHash,
   saveReceipt,
 } from "../checkout-receipt";
-import { Field, Form, Heading, Notice, QueryState, value } from "../ui";
+import { CheckField, Field, Form, Heading, Notice, QueryState, value } from "../ui";
 import { Captcha, captchaToken, resetCaptcha } from "../captcha";
 import { PublicFrame } from "./access";
 import { statusName } from "./community";
@@ -283,10 +283,9 @@ export function Checkout() {
                           <Link to="/termos">Termos de uso</Link>
                           <Link to="/privacidade">Política de privacidade</Link>
                         </div>
-                        <label className="check">
-                          <input name="legal" type="checkbox" required />
+                        <CheckField name="legal" required>
                           Aceito os Termos de uso e a Política de privacidade.
-                        </label>
+                        </CheckField>
                       </div>
                       <label className="check">
                         <input name="marketing" type="checkbox" />

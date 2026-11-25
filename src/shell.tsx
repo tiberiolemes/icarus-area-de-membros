@@ -363,7 +363,7 @@ export function Shell() {
           </div>
         </header>
         <main id="main" className="content" tabIndex={-1}>
-          <RouteFocus />
+          <RouteFocus name={installationName} />
           {admin && profile.role === "admin" && <UpdateNotice />}
           {admin && offModule && (
             <Notice>

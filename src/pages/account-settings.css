@@ -122,14 +122,10 @@
   font-weight: var(--stitch-type-label-md-weight);
 }
 
-.student-account :focus-visible,
+.student-account :focus-visible:not([tabindex="-1"]),
 .student-account .notice[role="alert"]:focus {
   outline: var(--stitch-focus-width) solid var(--stitch-focus);
   outline-offset: var(--stitch-focus-offset);
-}
-
-.student-account :is(.field-error, .notice[role="alert"]) {
-  color: var(--stitch-error);
 }
 
 .student-account :is(.field [aria-invalid="true"], .notice[role="alert"]) {

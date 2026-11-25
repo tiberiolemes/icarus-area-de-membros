@@ -140,7 +140,7 @@ it("revalida o código atual e distingue falha de consulta de revogação", asyn
 
   fireEvent.change(screen.getByRole("textbox", { name: "Código de verificação" }), { target: { value: validCode } });
   fireEvent.click(screen.getByRole("button", { name: "Verificar certificado" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent("Esta operação está indisponível");
+  expect(await screen.findByRole("alert")).toHaveTextContent("O servidor não respondeu agora");
   expect(screen.queryByRole("button", { name: "Baixar PDF" })).not.toBeInTheDocument();
   expect(screen.queryByText("Certificado inválido")).not.toBeInTheDocument();
 

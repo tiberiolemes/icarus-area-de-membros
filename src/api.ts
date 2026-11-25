@@ -85,6 +85,8 @@ export function errorMessage(error: unknown): string {
   };
   if (!navigator.onLine || /fetch|network/i.test(e?.message ?? ""))
     return "Sem conexão com o servidor. Seu texto continua nesta tela. Reconecte e tente novamente.";
+  // Códigos do Auth antes dos ramos por status: otp_expired, por exemplo, chega com 403.
+  if (e?.code && authMessages[e.code]) return authMessages[e.code];
   if (e?.status === 401 || ["PGRST301", "PGRST303"].includes(e?.code ?? ""))
     return "Sua sessão expirou. Entre novamente para continuar.";
   if (
@@ -102,13 +104,29 @@ export function errorMessage(error: unknown): string {
     return "Email ou senha inválidos.";
   if (/rate limit|too many/i.test(e?.message ?? ""))
     return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+  if (e?.name === "AuthSessionMissingError")
+    return "Sua sessão não foi encontrada. Abra o link mais recente enviado por email ou entre novamente.";
+  // PGRST000 a PGRST003: o PostgREST não alcançou o banco; é queda passageira, não recurso ausente.
+  if (/^PGRST00[0-3]$/.test(e?.code ?? ""))
+    return "O servidor não respondeu agora. Tente novamente em instantes.";
   if (
     e?.code?.startsWith("PGRST") ||
     /relation |column |SQL|syntax|function public\./i.test(e?.message ?? "")
   )
     return "Esta operação está indisponível nesta instalação. Tente novamente ou procure o suporte.";
+  // O Auth responde em inglês: sem tradução conhecida, uma frase neutra em português.
+  if (e?.name?.startsWith("Auth"))
+    return "Não foi possível concluir o acesso. Tente novamente.";
   return e?.message || "Não foi possível concluir. Tente novamente.";
 }
+const authMessages: Record<string, string> = {
+  weak_password: "A senha não atende aos requisitos de segurança. Use uma senha mais longa, com letras maiúsculas, minúsculas, números e símbolos.",
+  same_password: "A nova senha precisa ser diferente da atual.",
+  mfa_verification_failed: "Código inválido. Confira o aplicativo autenticador e tente de novo.",
+  otp_expired: "O link ou código expirou. Peça um novo.",
+  captcha_failed: "Não foi possível confirmar a verificação anti-spam. Recarregue a página e tente de novo.",
+  email_address_invalid: "Confira o endereço de email.",
+};
 export async function rpc<T>(
   name: string,
   args: Record<string, unknown> = {},
@@ -122,11 +140,12 @@ export async function edge<T>(name: string, body?: unknown): Promise<T> {
     body: body ?? {},
   });
   if (error) {
-    let message = "";
+    let message = "", code: string | undefined;
     try {
       const parsed = await error.context?.json();
       message =
         parsed?.message ?? parsed?.error?.message ?? parsed?.error ?? "";
+      code = parsed?.code ?? parsed?.error?.code;
     } catch {
       /* Response may not be JSON. */
     }
@@ -134,6 +153,7 @@ export async function edge<T>(name: string, body?: unknown): Promise<T> {
       typeof message === "string" && message && !/^[A-Z0-9_]+$/.test(message)
         ? message
         : errorMessage(error),
+      typeof code === "string" ? code : undefined,
     );
   }
   return data as T;

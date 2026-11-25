@@ -145,10 +145,10 @@ export function QueryState({
   if (query.isPending) return <Loading />;
   if (query.error)
     return (
-      <>
+      <div className="query-error">
         <Notice error>{errorMessage(query.error)}</Notice>
         <button onClick={() => query.refetch()}>Tentar novamente</button>
-      </>
+      </div>
     );
   return <>{children}</>;
 }
@@ -190,7 +190,8 @@ export function Password({
 }
 function validationMessage(input: HTMLInputElement) {
   const v = input.validity;
-  if (v.valueMissing) return "Preencha este campo.";
+  if (v.valueMissing)
+    return input.type === "checkbox" ? "Marque esta opção para continuar." : "Preencha este campo.";
   if (v.typeMismatch)
     return input.type === "email"
       ? "Informe um email válido."
@@ -246,6 +247,41 @@ export function Field({
         </small>
       )}
     </label>
+  );
+}
+/** Caixa de seleção com o erro de validação ligado a ela, como no Field. */
+export function CheckField({
+  name,
+  required = false,
+  disabled = false,
+  children,
+}: {
+  name: string;
+  required?: boolean;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  const id = useId(),
+    error = useContext(FormErrors)[name];
+  return (
+    <>
+      <label className="check">
+        <input
+          type="checkbox"
+          name={name}
+          required={required}
+          disabled={disabled}
+          aria-invalid={!!error}
+          aria-describedby={error ? id + "-error" : undefined}
+        />
+        {children}
+      </label>
+      {error && (
+        <small className="field-error check-error" id={id + "-error"}>
+          {error}
+        </small>
+      )}
+    </>
   );
 }
 export function Form({
@@ -512,9 +548,16 @@ export function Action({
   );
 }
 const scrollPositions = new Map<string, number>();
-export function RouteFocus() {
+export function RouteFocus({ name = "Icarus" }: { name?: string }) {
   const { pathname, search, key, state } = useLocation(),
     navigation = useNavigationType();
+  // O nome da instalação pode chegar depois da primeira tela; o título acompanha sem mover o foco.
+  const installation = useRef(name);
+  installation.current = name;
+  useEffect(() => {
+    const heading = document.getElementById("main")?.querySelector("h1");
+    if (heading?.textContent) document.title = `${heading.textContent.trim()} · ${name}`;
+  }, [name]);
   const previousPath = useRef(pathname);
   useEffect(() => {
     const searching = previousPath.current === pathname && navigation !== "POP" &&
@@ -525,6 +568,8 @@ export function RouteFocus() {
       const content = document.getElementById("main") ?? document.body;
       function focusHeading() {
         const heading = content.querySelector<HTMLElement>("h1");
+        // Cada tela ganha título próprio (WCAG 2.4.2): o H1 que recebe o foco e o nome da instalação.
+        if (heading?.textContent) document.title = `${heading.textContent.trim()} · ${installation.current}`;
         heading?.focus({ preventScroll: true });
         return heading === document.activeElement;
       }

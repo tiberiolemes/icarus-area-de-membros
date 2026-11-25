@@ -6,16 +6,17 @@ O Icarus é uma plataforma de área de membros e cursos online em React/Vite e S
 
 Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes. Numa instalação hospedada, siga [Aplicar migrações no Supabase hospedado](#aplicar-migrações-no-supabase-hospedado), que vale para a 0.1.6 e para a 0.2.0. O roteiro do [stack Docker completo](#atualizar-uma-instalação-docker-completa) foi escrito e ensaiado para a v0.1.6. A partir da 0.2.0, o banco foi ensaiado pelo [ensaio isolado](#ensaio-de-banco-isolado) (`install` da tag v0.2.0, `upgrade` e `verify` no mesmo Postgres), mas o stack Docker completo da 0.2.0 ainda não tem roteiro próprio ensaiado para as Edge Functions.
 
-| Versão instalada | Histórico esperado | Migrations novas até a 2.5.0 |
+| Versão instalada | Histórico esperado | Migrations novas até a 2.5.1 |
 | --- | --- | --- |
-| 2.4.0 | `202611230001` a `202611250003` | `202611250004` |
-| 2.3.0 | `202611230001` a `202611250002` | `202611250003` e `202611250004` |
-| 2.2.2 ou 2.2.3 | `202611230001` a `202611250001` | `202611250002` a `202611250004` |
-| 2.2.1 | `202611230001` a `202611230040` | `202611250001` a `202611250004` |
-| 0.2.0 | `202611230001` a `202611230038` | `202611230039`, `202611230040` e `202611250001` a `202611250004` |
-| 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` e `202611250001` a `202611250004` |
+| 2.5.0 | `202611230001` a `202611250004` | `202611250005` |
+| 2.4.0 | `202611230001` a `202611250003` | `202611250004` e `202611250005` |
+| 2.3.0 | `202611230001` a `202611250002` | `202611250003` a `202611250005` |
+| 2.2.2 ou 2.2.3 | `202611230001` a `202611250001` | `202611250002` a `202611250005` |
+| 2.2.1 | `202611230001` a `202611230040` | `202611250001` a `202611250005` |
+| 0.2.0 | `202611230001` a `202611230038` | `202611230039`, `202611230040` e `202611250001` a `202611250005` |
+| 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` e `202611250001` a `202611250005` |
 
-A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos.
+A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos. A `202611250005` cria três RPCs de leitura e registro do painel (denúncias e pedidos LGPD) e reserva a identidade de quem denunciou para administradores, inclusive na listagem genérica. A migration não cria tabelas nem altera dados.
 
 Publique também as Edge Functions da tag:
 - na 2.4.0, `upload` passou a receber a logo, o ícone e a assinatura do certificado (`kind=brand-asset`) e a gravá-los no bucket público `icarus-brand`, criado pela `202611250003`;

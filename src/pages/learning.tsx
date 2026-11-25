@@ -47,6 +47,7 @@ import { CatalogLaunches } from "./catalog-launches";
 import { LessonComments, LessonEngagementActions, LessonEngagementTab, LessonNotes, useLessonEngagement } from "./lesson-engagement";
 import { LessonCta, LessonDescription, useLessonPresentation } from "./lesson-presentation";
 import { notificationListKey, reconcileNotificationQueries } from "./notifications";
+import { useModules } from "../modules";
 import "../lesson-stitch.css";
 
 export { Catalog } from "./catalog";
@@ -421,6 +422,7 @@ function LessonProgressAction({ children, run, complete, resume }: {
 
 export function LessonPage() {
   const memberId = useAuth().session?.user.id;
+  const modules = useModules();
   const queryClient = useQueryClient();
   const { curso, modulo, aula } = useParams(),
     course = useRpc<CourseDetail>("app_course", { p_slug: curso }),
@@ -804,7 +806,7 @@ export function LessonPage() {
                                 result.certificate_code
                                   ? "Aula concluída e certificado emitido. Consulte seus certificados."
                                   : result.course_progress_percent ===
-                                        100 && result.certificate_reason
+                                        100 && modules.certificates && result.certificate_reason
                                     ? result.certificate_reason
                                     : "Conclusão confirmada pelo servidor.",
                               );

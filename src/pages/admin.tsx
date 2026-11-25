@@ -6,7 +6,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ArrowDown,
   ArrowRight,
@@ -26,6 +26,7 @@ import {
   Presentation,
   RefreshCw,
   Shield,
+  ToggleRight,
   Users,
   Video,
   X,
@@ -33,6 +34,7 @@ import {
 import {
   cache,
   date,
+  errorMessage,
   downloadBlob,
   edge,
   money,
@@ -70,6 +72,7 @@ import { AdminCatalogLaunch } from "./admin-catalog-launch";
 import { Reauth } from "./settings";
 import { Moderate, statusName } from "./community";
 import { useBootstrap } from "../auth";
+import { moduleLabel, modules, readModules, type ModuleKey } from "../modules";
 import { Upload } from "../upload";
 import "./admin-commercial.css";
 import "./admin-settings.css";
@@ -2383,6 +2386,7 @@ export function AdminCommunity() {
 const settingsTabs = [
   ["onboarding", "Onboarding"],
   ["marca", "Plataforma e marca"],
+  ["modulos", "Módulos"],
   ["integracoes", "Integrações"],
   ["legal", "Documentos legais"],
   ["equipe", "Equipe"],
@@ -2401,7 +2405,7 @@ function PlatformSettingsTabs({ tab }: { tab: string }) {
 }
 
 function SettingsSurface({ tab, sectionLabel, title, description, action, children }: {
-  tab: "equipe" | "auditoria" | "integracoes" | "marca";
+  tab: "equipe" | "auditoria" | "integracoes" | "marca" | "modulos";
   sectionLabel?: string;
   title: string;
   description: string;
@@ -2461,6 +2465,72 @@ function AdminTeam() {
           <p>Para alterar um papel, abra a ficha do membro, informe o motivo e reautentique. A alteração fica registrada na trilha de auditoria.</p>
         </div>
         <Link className="button" to="?aba=auditoria">Consultar trilha de auditoria</Link>
+      </section>
+    </SettingsSurface>
+  );
+}
+
+function AdminModules() {
+  const boot = useBootstrap();
+  const state = readModules(boot.data?.settings?.modules);
+  const toggle = useMutation({
+    mutationFn: ({ key, enabled }: { key: ModuleKey; enabled: boolean }) =>
+      rpc("app_admin_set_module", { p_key: key, p_enabled: enabled }),
+    onSuccess: async () => {
+      void cache.invalidateQueries({ queryKey: ["app_public_context"] });
+      await boot.refetch();
+    },
+  });
+  const saved = toggle.variables;
+  return (
+    <SettingsSurface
+      tab="modulos"
+      title="Módulos da plataforma"
+      description="Escolha quais recursos os alunos veem. Desligar esconde e bloqueia, sem apagar dados."
+    >
+      <section className="settings-panel" data-tour="admin-settings-modules" aria-labelledby="settings-modules">
+        <header>
+          <h2 id="settings-modules"><ToggleRight size={20} aria-hidden="true" /> Recursos da área de membros</h2>
+          <p>
+            Um módulo desligado sai do menu, dos atalhos, do guia e das outras telas, e o servidor recusa o acesso dos alunos.
+            Nada é apagado, e religar traz tudo de volta. A equipe continua usando o painel de cada recurso, e a exportação de dados do membro segue completa.
+          </p>
+        </header>
+        <ul className="settings-modules">
+          <li>
+            <BookOpen size={20} aria-hidden="true" />
+            <div>
+              <h3>Cursos</h3>
+              <p>O núcleo da plataforma: catálogo, aulas, progresso e comentários de aula. Fica sempre ativo.</p>
+            </div>
+            <span className="settings-module-state" data-on="true">Sempre ativo</span>
+          </li>
+          {modules.map(({ key, label, Icon, description }) => (
+            <li key={key}>
+              <Icon size={20} aria-hidden="true" />
+              <div>
+                <h3 id={`module-${key}`}>{label}</h3>
+                <p id={`module-${key}-description`}>{description}</p>
+              </div>
+              <span className="settings-module-state" data-on={state[key]}>{state[key] ? "Ativo" : "Desativado"}</span>
+              <button type="button" className="notification-switch" role="switch" aria-checked={state[key]}
+                aria-labelledby={`module-${key}`} aria-describedby={`module-${key}-description`}
+                aria-disabled={toggle.isPending || boot.isFetching}
+                onClick={() => {
+                  if (!toggle.isPending && !boot.isFetching) toggle.mutate({ key, enabled: !state[key] });
+                }}>
+                <span aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+        {toggle.isError && saved && (
+          <Notice error>Não foi possível {saved.enabled ? "ligar" : "desligar"} o módulo {moduleLabel(saved.key)}. {errorMessage(toggle.error)}</Notice>
+        )}
+        <p className="settings-module-status" role="status">
+          {toggle.isPending || (toggle.isSuccess && boot.isFetching) ? "Salvando…"
+            : toggle.isSuccess && saved ? `Módulo ${moduleLabel(saved.key)} ${saved.enabled ? "ligado" : "desligado"}.` : ""}
+        </p>
       </section>
     </SettingsSurface>
   );
@@ -2635,6 +2705,7 @@ export function AdminSettings() {
       <AdminBrand />
     </SettingsSurface>
   );
+  if (tab === "modulos") return <AdminModules />;
   if (tab === "equipe") return <AdminTeam />;
   if (tab === "auditoria") return <AdminAudit />;
   if (tab === "integracoes") return <AdminIntegrations provider={params.get("provedor") === "bunny" ? "bunny" : "asaas"} />;

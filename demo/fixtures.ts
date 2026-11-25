@@ -97,7 +97,7 @@ export function seed() {
       },
     } as Record<string, unknown>,
     checklists: {} as Record<string, string[]>,
-    installation: { name: "Icarus", name_revision: 0 },
+    installation: { name: "Icarus", name_revision: 0, modules: {} as Record<string, boolean> },
   };
 }
 

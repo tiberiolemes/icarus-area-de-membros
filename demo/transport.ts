@@ -322,6 +322,10 @@ function call(name: string, a: Args, profile: Profile) {
       return { started: 32, module_title: "Primeiros passos", module_completed: 18, course_completed: 12,
         lessons: page(detail?.lessons.map((lesson) => ({ ...lesson, module_title: "Primeiros passos", registered: 32, completed: 18 }))) };
     }
+    case "app_admin_set_module":
+      // Sessões salvas antes da 2.5.0 não têm o campo; ausente conta como ligado.
+      (state.installation.modules ??= {})[str(a.p_key)] = a.p_enabled === true;
+      return state.installation.modules;
     case "app_admin_save_installation_name":
       state.installation.name = str(a.p_name);
       return { name: state.installation.name, revision: ++state.installation.name_revision, saved: true };
@@ -409,7 +413,7 @@ export const transport: typeof fetch = async (input, init) => {
   if (path === "/auth/v1/logout") return new Response(null, { status: 204 });
   if (path === "/auth/v1/user" && request.method === "GET" && profile) return Response.json(user(profile));
   if (path === "/rest/v1/rpc/app_public_context")
-    return Response.json({ name: state.installation.name, plans, legal_versions: legalVersions, legal_ready: true, registration_enabled: false });
+    return Response.json({ name: state.installation.name, modules: state.installation.modules ?? {}, plans, legal_versions: legalVersions, legal_ready: true, registration_enabled: false });
   if (path === "/rest/v1/rpc/app_certificate") {
     const item = state.profiles.flatMap(earned).find((certificate) => certificate.code === a.p_code);
     return item ? Response.json(item) : fail("Certificado não encontrado.");

@@ -248,6 +248,26 @@ try {
       await visit("/admin/membros/00000000-0000-4000-8000-000000000001");
       await heading("Marina Costa").waitFor();
       await page.getByRole("heading", { name: /Aprendizado/ }).waitFor();
+      // Módulos: desligar esconde do aluno e mantém o painel; religar devolve o fórum.
+      await visit("/admin/configuracoes?aba=modulos");
+      await heading("Módulos da plataforma").waitFor();
+      await capture("modulos");
+      await page.getByRole("switch", { name: "Comunidade", exact: true }).click();
+      await page.getByText("Módulo Comunidade desligado.", { exact: true }).waitFor();
+      assert.equal(await page.getByRole("switch", { name: "Comunidade", exact: true }).getAttribute("aria-checked"), "false");
+      await visit("/admin/comunidade");
+      await page.getByText("O módulo Comunidade está desativado.", { exact: true }).waitFor();
+      assert.equal(await page.locator('.sidebar nav a[href$="/admin/comunidade"] .module-off-badge').count(), 1);
+      await capture("modulo-painel-desativado");
+      await visit("/app/comunidade");
+      await heading("Recurso indisponível").waitFor();
+      assert.equal(await page.locator('nav a[href$="/app/comunidade"]').count(), 0);
+      await capture("modulo-indisponivel");
+      await visit("/admin/configuracoes?aba=modulos");
+      await page.getByRole("switch", { name: "Comunidade", exact: true }).click();
+      await page.getByText("Módulo Comunidade ligado.", { exact: true }).waitFor();
+      await visit("/app/comunidade");
+      await page.getByText("Bem-vindos à comunidade", { exact: true }).first().waitFor();
       assert.deepEqual(errors, []);
       assert.deepEqual(external, []);
     } finally { await admin.context.close(); }

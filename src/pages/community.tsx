@@ -24,6 +24,7 @@ import {
 import { cache, date, errorMessage, rpc, useRpc } from "../api";
 import type { Page, Post, Space } from "../api";
 import { useAuth } from "../auth";
+import { useModules } from "../modules";
 import {
   Action,
   AdminBadge,
@@ -107,6 +108,7 @@ function PostMeta({ post }: { post: Post & { avatar_id?: string | null } }) {
 }
 
 function ReviewInfo({ guide = false }: { guide?: boolean }) {
+  const modules = useModules();
   return (
     <aside
       className="community-card community-info"
@@ -120,7 +122,7 @@ function ReviewInfo({ guide = false }: { guide?: boolean }) {
         visíveis aos demais membros.
       </p>
       <p>Denúncias são analisadas pela equipe de moderação.</p>
-      {guide && (
+      {guide && modules.help && (
         <Link className="community-context-link" to="/ajuda/comunidade">
           Como publicar na comunidade <ArrowRight size={16} aria-hidden="true" />
         </Link>
@@ -232,6 +234,7 @@ export function Report({ id, type }: { id: string; type: "post" | "reply" }) {
   );
 }
 export function Community() {
+  const modules = useModules();
   const [params, setParams] = useSearchParams(),
     q = params.get("q") ?? "",
     space = params.get("space") ?? "",
@@ -431,15 +434,17 @@ export function Community() {
         </div>
         <div className="community-sidebar">
           {currentSpace?.description && <SpaceInfo space={currentSpace} />}
-          <aside className="community-card community-info community-side-context">
-            <h2>
-              <Trophy size={18} aria-hidden="true" /> Ranking
-            </h2>
-            <p>Acompanhe sua colocação e consulte a classificação por período.</p>
-            <Link className="community-context-link" to="/app/ranking">
-              Consultar ranking <ArrowRight size={16} aria-hidden="true" />
-            </Link>
-          </aside>
+          {modules.ranking && (
+            <aside className="community-card community-info community-side-context">
+              <h2>
+                <Trophy size={18} aria-hidden="true" /> Ranking
+              </h2>
+              <p>Acompanhe sua colocação e consulte a classificação por período.</p>
+              <Link className="community-context-link" to="/app/ranking">
+                Consultar ranking <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </aside>
+          )}
           <ReviewInfo guide />
         </div>
       </div>

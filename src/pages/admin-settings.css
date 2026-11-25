@@ -200,6 +200,41 @@
 .admin-settings .settings-services { padding-block: var(--stitch-space-sm); }
 .admin-settings .settings-help { justify-self: start; }
 
+.admin-settings .settings-modules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-settings .settings-modules li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--stitch-space-sm) var(--stitch-space-md);
+  padding-block: var(--stitch-space-md);
+  border-block-start: var(--stitch-border-width) solid var(--stitch-border-subtle);
+}
+
+.admin-settings .settings-modules li > svg { align-self: start; margin-block-start: 2px; color: var(--stitch-text-secondary); }
+.admin-settings .settings-modules div { display: grid; gap: var(--stitch-space-xs); min-width: 0; }
+.admin-settings .settings-modules h3 {
+  margin: 0;
+  color: var(--stitch-text-heading);
+  font-size: var(--stitch-type-body-md-size);
+  font-weight: var(--stitch-type-headline-sm-weight);
+}
+
+.admin-settings .settings-module-state {
+  color: var(--stitch-text-secondary);
+  font-weight: var(--stitch-type-label-md-weight);
+  white-space: nowrap;
+}
+
+.admin-settings .settings-module-state[data-on="true"] { color: var(--stitch-status-success); }
+.admin-settings .settings-modules .notification-switch,
+.admin-settings .settings-modules .notification-switch:hover { border: 0; background: transparent; }
+.admin-settings .settings-module-status { min-block-size: 1.5em; }
+
 @media (max-width: 860px) {
   .admin-settings .settings-events dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-settings .settings-events dl > :last-child { grid-column: 1 / -1; }
@@ -210,6 +245,9 @@
   .content:has(> .admin-settings) { padding: var(--stitch-space-md) var(--stitch-margin-mobile) var(--stitch-space-lg); }
   .admin-settings .settings-panel { padding: var(--stitch-space-md); }
   .admin-settings .settings-roles > div { grid-template-columns: 1fr; gap: var(--stitch-space-xs); }
+  .admin-settings .settings-modules li { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .admin-settings .settings-module-state { grid-column: 2; grid-row: 2; }
+  .admin-settings .settings-modules .notification-switch { grid-column: 3; grid-row: 1 / span 2; }
   .admin-settings .page-heading h1 {
     font-size: var(--stitch-type-headline-lg-mobile-size);
     line-height: var(--stitch-type-headline-lg-mobile-line);

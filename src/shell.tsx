@@ -37,12 +37,13 @@ import { useBootstrap } from "./auth";
 import { usePrivateImageQuery } from "./media";
 import { NotificationBell } from "./pages/notifications";
 import { FeedbackButton } from "./pages/feedback";
-import { Action, AdminBadge, RouteFocus } from "./ui";
+import { Action, AdminBadge, Notice, RouteFocus } from "./ui";
 import { Tour } from "./tour";
 import { UpdateNotice } from "./update-notice";
 import { MemberSearch } from "./pages/member-search";
 import { StitchIcon } from "./stitch-icon";
 import { BrandLogo, brandAssetUrl, defaultLogo } from "./brand";
+import { ModuleUnavailable, moduleLabel, moduleOfPath, pathOpen, useModules } from "./modules";
 import "./member-shell-stitch.css";
 
 const memberNav = [
@@ -117,11 +118,12 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
   drawerInitials?: string;
 }) {
   const dark = profile.theme === "dark";
+  const modules = useModules();
   const staffRoutes = adminNav.filter((item) =>
     (item[3] as readonly string[]).includes(profile.role),
   );
   const [staffEntry] = staffRoutes;
-  const help = (
+  const help = (admin || modules.help) && (
     <Link to="/ajuda" onClick={onNavigate}>
       <HelpCircle size={20} aria-hidden="true" />
       Central de ajuda
@@ -154,12 +156,17 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
         aria-label={admin ? "Administração" : "Área de membros"}
         data-tour="navigation"
       >
-        {(admin ? staffRoutes : memberNav).map(([title, path, Icon]) => (
-          <NavLink key={path} to={(admin ? "/admin/" : "/app/") + path} onClick={onNavigate}>
-            <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
-            {title}
-          </NavLink>
-        ))}
+        {(admin ? staffRoutes : memberNav).map(([title, path, Icon]) => {
+          const to = (admin ? "/admin/" : "/app/") + path;
+          const open = pathOpen(modules, to);
+          return (admin || open) && (
+            <NavLink key={path} to={to} onClick={onNavigate}>
+              <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
+              {title}
+              {!open && <> <small className="badge module-off-badge">Desativado</small></>}
+            </NavLink>
+          );
+        })}
         {!admin && help}
       </nav>
       <div className="rail-bottom">
@@ -218,6 +225,8 @@ export function Shell() {
   const brandIcon = installationName !== "Icarus" && !logos.light && !logos.dark;
   const { pathname, search } = useLocation();
   const admin = pathname.startsWith("/admin");
+  const modules = useModules();
+  const offModule = pathOpen(modules, pathname) ? undefined : moduleOfPath(pathname);
   const account = useMatch("/app/configuracoes");
   const catalog = useMatch("/app/cursos");
   const forum = useMatch("/app/comunidade");
@@ -341,7 +350,7 @@ export function Shell() {
           </> : <MemberSearch actorId={profile.id} drawerOpen={open} />}
           <div className="topbar-tools">
             <Tour />
-            {!admin && <FeedbackButton key={JSON.stringify([profile.id, pathname])} />}
+            {!admin && modules.feedback && <FeedbackButton key={JSON.stringify([profile.id, pathname])} />}
             {lesson && planBadge}
             {!admin && <NotificationBell key={profile.id} memberId={profile.id} stitchIcon={stitchFrameIcons === "browse"} />}
             <Link className="account-link" to="/app/configuracoes" aria-label={`Sua conta: ${profile.full_name || "Membro"}`}>
@@ -356,16 +365,22 @@ export function Shell() {
         <main id="main" className="content" tabIndex={-1}>
           <RouteFocus />
           {admin && profile.role === "admin" && <UpdateNotice />}
-          <Outlet />
+          {admin && offModule && (
+            <Notice>
+              <strong>O módulo {moduleLabel(offModule)} está desativado.</strong> Os alunos não veem este recurso. Você pode preparar o conteúdo aqui
+              {profile.role === "admin" ? <> e ligar o módulo em <Link to="/admin/configuracoes?aba=modulos">Configurações &gt; Módulos</Link>.</> : "."}
+            </Notice>
+          )}
+          {!admin && offModule ? <ModuleUnavailable /> : <Outlet />}
         </main>
       </div>
       {mobileFrame === "browse" && (
         <nav className="mobile-member-nav" aria-label="Navegação rápida">
           <NavLink to="/app/cursos">{mobileIcon(dark ? "school" : "play_circle", <CourseIcon aria-hidden="true" />)}Cursos</NavLink>
-          <NavLink to="/app/comunidade">{mobileIcon(dark ? "forum" : "groups", <ForumIcon aria-hidden="true" />)}Comunidade</NavLink>
-          {dark && <NavLink to="/app/podcasts">{mobileIcon("podcasts", <Podcast aria-hidden="true" />)}Podcasts</NavLink>}
-          <NavLink to="/app/ranking">{mobileIcon(dark ? "leaderboard" : "emoji_events", <RankingIcon aria-hidden="true" />)}Ranking</NavLink>
-          {!dark && <NavLink to="/app/materiais">{mobileIcon("bookmarks", <FolderOpen aria-hidden="true" />)}Materiais</NavLink>}
+          {modules.community && <NavLink to="/app/comunidade">{mobileIcon(dark ? "forum" : "groups", <ForumIcon aria-hidden="true" />)}Comunidade</NavLink>}
+          {dark && modules.podcasts && <NavLink to="/app/podcasts">{mobileIcon("podcasts", <Podcast aria-hidden="true" />)}Podcasts</NavLink>}
+          {modules.ranking && <NavLink to="/app/ranking">{mobileIcon(dark ? "leaderboard" : "emoji_events", <RankingIcon aria-hidden="true" />)}Ranking</NavLink>}
+          {!dark && modules.materials && <NavLink to="/app/materiais">{mobileIcon("bookmarks", <FolderOpen aria-hidden="true" />)}Materiais</NavLink>}
           <NavLink to="/app/configuracoes">{dark ? mobileIcon("person", <UserRound aria-hidden="true" />) : <UserRound aria-hidden="true" />}Perfil</NavLink>
         </nav>
       )}

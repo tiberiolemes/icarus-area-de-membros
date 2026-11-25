@@ -695,6 +695,16 @@ h2 > a,
   background: var(--ic-action);
   color: var(--ic-on-action);
 }
+/* Módulo desligado: o painel continua acessível, com o selo à direita do nome. */
+.module-off-badge {
+  margin-left: auto;
+  padding: 0 6px;
+  border-color: currentColor;
+  background: transparent;
+  color: inherit;
+  font-size: var(--stitch-type-label-md-size);
+  white-space: nowrap;
+}
 .rail-bottom {
   margin-top: auto;
   display: flex;

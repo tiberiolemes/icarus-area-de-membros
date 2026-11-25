@@ -3,14 +3,15 @@ import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { HelpCircle } from "lucide-react";
 import { rpc } from "./api";
-import { useAuth } from "./auth";
+import { useAuth, useBootstrap } from "./auth";
+import { readModules, type Modules } from "./modules";
 import { Action } from "./ui";
 
 const steps = [
   {
     target: "navigation",
     title: "Encontre seu caminho",
-    body: "O menu reúne cursos, materiais, certificados, comunidade e suporte. No celular, abra o menu pelo topo. Contas administradoras têm o atalho Administração logo abaixo de Configurações, no fim do menu da área de membros. Instrutores, moderadores e suporte têm, no mesmo lugar, atalhos para suas ferramentas. No catálogo e no fórum, a barra inferior também dá acesso ao Ranking. Materiais fica disponível no menu em ambos os temas.",
+    body: "",
   },
   {
     target: "member-search",
@@ -148,6 +149,11 @@ const steps = [
     body: "Use Salvar nome para publicar o nome. Se outra sessão tiver alterado o nome, revise o valor publicado antes de reenviar. Em Logo da plataforma, envie a versão colorida e a branca, confira a prévia nos dois temas e salve cada uma. Remover devolve o nome da instalação ou a logo do Icarus. Em Ícone da plataforma, envie o favicon em PNG quadrado.",
   },
   {
+    target: "admin-settings-modules",
+    title: "Escolha os módulos da plataforma",
+    body: "Use o interruptor de cada módulo para ligar ou desligar. Desligar esconde o recurso dos alunos e bloqueia o acesso no servidor, sem apagar dados. A mudança vale assim que o servidor confirma.",
+  },
+  {
     target: "admin-settings-team",
     title: "Consulte os papéis da equipe",
     body: "Para alterar papel ou acesso, use Gerenciar membros e equipe e abra a ficha da pessoa. Informe o motivo e confirme sua identidade.",
@@ -183,6 +189,18 @@ const steps = [
     body: "Cadastre capítulos, destaques, fórmulas, checklist e CTA conforme o conteúdo. Ao remover um item já salvo, confirme a exclusão das marcações associadas.",
   },
 ];
+// O passo do menu cita só os módulos ligados nesta plataforma.
+function navigationBody(state: Modules) {
+  const sections = ["cursos", state.materials && "materiais", state.certificates && "certificados",
+    state.community && "comunidade", state.support && "suporte"].filter(Boolean) as string[];
+  const listed = sections.length > 1 ? `${sections.slice(0, -1).join(", ")} e ${sections.at(-1)}` : sections[0];
+  return [
+    `O menu reúne ${listed}. No celular, abra o menu pelo topo.`,
+    "Contas administradoras têm o atalho Administração logo abaixo de Configurações, no fim do menu da área de membros. Instrutores, moderadores e suporte têm, no mesmo lugar, atalhos para suas ferramentas.",
+    state.ranking && `${state.community ? "No catálogo e no fórum" : "No catálogo"}, a barra inferior também dá acesso ao Ranking.`,
+    state.materials && "Materiais fica disponível no menu em ambos os temas.",
+  ].filter(Boolean).join(" ");
+}
 function visibleTarget(target: string) {
   const region = [...document.querySelectorAll<HTMLElement>(`[data-tour="${target}"]`)]
     .find((element) => element.getClientRects().length > 0);
@@ -198,6 +216,9 @@ function visibleTarget(target: string) {
 export function Tour() {
   const { pathname, search } = useLocation(),
     { session } = useAuth(),
+    boot = useBootstrap().data,
+    modules = readModules(boot?.settings?.modules),
+    helpOpen = modules.help || (!!boot && boot.profile.role !== "member"),
     [active, setActive] = useState(false),
     [index, setIndex] = useState(0),
     [done, setDone] = useState(false),
@@ -342,8 +363,9 @@ export function Tour() {
       ) : (
         <>
           <p>
-            {step?.body ??
-              "Consulte a central de ajuda para ver os passos completos deste fluxo."}
+            {step?.target === "navigation" ? navigationBody(modules) : step?.body ?? (helpOpen
+              ? "Consulte a central de ajuda para ver os passos completos deste fluxo."
+              : "Esta tela ainda não tem um guia próprio.")}
           </p>
           {step && <p className="meta">
             Passo {Math.min(index + 1, available.length)} de {available.length}
@@ -380,9 +402,11 @@ export function Tour() {
           </div>
         </>
       )}
-      <Link className="text-action" to={adminSettingsScreen || adminReport || adminOrders ? "/ajuda/administracao" : rankingScreen ? "/ajuda/ranking" : podcastScreen ? "/ajuda/podcasts" : "/ajuda"}>
-        Ajuda completa
-      </Link>
+      {helpOpen && (
+        <Link className="text-action" to={adminSettingsScreen || adminReport || adminOrders ? "/ajuda/administracao" : rankingScreen ? "/ajuda/ranking" : podcastScreen ? "/ajuda/podcasts" : "/ajuda"}>
+          Ajuda completa
+        </Link>
+      )}
     </aside>
     </>,
     document.body,

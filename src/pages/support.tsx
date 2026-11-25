@@ -29,6 +29,7 @@ import {
 } from "../ui";
 import { statusName } from "./community";
 import { Upload } from "../upload";
+import { useModules } from "../modules";
 
 import "./support.css";
 
@@ -37,11 +38,12 @@ const priorities = ["low", "normal", "high", "urgent"];
 const helpLinks = [
   ["/ajuda/acesso", "Recuperar acesso à conta"],
   ["/ajuda/cursos", "Acessar cursos e aulas"],
-  ["/ajuda/certificados", "Consultar certificados"],
+  ["/ajuda/certificados", "Consultar certificados", "certificates"],
   ["/ajuda/suporte", "Acompanhar chamados e anexos"],
-];
+] as const;
 
 export function Tickets({ admin = false }: { admin?: boolean }) {
+  const modules = useModules();
   return admin ? (
     <AdminTickets />
   ) : (
@@ -50,16 +52,18 @@ export function Tickets({ admin = false }: { admin?: boolean }) {
         Envie sua solicitação à equipe e acompanhe as respostas na conversa.
       </Heading>
       <nav className="support-shortcuts" aria-label="Atalhos de suporte">
-        <Link className="support-panel" to="/ajuda">
-          <BookOpen size={22} aria-hidden="true" />
-          <strong>Central de ajuda</strong>
-          <span>Consulte os guias da plataforma.</span>
-        </Link>
-        <Link className="support-panel" to="/ajuda/suporte">
-          <LifeBuoy size={22} aria-hidden="true" />
-          <strong>Como funciona o atendimento</strong>
-          <span>Veja como acompanhar e reabrir um chamado.</span>
-        </Link>
+        {modules.help && <>
+          <Link className="support-panel" to="/ajuda">
+            <BookOpen size={22} aria-hidden="true" />
+            <strong>Central de ajuda</strong>
+            <span>Consulte os guias da plataforma.</span>
+          </Link>
+          <Link className="support-panel" to="/ajuda/suporte">
+            <LifeBuoy size={22} aria-hidden="true" />
+            <strong>Como funciona o atendimento</strong>
+            <span>Veja como acompanhar e reabrir um chamado.</span>
+          </Link>
+        </>}
         <Link className="support-panel" to="/app/suporte/novo">
           <MessageSquare size={22} aria-hidden="true" />
           <strong>Abrir ticket</strong>
@@ -76,25 +80,27 @@ export function Tickets({ admin = false }: { admin?: boolean }) {
           <TicketQueue />
         </section>
       </div>
-      <section className="support-panel">
-        <SectionHeading
-          className="support-section-heading"
-          title="Perguntas frequentes"
-          actions={
-            <Link className="text-action" to="/ajuda">
-              Ver todos os guias <ArrowUpRight size={16} aria-hidden="true" />
-            </Link>
-          }
-        />
-        <div className="support-faq">
-          {helpLinks.map(([to, label]) => (
-            <Link to={to} key={to}>
-              {label}
-              <ChevronRight size={16} aria-hidden="true" />
-            </Link>
-          ))}
-        </div>
-      </section>
+      {modules.help && (
+        <section className="support-panel">
+          <SectionHeading
+            className="support-section-heading"
+            title="Perguntas frequentes"
+            actions={
+              <Link className="text-action" to="/ajuda">
+                Ver todos os guias <ArrowUpRight size={16} aria-hidden="true" />
+              </Link>
+            }
+          />
+          <div className="support-faq">
+            {helpLinks.filter(([, , key]) => !key || modules[key]).map(([to, label]) => (
+              <Link to={to} key={to}>
+                {label}
+                <ChevronRight size={16} aria-hidden="true" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

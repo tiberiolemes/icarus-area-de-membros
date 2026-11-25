@@ -33,20 +33,25 @@ async function latest(repo: string): Promise<Release | null> {
   const age = Date.now() - Number(cached?.at);
   if (age >= 0 && age < day) {
     if (valid(cached)) return { tag: cached.tag, url: cached.url };
-    // Falha guardada: sem rede ou no limite do GitHub, o painel não repete a consulta a cada recarga.
+    // Falha guardada: no limite do GitHub, o painel não repete a consulta a cada recarga.
     if (cached?.tag === undefined) return null;
   }
+  let data;
   try {
     const response = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, { headers: { accept: "application/vnd.github+json" } });
-    if (!response.ok) throw Error(`GitHub respondeu ${response.status}`);
-    const { tag_name: tag, html_url: url } = await response.json();
-    if (!valid({ tag, url })) throw Error("Release inesperada");
-    write(key, JSON.stringify({ tag, url, at: Date.now() }));
-    return { tag, url };
+    data = response.ok ? await response.json() : null;
   } catch {
+    // Sem rede, CSP ou recarga no meio da consulta: nada chegou ao GitHub, então tenta de novo na próxima abertura.
+    return null;
+  }
+  const release = { tag: data?.tag_name, url: data?.html_url };
+  if (!valid(release)) {
+    // Erro do GitHub (como o limite de requisições) ou resposta inesperada: guarda a falha por 24 horas.
     write(key, JSON.stringify({ at: Date.now() }));
     return null;
   }
+  write(key, JSON.stringify({ ...release, at: Date.now() }));
+  return release;
 }
 
 /** Aviso de versão nova para admins: o navegador consulta as Releases públicas do GitHub, no máximo uma vez por dia. */

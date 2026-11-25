@@ -1,5 +1,9 @@
 # Changelog
 
+## Não lançado
+
+- Aviso de versão nova: uma consulta que não chegou ao GitHub (sem rede, bloqueada ou interrompida por recarga) não fica mais guardada como falha por 24 horas. Só a resposta de erro do GitHub, como a do limite de requisições, fica guardada.
+
 ## 2.2.1 · 2026-11-25
 
 - Foto de perfil salva pelo botão Salvar foto, com aviso de foto pendente e proteção ao sair da tela. Antes, escolher a foto só criava a prévia, e Salvar perfil não a enviava. A foto aceita só JPG ou PNG de até 500 KB, conferidos no navegador pelo conteúdo real do arquivo e na Edge `upload`, que recusa o resto com 422.

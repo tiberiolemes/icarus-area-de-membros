@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.5.0 · 2026-11-25
+
+- Módulos da plataforma em Configurações → Módulos. O admin liga e desliga, cada um por um interruptor em AJAX com a explicação do que deixa de aparecer: Comunidade, Materiais (a biblioteca), Podcasts e masterclasses, Certificados, Ranking, Encontros ao vivo, Suporte, Central de ajuda e Feedback dos alunos. Cursos é o núcleo e fica sempre ativo. Instalações novas e atualizadas começam com tudo ligado, então nada muda sozinho.
+- Desligar esconde e bloqueia, nunca apaga. O módulo sai do menu lateral, da gaveta e da barra do celular, do guia da tela, da Central de ajuda e dos links de outras telas. A rota do aluno mostra "Recurso indisponível" com volta aos cursos. No servidor, as RPCs do aluno recusam com "Este recurso está desativado nesta plataforma.", e as Edges `upload` e `media` recusam anexo de ticket, imagem de publicação, material da biblioteca e print de feedback. Religar devolve tudo com os dados intactos.
+- A equipe de cada módulo segue usando o painel: o menu do admin mostra o selo Desativado e a tela traz um aviso com o caminho para religar. Moderadores, suporte e instrutores não são bloqueados no servidor nos módulos que atendem.
+- Regras por módulo: com Certificados desligado, a emissão de novos certificados pausa e os já emitidos continuam válidos em `/verificar` e `/certificado`; ao religar, quem concluiu emite pelo botão Emitir certificado. Com o Ranking desligado, os pontos continuam registrados. Os anexos de cada aula seguem com Cursos. A Central de ajuda desligada some também da tela de entrada; o guia de cada tela continua. A exportação de dados do membro segue completa, inclusive de módulos desligados. A busca global e o Analytics não mudam.
+- Só admin muda os módulos, com AAL2 quando tem 2FA, e cada troca fica na auditoria (`enable` ou `disable`, alvo `module_<chave>`). O estado sai como booleanos em `app_public_context` e `app_bootstrap`.
+- Atualização da 2.4.0: aplique a migration `202611250004` e gere o frontend da tag. Não há Edge Function nova: o bloqueio das Edges vem do banco. Faça backup e siga [Atualizar de versão](docs/operations.md#atualizar-de-versão).
+
 ## 2.4.0 · 2026-11-25
 
 - Logo da instalação em Configurações → Plataforma e marca. O admin envia a logo colorida, para fundo claro, e a branca, para fundo escuro, em PNG ou WebP de até 500 KB, com mínimo de 240 × 60 px e recomendação de 960 × 240 px com fundo transparente. Cada versão tem prévia nos dois temas antes de salvar, salvar, trocar e remover, tudo em AJAX. O navegador e a Edge `upload` conferem o conteúdo real do arquivo, o tamanho e as dimensões; SVG, arquivo renomeado e imagem fora do limite são recusados com 422.

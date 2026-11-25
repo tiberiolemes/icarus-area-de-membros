@@ -24,6 +24,10 @@ Contrato de `docs/CONTRACT.md`, sem escrita direta do browser. Todas as RPCs ret
 
 `app_admin_member_detail(p_id uuid)` exige papel de admin e sessão válida e retorna `{profile,subscriptions,courses,orders,tickets}`. Cada lista relacionada é `{items,total,page:1,page_size:20}` com ordenação no servidor e contagem real. Cursos incluem progresso/certificados relacionados ao titular; assinaturas preservam validade/fonte/status derivado; pedidos expõem montante/método/status/datas, nunca buyer_data/documento/receipt_hash/attempt_key; tickets são do próprio titular, sem mensagens/PII de terceiros. É uma única RPC da ficha, sem consultas SDK por linha. Página posterior/filtros avançados continuam fora desta assinatura.
 
+## Módulos da plataforma
+
+`app_admin_set_module(p_key text,p_enabled boolean)` → objeto com os nove módulos (`community`, `materials`, `podcasts`, `certificates`, `ranking`, `live_events`, `support`, `help`, `feedback`) como booleanos. Exige admin e AAL2 quando o admin tem 2FA; audita `enable`/`disable` com alvo `module_<chave>` só quando o estado muda. `app_public_context().modules` e `app_bootstrap().settings.modules` devolvem o mesmo objeto. Com um módulo desligado, as RPCs do aluno recusam com `P0001` "Este recurso está desativado nesta plataforma." ou com a recusa de acesso da própria RPC, e a equipe do módulo continua passando. O [contrato](CONTRACT.md) lista as RPCs e as regras de cada módulo.
+
 ## Arquivamento próprio na comunidade
 
 `app_archive_post(p_id uuid,p_archived boolean)` → `{id,status,archived}`, apenas `authenticated`. Usa `actor()`, titularidade e acesso vigente ao espaço dentro da transação, com trava da publicação e auditoria atômica. ID/operação nulos, objeto alheio, sessão revogada, suspensão e estado inválido são negados. `true` arquiva `pending/approved/rejected`; `false` recupera exatamente o estado anterior permitido, sem aprovar conteúdo. Nenhuma exclusão física ou alteração de texto, imagem, criação, respostas ou votos.

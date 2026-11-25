@@ -110,12 +110,12 @@ it("remove a logo branca só depois da confirmação", async () => {
   expect(edge).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Remover logo branca" }));
   expect(await screen.findByText("Logo branca removida.")).toBeInTheDocument();
-  expect(confirm).toHaveBeenLastCalledWith("Remover a logo branca? O tema escuro passa a usar a logo colorida ou, sem ela, a logo padrão do Icarus.");
+  expect(confirm).toHaveBeenLastCalledWith("Remover a logo branca? O tema escuro passa a usar a logo colorida, se houver.");
   expect(edge).toHaveBeenCalledWith("upload", { action: "brand-logo-remove", variant: "dark" });
 });
 
 it("avisa quando só a logo branca está cadastrada", () => {
   settings.logo_dark = dark;
   mount();
-  expect(screen.getByText("Envie também a logo colorida. Sem ela, o tema claro, as telas de entrada e o certificado usam a logo padrão do Icarus.")).toBeInTheDocument();
+  expect(screen.getByText("Envie também a logo colorida. Sem ela, o tema claro, as telas de entrada e o certificado não mostram a sua logo.")).toBeInTheDocument();
 });

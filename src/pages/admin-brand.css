@@ -25,7 +25,7 @@
 
 .admin-settings .brand-workspace .form { max-width: none; margin: 0; }
 
-.admin-settings .brand-workspace .field input {
+.admin-settings .brand-workspace .field input:not([type="file"]) {
   width: 100%;
   min-block-size: var(--stitch-control-min-size);
   border-color: var(--stitch-text-muted);
@@ -78,15 +78,16 @@
   gap: var(--stitch-space-md);
 }
 
-@media (min-width: 640px) {
-  .brand-logos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
 .brand-logo-card {
   display: grid;
   align-content: start;
   gap: var(--stitch-space-sm);
   min-inline-size: 0;
+}
+
+.brand-logo-card + .brand-logo-card {
+  padding-block-start: var(--stitch-space-md);
+  border-block-start: var(--stitch-border-width) solid var(--stitch-border-subtle);
 }
 
 .brand-logo-card h3 { font-size: var(--stitch-type-body-lg-size); }

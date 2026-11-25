@@ -2629,7 +2629,7 @@ export function AdminSettings() {
     <SettingsSurface
       tab="marca"
       title="Plataforma, marca e white label"
-      description="Gerencie o nome da plataforma e seus documentos legais."
+      description="Gerencie o nome e a logo da plataforma e os documentos legais."
     >
       <AdminBrand />
     </SettingsSurface>

@@ -16,15 +16,15 @@ const logoCopy = {
     title: "Logo colorida",
     noun: "logo colorida",
     use: "Para fundo claro. Aparece no tema claro, nas telas de entrada e no certificado.",
-    empty: "Usando a logo padrão do Icarus.",
-    confirm: "Remover a logo colorida? O tema claro, as telas de entrada e o certificado voltam à logo padrão do Icarus.",
+    empty: "Nenhuma logo enviada.",
+    confirm: "Remover a logo colorida? O tema claro, as telas de entrada e o certificado deixam de mostrar a sua logo.",
   },
   dark: {
     title: "Logo branca",
     noun: "logo branca",
     use: "Para fundo escuro. Aparece no tema escuro; sem ela, a colorida vale nos dois temas.",
-    empty: "Usando a logo colorida ou, sem ela, a padrão do Icarus.",
-    confirm: "Remover a logo branca? O tema escuro passa a usar a logo colorida ou, sem ela, a logo padrão do Icarus.",
+    empty: "Nenhuma logo enviada. O tema escuro usa a colorida, se houver.",
+    confirm: "Remover a logo branca? O tema escuro passa a usar a logo colorida, se houver.",
   },
 } as const;
 
@@ -219,7 +219,7 @@ function BrandEditor({ actorId, token, name, revision, logos }: { actorId: strin
               <p>Envie a versão colorida, para fundo claro, e a branca, para fundo escuro. A logo substitui a do Icarus em toda a plataforma, inclusive nas telas de entrada.</p>
             </header>
             {!logos.light && logos.dark && (
-              <Notice>Envie também a logo colorida. Sem ela, o tema claro, as telas de entrada e o certificado usam a logo padrão do Icarus.</Notice>
+              <Notice>Envie também a logo colorida. Sem ela, o tema claro, as telas de entrada e o certificado não mostram a sua logo.</Notice>
             )}
             <div className="brand-logos">
               {(["light", "dark"] as const).map((variant) => (

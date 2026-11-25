@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation, useMatch } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -42,6 +42,7 @@ import { Tour } from "./tour";
 import { UpdateNotice } from "./update-notice";
 import { MemberSearch } from "./pages/member-search";
 import { StitchIcon } from "./stitch-icon";
+import { BrandLogo, brandLogoUrl, defaultLogo } from "./brand";
 import "./member-shell-stitch.css";
 
 const memberNav = [
@@ -70,7 +71,6 @@ const adminNav = [
   ["Configurações", "configuracoes", Settings, ["admin"]],
 ] as const;
 
-const logoUrl = import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg";
 
 const staffEntryLabels: Readonly<Record<string, string | undefined>> = {
   admin: "Administração",
@@ -107,10 +107,11 @@ function threadInitials(fullName?: string) {
   return (([...first][0] ?? "I") + ([...last][0] ?? "")).toLocaleUpperCase("pt-BR");
 }
 
-function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNavigate, drawerInitials }: {
+function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNavigate, drawerInitials }: {
   admin: boolean;
   profile: Profile;
-  installationName: string;
+  brand: ReactNode;
+  brandIcon: boolean;
   onToggleTheme: () => Promise<void>;
   onNavigate?: () => void;
   drawerInitials?: string;
@@ -131,16 +132,13 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
       <Link className="rail-brand" to="/app/cursos" onClick={onNavigate}>
         {admin ? (
           <>
-            {installationName !== "Icarus" && <PlaneTakeoff size={32} aria-hidden="true" />}
+            {brandIcon && <PlaneTakeoff size={32} aria-hidden="true" />}
             <div className="installation-admin">
-              {installationName === "Icarus" ? <img src={logoUrl} alt="Icarus" /> :
-                <strong className="installation-name" title={installationName}>{installationName}</strong>}
+              {brand}
               <span>Painel admin</span>
             </div>
           </>
-        ) : installationName === "Icarus" ? (
-          <img src={logoUrl} alt="Icarus" />
-        ) : <strong className="installation-name" title={installationName}>{installationName}</strong>}
+        ) : brand}
       </Link>
       {drawerInitials && (
         <div className="mobile-drawer-account">
@@ -210,6 +208,14 @@ export function Shell() {
   const profile = boot.data!.profile;
   const name = boot.data?.settings?.name;
   const installationName = typeof name === "string" && name ? name : "Icarus";
+  const logos = { light: brandLogoUrl(boot.data?.settings?.logo_light), dark: brandLogoUrl(boot.data?.settings?.logo_dark) };
+  // Sem logo própria, nada muda: logo do Icarus ou o nome personalizado em texto.
+  const brandMark = (Text: "strong" | "span") => (
+    <BrandLogo {...logos} name={installationName} fallback={installationName === "Icarus" ? <img src={defaultLogo} alt="Icarus" />
+      : Text === "strong" ? <strong className="installation-name" title={installationName}>{installationName}</strong>
+      : <span title={installationName}>{installationName}</span>} />
+  );
+  const brandIcon = installationName !== "Icarus" && !logos.light && !logos.dark;
   const { pathname, search } = useLocation();
   const admin = pathname.startsWith("/admin");
   const account = useMatch("/app/configuracoes");
@@ -283,7 +289,7 @@ export function Shell() {
         Pular para o conteúdo
       </a>
       <aside className="sidebar">
-        <ShellNavigation admin={admin} profile={profile} installationName={installationName} onToggleTheme={toggleTheme} />
+        <ShellNavigation admin={admin} profile={profile} brand={brandMark("strong")} brandIcon={brandIcon} onToggleTheme={toggleTheme} />
       </aside>
       <div className="workspace">
         <header className="topbar">
@@ -313,7 +319,7 @@ export function Shell() {
                 >
                   <X />
                 </Dialog.Close>
-                <ShellNavigation admin={admin} profile={profile} installationName={installationName} onToggleTheme={toggleTheme} onNavigate={() => setOpen(false)}
+                <ShellNavigation admin={admin} profile={profile} brand={brandMark("strong")} brandIcon={brandIcon} onToggleTheme={toggleTheme} onNavigate={() => setOpen(false)}
                   drawerInitials={mobileFrame === "browse" ? accountInitials : undefined} />
               </Dialog.Content>
             </Dialog.Portal>
@@ -325,18 +331,13 @@ export function Shell() {
           )}
           {mobileFrame && (
             <div className="mobile-frame-label">
-              {lesson ? <span>Aula</span> : installationName === "Icarus" ? (
-                <img src={logoUrl} alt="Icarus" />
-              ) : <span title={installationName}>{installationName}</span>}
+              {lesson ? <span>Aula</span> : brandMark("span")}
               {!lesson && planBadge}
             </div>
           )}
           {admin ? <>
             <span className="top-context">Administração</span>
-            <div className="admin-topbar-brand">
-              {installationName === "Icarus" ? <img src={logoUrl} alt="Icarus" /> :
-                <strong className="installation-name" title={installationName}>{installationName}</strong>}
-            </div>
+            <div className="admin-topbar-brand">{brandMark("strong")}</div>
           </> : <MemberSearch actorId={profile.id} drawerOpen={open} />}
           <div className="topbar-tools">
             <Tour />

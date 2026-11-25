@@ -9,6 +9,7 @@ import { Action, Empty, Field, Form, Heading, Notice, Progress, QueryState, valu
 import { PublicFrame } from "./access";
 import { RichContent } from "../rich";
 import { exportCertificate } from "../certificate";
+import { BrandLogo, brandLogoUrl, defaultLogo } from "../brand";
 import { notificationListKey, reconcileNotificationQueries } from "./notifications";
 import "./student-resources.css";
 
@@ -21,12 +22,16 @@ function certificateStatus(certificate: Certificate) {
   return certificate.demo ? "Demonstração sem validade" : "Certificado válido";
 }
 
+type PublicBrand = { name?: string; logo_light?: string | null; logo_dark?: string | null };
+
 function CertificateDocument({ certificate }: { certificate: Certificate }) {
+  const brand = useRpc<PublicBrand>("app_public_context").data;
   return (
     <article className="certificate-document" data-tour="certificate">
       <header className="certificate-document-header">
         <span className="certificate-brand">
-          <img src={import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg"} alt="Icarus" width="244" height="64" />
+          <BrandLogo light={brandLogoUrl(brand?.logo_light)} dark={brandLogoUrl(brand?.logo_dark)} name={brand?.name || "Icarus"}
+            fallback={<img src={defaultLogo} alt="Icarus" width="244" height="64" />} />
         </span>
         <span className="certificate-code">Código de verificação <code>{certificate.code}</code></span>
       </header>
@@ -60,14 +65,16 @@ function CertificateActions({ certificate }: { certificate: Certificate }) {
   const [copied, setCopied] = useState(false);
   const verifyHref = useHref(verificationPath(certificate.code));
   const verificationUrl = new URL(verifyHref, window.location.href).href;
+  // O arquivo exportado tem fundo branco: usa a logo colorida ou, sem ela, a do Icarus.
+  const logoUrl = brandLogoUrl(useRpc<PublicBrand>("app_public_context").data?.logo_light);
   return (
     <div className="certificate-actions">
       {!certificate.revoked_at && (
         <>
-          <Action primary run={() => exportCertificate(certificate, "pdf", verificationUrl)}>
+          <Action primary run={() => exportCertificate(certificate, "pdf", verificationUrl, logoUrl)}>
             <Download size={18} aria-hidden="true" /> Baixar PDF
           </Action>
-          <Action run={() => exportCertificate(certificate, "png", verificationUrl)}>
+          <Action run={() => exportCertificate(certificate, "png", verificationUrl, logoUrl)}>
             <Image size={18} aria-hidden="true" /> Baixar PNG
           </Action>
         </>

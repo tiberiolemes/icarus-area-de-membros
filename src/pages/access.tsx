@@ -16,6 +16,7 @@ import {
 import type { Profile } from "../api";
 import { useAuth, useBootstrap } from "../auth";
 import { Captcha, captchaToken, resetCaptcha } from "../captcha";
+import { BrandLogo, brandLogoUrl, defaultLogo } from "../brand";
 import {
   Action,
   Field,
@@ -30,6 +31,8 @@ import {
 
 type PublicContext = {
   name: string;
+  logo_light?: string | null;
+  logo_dark?: string | null;
   registration_enabled: boolean;
   legal_ready: boolean;
   legal_versions: {
@@ -48,9 +51,9 @@ export function PublicFrame({ children }: { children: React.ReactNode }) {
     <div className="public-layout">
       <header className="public-top">
         <Link to="/entrar" aria-label={`${name}, início`} className={name === "Icarus" ? undefined : "public-installation-name"}>
-          {name === "Icarus" ? (
-            <img src={import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg"} alt="Icarus" width="244" height="64" />
-          ) : <strong className="installation-name" title={name}>{name}</strong>}
+          <BrandLogo light={brandLogoUrl(context.data?.logo_light)} dark={brandLogoUrl(context.data?.logo_dark)} name={name}
+            fallback={name === "Icarus" ? <img src={defaultLogo} alt="Icarus" width="244" height="64" />
+              : <strong className="installation-name" title={name}>{name}</strong>} />
         </Link>
         <Link to="/ajuda">Central de ajuda</Link>
       </header>

@@ -1,9 +1,11 @@
 import { safeUrl, downloadBlob } from "./api";
 import type { Certificate } from "./api";
+import { defaultLogo, logoBox } from "./brand";
 
 export async function certificateCanvas(
   certificate: Certificate,
   verificationUrl = `${location.origin}/verificar/${encodeURIComponent(certificate.code)}`,
+  logoUrl: string | null = null,
 ) {
   if (certificate.revoked_at)
     throw new Error(
@@ -24,9 +26,16 @@ export async function certificateCanvas(
   ctx.lineWidth = 2;
   ctx.strokeRect(56, 56, 1488, 1008);
   const logo = new Image();
-  logo.src = import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg";
-  await logo.decode();
-  ctx.drawImage(logo, 100, 96, 305, 80);
+  // O Storage responde com CORS aberto; sem crossOrigin o canvas ficaria bloqueado para exportar.
+  if (logoUrl) logo.crossOrigin = "anonymous";
+  logo.src = logoUrl ?? defaultLogo;
+  try {
+    await logo.decode();
+  } catch {
+    throw new Error("Não foi possível carregar a logo para exportar o certificado. Tente novamente.");
+  }
+  const box = logoUrl ? logoBox(logo.naturalWidth, logo.naturalHeight) : { x: 100, y: 96, width: 305, height: 80 };
+  ctx.drawImage(logo, box.x, box.y, box.width, box.height);
   ctx.fillStyle = "#000000";
   ctx.font = "500 24px Inter";
   ctx.fillText(
@@ -159,8 +168,9 @@ export async function exportCertificate(
   certificate: Certificate,
   format: "png" | "pdf",
   verificationUrl?: string,
+  logoUrl: string | null = null,
 ) {
-  const canvas = await certificateCanvas(certificate, verificationUrl);
+  const canvas = await certificateCanvas(certificate, verificationUrl, logoUrl);
   if (format === "png") {
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob(

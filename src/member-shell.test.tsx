@@ -5,9 +5,16 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { Shell } from "./shell";
 import { NotificationHistory } from "./pages/notifications";
 
+vi.hoisted(() => {
+  vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:58521");
+  vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
+});
+const logoLight = "logo/light-11111111-1111-4111-8111-111111111111.png";
+const logoDark = "logo/dark-22222222-2222-4222-8222-222222222222.webp";
+
 const { profile, settings, refetch, rpc, edge, signOut } = vi.hoisted(() => ({
   profile: { id: "member-1", full_name: "Pessoa Teste", plan_name: "Plano ativo", role: "member", theme: undefined as string | undefined, avatar_id: undefined as string | undefined },
-  settings: { name: "Icarus" },
+  settings: { name: "Icarus", logo_light: null as string | null, logo_dark: null as string | null },
   refetch: vi.fn(),
   rpc: vi.fn(),
   edge: vi.fn(),
@@ -43,6 +50,8 @@ function mount(path: string) {
 
 beforeEach(() => {
   settings.name = "Icarus";
+  settings.logo_light = null;
+  settings.logo_dark = null;
   profile.full_name = "Pessoa Teste";
   profile.role = "member";
   profile.plan_name = "Plano ativo";
@@ -285,6 +294,29 @@ it("usa o nome personalizado na lateral e no topo móvel da administração", ()
   mount("/admin/cursos");
   expect(screen.getAllByText("Plataforma de teste")).toHaveLength(2);
   expect(screen.queryByRole("img", { name: "Icarus" })).not.toBeInTheDocument();
+});
+
+it("troca a logo do Icarus e o nome pela logo da instalação na lateral e no topo móvel do membro", () => {
+  settings.name = "Academia de teste";
+  settings.logo_light = logoLight;
+  mount("/app/cursos");
+  const logos = screen.getAllByRole("img", { name: "Academia de teste" });
+  expect(logos).toHaveLength(2);
+  for (const logo of logos) expect(logo).toHaveAttribute("src", `http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${logoLight}`);
+  expect(screen.queryByRole("img", { name: "Icarus" })).not.toBeInTheDocument();
+  expect(screen.queryByText("Academia de teste")).not.toBeInTheDocument();
+});
+
+it("mostra a logo da instalação com Painel admin, sem o ícone, nos dois temas da administração", () => {
+  profile.role = "admin";
+  settings.name = "Plataforma de teste";
+  settings.logo_light = logoLight;
+  settings.logo_dark = logoDark;
+  mount("/admin/cursos");
+  const logos = screen.getAllByRole("img", { name: "Plataforma de teste" });
+  expect(logos.map((logo) => logo.dataset.brandTone)).toEqual(["light", "dark", "light", "dark"]);
+  expect(screen.getByText("Painel admin")).toBeInTheDocument();
+  expect(document.querySelector(".rail-brand > svg")).toBeNull();
 });
 
 it.each([

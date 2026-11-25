@@ -98,6 +98,19 @@ it("lida com código malformado no endereço sem consultar o certificado", async
   expect(request).not.toHaveBeenCalled();
 });
 
+it("o documento do certificado usa a logo da instalação nos dois temas", async () => {
+  const light = "logo/light-11111111-1111-4111-8111-111111111111.png", dark = "logo/dark-22222222-2222-4222-8222-222222222222.png";
+  vi.stubGlobal("fetch", async (url: RequestInfo | URL) =>
+    String(url).endsWith("/app_public_context") ? json({ name: "Academia de teste", logo_light: light, logo_dark: dark }) : json(certificate));
+  mount("/verificar/" + validCode);
+  await waitFor(() => expect(document.querySelectorAll('[data-tour="certificate"] img.brand-custom')).toHaveLength(2));
+  const paper = document.querySelector('[data-tour="certificate"]')!;
+  const [first, second] = paper.querySelectorAll("img.brand-custom");
+  expect(first).toHaveAttribute("src", expect.stringMatching(new RegExp(`/icarus-brand/${light}$`)));
+  expect(second).toHaveAttribute("data-brand-tone", "dark");
+  expect(paper.querySelector('img[alt="Icarus"]')).toBeNull();
+});
+
 it("revalida o código atual e distingue falha de consulta de revogação", async () => {
   const request = vi.fn()
     .mockImplementationOnce(async () => json(certificate))

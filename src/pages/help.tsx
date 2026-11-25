@@ -163,6 +163,7 @@ export const articles = [
       "Em Dashboard, abra o filtro de período e escolha um atalho ou Personalizado. Digite as datas ou selecione-as no calendário e clique em Aplicar. A consulta inclui a data final e usa o horário de Brasília. Administradores podem ativar a verificação em duas etapas em Sua conta → Segurança.",
       "Em Analytics, escolha um curso publicado para consultar o funil e a conclusão por aula. A retenção por trecho depende de telemetria de vídeo.",
       "Em Configurações, abra Plataforma e marca para editar o nome exibido. Confira a prévia e salve para publicar. O nome aparece na área pública e nos cabeçalhos da plataforma.",
+      "Em Plataforma e marca, envie a logo colorida, para fundo claro, e a branca, para fundo escuro, em PNG ou WebP de até 500 KB. Confira a prévia nos dois temas e salve cada uma. A logo substitui a do Icarus nos menus, nas telas de entrada, no checkout e no certificado. Sem a branca, a colorida vale nos dois temas. Remover volta à logo padrão do Icarus.",
       "Em Configurações, revise perguntas e versões legais. Na aba Equipe, consulte os papéis e abra Gerenciar membros e equipe para alterar o acesso pela ficha.",
       "Em Auditoria, busque eventos por ação, ator ou alvo e navegue entre as páginas. A trilha mostra o motivo quando registrado.",
       "Em Integrações, escolha Gateway Asaas ou Bunny Stream. Atualizar estado consulta se há configuração no servidor. Configure as credenciais no servidor.",

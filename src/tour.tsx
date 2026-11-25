@@ -144,8 +144,8 @@ const steps = [
   },
   {
     target: "admin-settings-brand",
-    title: "Edite o nome da plataforma",
-    body: "Confira a prévia e use Salvar nome para publicar. Se outra sessão tiver alterado o nome, revise o valor publicado antes de reenviar.",
+    title: "Edite o nome e a logo da plataforma",
+    body: "Use Salvar nome para publicar o nome. Se outra sessão tiver alterado o nome, revise o valor publicado antes de reenviar. Em Logo da plataforma, envie a versão colorida e a branca, confira a prévia nos dois temas e salve cada uma. Remover volta à logo padrão do Icarus.",
   },
   {
     target: "admin-settings-team",

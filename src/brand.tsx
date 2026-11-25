@@ -32,3 +32,25 @@ export function logoBox(width: number, height: number) {
     ? { x: 100, y: 96, width: 305, height: (305 * height) / width }
     : { x: 100, y: 96, width: (80 * width) / height, height: 80 };
 }
+
+export const logoHint = "PNG ou WebP, até 500 KB. Mínimo de 240 × 60 px; recomendado 960 × 240 px (proporção 4:1), com fundo transparente.";
+
+/** Confere tipo pelo conteúdo, tamanho e dimensões antes do envio e devolve a URL da prévia. O servidor confere tudo de novo. */
+export async function checkLogoFile(file: File) {
+  const type = ({ png: "image/png", webp: "image/webp" } as Record<string, string | undefined>)[file.name.split(".").pop()!.toLowerCase()];
+  if (!type || file.type !== type) throw new Error("A logo precisa ser PNG ou WebP.");
+  if (!file.size || file.size > 512000) throw new Error("A logo precisa ter até 500 KB.");
+  const bytes = new Uint8Array(await file.slice(0, 12).arrayBuffer()), ascii = (start: number, end: number) => String.fromCharCode(...bytes.slice(start, end));
+  const real = type === "image/png" ? [137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => bytes[index] === byte) : ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP";
+  if (!real) throw new Error("O conteúdo do arquivo não é um PNG ou WebP válido.");
+  let image: ImageBitmap;
+  try {
+    image = await createImageBitmap(file);
+  } catch {
+    throw new Error("Não foi possível ler esta imagem. Escolha outro PNG ou WebP.");
+  }
+  const { width, height } = image;
+  image.close();
+  if (width < 240 || height < 60 || width > 4096 || height > 4096) throw new Error("A logo precisa ter pelo menos 240 × 60 px e no máximo 4096 px de cada lado.");
+  return URL.createObjectURL(file);
+}

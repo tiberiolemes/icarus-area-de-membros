@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import {
   Link,
@@ -18,7 +18,11 @@ import {
   CreditCard,
   Download,
   FileText,
+  Flag,
   FolderOpen,
+  LayoutGrid,
+  MessageSquare,
+  Reply,
   History,
   KeyRound,
   ListOrdered,
@@ -392,34 +396,31 @@ function OrderControl({
 }
 export function AdminCourses() {
   return (
-    <div className="admin-content">
-      <AdminList
-        entity="courses"
-        title="Cursos e aulas"
-        action={
-          <Link className="button primary" to="/admin/cursos/novo">
-            <Plus size={18} aria-hidden="true" />
-            Criar curso
-          </Link>
-        }
-      >
+    <AdminSurface
+      section="conteudo"
+      trail={["Administração", "Conteúdo"]}
+      title="Cursos e aulas"
+      description="Crie cursos, organize módulos e aulas e publique o conteúdo."
+      action={
+        <Link className="button primary" to="/admin/cursos/novo">
+          <Plus size={18} aria-hidden="true" />
+          Criar curso
+        </Link>
+      }
+    >
+      <AdminList entity="courses" title="Cursos" icon={<BookOpen size={20} aria-hidden="true" />}>
         {(course) => {
           const editor = `/admin/cursos/${encodeURIComponent(course.id)}`;
           return (
             <>
-              <div className="course-list-title">
-                <span className="content-icon">
-                  <BookOpen size={20} aria-hidden="true" />
-                </span>
-                <div>
-                  <h2>
-                    <Link to={editor}>{text(course, "title")}</Link>
-                  </h2>
-                  <p>
-                    {statusName(text(course, "status"))} · /
-                    {text(course, "slug")}
-                  </p>
-                </div>
+              <div>
+                <h3>
+                  <Link to={editor}>{text(course, "title")}</Link>
+                </h3>
+                <p>
+                  {statusName(text(course, "status"))} · /
+                  {text(course, "slug")}
+                </p>
               </div>
               <div className="actions">
                 <Link className="button" to={editor}>
@@ -433,7 +434,7 @@ export function AdminCourses() {
           );
         }}
       </AdminList>
-    </div>
+    </AdminSurface>
   );
 }
 export function CourseEditor() {
@@ -1134,23 +1135,25 @@ export function AdminMaterials() {
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
     [folder, setFolder] = useState<Row | null | undefined>(undefined);
   return (
-    <>
-      <AdminList
-        entity="materials"
-        title="Materiais"
-        action={
-          <div className="actions">
-            <button onClick={() => setFolder(null)}>Nova pasta</button>
-            <button className="primary" onClick={() => setEditing(null)}>
-              Novo material
-            </button>
-          </div>
-        }
-      >
+    <AdminSurface
+      section="materiais"
+      trail={["Administração", "Materiais"]}
+      title="Materiais"
+      description="Organize a biblioteca em pastas e envie os arquivos privados dos alunos."
+      action={
+        <div className="actions">
+          <button onClick={() => setFolder(null)}>Nova pasta</button>
+          <button className="primary" onClick={() => setEditing(null)}>
+            <Plus size={18} aria-hidden="true" /> Novo material
+          </button>
+        </div>
+      }
+    >
+      <AdminList entity="materials" title="Arquivos" icon={<FileText size={20} aria-hidden="true" />}>
         {(item) => (
           <>
             <div>
-              <h2>{text(item, "name")}</h2>
+              <h3>{text(item, "name")}</h3>
               <p>
                 {statusName(text(item, "status"))} · {text(item, "file_type")} ·{" "}
                 {text(item, "size_bytes")} bytes
@@ -1160,46 +1163,107 @@ export function AdminMaterials() {
           </>
         )}
       </AdminList>
-      <h2>Pastas</h2>
-      <QueryState query={folders}>
-        {folders.data?.map((item) => (
-          <div className="resource-row" key={item.id}>
-            <strong>{text(item, "name")}</strong>
-            <button onClick={() => setFolder(item)}>Editar pasta</button>
-          </div>
-        ))}
-      </QueryState>
+      <section className="settings-panel" aria-labelledby="materials-folders">
+        <header>
+          <h2 id="materials-folders"><FolderOpen size={20} aria-hidden="true" /> Pastas</h2>
+        </header>
+        <QueryState query={folders}>
+          {folders.data?.length ? folders.data.map((item) => (
+            <div className="resource-row" key={item.id}>
+              <strong>{text(item, "name")}</strong>
+              <button onClick={() => setFolder(item)}>Editar pasta</button>
+            </div>
+          )) : <Empty>Nenhuma pasta cadastrada.</Empty>}
+        </QueryState>
+      </section>
       {folder !== undefined && (
-        <section
-          className="inline-editor reading"
-          ref={focusEditor}
-          key={folder?.id ?? "new-folder"}
-        >
-          <h2>{folder ? "Editar pasta" : "Criar pasta"}</h2>
-          <Form
-            label="Salvar pasta"
-            secondaryAction={<button type="button" onClick={() => setFolder(undefined)}>Fechar editor</button>}
-            onSave={async (data) => {
-              await save("material_folders", folder?.id ?? null, {
-                name: value(data, "name"),
-                status: value(data, "status"),
-                ...accessData(data),
-                ...(!folder ? { parent_id: nullable(data, "parent_id") } : {}),
-              });
-              setFolder(undefined);
-            }}
-          >
-            <Field label="Nome da pasta">
-              <input
-                name="name"
-                required
-                defaultValue={text(folder ?? undefined, "name")}
-              />
-            </Field>
-            {!folder && (
-              <Field label="Pasta superior">
-                <select name="parent_id">
-                  <option value="">Raiz da biblioteca</option>
+        <section className="settings-panel">
+          <div className="reading inline-editor" ref={focusEditor} key={folder?.id ?? "new-folder"}>
+            <h2>{folder ? "Editar pasta" : "Criar pasta"}</h2>
+            <Form
+              label="Salvar pasta"
+              secondaryAction={<button type="button" onClick={() => setFolder(undefined)}>Fechar editor</button>}
+              onSave={async (data) => {
+                await save("material_folders", folder?.id ?? null, {
+                  name: value(data, "name"),
+                  status: value(data, "status"),
+                  ...accessData(data),
+                  ...(!folder ? { parent_id: nullable(data, "parent_id") } : {}),
+                });
+                setFolder(undefined);
+              }}
+            >
+              <Field label="Nome da pasta">
+                <input
+                  name="name"
+                  required
+                  defaultValue={text(folder ?? undefined, "name")}
+                />
+              </Field>
+              {!folder && (
+                <Field label="Pasta superior">
+                  <select name="parent_id">
+                    <option value="">Raiz da biblioteca</option>
+                    {folders.data?.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {text(f, "name")}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+              <StatusField row={folder ?? undefined} />
+              <AccessFields row={folder ?? undefined} />
+            </Form>
+            {folder && <Archive entity="material_folders" row={folder} />}
+          </div>
+        </section>
+      )}
+      {editing !== undefined && (
+        <section className="settings-panel">
+          <div className="reading inline-editor" ref={focusEditor} key={editing?.id ?? "new-material"}>
+            <h2>{editing ? "Editar material" : "Criar material"}</h2>
+            <Form
+              label="Salvar material"
+              secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
+              onSave={async (data) => {
+                const result = await save("materials", editing?.id ?? null, {
+                  name: value(data, "name"),
+                  description: value(data, "description"),
+                  folder_id: nullable(data, "folder_id"),
+                  lesson_id: nullable(data, "lesson_id"),
+                  file_type: value(data, "file_type"),
+                  status: value(data, "status"),
+                  ...accessData(data),
+                });
+                setEditing({
+                  ...editing,
+                  id: result.id,
+                  name: value(data, "name"),
+                  description: value(data, "description"),
+                  status: value(data, "status"),
+                });
+              }}
+            >
+              <Field label="Nome">
+                <input
+                  name="name"
+                  required
+                  defaultValue={text(editing ?? undefined, "name")}
+                />
+              </Field>
+              <Field label="Descrição">
+                <textarea
+                  name="description"
+                  defaultValue={text(editing ?? undefined, "description")}
+                />
+              </Field>
+              <Field label="Pasta">
+                <select
+                  name="folder_id"
+                  defaultValue={text(editing ?? undefined, "folder_id")}
+                >
+                  <option value="">Raiz</option>
                   {folders.data?.map((f) => (
                     <option key={f.id} value={f.id}>
                       {text(f, "name")}
@@ -1207,115 +1271,54 @@ export function AdminMaterials() {
                   ))}
                 </select>
               </Field>
+              <Field label="Aula vinculada">
+                <select
+                  name="lesson_id"
+                  defaultValue={text(editing ?? undefined, "lesson_id")}
+                >
+                  <option value="">Sem vínculo</option>
+                  {lessons.data?.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {text(l, "title")}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Tipo">
+                <select
+                  name="file_type"
+                  defaultValue={text(
+                    editing ?? undefined,
+                    "file_type",
+                    "application/pdf",
+                  )}
+                >
+                  {[
+                    "application/pdf",
+                    "application/zip",
+                    "video/mp4",
+                    "image/png",
+                    "image/jpeg",
+                    "text/plain",
+                    "audio/mpeg",
+                  ].map((type) => (
+                    <option key={type}>{type}</option>
+                  ))}
+                </select>
+              </Field>
+              <StatusField row={editing ?? undefined} />
+              <AccessFields row={editing ?? undefined} />
+            </Form>
+            {editing && (
+              <>
+                <Upload kind="material" resourceId={editing.id} />
+                <Archive entity="materials" row={editing} />
+              </>
             )}
-            <StatusField row={folder ?? undefined} />
-            <AccessFields row={folder ?? undefined} />
-          </Form>
-          {folder && <Archive entity="material_folders" row={folder} />}
+          </div>
         </section>
       )}
-      {editing !== undefined && (
-        <section
-          className="inline-editor reading"
-          ref={focusEditor}
-          key={editing?.id ?? "new-material"}
-        >
-          <h2>{editing ? "Editar material" : "Criar material"}</h2>
-          <Form
-            label="Salvar material"
-            secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
-            onSave={async (data) => {
-              const result = await save("materials", editing?.id ?? null, {
-                name: value(data, "name"),
-                description: value(data, "description"),
-                folder_id: nullable(data, "folder_id"),
-                lesson_id: nullable(data, "lesson_id"),
-                file_type: value(data, "file_type"),
-                status: value(data, "status"),
-                ...accessData(data),
-              });
-              setEditing({
-                ...editing,
-                id: result.id,
-                name: value(data, "name"),
-                description: value(data, "description"),
-                status: value(data, "status"),
-              });
-            }}
-          >
-            <Field label="Nome">
-              <input
-                name="name"
-                required
-                defaultValue={text(editing ?? undefined, "name")}
-              />
-            </Field>
-            <Field label="Descrição">
-              <textarea
-                name="description"
-                defaultValue={text(editing ?? undefined, "description")}
-              />
-            </Field>
-            <Field label="Pasta">
-              <select
-                name="folder_id"
-                defaultValue={text(editing ?? undefined, "folder_id")}
-              >
-                <option value="">Raiz</option>
-                {folders.data?.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {text(f, "name")}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Aula vinculada">
-              <select
-                name="lesson_id"
-                defaultValue={text(editing ?? undefined, "lesson_id")}
-              >
-                <option value="">Sem vínculo</option>
-                {lessons.data?.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {text(l, "title")}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Tipo">
-              <select
-                name="file_type"
-                defaultValue={text(
-                  editing ?? undefined,
-                  "file_type",
-                  "application/pdf",
-                )}
-              >
-                {[
-                  "application/pdf",
-                  "application/zip",
-                  "video/mp4",
-                  "image/png",
-                  "image/jpeg",
-                  "text/plain",
-                  "audio/mpeg",
-                ].map((type) => (
-                  <option key={type}>{type}</option>
-                ))}
-              </select>
-            </Field>
-            <StatusField row={editing ?? undefined} />
-            <AccessFields row={editing ?? undefined} />
-          </Form>
-          {editing && (
-            <>
-              <Upload kind="material" resourceId={editing.id} />
-              <Archive entity="materials" row={editing} />
-            </>
-          )}
-        </section>
-      )}
-    </>
+    </AdminSurface>
   );
 }
 const orderStatuses = ["paid", "pending", "refunded", "chargeback", "expired", "cancelled"] as const;
@@ -2235,31 +2238,23 @@ export function AdminOrders() {
   );
 }
 export function AdminCommunity() {
-  const [params, setParams] = useSearchParams(),
+  const [params] = useSearchParams(),
     tab = params.get("aba") ?? "moderacao",
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
     spaces = useAll("spaces");
+  const current = communityTabs.find(([id]) => id === tab) ?? communityTabs[0];
   return (
-    <>
-      <Heading title="Comunidade" action={
-        <Link className="button" to="/admin/comentarios-aula">Comentários de aula</Link>
-      } />
-      <NavigationTabs
-        label="Administração da comunidade"
-        selected={tab}
-        items={[
-          ["moderacao", "Publicações"],
-          ["respostas", "Respostas"],
-          ["denuncias", "Denúncias"],
-          ["espacos", "Espaços"],
-        ].map(([id, label]) => ({
-          id,
-          label,
-          onClick: () => setParams({ aba: id }),
-        }))}
-      />
+    <AdminSurface
+      section={"comunidade-" + current[0]}
+      trail={["Administração", "Comunidade", current[1]]}
+      title="Comunidade"
+      description="Modere publicações, respostas e denúncias e organize os espaços."
+      action={<Link className="button" to="/admin/comentarios-aula">Comentários de aula</Link>}
+      tabs={<NavigationTabs label="Administração da comunidade" selected={current[0]}
+        items={communityTabs.map(([id, label]) => ({ id, label, to: `?aba=${id}` }))} />}
+    >
       {tab === "moderacao" && (
-        <AdminList entity="posts" title="Fila de publicações" section>
+        <AdminList entity="posts" title="Fila de publicações" icon={<MessageSquare size={20} aria-hidden="true" />}>
           {(post) => (
             <div>
               <p className="meta">
@@ -2284,7 +2279,7 @@ export function AdminCommunity() {
         </AdminList>
       )}
       {tab === "respostas" && (
-        <AdminList entity="replies" title="Fila de respostas" section>
+        <AdminList entity="replies" title="Fila de respostas" icon={<Reply size={20} aria-hidden="true" />}>
           {(reply) => (
             <div>
               <p>
@@ -2307,7 +2302,7 @@ export function AdminCommunity() {
         </AdminList>
       )}
       {tab === "denuncias" && (
-        <AdminList entity="reports" title="Denúncias" section>
+        <AdminList entity="reports" title="Denúncias" icon={<Flag size={20} aria-hidden="true" />}>
           {(report) => (
             <div>
               <p>{text(report, "reason")}</p>
@@ -2342,69 +2337,82 @@ export function AdminCommunity() {
       )}
       {tab === "espacos" && (
         <>
-          <button className="primary" onClick={() => setEditing(null)}>
-            Criar espaço
-          </button>
-          <QueryState query={spaces}>
-            {spaces.data?.map((space) => (
-              <div className="resource-row" key={space.id}>
-                <div>
-                  <h2>{text(space, "name")}</h2>
-                  <p>{text(space, "description")}</p>
+          <section className="settings-panel" aria-labelledby="community-spaces">
+            <header className="settings-toolbar">
+              <h2 id="community-spaces"><LayoutGrid size={20} aria-hidden="true" /> Espaços</h2>
+              <button className="primary" onClick={() => setEditing(null)}>
+                <Plus size={18} aria-hidden="true" /> Criar espaço
+              </button>
+            </header>
+            <QueryState query={spaces}>
+              {spaces.data?.length ? spaces.data.map((space) => (
+                <div className="resource-row" key={space.id}>
+                  <div>
+                    <h3>{text(space, "name")}</h3>
+                    <p>{text(space, "description")}</p>
+                  </div>
+                  <button onClick={() => setEditing(space)}>Editar espaço</button>
                 </div>
-                <button onClick={() => setEditing(space)}>Editar espaço</button>
-              </div>
-            ))}
-          </QueryState>
+              )) : <Empty>Nenhum espaço cadastrado.</Empty>}
+            </QueryState>
+          </section>
           {editing !== undefined && (
-            <div className="inline-editor reading" key={editing?.id ?? "new"} ref={focusEditor}>
-              <h2>{editing ? "Editar espaço" : "Criar espaço"}</h2>
-              <Form
-                label="Salvar espaço"
-                secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
-                onSave={async (data) => {
-                  await save("spaces", editing?.id ?? null, {
-                    name: value(data, "name"),
-                    description: value(data, "description"),
-                    status: value(data, "status"),
-                    order_index: num(data, "order_index"),
-                    ...accessData(data),
-                  });
-                  setEditing(undefined);
-                }}
-              >
-                <Field label="Nome">
-                  <input
-                    name="name"
-                    required
-                    defaultValue={text(editing ?? undefined, "name")}
-                  />
-                </Field>
-                <Field label="Descrição">
-                  <textarea
-                    name="description"
-                    defaultValue={text(editing ?? undefined, "description")}
-                  />
-                </Field>
-                <Field label="Ordem">
-                  <input
-                    name="order_index"
-                    type="number"
-                    defaultValue={Number(editing?.order_index ?? 0)}
-                    min="0"
-                  />
-                </Field>
-                <StatusField row={editing ?? undefined} />
-                <AccessFields row={editing ?? undefined} />
-              </Form>
-              {editing && <Archive entity="spaces" row={editing} />}
-            </div>
+            <section className="settings-panel">
+              <div className="reading inline-editor" key={editing?.id ?? "new"} ref={focusEditor}>
+                <h2>{editing ? "Editar espaço" : "Criar espaço"}</h2>
+                <Form
+                  label="Salvar espaço"
+                  secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
+                  onSave={async (data) => {
+                    await save("spaces", editing?.id ?? null, {
+                      name: value(data, "name"),
+                      description: value(data, "description"),
+                      status: value(data, "status"),
+                      order_index: num(data, "order_index"),
+                      ...accessData(data),
+                    });
+                    setEditing(undefined);
+                  }}
+                >
+                  <Field label="Nome">
+                    <input
+                      name="name"
+                      required
+                      defaultValue={text(editing ?? undefined, "name")}
+                    />
+                  </Field>
+                  <Field label="Descrição">
+                    <textarea
+                      name="description"
+                      defaultValue={text(editing ?? undefined, "description")}
+                    />
+                  </Field>
+                  <Field label="Ordem">
+                    <input
+                      name="order_index"
+                      type="number"
+                      defaultValue={Number(editing?.order_index ?? 0)}
+                      min="0"
+                    />
+                  </Field>
+                  <StatusField row={editing ?? undefined} />
+                  <AccessFields row={editing ?? undefined} />
+                </Form>
+                {editing && <Archive entity="spaces" row={editing} />}
+              </div>
+            </section>
           )}
         </>
       )}
-    </>
+    </AdminSurface>
   );
 }
+const communityTabs = [
+  ["moderacao", "Publicações"],
+  ["respostas", "Respostas"],
+  ["denuncias", "Denúncias"],
+  ["espacos", "Espaços"],
+] as const;
 const settingsTabs = [
   ["onboarding", "Onboarding"],
   ["marca", "Plataforma e marca"],
@@ -2426,8 +2434,36 @@ function PlatformSettingsTabs({ tab }: { tab: string }) {
   );
 }
 
-/** Página única das Configurações: trilha, título, descrição, ação principal, abas e cartões. */
-function SettingsSurface({ tab, sectionLabel, title, description, action, children }: {
+/** Página padrão do painel (classe admin-settings): trilha, título, descrição, ação à direita, abas e cartões. */
+function AdminSurface({ section, trail, title, description, action, tabs, children }: {
+  section: string;
+  trail: string[];
+  title: string;
+  description: string;
+  action?: ReactNode;
+  tabs?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="admin-settings" data-section={section}>
+      <p className="settings-breadcrumb">
+        {trail.map((item, index) => (
+          <Fragment key={item}>
+            {index > 0 && <ChevronRight size={14} aria-hidden="true" />}
+            <span>{item}</span>
+          </Fragment>
+        ))}
+      </p>
+      <Heading title={title} action={action}>{description}</Heading>
+      {tabs}
+      {children}
+      <Link className="button settings-help" to="/ajuda/administracao">Ajuda da administração</Link>
+    </div>
+  );
+}
+
+/** Configurações usam a página padrão com as abas da plataforma. */
+function SettingsSurface({ tab, sectionLabel, ...page }: {
   tab: (typeof settingsTabs)[number][0];
   sectionLabel?: string;
   title: string;
@@ -2436,17 +2472,8 @@ function SettingsSurface({ tab, sectionLabel, title, description, action, childr
   children: ReactNode;
 }) {
   return (
-    <div className="admin-settings" data-section={tab}>
-      <p className="settings-breadcrumb">
-        <span>Administração</span><ChevronRight size={14} aria-hidden="true" />
-        <span>Configurações</span><ChevronRight size={14} aria-hidden="true" />
-        <span>{sectionLabel ?? settingsTabs.find(([id]) => id === tab)?.[1]}</span>
-      </p>
-      <Heading title={title} action={action}>{description}</Heading>
-      <PlatformSettingsTabs tab={tab} />
-      {children}
-      <Link className="button settings-help" to="/ajuda/administracao">Ajuda da administração</Link>
-    </div>
+    <AdminSurface section={tab} trail={["Administração", "Configurações", sectionLabel ?? settingsTabs.find(([id]) => id === tab)![1]]}
+      tabs={<PlatformSettingsTabs tab={tab} />} {...page} />
   );
 }
 

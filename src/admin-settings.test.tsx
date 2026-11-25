@@ -7,7 +7,7 @@ vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
 import { cache } from "./api";
-import { AdminSettings } from "./pages/admin";
+import { AdminCommunity, AdminCourses, AdminMaterials, AdminSettings } from "./pages/admin";
 
 let page = { items: [] as Record<string, unknown>[], total: 0, page: 1, page_size: 20 };
 let failing = false;
@@ -26,10 +26,10 @@ function Where() {
   const { search } = useLocation();
   return <output data-testid="where">{search}</output>;
 }
-function show(tab: string) {
+function show(tab: string, node = <AdminSettings />, path = "/admin/configuracoes?aba=" + tab) {
   return render(
     <QueryClientProvider client={cache}>
-      <MemoryRouter initialEntries={["/admin/configuracoes?aba=" + tab]}><AdminSettings /><Where /></MemoryRouter>
+      <MemoryRouter initialEntries={[path]}>{node}<Where /></MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -89,4 +89,48 @@ it("Adicionar pergunta abre o editor do onboarding e o vazio fica no cartão", a
   expect(await within(card).findByText("Nenhuma pergunta cadastrada.")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Adicionar pergunta" }));
   expect(await screen.findByRole("heading", { level: 2, name: "Criar pergunta" })).toBeInTheDocument();
+});
+
+it.each([
+  ["Conteúdo", <AdminCourses />, "/admin/cursos", "AdministraçãoConteúdo", "Cursos e aulas", "Cursos", "Criar curso"],
+  ["Materiais", <AdminMaterials />, "/admin/materiais", "AdministraçãoMateriais", "Materiais", "Arquivos", "Novo material"],
+  ["Comunidade", <AdminCommunity />, "/admin/comunidade?aba=respostas", "AdministraçãoComunidadeRespostas", "Comunidade", "Fila de respostas", "Comentários de aula"],
+] as const)("%s do painel usa a página padrão, com a lista em cartão e a busca que mantém os filtros", async (_name, node, path, trail, title, list, action) => {
+  const view = show("", node, path);
+  const surface = view.container.querySelector(".admin-settings");
+  expect(surface!.querySelector(".settings-breadcrumb")).toHaveTextContent(trail);
+  expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
+  expect(surface!.querySelector(".page-heading p")?.textContent).toBeTruthy();
+  expect(within(surface!.querySelector(".page-heading") as HTMLElement).getByRole(action === "Comentários de aula" || action === "Criar curso" ? "link" : "button", { name: action })).toBeInTheDocument();
+  const card = (await screen.findByRole("heading", { level: 2, name: list })).closest(".settings-panel") as HTMLElement;
+  expect(await within(card).findByText("Nenhum registro cadastrado.")).toBeInTheDocument();
+  fireEvent.change(within(card).getByRole("searchbox"), { target: { value: "termo" } });
+  fireEvent.submit(within(card).getByRole("searchbox").closest("form")!);
+  await waitFor(() => expect(screen.getByTestId("where").textContent).toContain("q=termo&page=1"));
+  if (path.includes("aba=")) expect(screen.getByTestId("where")).toHaveTextContent("aba=respostas");
+});
+
+it("as abas da Comunidade são links e mantêm a página padrão", () => {
+  show("", <AdminCommunity />, "/admin/comunidade");
+  const tabs = screen.getByRole("navigation", { name: "Administração da comunidade" });
+  expect(within(tabs).getByRole("link", { current: "page" })).toHaveTextContent("Publicações");
+  expect(within(tabs).getByRole("link", { name: "Espaços" })).toHaveAttribute("href", "/admin/comunidade?aba=espacos");
+});
+
+it("Materiais cria pasta e material e lista as pastas em cartão", async () => {
+  show("", <AdminMaterials />, "/admin/materiais");
+  const folders = screen.getByRole("heading", { level: 2, name: "Pastas" }).closest(".settings-panel") as HTMLElement;
+  expect(await within(folders).findByText("Nenhuma pasta cadastrada.")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Nova pasta" }));
+  expect(await screen.findByRole("heading", { level: 2, name: "Criar pasta" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Novo material" }));
+  expect(await screen.findByRole("heading", { level: 2, name: "Criar material" })).toBeInTheDocument();
+});
+
+it("Espaços da Comunidade ficam num cartão com Criar espaço", async () => {
+  show("", <AdminCommunity />, "/admin/comunidade?aba=espacos");
+  const card = screen.getByRole("heading", { level: 2, name: "Espaços" }).closest(".settings-panel") as HTMLElement;
+  expect(await within(card).findByText("Nenhum espaço cadastrado.")).toBeInTheDocument();
+  fireEvent.click(within(card).getByRole("button", { name: "Criar espaço" }));
+  expect(await screen.findByRole("heading", { level: 2, name: "Criar espaço" })).toBeInTheDocument();
 });

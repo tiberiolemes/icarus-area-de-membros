@@ -97,40 +97,19 @@ export function Gate({
       />
     );
   if (boot.isPending) return <Loading />;
-  if (boot.error)
+  if (boot.error) {
+    // actor() recusa conta suspensa ou sem perfil com esta frase; nos dois casos não adianta tentar de novo.
+    const unavailable = (boot.error as { message?: string }).message === "Acesso indisponível.";
     return (
-      <>
-        <Notice error>{errorMessage(boot.error)}</Notice>
-        <Action
-          run={async () => {
-            await boot.refetch();
-          }}
-        >
-          Tentar novamente
-        </Action>
-        <Action
-          run={async () => {
-            await signOut();
-          }}
-        >
-          Sair
-        </Action>
-      </>
+      <Blocked title={unavailable ? "Acesso indisponível" : "Não foi possível abrir sua área"}
+        retry={unavailable ? undefined : async () => { await boot.refetch(); }}>
+        {unavailable ? suspendedText : errorMessage(boot.error)}
+      </Blocked>
     );
+  }
   if (!boot.data) return null;
   if (boot.data.profile.suspended)
-    return (
-      <PublicFrame>
-        <div className="access">
-          <Heading title="Acesso suspenso">
-            Sua conta está suspensa e não abre a área de membros. Para entender
-            o motivo ou pedir a revisão, fale com a equipe responsável pela
-            plataforma.
-          </Heading>
-          <Action run={signOut}>Sair e usar outra conta</Action>
-        </div>
-      </PublicFrame>
-    );
+    return <Blocked title="Acesso indisponível">{suspendedText}</Blocked>;
   if (boot.data.profile.password_setup_required) return <PasswordSetup />;
   if (roles && !roles.includes(boot.data.profile.role))
     return (
@@ -175,6 +154,19 @@ export function RoleGate({
     <>{children}</>
   ) : (
     <Restricted role={boot.data?.profile.role} />
+  );
+}
+const suspendedText = "Sua conta está suspensa ou sem acesso à área de membros. Para entender o motivo ou pedir a revisão, fale com a equipe responsável pela plataforma.";
+/** Bloqueio antes da moldura da área: título, explicação e sempre a saída para outra conta. */
+function Blocked({ title, children, retry }: { title: string; children: ReactNode; retry?: () => Promise<void> }) {
+  return (
+    <PublicFrame>
+      <div className="access">
+        <Heading title={title}>{children}</Heading>
+        {retry && <Action run={retry}>Tentar novamente</Action>}
+        <Action run={signOut}>Sair e usar outra conta</Action>
+      </div>
+    </PublicFrame>
   );
 }
 /** Primeira área do painel de cada papel da equipe; membro não tem painel. */

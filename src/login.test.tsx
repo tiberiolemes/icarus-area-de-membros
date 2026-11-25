@@ -48,6 +48,7 @@ function Location() {
 }
 let touchReply: { seconds: number; remembered?: boolean } = { seconds: 1800 };
 let profileOverride: Record<string, unknown> = {};
+let bootstrapError = false;
 let startAt = "/entrar?returnTo=/admin/cursos";
 function setup(hasFactor: boolean, failCode = false, loginError?: string, rememberFails = false) {
   const user = {
@@ -73,6 +74,7 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string, rememb
       const url = String(input);
       requests.push(url);
       if (url.includes("app_bootstrap")) {
+        if (bootstrapError) return json({ code: "P0001", message: "Acesso indisponível." }, 400);
         return json({
           profile: {
             id,
@@ -162,6 +164,7 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string, rememb
 beforeEach(() => {
   touchReply = { seconds: 1800 };
   profileOverride = {};
+  bootstrapError = false;
   startAt = "/entrar?returnTo=/admin/cursos";
   localStorage.clear();
   sessionStorage.clear();
@@ -337,7 +340,7 @@ it("conta suspensa vê título, orientação e a saída, que encerra a sessão",
   profileOverride = { suspended: true };
   const { requests } = setup(false);
   await password();
-  expect(await screen.findByRole("heading", { level: 1, name: "Acesso suspenso" })).toBeVisible();
+  expect(await screen.findByRole("heading", { level: 1, name: "Acesso indisponível" })).toBeVisible();
   expect(screen.queryByText("Destino autorizado")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Sair e usar outra conta" }));
   await waitFor(() => expect(requests.some((url) => url.includes("/logout"))).toBe(true));
@@ -359,4 +362,15 @@ it("cadastro fechado mostra um aviso com a saída e não oferece o formulário",
   expect(document.querySelectorAll(".notice")).toHaveLength(1);
   expect(screen.getByRole("link", { name: "Voltar para entrar" })).toHaveAttribute("href", expect.stringContaining("/entrar"));
   expect(screen.queryByRole("button", { name: "Criar conta" })).not.toBeInTheDocument();
+});
+
+it("conta suspensa recusada pelo servidor vê a explicação com moldura e a saída", async () => {
+  bootstrapError = true;
+  const { requests } = setup(false);
+  await password();
+  expect(await screen.findByRole("heading", { level: 1, name: "Acesso indisponível" })).toBeVisible();
+  expect(screen.getByText(/conta está suspensa ou sem acesso/)).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Tentar novamente" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Sair e usar outra conta" }));
+  await waitFor(() => expect(requests.some((url) => url.includes("/logout"))).toBe(true));
 });

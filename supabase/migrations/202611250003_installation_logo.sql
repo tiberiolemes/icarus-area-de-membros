@@ -6,9 +6,16 @@ alter table app_private.installation_brand
   add column logo_dark text check (logo_dark ~ '^logo/dark-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|webp)$');
 
 -- Leitura só pela URL pública. Sem policy em storage.objects: listar e gravar ficam negados a anon e authenticated; só a Edge grava, com a service role.
+-- Não altera um bucket de mesmo nome que já exista: num projeto compartilhado ele pode ser de outro sistema.
 insert into storage.buckets(id, name, public, file_size_limit, allowed_mime_types)
 values ('icarus-brand', 'icarus-brand', true, 512000, array['image/png', 'image/webp'])
-on conflict (id) do update set public = true, file_size_limit = 512000, allowed_mime_types = array['image/png', 'image/webp'];
+on conflict (id) do nothing;
+do $$
+begin
+  if not exists(select 1 from storage.buckets where id = 'icarus-brand' and public and file_size_limit = 512000 and allowed_mime_types = array['image/png', 'image/webp']) then
+    raise exception 'O bucket icarus-brand já existe com outra configuração (público, limite ou tipos). Ele pode ser de outro sistema: confira antes de instalar a logo do Icarus.';
+  end if;
+end $$;
 
 create function public.app_brand_logo_begin(p_actor_id uuid, p_variant text, p_content_type text)
 returns text language plpgsql security definer set search_path = '' as $$

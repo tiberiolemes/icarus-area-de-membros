@@ -150,6 +150,7 @@ function useAll(entity: string) {
 /** Com `icon`, a lista vira o cartão padrão das Configurações, com a busca na barra do cartão. */
 function AdminList({
   entity,
+  rpc: listRpc,
   title,
   action,
   children,
@@ -157,6 +158,8 @@ function AdminList({
   icon,
 }: {
   entity: string;
+  /** RPC própria da lista, no mesmo formato paginado da app_admin_list. */
+  rpc?: "app_admin_reports" | "app_admin_privacy_requests";
   title: string;
   action?: ReactNode;
   children: (item: Row) => ReactNode;
@@ -166,11 +169,9 @@ function AdminList({
   const [params, setParams] = useSearchParams(),
     q = params.get("q") ?? "",
     page = Number(params.get("page") || 1),
-    query = useRpc<Page<Row>>("app_admin_list", {
-      p_entity: entity,
-      p_query: q,
-      p_page: page,
-    }),
+    query = useRpc<Page<Row>>(listRpc ?? "app_admin_list", listRpc
+      ? { p_query: q, p_page: page }
+      : { p_entity: entity, p_query: q, p_page: page }),
     exportEntity = entity === "profiles" || entity === "orders" ? entity : null;
   // Preserva a aba e os demais filtros da URL ao buscar e paginar.
   const go = (nextQuery: string, nextPage: number) => setParams((current) => {
@@ -2302,12 +2303,28 @@ export function AdminCommunity() {
         </AdminList>
       )}
       {tab === "denuncias" && (
-        <AdminList entity="reports" title="Denúncias" icon={<Flag size={20} aria-hidden="true" />}>
+        <AdminList entity="reports" rpc="app_admin_reports" title="Denúncias" icon={<Flag size={20} aria-hidden="true" />}>
           {(report) => (
             <div>
-              <p>{text(report, "reason")}</p>
-              <p>Estado: {statusName(text(report, "status"))}</p>
-              <Form
+              <h3>{text(report, "title") || "Conteúdo indisponível"}</h3>
+              {text(report, "excerpt") && <p>{text(report, "excerpt")}</p>}
+              <p>
+                {report.target_type === "reply" ? "Resposta" : "Publicação"} de{" "}
+                {text(report, "author_name") || "Membro sem nome"} ·{" "}
+                {statusName(text(report, "target_status"))}
+              </p>
+              <p>
+                Motivo da denúncia: {text(report, "reason")} · enviada por{" "}
+                {text(report, "reporter_name") || "Membro sem nome"} em{" "}
+                {date(text(report, "created_at"))}
+              </p>
+              <p>Estado: {reportStatus[text(report, "status")] ?? text(report, "status")}</p>
+              {text(report, "post_id") && (
+                <Link className="button" to={`/admin/comunidade/${text(report, "post_id")}`}>
+                  Abrir publicação
+                </Link>
+              )}
+              {text(report, "status") === "pending" && <Form
                 label="Concluir análise"
                 onSave={async (data) => {
                   await rpc("app_moderate", {
@@ -2317,7 +2334,7 @@ export function AdminCommunity() {
                     p_reason: value(data, "reason"),
                   });
                   await cache.invalidateQueries({
-                    queryKey: ["app_admin_list"],
+                    queryKey: ["app_admin_reports"],
                   });
                 }}
               >
@@ -2330,7 +2347,7 @@ export function AdminCommunity() {
                 <Field label="Motivo">
                   <textarea name="reason" required minLength={5} />
                 </Field>
-              </Form>
+              </Form>}
             </div>
           )}
         </AdminList>
@@ -2873,6 +2890,9 @@ function LegalSettings() {
     </SettingsSurface>
   );
 }
+const privacyKinds: Record<string, string> = { export: "Exportação de dados", deletion: "Exclusão de conta" };
+const privacyStatus: Record<string, string> = { pending: "Recebido", processing: "Em análise", completed: "Concluído", rejected: "Recusado" };
+const reportStatus: Record<string, string> = { pending: "Pendente", resolved: "Tratada", dismissed: "Improcedente" };
 function PrivacySettings() {
   return (
     <SettingsSurface
@@ -2880,20 +2900,52 @@ function PrivacySettings() {
       title="Solicitações de privacidade"
       description="Acompanhe os pedidos de exportação e exclusão de dados dos membros."
     >
-      <AdminList entity="privacy_requests" title="Solicitações registradas" icon={<Shield size={20} aria-hidden="true" />}>
-        {(request) => (
-          <div>
-            <h3>{text(request, "kind")}</h3>
-            <p>
-              {statusName(text(request, "status"))} ·{" "}
-              {date(text(request, "created_at"))}
-            </p>
-            <p>
-              O processamento exige análise e retenção legal no servidor.
-              Nenhuma exclusão automática é simulada nesta tela.
-            </p>
-          </div>
-        )}
+      <AdminList entity="privacy_requests" rpc="app_admin_privacy_requests" title="Solicitações registradas" icon={<Shield size={20} aria-hidden="true" />}>
+        {(request) => {
+          const status = text(request, "status");
+          return (
+            <div>
+              <h3>{privacyKinds[text(request, "kind")] ?? text(request, "kind")}</h3>
+              <p>
+                Titular{" "}
+                <Link to={`/admin/membros/${text(request, "user_id")}`}>
+                  {text(request, "full_name").trim() || "Membro sem nome"}
+                </Link>{" "}
+                · {privacyStatus[status] ?? status} · {date(text(request, "created_at"))}
+              </p>
+              {(status === "pending" || status === "processing") && (
+                <Form
+                  label="Registrar atendimento"
+                  successMessage="Atendimento registrado."
+                  onSave={async (data) => {
+                    await rpc("app_admin_set_privacy_request", {
+                      p_id: request.id,
+                      p_status: value(data, "status"),
+                      p_reason: value(data, "reason"),
+                    });
+                    await cache.invalidateQueries({ queryKey: ["app_admin_privacy_requests"] });
+                  }}
+                >
+                  <Field label="Nova situação">
+                    <select name="status">
+                      {(["processing", "completed", "rejected"] as const)
+                        .filter((option) => option !== status)
+                        .map((option) => <option key={option} value={option}>{privacyStatus[option]}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Motivo do registro">
+                    <textarea name="reason" required minLength={3} maxLength={2000} />
+                  </Field>
+                </Form>
+              )}
+              <p>
+                Registrar o atendimento não exporta nem exclui dados. Conclua o
+                processo com a retenção legal e registre aqui; cada decisão fica
+                na auditoria.
+              </p>
+            </div>
+          );
+        }}
       </AdminList>
     </SettingsSurface>
   );

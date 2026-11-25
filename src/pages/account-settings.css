@@ -101,6 +101,7 @@
 }
 
 .student-account :is(.field input:not([type="radio"], [type="checkbox"]), .field textarea, .field select) {
+  --ic-select-gap: var(--stitch-space-md);
   padding-inline: var(--stitch-space-md);
   background: var(--account-control);
   border-color: var(--stitch-text-muted);

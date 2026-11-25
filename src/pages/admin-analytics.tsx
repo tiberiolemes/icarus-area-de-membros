@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AudioLines, BookOpenCheck, ChevronsUpDown, Clock3, PlayCircle, Route, Timer, TrendingDown } from "lucide-react";
+import { AudioLines, BookOpenCheck, Clock3, PlayCircle, Route, Timer, TrendingDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { rpc } from "../api";
@@ -142,7 +142,6 @@ export function AdminAnalytics({ dashboardPath }: { dashboardPath: string }) {
                 {!active && <option value="">Nenhum curso disponível</option>}
                 {query.data?.items.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
               </select>
-              <ChevronsUpDown aria-hidden="true" />
             </span>
           </label>
           <div><span>Janela de observação</span><strong>Histórico disponível</strong></div>

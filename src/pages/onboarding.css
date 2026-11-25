@@ -172,6 +172,7 @@
 }
 
 .student-onboarding .student-onboarding-questions .field :is(input, select, textarea) {
+  --ic-select-gap: var(--stitch-space-md);
   padding-inline: var(--stitch-space-md);
   background: var(--onboarding-option);
   border-color: var(--stitch-text-muted);

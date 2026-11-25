@@ -37,6 +37,18 @@ function canvasGaps(page) {
   });
 }
 
+// Selects visíveis fora da seta do DS: aparência nativa, respiro da seta diferente do padding da esquerda, altura ou fonte.
+function selectGaps(page) {
+  return page.locator("select").evaluateAll((selects) => selects.filter((select) =>
+    select.getClientRects().length && getComputedStyle(select).opacity !== "0").flatMap((select) => {
+    const style = getComputedStyle(select), name = select.getAttribute("aria-label") || select.name;
+    const expected = { appearance: "none", arrow: `calc(100% - ${style.paddingLeft}) 50%`, height: "44px", fontSize: "16px" };
+    const actual = { appearance: style.appearance, arrow: style.backgroundImage.includes("data:image/svg+xml") ? style.backgroundPosition : "nativa",
+      height: style.height, fontSize: style.fontSize };
+    return Object.keys(expected).filter((key) => actual[key] !== expected[key]).map((key) => `${name} ${key}: ${actual[key]} ≠ ${expected[key]}`);
+  }));
+}
+
 async function open(width, height = 900) {
   const context = await browser.newContext({ viewport: { width, height }, reducedMotion: "reduce" });
   const external = [], errors = [];
@@ -88,6 +100,7 @@ try {
           await visit(path);
           await page.locator(ready).first().waitFor();
           assert.deepEqual(await canvasGaps(page), [], `Fundo contínuo em ${path}, tema ${theme}, ${width}px`);
+          assert.deepEqual(await selectGaps(page), [], `Seta do select em ${path}, tema ${theme}, ${width}px`);
         }
         await visit("/app/cursos?q=sem-resultado");
         await page.getByText("Nenhum curso corresponde aos filtros.", { exact: true }).waitFor();
@@ -209,6 +222,7 @@ try {
       await page.getByLabel(/slug|endereço/i).fill("curso-de-teste");
       await button("Criar curso").click();
       await heading("Curso de teste").waitFor();
+      assert.deepEqual(await selectGaps(page), [], `Seta do select no editor de curso, ${width}px`);
       await page.getByLabel("Estado", { exact: true }).selectOption("published");
       await button("Salvar curso").click();
       await page.getByText("Publicado", { exact: true }).first().waitFor();

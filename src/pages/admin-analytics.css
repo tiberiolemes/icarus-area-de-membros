@@ -347,27 +347,13 @@
   grid-column: 1 / -1;
 }
 
-.reports-select {
-  position: relative;
-}
-
 .reports-select select {
-  appearance: none;
   inline-size: 100%;
-  padding-inline-end: 2rem;
   text-overflow: ellipsis;
   border: 1px solid var(--stitch-border-strong);
   background: var(--stitch-surface-input);
   color: var(--stitch-text-primary);
   font-size: var(--stitch-input-min-size);
-}
-
-.reports-select svg {
-  position: absolute;
-  inset: 0 var(--stitch-space-sm) 0 auto;
-  width: var(--stitch-icon-sm);
-  margin-block: auto;
-  pointer-events: none;
 }
 
 .reports-funnel {

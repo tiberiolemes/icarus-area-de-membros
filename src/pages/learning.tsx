@@ -83,6 +83,13 @@ export function CoursePage() {
     modules = modulo
       ? data?.modules.filter((m) => m.slug === modulo)
       : data?.modules;
+  // Na página do módulo, os números vêm só das aulas dele, não do curso inteiro.
+  const moduleLessons = modules?.[0]?.sections.flatMap((section) => section.lessons) ?? [],
+    moduleStats = {
+      total_lessons: moduleLessons.length,
+      completed_lessons: moduleLessons.filter((lesson) => lesson.completed).length,
+      duration_seconds: moduleLessons.reduce((sum, lesson) => sum + lesson.duration_seconds, 0),
+    };
   return (
     <>
       <Back
@@ -103,8 +110,8 @@ export function CoursePage() {
               <>
                 {modulo ? (
                   <Heading title={modules?.[0]?.title ?? data.course.title}>
-                    {data.course.total_lessons} aulas ·{" "}
-                    {Math.ceil(data.course.duration_seconds / 60)} minutos
+                    {moduleStats.total_lessons} {moduleStats.total_lessons === 1 ? "aula" : "aulas"} ·{" "}
+                    {Math.ceil(moduleStats.duration_seconds / 60)} minutos
                   </Heading>
                 ) : (
                   <CourseFeature course={data.course} modules={data.modules} />
@@ -112,9 +119,9 @@ export function CoursePage() {
                 {!data.course.can_access && <AccessRequired />}
                 {modulo && (
                   <Progress
-                    value={curriculumPercent(data.course)}
-                    done={data.course.completed_lessons}
-                    total={data.course.total_lessons}
+                    value={curriculumPercent(moduleStats)}
+                    done={moduleStats.completed_lessons}
+                    total={moduleStats.total_lessons}
                   />
                 )}
                 <div className="course-outline">

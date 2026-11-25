@@ -152,6 +152,24 @@ describe("Vitrine de cursos", () => {
     expect(within(expanded).getByRole("link", {name:/Aula de prévia/})).toHaveAttribute("href", "/app/cursos/ementa/segundo/~l1");
   });
 
+  it("mostra na página do módulo as aulas, a duração e o progresso só daquele módulo", async () => {
+    const lesson = (id: string, duration_seconds: number, completed: boolean) =>
+      ({id, title:"Aula "+id, duration_seconds, can_access:true, completed});
+    const item = course("ementa", {total_lessons:5, completed_lessons:2, required_lessons:0, progress_percent:40, duration_seconds:1920});
+    const modules = [
+      {slug:"primeiro", id:"primeiro", title:"Módulo um", can_access:true, sections:[{id:"s1",title:"Conteúdo",lessons:[lesson("a",60,true),lesson("b",60,false)]}]},
+      {slug:"segundo", id:"segundo", title:"Módulo dois", can_access:true, sections:[{id:"s2",title:"Parte 1",lessons:[lesson("c",600,true)]},{id:"s3",title:"Parte 2",lessons:[lesson("d",600,false),lesson("e",600,false)]}]},
+    ];
+    vi.stubGlobal("fetch", vi.fn(async () => json({course:item,modules})));
+    render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={["/app/cursos/ementa/segundo"]}>
+      <Routes><Route path="/app/cursos/:curso/:modulo" element={<CoursePage />} /></Routes>
+    </MemoryRouter></QueryClientProvider>);
+    await screen.findByRole("heading", {name:"Módulo dois"});
+    expect(screen.getByText("3 aulas · 30 minutos")).toBeVisible();
+    expect(screen.getByRole("progressbar", {name:"33% concluído"})).toHaveValue(33);
+    expect(screen.getByText("1/3 aulas · 33%")).toBeVisible();
+  });
+
   it("oferece somente a consulta de acesso ao curso restrito", async () => {
     catalogFetch([course("negado", {can_access: false})]);
     mount();

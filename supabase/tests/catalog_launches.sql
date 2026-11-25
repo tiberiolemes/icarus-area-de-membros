@@ -37,23 +37,23 @@ select pg_temp.id(n),'launch-'||n||'@example.test',now(),'{"icarus_server_create
 set constraints all immediate;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
 select pg_temp.id(10+n),pg_temp.id(n),now(),now(),'aal2' from generate_series(1,6) n;
-update public.ica_profiles set role='instructor' where id=pg_temp.id(3);
-update public.ica_profiles set role='support' where id=pg_temp.id(4);
-update public.ica_profiles set role='admin' where id=pg_temp.id(5);
-insert into public.ica_plans(id,slug,name,price_cents,access_months)
+update public.profiles set role='instructor' where id=pg_temp.id(3);
+update public.profiles set role='support' where id=pg_temp.id(4);
+update public.profiles set role='admin' where id=pg_temp.id(5);
+insert into public.plans(id,slug,name,price_cents,access_months)
 values(pg_temp.id(50),'launch-pro','Pro',0,12);
-insert into public.ica_subscriptions(user_id,plan_id,ends_at,source)
+insert into public.subscriptions(user_id,plan_id,ends_at,source)
 values(pg_temp.id(1),pg_temp.id(50),now()+interval '1 day','courtesy'),
  (pg_temp.id(2),pg_temp.id(50),now()+interval '1 day','courtesy'),
  (pg_temp.id(6),pg_temp.id(50),now()+interval '1 day','courtesy');
-insert into public.ica_courses(id,slug,title,description,status,access_mode)
+insert into public.courses(id,slug,title,description,status,access_mode)
 values
  (pg_temp.id(101),'launch-test-course','TÍTULO PRIVADO','CORPO PRIVADO','draft','plans'),
  (pg_temp.id(102),'launch-test-parent','Curso pai','', 'published','members'),
  (pg_temp.id(103),'launch-test-staged','Curso pai rascunho','', 'draft','members'),
  (pg_temp.id(104),'launch-test-hidden','Rascunho sem anúncio','', 'draft','members');
-update public.ica_courses set plan_ids=array[pg_temp.id(50)] where id=pg_temp.id(101);
-insert into public.ica_modules(id,course_id,slug,title,status,access_mode,plan_ids)
+update public.courses set plan_ids=array[pg_temp.id(50)] where id=pg_temp.id(101);
+insert into public.modules(id,course_id,slug,title,status,access_mode,plan_ids)
 values
  (pg_temp.id(201),pg_temp.id(102),'launch-test-module','Módulo privado','draft','plans',array[pg_temp.id(50)]),
  (pg_temp.id(202),pg_temp.id(103),'launch-test-child','Módulo em preparação','draft','inherit','{}');
@@ -67,7 +67,7 @@ select pg_temp.ok(not exists (
 ),'ACL de RPCs somente para authenticated');
 select pg_temp.ok(not exists(
  select from pg_class c cross join unnest(array['anon','authenticated','service_role']) r(role_name)
- where c.oid in ('ica_private.catalog_launches'::regclass,'ica_private.catalog_launch_signups'::regclass)
+ where c.oid in ('app_private.catalog_launches'::regclass,'app_private.catalog_launch_signups'::regclass)
  and (not c.relrowsecurity or has_table_privilege(r.role_name,c.oid,'SELECT, INSERT, UPDATE, DELETE'))
 ),'RLS e grants negam tabelas privadas');
 
@@ -100,31 +100,31 @@ select public.app_admin_save_catalog_launch('modules',pg_temp.id(201),'Módulo f
 select pg_temp.ok(public.app_admin_catalog_launch('modules',pg_temp.id(201))->>'enabled'='false',
  'editor desabilita anúncio existente');
 reset role;
-select pg_temp.ok(exists(select from public.ica_audit_events where actor_id=pg_temp.id(5)
+select pg_temp.ok(exists(select from public.audit_events where actor_id=pg_temp.id(5)
  and action='catalog_launch_update' and target_type='modules' and target_id=pg_temp.id(201)
  and reason is null),'desabilitar grava ator e alvo sem o conteúdo editorial');
 rollback to savepoint editorial_rollback;
 select pg_temp.ok(public.app_admin_catalog_launch('modules',pg_temp.id(201))->>'enabled'='true',
  'rollback restaura visibilidade do anúncio');
 reset role;
-select pg_temp.ok((select count(*)=4 and bool_and(reason is null) from public.ica_audit_events
+select pg_temp.ok((select count(*)=4 and bool_and(reason is null) from public.audit_events
  where action in ('catalog_launch_create','catalog_launch_update')),
  'somente quatro escritas autorizadas geram auditoria, sem payload editorial ou evento do rollback');
-select pg_temp.ok((select count(*)=2 from public.ica_audit_events where actor_id=pg_temp.id(3)
+select pg_temp.ok((select count(*)=2 from public.audit_events where actor_id=pg_temp.id(3)
  and action='catalog_launch_create' and
  ((target_type='courses' and target_id=pg_temp.id(101))
   or (target_type='modules' and target_id=pg_temp.id(201)))),
  'criação registra instrutor e IDs reais de curso e módulo');
-select pg_temp.ok(exists(select from public.ica_audit_events where actor_id=pg_temp.id(5)
+select pg_temp.ok(exists(select from public.audit_events where actor_id=pg_temp.id(5)
  and action='catalog_launch_update' and target_type='courses' and target_id=pg_temp.id(101)),
  'alteração registra admin e curso alvo');
-select pg_temp.ok(not exists(select from public.ica_audit_events
+select pg_temp.ok(not exists(select from public.audit_events
  where action in ('catalog_launch_create','catalog_launch_update')
  and (actor_id in (pg_temp.id(1),pg_temp.id(4)) or target_id=pg_temp.id(102))),
  'negativa por papel ou curso já publicado não gera auditoria');
-insert into launch_keys select 'course',id from ica_private.catalog_launches where course_id=pg_temp.id(101);
-insert into launch_keys select 'module',id from ica_private.catalog_launches where module_id=pg_temp.id(201);
-insert into launch_keys select 'staged',id from ica_private.catalog_launches where module_id=pg_temp.id(202);
+insert into launch_keys select 'course',id from app_private.catalog_launches where course_id=pg_temp.id(101);
+insert into launch_keys select 'module',id from app_private.catalog_launches where module_id=pg_temp.id(201);
+insert into launch_keys select 'staged',id from app_private.catalog_launches where module_id=pg_temp.id(202);
 set local role authenticated;
 select pg_temp.login(1);
 select pg_temp.ok(public.app_catalog_launches() = jsonb_build_array(jsonb_build_object(
@@ -153,7 +153,7 @@ select pg_temp.login(6);
 select public.app_subscribe_catalog_launch(pg_temp.key('course'));
 select public.app_subscribe_catalog_launch(pg_temp.key('module'));
 reset role;
-update public.ica_subscriptions set revoked_at=now() where user_id=pg_temp.id(6);
+update public.subscriptions set revoked_at=now() where user_id=pg_temp.id(6);
 set local role authenticated;
 select pg_temp.login(6);
 select pg_temp.ok(public.app_catalog_launches()->0->>'subscribed'='true',
@@ -178,19 +178,19 @@ select public.app_admin_save('courses',pg_temp.id(101),'{"status":"published"}')
 select public.app_admin_save('modules',pg_temp.id(201),'{"status":"published"}');
 select public.app_admin_save('modules',pg_temp.id(202),'{"status":"published"}');
 reset role;
-select pg_temp.ok((select released_at is null from ica_private.catalog_launches where id=pg_temp.key('staged')),
+select pg_temp.ok((select released_at is null from app_private.catalog_launches where id=pg_temp.key('staged')),
  'publicar módulo antes do pai ainda não lança');
 set local role authenticated;
 select pg_temp.login(3);
 select public.app_admin_save('courses',pg_temp.id(103),'{"status":"published"}');
 reset role;
-select pg_temp.ok((select released_at is not null from ica_private.catalog_launches where id=pg_temp.key('staged')),
+select pg_temp.ok((select released_at is not null from app_private.catalog_launches where id=pg_temp.key('staged')),
  'publicação posterior do pai conclui lançamento do módulo');
-select pg_temp.ok((select count(*)=2 from public.ica_notifications where user_id=pg_temp.id(1) and event_key='catalog_launch'),
+select pg_temp.ok((select count(*)=2 from public.notifications where user_id=pg_temp.id(1) and event_key='catalog_launch'),
  'somente um aviso por inscrição e lançamento');
-select pg_temp.ok((select count(*)=0 from public.ica_notifications where user_id=pg_temp.id(2) and event_key='catalog_launch'),
+select pg_temp.ok((select count(*)=0 from public.notifications where user_id=pg_temp.id(2) and event_key='catalog_launch'),
  'opt-out bloqueia inclusive o aviso do curso elegível');
-select pg_temp.ok((select count(*)=0 from public.ica_notifications where user_id=pg_temp.id(6) and event_key='catalog_launch'),
+select pg_temp.ok((select count(*)=0 from public.notifications where user_id=pg_temp.id(6) and event_key='catalog_launch'),
  'revalidação de plano bloqueia o aviso mesmo com preferência ativa');
 set local role authenticated;
 select pg_temp.login(1);
@@ -204,7 +204,7 @@ select pg_temp.ok(exists(select from jsonb_array_elements(public.app_notificatio
  where x->>'action_path'='/app/cursos/launch-test-course' and x->>'subtitle'='Curso futuro' and not x?'source_id'),
  'curso restrito publicado tem destino e título para o titular elegível');
 reset role;
-update public.ica_subscriptions set revoked_at=now() where user_id=pg_temp.id(1);
+update public.subscriptions set revoked_at=now() where user_id=pg_temp.id(1);
 set local role authenticated;
 select pg_temp.login(1);
 select pg_temp.ok((select count(*)=2 from jsonb_array_elements(public.app_notifications()->'items') x

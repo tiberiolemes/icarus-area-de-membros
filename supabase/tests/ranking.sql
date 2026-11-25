@@ -44,39 +44,39 @@ from generate_series(1, 9) n;
 set constraints all immediate;
 insert into auth.sessions(id, user_id, created_at, updated_at, aal)
 select pg_temp.id(100 + n), pg_temp.id(n), now(), now(), 'aal2' from generate_series(1, 9) n;
-update public.ica_profiles set phone = 'telefone sigiloso', bio = 'biografia privada',
+update public.profiles set phone = 'telefone sigiloso', bio = 'biografia privada',
   company = '{"name":"empresa privada"}' where id = pg_temp.id(1);
-update public.ica_profiles set role = 'admin' where id = pg_temp.id(4);
-update public.ica_profiles set role = 'moderator' where id = pg_temp.id(5);
-update public.ica_profiles set role = 'instructor' where id = pg_temp.id(6);
-update public.ica_profiles set role = 'support' where id = pg_temp.id(7);
-update public.ica_profiles set suspended = true where id = pg_temp.id(8);
-update public.ica_profiles set demo = true where id = pg_temp.id(9);
-insert into public.ica_plans(id, slug, name, price_cents, access_months)
+update public.profiles set role = 'admin' where id = pg_temp.id(4);
+update public.profiles set role = 'moderator' where id = pg_temp.id(5);
+update public.profiles set role = 'instructor' where id = pg_temp.id(6);
+update public.profiles set role = 'support' where id = pg_temp.id(7);
+update public.profiles set suspended = true where id = pg_temp.id(8);
+update public.profiles set demo = true where id = pg_temp.id(9);
+insert into public.plans(id, slug, name, price_cents, access_months)
 values (pg_temp.id(199), 'ranking-fixture', 'Plano da fixture', 0, 12);
-insert into public.ica_subscriptions(user_id, plan_id, ends_at, source)
+insert into public.subscriptions(user_id, plan_id, ends_at, source)
 values (pg_temp.id(1), pg_temp.id(199), now() + interval '1 day', 'courtesy');
 
-insert into public.ica_spaces(id, name, status, access_mode) values (pg_temp.id(200), 'Fórum diagnóstico', 'published', 'members');
-insert into public.ica_courses(id, slug, title, status, access_mode, certificate_enabled, signer_name, signer_title)
+insert into public.spaces(id, name, status, access_mode) values (pg_temp.id(200), 'Fórum diagnóstico', 'published', 'members');
+insert into public.courses(id, slug, title, status, access_mode, certificate_enabled, signer_name, signer_title)
 values (pg_temp.id(300), 'ranking-diagnostico', 'Curso da fixture', 'published', 'members', true, 'Equipe da fixture', 'Instrutor');
-insert into public.ica_modules(id, course_id, slug, title, status)
+insert into public.modules(id, course_id, slug, title, status)
 values (pg_temp.id(301), pg_temp.id(300), 'base', 'Módulo da fixture', 'published');
-insert into public.ica_sections(id, module_id, title, status)
+insert into public.sections(id, module_id, title, status)
 values (pg_temp.id(302), pg_temp.id(301), 'Seção da fixture', 'published');
-insert into public.ica_lessons(id, section_id, slug, title, status, type, duration_seconds)
+insert into public.lessons(id, section_id, slug, title, status, type, duration_seconds)
 values (pg_temp.id(303), pg_temp.id(302), 'primeira', 'Primeira', 'published', 'text', 120),
   (pg_temp.id(304), pg_temp.id(302), 'segunda', 'Segunda', 'published', 'text', 120);
 
 select pg_temp.ok(not exists (select from pg_class
-  where oid in ('ica_private.ranking_events'::regclass, 'ica_private.ranking_subjects'::regclass) and not relrowsecurity)
+  where oid in ('app_private.ranking_events'::regclass, 'app_private.ranking_subjects'::regclass) and not relrowsecurity)
   and not exists (
     select from unnest(array['anon', 'authenticated', 'service_role']) r(role_name)
-    where has_table_privilege(r.role_name, 'ica_private.ranking_events', 'SELECT, INSERT, UPDATE, DELETE')
-      or has_table_privilege(r.role_name, 'ica_private.ranking_subjects', 'SELECT, INSERT, UPDATE, DELETE')
-      or has_function_privilege(r.role_name, 'ica_private.record_ranking_event()', 'EXECUTE')
-      or has_function_privilege(r.role_name, 'ica_private.register_ranking_subject()', 'EXECUTE')
-      or has_function_privilege(r.role_name, 'ica_private.export_data_before_ranking()', 'EXECUTE')
+    where has_table_privilege(r.role_name, 'app_private.ranking_events', 'SELECT, INSERT, UPDATE, DELETE')
+      or has_table_privilege(r.role_name, 'app_private.ranking_subjects', 'SELECT, INSERT, UPDATE, DELETE')
+      or has_function_privilege(r.role_name, 'app_private.record_ranking_event()', 'EXECUTE')
+      or has_function_privilege(r.role_name, 'app_private.register_ranking_subject()', 'EXECUTE')
+      or has_function_privilege(r.role_name, 'app_private.export_data_before_ranking()', 'EXECUTE')
   ), 'RLS e ACL da trilha privada');
 
 set local role anon;
@@ -98,19 +98,19 @@ select pg_temp.login(1);
 select pg_temp.denied('select public.app_ranking(null, 1)', 'período obrigatório', 'P0001');
 select pg_temp.denied('select public.app_ranking(''futuro'', 1)', 'período fora da enumeração', 'P0001');
 select pg_temp.denied('select public.app_ranking(''current'', 2147483647)', 'paginação limitada', 'P0001');
-select pg_temp.denied('select * from ica_private.ranking_events', 'membro não lê fontes ou identidades', '42501');
-select pg_temp.denied('delete from ica_private.ranking_events', 'membro não altera pontos', '42501');
+select pg_temp.denied('select * from app_private.ranking_events', 'membro não lê fontes ou identidades', '42501');
+select pg_temp.denied('delete from app_private.ranking_events', 'membro não altera pontos', '42501');
 select pg_temp.ok((select j->'prizes' = 'null' and j->'podium' = '[]'
     and j->'own' = '{"status":"unranked"}'
     and j->'rules' = '{"post":5,"reply":3,"like":1,"lesson":8,"certificate":15}'
   from (select public.app_ranking() j) s), 'vazio, sem premiação ou pontos fabricados e regras do PRD');
 reset role;
-update public.ica_app_sessions set revoked_at = now() where id = pg_temp.id(101);
+update public.app_sessions set revoked_at = now() where id = pg_temp.id(101);
 set local role authenticated;
 select pg_temp.denied('select public.app_ranking()', 'sessão revogada não lê ranking', 'P0001');
 select pg_temp.denied('select public.app_export_data()', 'sessão revogada não exporta eventos', 'P0001');
 reset role;
-update public.ica_app_sessions set revoked_at = null where id = pg_temp.id(101);
+update public.app_sessions set revoked_at = null where id = pg_temp.id(101);
 set local role authenticated;
 
 insert into ranking_sources
@@ -194,11 +194,11 @@ select pg_temp.login(4);
 select pg_temp.ok(public.app_export_data()->'ranking_events' = '[]', 'administrador não exporta eventos alheios');
 reset role;
 select pg_temp.login(1);
-insert into previous_export select ica_private.export_data_before_ranking();
+insert into previous_export select app_private.export_data_before_ranking();
 set local role authenticated;
 with exported as materialized (select public.app_export_data() data)
 select pg_temp.ok(data - 'ranking_events' = (select data from previous_export)
-  and data ? 'podcast_watches' and (to_regclass('public.ica_feedbacks') is null or data ? 'feedbacks'),
+  and data ? 'podcast_watches' and (to_regclass('public.feedbacks') is null or data ? 'feedbacks'),
   'export conserva integralmente o contrato anterior'),
   pg_temp.ok(data->'ranking_events' = (
     select jsonb_agg(jsonb_build_object('kind', kind, 'occurred_at', now(), 'relation', 'recipient') order by n)
@@ -208,13 +208,13 @@ from exported;
 rollback to savepoint export_scope;
 
 reset role;
-select pg_temp.ok((select count(*) = 7 from ica_private.ranking_events where recipient_id <> pg_temp.id(9)),
+select pg_temp.ok((select count(*) = 7 from app_private.ranking_events where recipient_id <> pg_temp.id(9)),
  'aprovações, curtida reativada, conclusão e emissão deixam uma linha por ocorrência');
-update public.ica_certificates set revoked_at = now() where user_id = pg_temp.id(1);
-update ica_private.ranking_events
+update public.certificates set revoked_at = now() where user_id = pg_temp.id(1);
+update app_private.ranking_events
 set occurred_at = (date_trunc('month', now() at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo') - interval '1 microsecond'
 where kind = 'like';
-update ica_private.ranking_events
+update app_private.ranking_events
 set occurred_at = date_trunc('month', now() at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo'
 where kind = 'post';
 
@@ -230,12 +230,12 @@ select pg_temp.login(3);
 select public.app_progress(pg_temp.id(304), 120, true);
 -- Uma amostra adicional de empate é criada sem sobrescrever eventos de negócio.
 reset role;
-update ica_private.ranking_events set occurred_at = now() - interval '2 months' where
+update app_private.ranking_events set occurred_at = now() - interval '2 months' where
   (kind in ('post', 'reply', 'certificate')) or (kind = 'lesson' and source_id = pg_temp.id(304));
 insert into auth.users(id, email, email_confirmed_at, raw_app_meta_data, raw_user_meta_data)
 select pg_temp.id(n), 'ranking-' || n || '@example.test', now(), '{"icarus_server_created":true}',
   jsonb_build_object('full_name', 'Membro ' || n) from generate_series(10, 27) n;
-insert into public.ica_lesson_progress(user_id, lesson_id, completed_at)
+insert into public.lesson_progress(user_id, lesson_id, completed_at)
 select pg_temp.id(n), pg_temp.id(303), now() from generate_series(10, 27) n;
 set local role authenticated;
 select pg_temp.login(2);
@@ -257,28 +257,28 @@ reset role;
 insert into auth.users(id, email, email_confirmed_at, raw_app_meta_data)
 select pg_temp.id(n), 'ranking-' || n || '@example.test', now(), '{"icarus_server_created":true}'
 from generate_series(28, 30) n;
-insert into public.ica_posts(id, space_id, author_id, title, body)
+insert into public.posts(id, space_id, author_id, title, body)
 values (pg_temp.id(202), pg_temp.id(200), pg_temp.id(28), 'Post para expurgo', 'Fixture');
-update public.ica_posts set status = 'approved' where id = pg_temp.id(202);
-insert into public.ica_votes(actor_id, post_id)
+update public.posts set status = 'approved' where id = pg_temp.id(202);
+insert into public.votes(actor_id, post_id)
 values (pg_temp.id(29), pg_temp.id(202)), (pg_temp.id(30), pg_temp.id(202));
-delete from public.ica_votes where actor_id = pg_temp.id(29);
-select pg_temp.ok(exists (select from ica_private.ranking_events where actor_id = pg_temp.id(29)),
+delete from public.votes where actor_id = pg_temp.id(29);
+select pg_temp.ok(exists (select from app_private.ranking_events where actor_id = pg_temp.id(29)),
  'a trilha permanece após apagar o voto de origem');
-delete from public.ica_profiles where id = pg_temp.id(29);
+delete from public.profiles where id = pg_temp.id(29);
 delete from auth.users where id = pg_temp.id(29);
-select pg_temp.ok(not exists (select from ica_private.ranking_events where actor_id = pg_temp.id(29))
-  and (select count(*) = 2 from ica_private.ranking_events where recipient_id = pg_temp.id(28)),
+select pg_temp.ok(not exists (select from app_private.ranking_events where actor_id = pg_temp.id(29))
+  and (select count(*) = 2 from app_private.ranking_events where recipient_id = pg_temp.id(28)),
   'excluir o autor da curtida expurga apenas seu vínculo mesmo com o destinatário ativo');
-delete from public.ica_votes where post_id = pg_temp.id(202);
-delete from public.ica_posts where id = pg_temp.id(202);
-delete from public.ica_profiles where id = pg_temp.id(28);
+delete from public.votes where post_id = pg_temp.id(202);
+delete from public.posts where id = pg_temp.id(202);
+delete from public.profiles where id = pg_temp.id(28);
 delete from auth.users where id = pg_temp.id(28);
-select pg_temp.ok(not exists (select from ica_private.ranking_events
+select pg_temp.ok(not exists (select from app_private.ranking_events
   where recipient_id in (pg_temp.id(28), pg_temp.id(29)) or actor_id in (pg_temp.id(28), pg_temp.id(29)))
-  and not exists (select from ica_private.ranking_subjects where profile_id in (pg_temp.id(28), pg_temp.id(29)))
-  and exists (select from public.ica_profiles where id = pg_temp.id(30))
-  and exists (select from ica_private.ranking_events where recipient_id = pg_temp.id(1)),
+  and not exists (select from app_private.ranking_subjects where profile_id in (pg_temp.id(28), pg_temp.id(29)))
+  and exists (select from public.profiles where id = pg_temp.id(30))
+  and exists (select from app_private.ranking_events where recipient_id = pg_temp.id(1)),
   'excluir o destinatário expurga o post e a curtida recebida e preserva os demais titulares');
 
 select count(*) from ranking_checks;

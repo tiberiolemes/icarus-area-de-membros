@@ -44,14 +44,14 @@ insert into auth.users(id,email,email_confirmed_at,raw_app_meta_data,raw_user_me
 select pg_temp.id(n),'analytics-'||n||'@example.test',now(),'{"icarus_server_created":true}',
   jsonb_build_object('full_name','Membro Privado '||n) from generate_series(1,9) n;
 set constraints all immediate;
-update public.ica_profiles set role=case
+update public.profiles set role=case
   when id in (pg_temp.id(1),pg_temp.id(9)) then 'admin'
   when id=pg_temp.id(5) then 'support' when id=pg_temp.id(6) then 'moderator'
   when id=pg_temp.id(7) then 'instructor' else 'member' end,
   demo=id=pg_temp.id(4), suspended=id=pg_temp.id(9), created_at=now()-interval '1 day'
 where id in (select pg_temp.id(n) from generate_series(1,9) n);
-update public.ica_profiles set created_at=pg_temp.from_30d() where id=pg_temp.id(2);
-update public.ica_profiles set created_at=pg_temp.from_30d()-interval '1 microsecond' where id=pg_temp.id(3);
+update public.profiles set created_at=pg_temp.from_30d() where id=pg_temp.id(2);
+update public.profiles set created_at=pg_temp.from_30d()-interval '1 microsecond' where id=pg_temp.id(3);
 
 insert into auth.sessions(id,user_id,created_at,updated_at,aal,not_after)
 select pg_temp.id(10+n),pg_temp.id(n),now(),now(),'aal2',null from generate_series(1,9) n;
@@ -59,7 +59,7 @@ insert into auth.sessions(id,user_id,created_at,updated_at,aal,not_after)
 values (pg_temp.id(21),pg_temp.id(1),now(),now(),'aal1',null),
   (pg_temp.id(22),pg_temp.id(1),now(),now(),'aal2',null),
   (pg_temp.id(23),pg_temp.id(1),now(),now(),'aal2',now()-interval '1 second');
-insert into public.ica_app_sessions(id,user_id,expires_at,revoked_at)
+insert into public.app_sessions(id,user_id,expires_at,revoked_at)
 values(pg_temp.id(22),pg_temp.id(1),now()+interval '10 minutes',now());
 
 set local role authenticated;
@@ -71,9 +71,9 @@ select pg_temp.ok(public.app_admin_analytics_courses() @> '{"items":[],"total":0
 select set_config('request.jwt.claims','{}',true);
 reset role;
 
-insert into public.ica_plans(id,name,slug,price_cents,access_months)
+insert into public.plans(id,name,slug,price_cents,access_months)
 values(pg_temp.id(90),'Plano financeiro teste','analytics-test-plan',999999,13);
-insert into public.ica_orders(id,user_id,plan_id,attempt_key,amount_cents,access_months,method,installments,buyer_data,receipt_hash,status,paid_at,finalized_at)
+insert into public.orders(id,user_id,plan_id,attempt_key,amount_cents,access_months,method,installments,buyer_data,receipt_hash,status,paid_at,finalized_at)
 select pg_temp.id(n),case when member_id is not null then pg_temp.id(member_id) end,pg_temp.id(90),
   'analytics-attempt-'||n,amount,months,method,1,'{"email":"private-buyer@example.test"}',repeat('a',64),
   status,paid_at,case when member_id is not null then paid_at end
@@ -90,57 +90,57 @@ from (values
   (210,null,7000,1,'PIX','pending',null),
   (211,null,1000,1,'PIX','paid',now())
 ) x(n,member_id,amount,months,method,status,paid_at);
-insert into public.ica_subscriptions(user_id,plan_id,starts_at,ends_at,source,order_id,revoked_at)
+insert into public.subscriptions(user_id,plan_id,starts_at,ends_at,source,order_id,revoked_at)
 select o.user_id,o.plan_id,
   case when n=208 then now()+interval '6 days' else o.paid_at end,
   case when n=203 then ((now() at time zone 'America/Sao_Paulo') + interval '30 days') at time zone 'America/Sao_Paulo'
        else now()+make_interval(days=>ends_days) end,
   'order',o.id,case when n=205 then now()-interval '1 hour' end
 from (values (201,10),(202,60),(203,30),(204,1),(205,2),(207,6),(208,60)) x(n,ends_days)
-join public.ica_orders o on o.id=pg_temp.id(n);
-insert into public.ica_subscriptions(user_id,plan_id,starts_at,ends_at,source)
+join public.orders o on o.id=pg_temp.id(n);
+insert into public.subscriptions(user_id,plan_id,starts_at,ends_at,source)
 values(pg_temp.id(8),pg_temp.id(90),now()-interval '1 day',now()+interval '1 day','courtesy');
 
-insert into public.ica_spaces(id,name,status,access_mode) values(pg_temp.id(95),'Comunidade teste','published','members');
-insert into public.ica_posts(space_id,author_id,title,body,status,created_at)
+insert into public.spaces(id,name,status,access_mode) values(pg_temp.id(95),'Comunidade teste','published','members');
+insert into public.posts(space_id,author_id,title,body,status,created_at)
 select pg_temp.id(95),pg_temp.id(n),'Post privado marcador','Corpo privado marcador',status,created_at
 from (values (2,'approved',pg_temp.from_30d()),(3,'pending',pg_temp.from_30d()-interval '1 day'),
   (2,'archived',now()-interval '1 day'),(4,'pending',now()-interval '1 day')) x(n,status,created_at);
 
-insert into public.ica_tickets(id,user_id,subject,priority,status,created_at)
+insert into public.tickets(id,user_id,subject,priority,status,created_at)
 select pg_temp.id(n),pg_temp.id(member_id),'Assunto privado marcador','normal',status,created_at
 from (values (301,2,'open',now()-interval '1 day'),(302,3,'resolved',now()-interval '2 days'),
   (303,2,'in_progress',now()-interval '1 day'),(304,3,'waiting_member',pg_temp.from_30d()-interval '1 day'),
   (305,4,'open',now()-interval '1 day')) x(n,member_id,status,created_at);
-insert into public.ica_ticket_messages(ticket_id,author_id,body,created_at)
+insert into public.ticket_messages(ticket_id,author_id,body,created_at)
 select t.id,pg_temp.id(author),'Mensagem privada marcador',t.created_at+make_interval(mins=>elapsed)
 from (values (301,2,0),(301,2,5),(301,5,60),(301,5,180),(302,4,30),(302,5,120),(303,2,10)) x(n,author,elapsed)
-join public.ica_tickets t on t.id=pg_temp.id(n);
+join public.tickets t on t.id=pg_temp.id(n);
 
-insert into public.ica_courses(id,slug,title,status,access_mode)
+insert into public.courses(id,slug,title,status,access_mode)
 values(pg_temp.id(100),'analytics-published','A · Curso publicado','published','members'),
   (pg_temp.id(101),'analytics-empty','B · Curso vazio','published','members'),
   (pg_temp.id(102),'analytics-draft','Curso privado marcador','draft','members'),
   (pg_temp.id(103),'analytics-archived','Curso arquivado marcador','archived','members');
-insert into public.ica_courses(id,slug,title,status,access_mode)
+insert into public.courses(id,slug,title,status,access_mode)
 select pg_temp.id(500+n),'analytics-catalog-'||n,'Z · Curso '||lpad(n::text,2,'0'),'published','members'
 from generate_series(1,20) n;
-insert into public.ica_modules(id,course_id,slug,title,status,order_index)
+insert into public.modules(id,course_id,slug,title,status,order_index)
 values(pg_temp.id(110),pg_temp.id(100),'primeiro','Primeiro módulo','published',1),
   (pg_temp.id(111),pg_temp.id(100),'segundo','Segundo módulo','published',2),
   (pg_temp.id(112),pg_temp.id(100),'rascunho','Módulo privado marcador','draft',0);
-insert into public.ica_sections(id,module_id,title,status) values
+insert into public.sections(id,module_id,title,status) values
   (pg_temp.id(120),pg_temp.id(110),'Seção 1','published'),(pg_temp.id(121),pg_temp.id(111),'Seção 2','published'),
   (pg_temp.id(122),pg_temp.id(112),'Seção privada marcador','published');
-insert into public.ica_lessons(id,section_id,slug,title,status,type,body,duration_seconds,video_id,is_required)
+insert into public.lessons(id,section_id,slug,title,status,type,body,duration_seconds,video_id,is_required)
 values (pg_temp.id(130),pg_temp.id(120),'primeira','Primeira aula','published','video','Corpo privado marcador',300,'Video privado marcador',true),
   (pg_temp.id(131),pg_temp.id(121),'segunda','Segunda aula','published','video','Corpo privado marcador',300,'Video privado marcador',true),
   (pg_temp.id(132),pg_temp.id(121),'opcional','Aula opcional','published','text','',0,null,false),
   (pg_temp.id(133),pg_temp.id(122),'rascunho','Aula privada marcador','published','text','',0,null,false);
-insert into public.ica_lessons(id,section_id,slug,title,status,is_required,order_index)
+insert into public.lessons(id,section_id,slug,title,status,is_required,order_index)
 select pg_temp.id(600+n),pg_temp.id(121),'opcional-'||n,'Opcional '||n,'published',false,n
 from generate_series(1,20) n;
-insert into public.ica_lesson_progress(user_id,lesson_id,position_seconds,completed_at,updated_at)
+insert into public.lesson_progress(user_id,lesson_id,position_seconds,completed_at,updated_at)
 select pg_temp.id(member_id),pg_temp.id(lesson_id),position_seconds,completed,now()
 from (values
   (2,130,0,now()-interval '3 days'),(2,131,300,pg_temp.from_30d()),
@@ -158,11 +158,11 @@ select pg_temp.ok((select count(*)=5 and bool_and(
 
 select pg_temp.ok((select bool_and(upper(span)-lower(span)=n)
   from (values('today',1),('yesterday',1),('7d',7),('14d',14),('30d',30),('90d',90)) preset(id,n)
-  cross join lateral (select ica_private.report_days(id,null,null) span) d), 'atalhos contam dias civis incluindo ambas as pontas');
+  cross join lateral (select app_private.report_days(id,null,null) span) d), 'atalhos contam dias civis incluindo ambas as pontas');
 select pg_temp.ok(not exists (
   select from unnest(array['anon','authenticated','service_role']) role_name
-  where has_function_privilege(role_name,'ica_private.admin_reporting_actor()','EXECUTE')
-    or has_function_privilege(role_name,'ica_private.report_days(text,date,date)','EXECUTE')
+  where has_function_privilege(role_name,'app_private.admin_reporting_actor()','EXECUTE')
+    or has_function_privilege(role_name,'app_private.report_days(text,date,date)','EXECUTE')
 ), 'helper privado sem execução explícita ou herdada');
 set local role anon;
 select pg_temp.denied('select public.app_admin_dashboard()','permission','anon recusado pelo dashboard');
@@ -201,7 +201,7 @@ select pg_temp.denied('select public.app_admin_dashboard()','Sessão inválida o
 select pg_temp.login(9);
 select pg_temp.denied('select public.app_admin_dashboard()','Acesso indisponível.','admin suspenso recusado');
 select pg_temp.login(1);
-select pg_temp.denied('select buyer_data from public.ica_orders','permission','nem admin lê tabelas por privilégio direto');
+select pg_temp.denied('select buyer_data from public.orders','permission','nem admin lê tabelas por privilégio direto');
 select pg_temp.denied('select public.app_admin_dashboard(null)','Período inválido.','período nulo');
 select pg_temp.denied('select public.app_admin_dashboard(repeat(''x'',1000))','Período inválido.','período arbitrário');
 select pg_temp.denied('select public.app_admin_analytics_courses(100001)','Página inválida.','limite de página de curso');
@@ -261,33 +261,33 @@ select pg_temp.ok(not exists(select from analytics_results where data::text ~*
   'example.test|privado marcador|privada marcador|arquivado marcador|"position_seconds"|"user_id"|"order_id"|"buyer_data"|ad320000-0000-4000-8000-000000000002'),
   'resposta agregada não contém PII, posições, conteúdo privado ou identificador de membro');
 reset role;
-update public.ica_lessons set status='archived' where id=pg_temp.id(131);
+update public.lessons set status='archived' where id=pg_temp.id(131);
 set local role authenticated;
 select pg_temp.ok(public.app_admin_course_analytics(pg_temp.id(100)) @> '{"started":3,"module_completed":2,"course_completed":null,"lessons":{"total":22}}',
   'obrigatória arquivada impede afirmar conclusão atual');
 reset role;
-insert into public.ica_orders(id,user_id,plan_id,attempt_key,amount_cents,access_months,method,installments,
+insert into public.orders(id,user_id,plan_id,attempt_key,amount_cents,access_months,method,installments,
   buyer_data,receipt_hash,status,paid_at,finalized_at)
 values
   (pg_temp.id(212),pg_temp.id(2),pg_temp.id(90),'analytics-attempt-212',10000,1,'PIX',1,'{}',repeat('a',64),
     'paid',now()-interval '90 days',pg_temp.from_30d()+interval '1 day'),
   (pg_temp.id(213),pg_temp.id(2),pg_temp.id(90),'analytics-attempt-213',10000,1,'PIX',1,'{}',repeat('a',64),
     'refunded',pg_temp.from_30d(),pg_temp.from_30d()+interval '2 days');
-insert into public.ica_subscriptions(user_id,plan_id,starts_at,ends_at,source,order_id,revoked_at)
+insert into public.subscriptions(user_id,plan_id,starts_at,ends_at,source,order_id,revoked_at)
 select user_id,plan_id,paid_at,paid_at+make_interval(months=>access_months),'order',id,
   case when status='refunded' then finalized_at end
-from public.ica_orders where id in (pg_temp.id(212),pg_temp.id(213));
+from public.orders where id in (pg_temp.id(212),pg_temp.id(213));
 set local role authenticated;
 select pg_temp.ok(public.app_admin_dashboard()->'acquisition'=pg_temp.result('30d')->'acquisition',
   'acesso vinculado após vencimento ou revogado no vínculo não antecipa a primeira ativação válida');
 reset role;
-update public.ica_orders set status='refunded' where id in (pg_temp.id(201),pg_temp.id(202));
-update public.ica_subscriptions set revoked_at=now() where order_id in (pg_temp.id(201),pg_temp.id(202));
+update public.orders set status='refunded' where id in (pg_temp.id(201),pg_temp.id(202));
+update public.subscriptions set revoked_at=now() where order_id in (pg_temp.id(201),pg_temp.id(202));
 set local role authenticated;
 select pg_temp.ok(public.app_admin_dashboard()->'acquisition'=pg_temp.result('30d')->'acquisition',
   'reembolso posterior preserva a primeira ativação do acesso que esteve vigente');
 reset role;
-insert into public.ica_rate_limits(actor_id,bucket,window_start,count)
+insert into public.rate_limits(actor_id,bucket,window_start,count)
 values(pg_temp.id(1),'admin_dashboard',date_trunc('minute',now()),20),
   (pg_temp.id(1),'admin_analytics_courses',date_trunc('minute',now()),20),
   (pg_temp.id(1),'admin_course_analytics',date_trunc('minute',now()),20)

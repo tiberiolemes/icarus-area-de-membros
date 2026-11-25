@@ -7,10 +7,10 @@ with tables as (
   select c.oid, n.nspname as schema_name, c.relname as table_name, c.relrowsecurity,
     n.nspname || '.' || c.relname as qualified_name
   from pg_class c join pg_namespace n on n.oid = c.relnamespace
-  where (n.nspname = 'ica_private' or (n.nspname = 'public' and c.relname like 'ica\_%')) and c.relkind in ('r', 'p')
+  where n.nspname in ('public', 'app_private') and c.relkind in ('r', 'p')
 ), sections as (
   select 0 as section, '' as name, 0 as line,
-    format(E'# Dicionário de dados do Icarus\n\n**%s tabelas e %s colunas** nas tabelas `ica_*` do esquema `public` e no esquema `ica_private`.\n\n'
+    format(E'# Dicionário de dados do Icarus\n\n**%s tabelas e %s colunas** nos esquemas `public` e `app_private`.\n\n'
       'Veja o [mapa técnico](architecture.md) para localizar os fluxos e visualizar os relacionamentos. '
       'Este inventário descreve a estrutura das tabelas da aplicação. Os esquemas gerenciados pelo Supabase, '
       '`auth` e `storage`, aparecem quando são destino de uma chave estrangeira.\n\n'

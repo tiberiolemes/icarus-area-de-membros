@@ -22,20 +22,20 @@ select pg_temp.sid(n),'vitrine-'||n||'@example.test',now(),'{"icarus_server_crea
 set constraints all immediate;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
 select pg_temp.sid(10+n),pg_temp.sid(n),now(),now(),'aal1' from generate_series(1,2) n;
-insert into public.ica_courses(id,slug,title,status,access_mode,created_at)
+insert into public.courses(id,slug,title,status,access_mode,created_at)
 select pg_temp.sid(i),'vitrine-'||i,'QA vitrine '||i,
  case when i=128 then 'draft' else 'published' end,case when i=125 then 'subscribers' else 'members' end,now()+i*interval '1 minute'
 from generate_series(100,128) i;
-insert into public.ica_modules(id,course_id,slug,title,status)
+insert into public.modules(id,course_id,slug,title,status)
 select pg_temp.sid(i+100),pg_temp.sid(i),'modulo','Módulo','published' from generate_series(100,128) i;
-insert into public.ica_sections(id,module_id,title,status)
+insert into public.sections(id,module_id,title,status)
 select pg_temp.sid(i+200),pg_temp.sid(i+100),'Seção','published' from generate_series(100,128) i;
-insert into public.ica_lessons(id,section_id,slug,title,duration_seconds,status,order_index)
+insert into public.lessons(id,section_id,slug,title,duration_seconds,status,order_index)
 select pg_temp.sid(i+300),pg_temp.sid(i+200),'aula','Aula '||i,i,'published',1 from generate_series(100,128) i;
-insert into public.ica_lessons(id,section_id,slug,title,status,order_index)
+insert into public.lessons(id,section_id,slug,title,status,order_index)
 values (pg_temp.sid(500),pg_temp.sid(300),'retomada','Retomada','published',2),
  (pg_temp.sid(501),pg_temp.sid(300),'rascunho','Rascunho','draft',0);
-insert into public.ica_lesson_progress(user_id,lesson_id,position_seconds,completed_at,updated_at) values
+insert into public.lesson_progress(user_id,lesson_id,position_seconds,completed_at,updated_at) values
  (pg_temp.sid(1),pg_temp.sid(500),14,null,now()),
  (pg_temp.sid(1),pg_temp.sid(401),40,now(),now()-interval '1 minute'),
  (pg_temp.sid(1),pg_temp.sid(402),9,null,now()-interval '1 day'),

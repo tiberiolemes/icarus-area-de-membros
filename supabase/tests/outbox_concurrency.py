@@ -32,14 +32,14 @@ claims = [str(uuid.uuid4()), str(uuid.uuid4())]
 barrier = threading.Barrier(2)
 created = False
 try:
-    assert sql("select exists(select 1 from pg_namespace where nspname='ica_private')") == ["t"]
+    assert sql("select exists(select 1 from pg_namespace where nspname='app_private')") == ["t"]
     sql(f"""begin;
-      insert into public.ica_plans(id,name,slug,price_cents,access_months)
+      insert into public.plans(id,name,slug,price_cents,access_months)
       values('{plan}','DEMONSTRAÇÃO corrida outbox','demo-race-{plan}',10000,12);
-      insert into public.ica_orders(id,plan_id,attempt_key,amount_cents,access_months,method,installments,buyer_data,receipt_hash,gateway_id,status,paid_at)
+      insert into public.orders(id,plan_id,attempt_key,amount_cents,access_months,method,installments,buyer_data,receipt_hash,gateway_id,status,paid_at)
       values('{order}','{plan}','demo-outbox-race-{order}',10000,12,'PIX',1,
       jsonb_build_object('name','DEMONSTRAÇÃO corrida','email','outbox-race-{order}@example.test'),repeat('a',64),'{gateway}','paid',now());
-      insert into public.ica_invitation_outbox(order_id) values('{order}');
+      insert into public.invitation_outbox(order_id) values('{order}');
       commit;""")
     created = True
 
@@ -58,13 +58,13 @@ try:
     winner = next(claim for claim, result in results if result == "true")
     assert sql(f"set role service_role; select public.app_finish_payment_invite('{order}','{winner}',true)->>'status'") == ["sent"]
     assert sql(f"set role service_role; select public.app_claim_payment_invite('{order}','{uuid.uuid4()}')->>'claimed'") == ["false"]
-    assert sql(f"select status='paid' and finalized_at is null and not exists(select 1 from public.ica_subscriptions where order_id='{order}') from public.ica_orders where id='{order}'") == ["t"]
+    assert sql(f"select status='paid' and finalized_at is null and not exists(select 1 from public.subscriptions where order_id='{order}') from public.orders where id='{order}'") == ["t"]
     print("outbox_concurrency: 4 assertions passed across two concurrent database sessions")
 finally:
     if created:
         sql(f"""begin;
-          delete from public.ica_audit_events where target_type='orders' and target_id='{order}';
-          delete from public.ica_invitation_outbox where order_id='{order}';
-          delete from public.ica_orders where id='{order}' and attempt_key='demo-outbox-race-{order}';
-          delete from public.ica_plans where id='{plan}' and slug='demo-race-{plan}';
+          delete from public.audit_events where target_type='orders' and target_id='{order}';
+          delete from public.invitation_outbox where order_id='{order}';
+          delete from public.orders where id='{order}' and attempt_key='demo-outbox-race-{order}';
+          delete from public.plans where id='{plan}' and slug='demo-race-{plan}';
           commit;""")

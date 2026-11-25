@@ -42,18 +42,18 @@ set constraints all immediate;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
 select pg_temp.id(10+n),pg_temp.id(n),now(),now(),case when n between 3 and 6 then 'aal2'::auth.aal_level else 'aal1'::auth.aal_level end
 from generate_series(1,7) n;
-insert into public.ica_app_sessions(id,user_id,expires_at) select pg_temp.id(10+n),pg_temp.id(n),now()+interval '20 minutes'
+insert into public.app_sessions(id,user_id,expires_at) select pg_temp.id(10+n),pg_temp.id(n),now()+interval '20 minutes'
  from generate_series(1,7) n;
-update public.ica_profiles set role='support' where id=pg_temp.id(3);
-update public.ica_profiles set role='moderator' where id=pg_temp.id(4);
-update public.ica_profiles set role='admin' where id in (pg_temp.id(5),pg_temp.id(7));
-update public.ica_profiles set role='instructor' where id=pg_temp.id(6);
+update public.profiles set role='support' where id=pg_temp.id(3);
+update public.profiles set role='moderator' where id=pg_temp.id(4);
+update public.profiles set role='admin' where id in (pg_temp.id(5),pg_temp.id(7));
+update public.profiles set role='instructor' where id=pg_temp.id(6);
 insert into auth.mfa_factors(id,user_id,friendly_name,factor_type,status,created_at,updated_at)
 values(pg_temp.id(51),pg_temp.id(5),'Teste de MFA','totp','verified',now(),now());
 
-select pg_temp.ok((select relrowsecurity from pg_class where oid='public.ica_feedbacks'::regclass)
+select pg_temp.ok((select relrowsecurity from pg_class where oid='public.feedbacks'::regclass)
  and not exists(select from unnest(array['anon','authenticated','service_role']) r where
-  has_table_privilege(r,'public.ica_feedbacks','SELECT, INSERT, UPDATE, DELETE, TRUNCATE')),'RLS e ACL da tabela');
+  has_table_privilege(r,'public.feedbacks','SELECT, INSERT, UPDATE, DELETE, TRUNCATE')),'RLS e ACL da tabela');
 select pg_temp.ok(not exists(select from unnest(array['app_submit_feedback(uuid,text,text,uuid,text,text)',
  'app_admin_feedbacks(text,text,integer)','app_admin_feedback(uuid)','app_admin_feedback_status(uuid,text,integer)','app_export_data()']) sig
  where has_function_privilege('anon','public.'||sig,'EXECUTE') or has_function_privilege('service_role','public.'||sig,'EXECUTE')
@@ -71,8 +71,8 @@ reset role;
 set local role authenticated;
 select pg_temp.denied('select public.app_submit_feedback(null,null,null)','sem sessão sem envio');
 select pg_temp.login(1);
-select pg_temp.denied('select * from public.ica_feedbacks','membro sem leitura direta');
-select pg_temp.denied('update public.ica_feedbacks set status=''done''','membro sem escrita direta');
+select pg_temp.denied('select * from public.feedbacks','membro sem leitura direta');
+select pg_temp.denied('update public.feedbacks set status=''done''','membro sem escrita direta');
 select pg_temp.denied('select public.app_admin_feedbacks()','membro sem fila');
 select pg_temp.denied('select public.app_feedback_screenshot_access(null,null)','membro sem RPC de assinatura');
 select pg_temp.denied($$select public.app_submit_feedback(pg_temp.id(100),'bug','   ' || chr(10))$$,'descrição vazia');
@@ -159,11 +159,11 @@ select pg_temp.ok(public.app_admin_feedback_status(pg_temp.key('relato'),'done',
 select pg_temp.ok(public.app_admin_feedback_status(pg_temp.key('relato'),'new',4)->>'revision'='5','correção para novo');
 select pg_temp.ok(jsonb_array_length(public.app_export_data()->'feedbacks')=0,'export do admin não contém relatos de terceiros');
 reset role;
-select pg_temp.ok((select count(*) from public.ica_audit_events where action='feedback.status' and target_type='feedback'
+select pg_temp.ok((select count(*) from public.audit_events where action='feedback.status' and target_type='feedback'
  and target_id=pg_temp.key('relato') and actor_id=pg_temp.id(5) and reason in ('new -> reviewing','reviewing -> planned','planned -> done','done -> new'))=4,
  'transições auditadas uma vez com ator, origem e destino');
 
-insert into public.ica_feedbacks(author_id,attempt_key,kind,body,created_at)
+insert into public.feedbacks(author_id,attempt_key,kind,body,created_at)
  select pg_temp.id(2),pg_temp.id(300+n),'bug','Relato numerado '||n,now()-n*interval '1 second'
  from generate_series(1,22) n;
 set local role authenticated;
@@ -191,7 +191,7 @@ select pg_temp.ok(public.app_feedback_screenshot_access(pg_temp.id(5),pg_temp.ke
 select pg_temp.edge_session(1);
 select pg_temp.ok(public.app_feedback_screenshot_access(pg_temp.id(1),pg_temp.key('print'))->>'can_access'='true','titular autoriza mídia');
 reset role;
-update public.ica_app_sessions set revoked_at=now() where id=pg_temp.id(11);
+update public.app_sessions set revoked_at=now() where id=pg_temp.id(11);
 set local role service_role;
 select pg_temp.denied($$select public.app_feedback_screenshot_access(pg_temp.id(1),pg_temp.key('print'))$$,'sessão revogada não assina print');
 reset role;

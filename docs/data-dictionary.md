@@ -1,12 +1,12 @@
 # Dicionário de dados do Icarus
 
-**51 tabelas e 368 colunas** nas tabelas `ica_*` do esquema `public` e no esquema `ica_private`.
+**51 tabelas e 368 colunas** nos esquemas `public` e `app_private`.
 
 Veja o [mapa técnico](architecture.md) para localizar os fluxos e visualizar os relacionamentos. Este inventário descreve a estrutura das tabelas da aplicação. Os esquemas gerenciados pelo Supabase, `auth` e `storage`, aparecem quando são destino de uma chave estrangeira.
 
 Gerado por [schema-dictionary.sql](schema-dictionary.sql) a partir do catálogo do PostgreSQL. Para atualizar, aplique as migrations em um banco de teste e execute `psql -XAtq -f docs/schema-dictionary.sql > docs/data-dictionary.md` com a conexão apontada para esse banco. “RLS” indica se a proteção está ativada na tabela. Para as regras efetivas, consulte as migrations e o contrato das RPCs.
 
-## `ica_private.catalog_launch_signups`
+## `app_private.catalog_launch_signups`
 
 RLS ativada.
 
@@ -19,14 +19,14 @@ RLS ativada.
 **Chaves e restrições**
 
 - `catalog_launch_signups_pkey` — `PRIMARY KEY (launch_id, user_id)`
-- `catalog_launch_signups_launch_id_fkey` — `FOREIGN KEY (launch_id) REFERENCES ica_private.catalog_launches(id)`
+- `catalog_launch_signups_launch_id_fkey` — `FOREIGN KEY (launch_id) REFERENCES app_private.catalog_launches(id)`
 - `catalog_launch_signups_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE`
 
 **Índices adicionais**
 
-- `CREATE INDEX catalog_launch_signups_owner ON ica_private.catalog_launch_signups USING btree (user_id, subscribed_at, launch_id)`
+- `CREATE INDEX catalog_launch_signups_owner ON app_private.catalog_launch_signups USING btree (user_id, subscribed_at, launch_id)`
 
-## `ica_private.catalog_launches`
+## `app_private.catalog_launches`
 
 RLS ativada.
 
@@ -46,13 +46,13 @@ RLS ativada.
 - `catalog_launches_pkey` — `PRIMARY KEY (id)`
 - `catalog_launches_course_id_key` — `UNIQUE (course_id)`
 - `catalog_launches_module_id_key` — `UNIQUE (module_id)`
-- `catalog_launches_course_id_fkey` — `FOREIGN KEY (course_id) REFERENCES public.ica_courses(id)`
-- `catalog_launches_module_id_fkey` — `FOREIGN KEY (module_id) REFERENCES public.ica_modules(id)`
+- `catalog_launches_course_id_fkey` — `FOREIGN KEY (course_id) REFERENCES public.courses(id)`
+- `catalog_launches_module_id_fkey` — `FOREIGN KEY (module_id) REFERENCES public.modules(id)`
 - `catalog_launches_check` — `CHECK ((num_nonnulls(course_id, module_id) = 1))`
 - `catalog_launches_summary_check` — `CHECK (((char_length(summary) >= 1) AND (char_length(summary) <= 500)))`
 - `catalog_launches_title_check` — `CHECK (((char_length(title) >= 1) AND (char_length(title) <= 160)))`
 
-## `ica_private.installation_brand`
+## `app_private.installation_brand`
 
 RLS ativada.
 
@@ -69,7 +69,7 @@ RLS ativada.
 - `installation_brand_revision_check` — `CHECK ((revision >= 0))`
 - `installation_brand_singleton_check` — `CHECK (singleton)`
 
-## `ica_private.local_demo_guard`
+## `app_private.local_demo_guard`
 
 RLS desativada.
 
@@ -83,7 +83,7 @@ RLS desativada.
 - `local_demo_guard_pkey` — `PRIMARY KEY (singleton)`
 - `local_demo_guard_singleton_check` — `CHECK (singleton)`
 
-## `ica_private.ranking_events`
+## `app_private.ranking_events`
 
 RLS ativada.
 
@@ -98,18 +98,18 @@ RLS ativada.
 **Chaves e restrições**
 
 - `ranking_events_pkey` — `PRIMARY KEY (kind, recipient_id, source_id, actor_id)`
-- `ranking_events_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES ica_private.ranking_subjects(profile_id) ON DELETE CASCADE`
-- `ranking_events_recipient_id_fkey` — `FOREIGN KEY (recipient_id) REFERENCES ica_private.ranking_subjects(profile_id) ON DELETE CASCADE`
+- `ranking_events_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES app_private.ranking_subjects(profile_id) ON DELETE CASCADE`
+- `ranking_events_recipient_id_fkey` — `FOREIGN KEY (recipient_id) REFERENCES app_private.ranking_subjects(profile_id) ON DELETE CASCADE`
 - `ranking_events_check` — `CHECK (((kind = 'like'::text) = (recipient_id <> actor_id)))`
 - `ranking_events_kind_check` — `CHECK ((kind = ANY (ARRAY['post'::text, 'reply'::text, 'like'::text, 'lesson'::text, 'certificate'::text])))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ranking_events_actor ON ica_private.ranking_events USING btree (actor_id)`
-- `CREATE INDEX ranking_events_period ON ica_private.ranking_events USING btree (occurred_at)`
-- `CREATE INDEX ranking_events_recipient ON ica_private.ranking_events USING btree (recipient_id)`
+- `CREATE INDEX ranking_events_actor ON app_private.ranking_events USING btree (actor_id)`
+- `CREATE INDEX ranking_events_period ON app_private.ranking_events USING btree (occurred_at)`
+- `CREATE INDEX ranking_events_recipient ON app_private.ranking_events USING btree (recipient_id)`
 
-## `ica_private.ranking_subjects`
+## `app_private.ranking_subjects`
 
 RLS ativada.
 
@@ -120,9 +120,9 @@ RLS ativada.
 **Chaves e restrições**
 
 - `ranking_subjects_pkey` — `PRIMARY KEY (profile_id)`
-- `ranking_subjects_profile_id_fkey` — `FOREIGN KEY (profile_id) REFERENCES public.ica_profiles(id) ON DELETE CASCADE`
+- `ranking_subjects_profile_id_fkey` — `FOREIGN KEY (profile_id) REFERENCES public.profiles(id) ON DELETE CASCADE`
 
-## `public.ica_app_sessions`
+## `public.app_sessions`
 
 RLS ativada.
 
@@ -136,11 +136,11 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_app_sessions_pkey` — `PRIMARY KEY (id)`
-- `ica_app_sessions_id_fkey` — `FOREIGN KEY (id) REFERENCES auth.sessions(id) ON DELETE CASCADE`
-- `ica_app_sessions_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
+- `app_sessions_pkey` — `PRIMARY KEY (id)`
+- `app_sessions_id_fkey` — `FOREIGN KEY (id) REFERENCES auth.sessions(id) ON DELETE CASCADE`
+- `app_sessions_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
 
-## `public.ica_audit_events`
+## `public.audit_events`
 
 RLS ativada.
 
@@ -156,14 +156,14 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_audit_events_pkey` — `PRIMARY KEY (id)`
-- `ica_audit_events_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.ica_profiles(id)`
+- `audit_events_pkey` — `PRIMARY KEY (id)`
+- `audit_events_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.profiles(id)`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_audit_events_date ON public.ica_audit_events USING btree (created_at DESC, id)`
+- `CREATE INDEX audit_events_date ON public.audit_events USING btree (created_at DESC, id)`
 
-## `public.ica_certificates`
+## `public.certificates`
 
 RLS ativada.
 
@@ -187,15 +187,15 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_certificates_pkey` — `PRIMARY KEY (id)`
-- `ica_certificates_code_key` — `UNIQUE (code)`
-- `ica_certificates_user_id_course_id_curriculum_version_key` — `UNIQUE (user_id, course_id, curriculum_version)`
-- `ica_certificates_course_id_fkey` — `FOREIGN KEY (course_id) REFERENCES public.ica_courses(id)`
-- `ica_certificates_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
-- `ica_certificates_duration_minutes_check` — `CHECK ((duration_minutes >= 0))`
-- `ica_certificates_lesson_ids_check` — `CHECK ((cardinality(lesson_ids) > 0))`
+- `certificates_pkey` — `PRIMARY KEY (id)`
+- `certificates_code_key` — `UNIQUE (code)`
+- `certificates_user_id_course_id_curriculum_version_key` — `UNIQUE (user_id, course_id, curriculum_version)`
+- `certificates_course_id_fkey` — `FOREIGN KEY (course_id) REFERENCES public.courses(id)`
+- `certificates_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
+- `certificates_duration_minutes_check` — `CHECK ((duration_minutes >= 0))`
+- `certificates_lesson_ids_check` — `CHECK ((cardinality(lesson_ids) > 0))`
 
-## `public.ica_courses`
+## `public.courses`
 
 RLS ativada.
 
@@ -221,17 +221,17 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_courses_pkey` — `PRIMARY KEY (id)`
-- `ica_courses_slug_key` — `UNIQUE (slug)`
-- `ica_courses_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
-- `ica_courses_description_check` — `CHECK ((length(description) <= 20000))`
-- `ica_courses_signer_name_check` — `CHECK ((length(signer_name) <= 160))`
-- `ica_courses_signer_title_check` — `CHECK ((length(signer_title) <= 160))`
-- `ica_courses_slug_check` — `CHECK ((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text))`
-- `ica_courses_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
-- `ica_courses_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
+- `courses_pkey` — `PRIMARY KEY (id)`
+- `courses_slug_key` — `UNIQUE (slug)`
+- `courses_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
+- `courses_description_check` — `CHECK ((length(description) <= 20000))`
+- `courses_signer_name_check` — `CHECK ((length(signer_name) <= 160))`
+- `courses_signer_title_check` — `CHECK ((length(signer_title) <= 160))`
+- `courses_slug_check` — `CHECK ((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text))`
+- `courses_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
+- `courses_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
 
-## `public.ica_feedbacks`
+## `public.feedbacks`
 
 RLS ativada.
 
@@ -252,22 +252,22 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_feedbacks_pkey` — `PRIMARY KEY (id)`
-- `ica_feedbacks_author_id_attempt_key_key` — `UNIQUE (author_id, attempt_key)`
-- `ica_feedbacks_screenshot_id_key` — `UNIQUE (screenshot_id)`
-- `ica_feedbacks_author_id_fkey` — `FOREIGN KEY (author_id) REFERENCES public.ica_profiles(id)`
-- `ica_feedbacks_screenshot_id_fkey` — `FOREIGN KEY (screenshot_id) REFERENCES public.ica_uploads(id)`
-- `ica_feedbacks_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 4000)))`
-- `ica_feedbacks_browser_family_check` — `CHECK ((browser_family = ANY (ARRAY['Chrome'::text, 'Safari'::text, 'Firefox'::text, 'Edge'::text, 'Opera'::text, 'Outro'::text])))`
-- `ica_feedbacks_kind_check` — `CHECK ((kind = ANY (ARRAY['suggestion'::text, 'bug'::text, 'other'::text])))`
-- `ica_feedbacks_page_path_check` — `CHECK ((page_path = ANY (ARRAY['/app'::text, '/app/cursos'::text, '/app/cursos/:curso'::text, '/app/cursos/:curso/:modulo'::text, '/app/cursos/:curso/:modulo/:aula'::text, '/app/materiais'::text, '/app/materiais/:pasta'::text, '/app/podcasts'::text, '/app/certificados'::text, '/app/encontros-ao-vivo'::text, '/app/notificacoes'::text, '/app/configuracoes'::text, '/app/comunidade'::text, '/app/comunidade/novo'::text, '/app/comunidade/:post'::text, '/app/comunidade/:post/editar'::text, '/app/suporte'::text, '/app/suporte/novo'::text, '/app/suporte/:ticket'::text])))`
-- `ica_feedbacks_status_check` — `CHECK ((status = ANY (ARRAY['new'::text, 'reviewing'::text, 'planned'::text, 'done'::text])))`
+- `feedbacks_pkey` — `PRIMARY KEY (id)`
+- `feedbacks_author_id_attempt_key_key` — `UNIQUE (author_id, attempt_key)`
+- `feedbacks_screenshot_id_key` — `UNIQUE (screenshot_id)`
+- `feedbacks_author_id_fkey` — `FOREIGN KEY (author_id) REFERENCES public.profiles(id)`
+- `feedbacks_screenshot_id_fkey` — `FOREIGN KEY (screenshot_id) REFERENCES public.uploads(id)`
+- `feedbacks_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 4000)))`
+- `feedbacks_browser_family_check` — `CHECK ((browser_family = ANY (ARRAY['Chrome'::text, 'Safari'::text, 'Firefox'::text, 'Edge'::text, 'Opera'::text, 'Outro'::text])))`
+- `feedbacks_kind_check` — `CHECK ((kind = ANY (ARRAY['suggestion'::text, 'bug'::text, 'other'::text])))`
+- `feedbacks_page_path_check` — `CHECK ((page_path = ANY (ARRAY['/app'::text, '/app/cursos'::text, '/app/cursos/:curso'::text, '/app/cursos/:curso/:modulo'::text, '/app/cursos/:curso/:modulo/:aula'::text, '/app/materiais'::text, '/app/materiais/:pasta'::text, '/app/podcasts'::text, '/app/certificados'::text, '/app/encontros-ao-vivo'::text, '/app/notificacoes'::text, '/app/configuracoes'::text, '/app/comunidade'::text, '/app/comunidade/novo'::text, '/app/comunidade/:post'::text, '/app/comunidade/:post/editar'::text, '/app/suporte'::text, '/app/suporte/novo'::text, '/app/suporte/:ticket'::text])))`
+- `feedbacks_status_check` — `CHECK ((status = ANY (ARRAY['new'::text, 'reviewing'::text, 'planned'::text, 'done'::text])))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_feedback_queue ON public.ica_feedbacks USING btree (created_at DESC, id DESC)`
+- `CREATE INDEX feedback_queue ON public.feedbacks USING btree (created_at DESC, id DESC)`
 
-## `public.ica_help_feedback`
+## `public.help_feedback`
 
 RLS ativada.
 
@@ -281,12 +281,12 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_help_feedback_pkey` — `PRIMARY KEY (user_id, page)`
-- `ica_help_feedback_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
-- `ica_help_feedback_action_check` — `CHECK ((action = ANY (ARRAY['start'::text, 'pause'::text, 'skip'::text, 'complete'::text, 'rate'::text])))`
-- `ica_help_feedback_page_check` — `CHECK (((length(page) >= 1) AND (length(page) <= 200)))`
+- `help_feedback_pkey` — `PRIMARY KEY (user_id, page)`
+- `help_feedback_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
+- `help_feedback_action_check` — `CHECK ((action = ANY (ARRAY['start'::text, 'pause'::text, 'skip'::text, 'complete'::text, 'rate'::text])))`
+- `help_feedback_page_check` — `CHECK (((length(page) >= 1) AND (length(page) <= 200)))`
 
-## `public.ica_invitation_outbox`
+## `public.invitation_outbox`
 
 RLS ativada.
 
@@ -304,16 +304,16 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_invitation_outbox_pkey` — `PRIMARY KEY (order_id)`
-- `ica_invitation_outbox_order_id_fkey` — `FOREIGN KEY (order_id) REFERENCES public.ica_orders(id)`
-- `ica_invitation_outbox_attempts_check` — `CHECK ((attempts >= 0))`
-- `ica_invitation_outbox_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'sending'::text, 'sent'::text, 'uncertain'::text, 'completed'::text])))`
+- `invitation_outbox_pkey` — `PRIMARY KEY (order_id)`
+- `invitation_outbox_order_id_fkey` — `FOREIGN KEY (order_id) REFERENCES public.orders(id)`
+- `invitation_outbox_attempts_check` — `CHECK ((attempts >= 0))`
+- `invitation_outbox_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'sending'::text, 'sent'::text, 'uncertain'::text, 'completed'::text])))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_invitation_outbox_due ON public.ica_invitation_outbox USING btree (next_attempt_at, created_at) WHERE (status = 'pending'::text)`
+- `CREATE INDEX invitation_outbox_due ON public.invitation_outbox USING btree (next_attempt_at, created_at) WHERE (status = 'pending'::text)`
 
-## `public.ica_legal_acceptances`
+## `public.legal_acceptances`
 
 RLS ativada.
 
@@ -328,13 +328,13 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_legal_acceptances_pkey` — `PRIMARY KEY (id)`
-- `ica_legal_acceptances_legal_version_id_fkey` — `FOREIGN KEY (legal_version_id) REFERENCES public.ica_legal_versions(id)`
-- `ica_legal_acceptances_order_id_fkey` — `FOREIGN KEY (order_id) REFERENCES public.ica_orders(id)`
-- `ica_legal_acceptances_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
-- `ica_legal_acceptances_check` — `CHECK (((user_id IS NOT NULL) OR (order_id IS NOT NULL)))`
+- `legal_acceptances_pkey` — `PRIMARY KEY (id)`
+- `legal_acceptances_legal_version_id_fkey` — `FOREIGN KEY (legal_version_id) REFERENCES public.legal_versions(id)`
+- `legal_acceptances_order_id_fkey` — `FOREIGN KEY (order_id) REFERENCES public.orders(id)`
+- `legal_acceptances_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
+- `legal_acceptances_check` — `CHECK (((user_id IS NOT NULL) OR (order_id IS NOT NULL)))`
 
-## `public.ica_legal_versions`
+## `public.legal_versions`
 
 RLS ativada.
 
@@ -351,18 +351,18 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_legal_versions_pkey` — `PRIMARY KEY (id)`
-- `ica_legal_versions_kind_version_key` — `UNIQUE (kind, version)`
-- `ica_legal_versions_body_check` — `CHECK (((length(body) >= 40) AND (length(body) <= 100000)))`
-- `ica_legal_versions_kind_check` — `CHECK ((kind = ANY (ARRAY['terms'::text, 'privacy'::text])))`
-- `ica_legal_versions_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
-- `ica_legal_versions_version_check` — `CHECK (((length(version) >= 1) AND (length(version) <= 80)))`
+- `legal_versions_pkey` — `PRIMARY KEY (id)`
+- `legal_versions_kind_version_key` — `UNIQUE (kind, version)`
+- `legal_versions_body_check` — `CHECK (((length(body) >= 40) AND (length(body) <= 100000)))`
+- `legal_versions_kind_check` — `CHECK ((kind = ANY (ARRAY['terms'::text, 'privacy'::text])))`
+- `legal_versions_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
+- `legal_versions_version_check` — `CHECK (((length(version) >= 1) AND (length(version) <= 80)))`
 
 **Índices adicionais**
 
-- `CREATE UNIQUE INDEX ica_legal_one_active ON public.ica_legal_versions USING btree (kind) WHERE published`
+- `CREATE UNIQUE INDEX legal_one_active ON public.legal_versions USING btree (kind) WHERE published`
 
-## `public.ica_lesson_checklist_items`
+## `public.lesson_checklist_items`
 
 RLS ativada.
 
@@ -374,16 +374,16 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_lesson_checklist_items_pkey` — `PRIMARY KEY (user_id, lesson_id, item_id)`
-- `ica_lesson_checklist_items_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.ica_lesson_presentations(lesson_id)`
-- `ica_lesson_checklist_items_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
-- `ica_lesson_checklist_items_item_id_check` — `CHECK (((item_id COLLATE "C") ~ '^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$'::text))`
+- `lesson_checklist_items_pkey` — `PRIMARY KEY (user_id, lesson_id, item_id)`
+- `lesson_checklist_items_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.lesson_presentations(lesson_id)`
+- `lesson_checklist_items_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
+- `lesson_checklist_items_item_id_check` — `CHECK (((item_id COLLATE "C") ~ '^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$'::text))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_lesson_checklist_items_definition ON public.ica_lesson_checklist_items USING btree (lesson_id, item_id)`
+- `CREATE INDEX lesson_checklist_items_definition ON public.lesson_checklist_items USING btree (lesson_id, item_id)`
 
-## `public.ica_lesson_comments`
+## `public.lesson_comments`
 
 RLS ativada.
 
@@ -400,20 +400,20 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_lesson_comments_pkey` — `PRIMARY KEY (id)`
-- `ica_lesson_comments_lesson_id_id_key` — `UNIQUE (lesson_id, id)`
-- `ica_lesson_comments_author_id_fkey` — `FOREIGN KEY (author_id) REFERENCES public.ica_profiles(id)`
-- `ica_lesson_comments_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.ica_lessons(id)`
-- `ica_lesson_comments_lesson_id_parent_id_fkey` — `FOREIGN KEY (lesson_id, parent_id) REFERENCES public.ica_lesson_comments(lesson_id, id)`
-- `ica_lesson_comments_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 10000)))`
-- `ica_lesson_comments_check` — `CHECK ((id IS DISTINCT FROM parent_id))`
-- `ica_lesson_comments_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))`
+- `lesson_comments_pkey` — `PRIMARY KEY (id)`
+- `lesson_comments_lesson_id_id_key` — `UNIQUE (lesson_id, id)`
+- `lesson_comments_author_id_fkey` — `FOREIGN KEY (author_id) REFERENCES public.profiles(id)`
+- `lesson_comments_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)`
+- `lesson_comments_lesson_id_parent_id_fkey` — `FOREIGN KEY (lesson_id, parent_id) REFERENCES public.lesson_comments(lesson_id, id)`
+- `lesson_comments_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 10000)))`
+- `lesson_comments_check` — `CHECK ((id IS DISTINCT FROM parent_id))`
+- `lesson_comments_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_lesson_comments_page ON public.ica_lesson_comments USING btree (lesson_id, created_at, id)`
+- `CREATE INDEX lesson_comments_page ON public.lesson_comments USING btree (lesson_id, created_at, id)`
 
-## `public.ica_lesson_favorites`
+## `public.lesson_favorites`
 
 RLS ativada.
 
@@ -424,11 +424,11 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_lesson_favorites_pkey` — `PRIMARY KEY (user_id, lesson_id)`
-- `ica_lesson_favorites_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.ica_lessons(id)`
-- `ica_lesson_favorites_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
+- `lesson_favorites_pkey` — `PRIMARY KEY (user_id, lesson_id)`
+- `lesson_favorites_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)`
+- `lesson_favorites_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
 
-## `public.ica_lesson_notes`
+## `public.lesson_notes`
 
 RLS ativada.
 
@@ -443,17 +443,17 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_lesson_notes_pkey` — `PRIMARY KEY (id)`
-- `ica_lesson_notes_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.ica_lessons(id)`
-- `ica_lesson_notes_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
-- `ica_lesson_notes_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 2000)))`
-- `ica_lesson_notes_position_seconds_check` — `CHECK (((position_seconds >= (0)::numeric) AND (position_seconds <= (86400)::numeric)))`
+- `lesson_notes_pkey` — `PRIMARY KEY (id)`
+- `lesson_notes_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)`
+- `lesson_notes_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
+- `lesson_notes_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 2000)))`
+- `lesson_notes_position_seconds_check` — `CHECK (((position_seconds >= (0)::numeric) AND (position_seconds <= (86400)::numeric)))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_lesson_notes_owner_page ON public.ica_lesson_notes USING btree (user_id, lesson_id, updated_at DESC, id)`
+- `CREATE INDEX lesson_notes_owner_page ON public.lesson_notes USING btree (user_id, lesson_id, updated_at DESC, id)`
 
-## `public.ica_lesson_presentations`
+## `public.lesson_presentations`
 
 RLS ativada.
 
@@ -464,11 +464,11 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_lesson_presentations_pkey` — `PRIMARY KEY (lesson_id)`
-- `ica_lesson_presentations_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.ica_lessons(id)`
-- `ica_lesson_presentations_presentation_check` — `CHECK (((jsonb_typeof(presentation) = 'object'::text) AND (pg_column_size(presentation) <= 65536)))`
+- `lesson_presentations_pkey` — `PRIMARY KEY (lesson_id)`
+- `lesson_presentations_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)`
+- `lesson_presentations_presentation_check` — `CHECK (((jsonb_typeof(presentation) = 'object'::text) AND (pg_column_size(presentation) <= 65536)))`
 
-## `public.ica_lesson_progress`
+## `public.lesson_progress`
 
 RLS ativada.
 
@@ -482,12 +482,12 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_lesson_progress_pkey` — `PRIMARY KEY (user_id, lesson_id)`
-- `ica_lesson_progress_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.ica_lessons(id)`
-- `ica_lesson_progress_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
-- `ica_lesson_progress_position_seconds_check` — `CHECK ((position_seconds >= (0)::numeric))`
+- `lesson_progress_pkey` — `PRIMARY KEY (user_id, lesson_id)`
+- `lesson_progress_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)`
+- `lesson_progress_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
+- `lesson_progress_position_seconds_check` — `CHECK ((position_seconds >= (0)::numeric))`
 
-## `public.ica_lessons`
+## `public.lessons`
 
 RLS ativada.
 
@@ -510,22 +510,22 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_lessons_pkey` — `PRIMARY KEY (id)`
-- `ica_lessons_section_id_slug_key` — `UNIQUE (section_id, slug)`
-- `ica_lessons_section_id_fkey` — `FOREIGN KEY (section_id) REFERENCES public.ica_sections(id)`
-- `ica_lessons_body_check` — `CHECK ((length(body) <= 100000))`
-- `ica_lessons_duration_seconds_check` — `CHECK (((duration_seconds >= 0) AND (duration_seconds <= 86400)))`
-- `ica_lessons_order_index_check` — `CHECK ((order_index >= 0))`
-- `ica_lessons_slug_check` — `CHECK ((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text))`
-- `ica_lessons_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
-- `ica_lessons_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
-- `ica_lessons_type_check` — `CHECK ((type = ANY (ARRAY['text'::text, 'video'::text, 'audio'::text])))`
+- `lessons_pkey` — `PRIMARY KEY (id)`
+- `lessons_section_id_slug_key` — `UNIQUE (section_id, slug)`
+- `lessons_section_id_fkey` — `FOREIGN KEY (section_id) REFERENCES public.sections(id)`
+- `lessons_body_check` — `CHECK ((length(body) <= 100000))`
+- `lessons_duration_seconds_check` — `CHECK (((duration_seconds >= 0) AND (duration_seconds <= 86400)))`
+- `lessons_order_index_check` — `CHECK ((order_index >= 0))`
+- `lessons_slug_check` — `CHECK ((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text))`
+- `lessons_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
+- `lessons_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
+- `lessons_type_check` — `CHECK ((type = ANY (ARRAY['text'::text, 'video'::text, 'audio'::text])))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_lessons_parent ON public.ica_lessons USING btree (section_id, order_index, id)`
+- `CREATE INDEX lessons_parent ON public.lessons USING btree (section_id, order_index, id)`
 
-## `public.ica_live_event_rsvps`
+## `public.live_event_rsvps`
 
 RLS ativada.
 
@@ -537,11 +537,11 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_live_event_rsvps_pkey` — `PRIMARY KEY (event_id, user_id)`
-- `ica_live_event_rsvps_event_id_fkey` — `FOREIGN KEY (event_id) REFERENCES public.ica_live_events(id)`
-- `ica_live_event_rsvps_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
+- `live_event_rsvps_pkey` — `PRIMARY KEY (event_id, user_id)`
+- `live_event_rsvps_event_id_fkey` — `FOREIGN KEY (event_id) REFERENCES public.live_events(id)`
+- `live_event_rsvps_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
 
-## `public.ica_live_events`
+## `public.live_events`
 
 RLS ativada.
 
@@ -562,23 +562,23 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_live_events_pkey` — `PRIMARY KEY (id)`
-- `ica_live_events_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
-- `ica_live_events_check` — `CHECK (((access_mode = 'plans'::text) = (cardinality(plan_ids) > 0)))`
-- `ica_live_events_description_check` — `CHECK ((length(description) <= 4000))`
-- `ica_live_events_duration_minutes_check` — `CHECK (((duration_minutes >= 1) AND (duration_minutes <= 720)))`
-- `ica_live_events_guest_check` — `CHECK (((length(btrim(guest)) >= 1) AND (length(btrim(guest)) <= 160)))`
-- `ica_live_events_meeting_url_check` — `CHECK (((length(meeting_url) <= 2048) AND (meeting_url ~ '^https://(([a-z0-9-]+\.)*zoom\.us/(j|my)/[A-Za-z0-9._-]+|meet\.google\.com/[a-zA-Z0-9-]+)([?][^[:space:]\\]*)?$'::text)))`
-- `ica_live_events_recording_url_check` — `CHECK (((length(recording_url) <= 2048) AND (recording_url ~ '^https://([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,63}([/?#][^[:space:]\\]*)?$'::text)))`
-- `ica_live_events_starts_at_check` — `CHECK (((starts_at >= '2000-01-01 00:00:00-02'::timestamp with time zone) AND (starts_at < '2100-01-01 00:00:00-03'::timestamp with time zone)))`
-- `ica_live_events_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
-- `ica_live_events_title_check` — `CHECK (((length(btrim(title)) >= 1) AND (length(btrim(title)) <= 160)))`
+- `live_events_pkey` — `PRIMARY KEY (id)`
+- `live_events_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
+- `live_events_check` — `CHECK (((access_mode = 'plans'::text) = (cardinality(plan_ids) > 0)))`
+- `live_events_description_check` — `CHECK ((length(description) <= 4000))`
+- `live_events_duration_minutes_check` — `CHECK (((duration_minutes >= 1) AND (duration_minutes <= 720)))`
+- `live_events_guest_check` — `CHECK (((length(btrim(guest)) >= 1) AND (length(btrim(guest)) <= 160)))`
+- `live_events_meeting_url_check` — `CHECK (((length(meeting_url) <= 2048) AND (meeting_url ~ '^https://(([a-z0-9-]+\.)*zoom\.us/(j|my)/[A-Za-z0-9._-]+|meet\.google\.com/[a-zA-Z0-9-]+)([?][^[:space:]\\]*)?$'::text)))`
+- `live_events_recording_url_check` — `CHECK (((length(recording_url) <= 2048) AND (recording_url ~ '^https://([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,63}([/?#][^[:space:]\\]*)?$'::text)))`
+- `live_events_starts_at_check` — `CHECK (((starts_at >= '2000-01-01 00:00:00-02'::timestamp with time zone) AND (starts_at < '2100-01-01 00:00:00-03'::timestamp with time zone)))`
+- `live_events_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
+- `live_events_title_check` — `CHECK (((length(btrim(title)) >= 1) AND (length(btrim(title)) <= 160)))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_live_events_schedule ON public.ica_live_events USING btree (starts_at, id) WHERE (status = 'published'::text)`
+- `CREATE INDEX live_events_schedule ON public.live_events USING btree (starts_at, id) WHERE (status = 'published'::text)`
 
-## `public.ica_material_folders`
+## `public.material_folders`
 
 RLS ativada.
 
@@ -594,14 +594,14 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_material_folders_pkey` — `PRIMARY KEY (id)`
-- `ica_material_folders_parent_id_fkey` — `FOREIGN KEY (parent_id) REFERENCES public.ica_material_folders(id)`
-- `ica_material_folders_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
-- `ica_material_folders_check` — `CHECK ((parent_id IS DISTINCT FROM id))`
-- `ica_material_folders_name_check` — `CHECK (((length(name) >= 1) AND (length(name) <= 200)))`
-- `ica_material_folders_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
+- `material_folders_pkey` — `PRIMARY KEY (id)`
+- `material_folders_parent_id_fkey` — `FOREIGN KEY (parent_id) REFERENCES public.material_folders(id)`
+- `material_folders_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
+- `material_folders_check` — `CHECK ((parent_id IS DISTINCT FROM id))`
+- `material_folders_name_check` — `CHECK (((length(name) >= 1) AND (length(name) <= 200)))`
+- `material_folders_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
 
-## `public.ica_materials`
+## `public.materials`
 
 RLS ativada.
 
@@ -622,20 +622,20 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_materials_pkey` — `PRIMARY KEY (id)`
-- `ica_materials_folder_id_fkey` — `FOREIGN KEY (folder_id) REFERENCES public.ica_material_folders(id)`
-- `ica_materials_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.ica_lessons(id)`
-- `ica_materials_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
-- `ica_materials_description_check` — `CHECK ((length(description) <= 4000))`
-- `ica_materials_name_check` — `CHECK (((length(name) >= 1) AND (length(name) <= 200)))`
-- `ica_materials_size_bytes_check` — `CHECK (((size_bytes >= 0) AND (size_bytes <= 524288000)))`
-- `ica_materials_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
+- `materials_pkey` — `PRIMARY KEY (id)`
+- `materials_folder_id_fkey` — `FOREIGN KEY (folder_id) REFERENCES public.material_folders(id)`
+- `materials_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)`
+- `materials_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
+- `materials_description_check` — `CHECK ((length(description) <= 4000))`
+- `materials_name_check` — `CHECK (((length(name) >= 1) AND (length(name) <= 200)))`
+- `materials_size_bytes_check` — `CHECK (((size_bytes >= 0) AND (size_bytes <= 524288000)))`
+- `materials_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_materials_parent ON public.ica_materials USING btree (folder_id, lesson_id)`
+- `CREATE INDEX materials_parent ON public.materials USING btree (folder_id, lesson_id)`
 
-## `public.ica_moderation_events`
+## `public.moderation_events`
 
 RLS ativada.
 
@@ -651,10 +651,10 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_moderation_events_pkey` — `PRIMARY KEY (id)`
-- `ica_moderation_events_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.ica_profiles(id)`
+- `moderation_events_pkey` — `PRIMARY KEY (id)`
+- `moderation_events_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.profiles(id)`
 
-## `public.ica_modules`
+## `public.modules`
 
 RLS ativada.
 
@@ -672,20 +672,20 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_modules_pkey` — `PRIMARY KEY (id)`
-- `ica_modules_course_id_slug_key` — `UNIQUE (course_id, slug)`
-- `ica_modules_course_id_fkey` — `FOREIGN KEY (course_id) REFERENCES public.ica_courses(id)`
-- `ica_modules_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['inherit'::text, 'members'::text, 'subscribers'::text, 'plans'::text])))`
-- `ica_modules_order_index_check` — `CHECK ((order_index >= 0))`
-- `ica_modules_slug_check` — `CHECK ((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text))`
-- `ica_modules_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
-- `ica_modules_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
+- `modules_pkey` — `PRIMARY KEY (id)`
+- `modules_course_id_slug_key` — `UNIQUE (course_id, slug)`
+- `modules_course_id_fkey` — `FOREIGN KEY (course_id) REFERENCES public.courses(id)`
+- `modules_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['inherit'::text, 'members'::text, 'subscribers'::text, 'plans'::text])))`
+- `modules_order_index_check` — `CHECK ((order_index >= 0))`
+- `modules_slug_check` — `CHECK ((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text))`
+- `modules_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
+- `modules_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_modules_parent ON public.ica_modules USING btree (course_id, order_index, id)`
+- `CREATE INDEX modules_parent ON public.modules USING btree (course_id, order_index, id)`
 
-## `public.ica_notification_preferences`
+## `public.notification_preferences`
 
 RLS ativada.
 
@@ -697,10 +697,10 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_notification_preferences_pkey` — `PRIMARY KEY (user_id, event_key)`
-- `ica_notification_preferences_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE`
+- `notification_preferences_pkey` — `PRIMARY KEY (user_id, event_key)`
+- `notification_preferences_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE`
 
-## `public.ica_notifications`
+## `public.notifications`
 
 RLS ativada.
 
@@ -715,16 +715,16 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_notifications_pkey` — `PRIMARY KEY (id)`
-- `ica_notifications_user_id_event_key_source_id_key` — `UNIQUE (user_id, event_key, source_id)`
-- `ica_notifications_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE`
+- `notifications_pkey` — `PRIMARY KEY (id)`
+- `notifications_user_id_event_key_source_id_key` — `UNIQUE (user_id, event_key, source_id)`
+- `notifications_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_notifications_owner_history ON public.ica_notifications USING btree (user_id, created_at DESC, id DESC)`
-- `CREATE INDEX ica_notifications_owner_unread ON public.ica_notifications USING btree (user_id, id) WHERE (read_at IS NULL)`
+- `CREATE INDEX notifications_owner_history ON public.notifications USING btree (user_id, created_at DESC, id DESC)`
+- `CREATE INDEX notifications_owner_unread ON public.notifications USING btree (user_id, id) WHERE (read_at IS NULL)`
 
-## `public.ica_onboarding`
+## `public.onboarding`
 
 RLS ativada.
 
@@ -738,11 +738,11 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_onboarding_pkey` — `PRIMARY KEY (id)`
-- `ica_onboarding_singleton_key` — `UNIQUE (singleton)`
-- `ica_onboarding_singleton_check` — `CHECK (singleton)`
+- `onboarding_pkey` — `PRIMARY KEY (id)`
+- `onboarding_singleton_key` — `UNIQUE (singleton)`
+- `onboarding_singleton_check` — `CHECK (singleton)`
 
-## `public.ica_onboarding_questions`
+## `public.onboarding_questions`
 
 RLS ativada.
 
@@ -759,15 +759,15 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_onboarding_questions_pkey` — `PRIMARY KEY (id)`
-- `ica_onboarding_questions_key_key` — `UNIQUE (key)`
-- `ica_onboarding_questions_key_check` — `CHECK ((key = ANY (ARRAY['name'::text, 'segment'::text, 'role'::text, 'size'::text, 'stage'::text, 'revenue_range'::text, 'acquisition'::text, 'product_description'::text])))`
-- `ica_onboarding_questions_label_check` — `CHECK (((length(label) >= 1) AND (length(label) <= 200)))`
-- `ica_onboarding_questions_options_check` — `CHECK ((jsonb_typeof(options) = 'array'::text))`
-- `ica_onboarding_questions_order_index_check` — `CHECK ((order_index >= 0))`
-- `ica_onboarding_questions_type_check` — `CHECK ((type = ANY (ARRAY['text'::text, 'select'::text, 'textarea'::text])))`
+- `onboarding_questions_pkey` — `PRIMARY KEY (id)`
+- `onboarding_questions_key_key` — `UNIQUE (key)`
+- `onboarding_questions_key_check` — `CHECK ((key = ANY (ARRAY['name'::text, 'segment'::text, 'role'::text, 'size'::text, 'stage'::text, 'revenue_range'::text, 'acquisition'::text, 'product_description'::text])))`
+- `onboarding_questions_label_check` — `CHECK (((length(label) >= 1) AND (length(label) <= 200)))`
+- `onboarding_questions_options_check` — `CHECK ((jsonb_typeof(options) = 'array'::text))`
+- `onboarding_questions_order_index_check` — `CHECK ((order_index >= 0))`
+- `onboarding_questions_type_check` — `CHECK ((type = ANY (ARRAY['text'::text, 'select'::text, 'textarea'::text])))`
 
-## `public.ica_orders`
+## `public.orders`
 
 RLS ativada.
 
@@ -792,20 +792,20 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_orders_pkey` — `PRIMARY KEY (id)`
-- `ica_orders_attempt_key_key` — `UNIQUE (attempt_key)`
-- `ica_orders_gateway_id_key` — `UNIQUE (gateway_id)`
-- `ica_orders_plan_id_fkey` — `FOREIGN KEY (plan_id) REFERENCES public.ica_plans(id)`
-- `ica_orders_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
-- `ica_orders_access_months_check` — `CHECK (((access_months >= 1) AND (access_months <= 120)))`
-- `ica_orders_amount_cents_check` — `CHECK ((amount_cents > 0))`
-- `ica_orders_attempt_key_check` — `CHECK (((length(attempt_key) >= 16) AND (length(attempt_key) <= 160)))`
-- `ica_orders_installments_check` — `CHECK (((installments >= 1) AND (installments <= 12)))`
-- `ica_orders_method_check` — `CHECK ((method = ANY (ARRAY['PIX'::text, 'CREDIT_CARD'::text])))`
-- `ica_orders_receipt_hash_check` — `CHECK ((receipt_hash ~ '^[a-f0-9]{64}$'::text))`
-- `ica_orders_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'paid'::text, 'refunded'::text, 'chargeback'::text, 'expired'::text, 'cancelled'::text])))`
+- `orders_pkey` — `PRIMARY KEY (id)`
+- `orders_attempt_key_key` — `UNIQUE (attempt_key)`
+- `orders_gateway_id_key` — `UNIQUE (gateway_id)`
+- `orders_plan_id_fkey` — `FOREIGN KEY (plan_id) REFERENCES public.plans(id)`
+- `orders_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
+- `orders_access_months_check` — `CHECK (((access_months >= 1) AND (access_months <= 120)))`
+- `orders_amount_cents_check` — `CHECK ((amount_cents > 0))`
+- `orders_attempt_key_check` — `CHECK (((length(attempt_key) >= 16) AND (length(attempt_key) <= 160)))`
+- `orders_installments_check` — `CHECK (((installments >= 1) AND (installments <= 12)))`
+- `orders_method_check` — `CHECK ((method = ANY (ARRAY['PIX'::text, 'CREDIT_CARD'::text])))`
+- `orders_receipt_hash_check` — `CHECK ((receipt_hash ~ '^[a-f0-9]{64}$'::text))`
+- `orders_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'paid'::text, 'refunded'::text, 'chargeback'::text, 'expired'::text, 'cancelled'::text])))`
 
-## `public.ica_payment_events`
+## `public.payment_events`
 
 RLS ativada.
 
@@ -818,10 +818,10 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_payment_events_pkey` — `PRIMARY KEY (id)`
-- `ica_payment_events_order_id_fkey` — `FOREIGN KEY (order_id) REFERENCES public.ica_orders(id)`
+- `payment_events_pkey` — `PRIMARY KEY (id)`
+- `payment_events_order_id_fkey` — `FOREIGN KEY (order_id) REFERENCES public.orders(id)`
 
-## `public.ica_plans`
+## `public.plans`
 
 RLS ativada.
 
@@ -838,15 +838,15 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_plans_pkey` — `PRIMARY KEY (id)`
-- `ica_plans_slug_key` — `UNIQUE (slug)`
-- `ica_plans_access_months_check` — `CHECK (((access_months >= 1) AND (access_months <= 120)))`
-- `ica_plans_benefits_check` — `CHECK ((jsonb_typeof(benefits) = 'array'::text))`
-- `ica_plans_name_check` — `CHECK (((length(name) >= 1) AND (length(name) <= 120)))`
-- `ica_plans_price_cents_check` — `CHECK ((price_cents >= 0))`
-- `ica_plans_slug_check` — `CHECK ((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text))`
+- `plans_pkey` — `PRIMARY KEY (id)`
+- `plans_slug_key` — `UNIQUE (slug)`
+- `plans_access_months_check` — `CHECK (((access_months >= 1) AND (access_months <= 120)))`
+- `plans_benefits_check` — `CHECK ((jsonb_typeof(benefits) = 'array'::text))`
+- `plans_name_check` — `CHECK (((length(name) >= 1) AND (length(name) <= 120)))`
+- `plans_price_cents_check` — `CHECK ((price_cents >= 0))`
+- `plans_slug_check` — `CHECK ((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text))`
 
-## `public.ica_podcast_episodes`
+## `public.podcast_episodes`
 
 RLS ativada.
 
@@ -865,23 +865,23 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_podcast_episodes_pkey` — `PRIMARY KEY (id)`
-- `ica_podcast_episodes_youtube_id_key` — `UNIQUE (youtube_id)`
-- `ica_podcast_episodes_check` — `CHECK (((NOT is_featured) OR (status = 'published'::text)))`
-- `ica_podcast_episodes_description_check` — `CHECK ((length(description) <= 5000))`
-- `ica_podcast_episodes_kind_check` — `CHECK ((kind = ANY (ARRAY['podcast'::text, 'masterclass'::text])))`
-- `ica_podcast_episodes_published_at_check` — `CHECK (isfinite(published_at))`
-- `ica_podcast_episodes_spotify_url_check` — `CHECK ((spotify_url ~ '^https://open[.]spotify[.]com/episode/[A-Za-z0-9]{22}$'::text))`
-- `ica_podcast_episodes_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text])))`
-- `ica_podcast_episodes_title_check` — `CHECK (((length(btrim(title)) >= 1) AND (length(btrim(title)) <= 160)))`
-- `ica_podcast_episodes_youtube_id_check` — `CHECK ((youtube_id ~ '^[A-Za-z0-9_-]{11}$'::text))`
+- `podcast_episodes_pkey` — `PRIMARY KEY (id)`
+- `podcast_episodes_youtube_id_key` — `UNIQUE (youtube_id)`
+- `podcast_episodes_check` — `CHECK (((NOT is_featured) OR (status = 'published'::text)))`
+- `podcast_episodes_description_check` — `CHECK ((length(description) <= 5000))`
+- `podcast_episodes_kind_check` — `CHECK ((kind = ANY (ARRAY['podcast'::text, 'masterclass'::text])))`
+- `podcast_episodes_published_at_check` — `CHECK (isfinite(published_at))`
+- `podcast_episodes_spotify_url_check` — `CHECK ((spotify_url ~ '^https://open[.]spotify[.]com/episode/[A-Za-z0-9]{22}$'::text))`
+- `podcast_episodes_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text])))`
+- `podcast_episodes_title_check` — `CHECK (((length(btrim(title)) >= 1) AND (length(btrim(title)) <= 160)))`
+- `podcast_episodes_youtube_id_check` — `CHECK ((youtube_id ~ '^[A-Za-z0-9_-]{11}$'::text))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_podcast_episode_order ON public.ica_podcast_episodes USING btree (published_at DESC, id)`
-- `CREATE UNIQUE INDEX ica_podcast_one_featured ON public.ica_podcast_episodes USING btree (is_featured) WHERE is_featured`
+- `CREATE INDEX podcast_episode_order ON public.podcast_episodes USING btree (published_at DESC, id)`
+- `CREATE UNIQUE INDEX podcast_one_featured ON public.podcast_episodes USING btree (is_featured) WHERE is_featured`
 
-## `public.ica_podcast_watches`
+## `public.podcast_watches`
 
 RLS ativada.
 
@@ -892,11 +892,11 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_podcast_watches_pkey` — `PRIMARY KEY (user_id, episode_id)`
-- `ica_podcast_watches_episode_id_fkey` — `FOREIGN KEY (episode_id) REFERENCES public.ica_podcast_episodes(id) ON DELETE CASCADE`
-- `ica_podcast_watches_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id) ON DELETE CASCADE`
+- `podcast_watches_pkey` — `PRIMARY KEY (user_id, episode_id)`
+- `podcast_watches_episode_id_fkey` — `FOREIGN KEY (episode_id) REFERENCES public.podcast_episodes(id) ON DELETE CASCADE`
+- `podcast_watches_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE`
 
-## `public.ica_posts`
+## `public.posts`
 
 RLS ativada.
 
@@ -917,20 +917,20 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_posts_pkey` — `PRIMARY KEY (id)`
-- `ica_posts_archived_by_fkey` — `FOREIGN KEY (archived_by) REFERENCES public.ica_profiles(id)`
-- `ica_posts_author_id_fkey` — `FOREIGN KEY (author_id) REFERENCES public.ica_profiles(id)`
-- `ica_posts_space_id_fkey` — `FOREIGN KEY (space_id) REFERENCES public.ica_spaces(id)`
-- `ica_posts_archive_source_check` — `CHECK ((archive_source = ANY (ARRAY['author'::text, 'admin'::text])))`
-- `ica_posts_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 20000)))`
-- `ica_posts_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'hidden'::text, 'removed'::text, 'archived'::text])))`
-- `ica_posts_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
+- `posts_pkey` — `PRIMARY KEY (id)`
+- `posts_archived_by_fkey` — `FOREIGN KEY (archived_by) REFERENCES public.profiles(id)`
+- `posts_author_id_fkey` — `FOREIGN KEY (author_id) REFERENCES public.profiles(id)`
+- `posts_space_id_fkey` — `FOREIGN KEY (space_id) REFERENCES public.spaces(id)`
+- `posts_archive_source_check` — `CHECK ((archive_source = ANY (ARRAY['author'::text, 'admin'::text])))`
+- `posts_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 20000)))`
+- `posts_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'hidden'::text, 'removed'::text, 'archived'::text])))`
+- `posts_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_posts_feed ON public.ica_posts USING btree (space_id, created_at DESC, id)`
+- `CREATE INDEX posts_feed ON public.posts USING btree (space_id, created_at DESC, id)`
 
-## `public.ica_privacy_requests`
+## `public.privacy_requests`
 
 RLS ativada.
 
@@ -944,16 +944,16 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_privacy_requests_pkey` — `PRIMARY KEY (id)`
-- `ica_privacy_requests_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
-- `ica_privacy_requests_kind_check` — `CHECK ((kind = ANY (ARRAY['export'::text, 'deletion'::text])))`
-- `ica_privacy_requests_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'processing'::text, 'completed'::text, 'rejected'::text])))`
+- `privacy_requests_pkey` — `PRIMARY KEY (id)`
+- `privacy_requests_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
+- `privacy_requests_kind_check` — `CHECK ((kind = ANY (ARRAY['export'::text, 'deletion'::text])))`
+- `privacy_requests_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'processing'::text, 'completed'::text, 'rejected'::text])))`
 
 **Índices adicionais**
 
-- `CREATE UNIQUE INDEX ica_privacy_one_pending ON public.ica_privacy_requests USING btree (user_id, kind) WHERE (status = ANY (ARRAY['pending'::text, 'processing'::text]))`
+- `CREATE UNIQUE INDEX privacy_one_pending ON public.privacy_requests USING btree (user_id, kind) WHERE (status = ANY (ARRAY['pending'::text, 'processing'::text]))`
 
-## `public.ica_profiles`
+## `public.profiles`
 
 RLS ativada.
 
@@ -975,17 +975,17 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_profiles_pkey` — `PRIMARY KEY (id)`
-- `ica_profiles_avatar_id_fkey` — `FOREIGN KEY (avatar_id) REFERENCES public.ica_uploads(id)`
-- `ica_profiles_id_fkey` — `FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE RESTRICT`
-- `ica_profiles_bio_check` — `CHECK ((length(bio) <= 2000))`
-- `ica_profiles_company_check` — `CHECK ((jsonb_typeof(company) = 'object'::text))`
-- `ica_profiles_full_name_check` — `CHECK ((length(full_name) <= 160))`
-- `ica_profiles_phone_check` — `CHECK ((length(phone) <= 40))`
-- `ica_profiles_role_check` — `CHECK ((role = ANY (ARRAY['member'::text, 'instructor'::text, 'moderator'::text, 'support'::text, 'admin'::text])))`
-- `ica_profiles_theme_check` — `CHECK ((theme = ANY (ARRAY['light'::text, 'dark'::text])))`
+- `profiles_pkey` — `PRIMARY KEY (id)`
+- `profiles_avatar_id_fkey` — `FOREIGN KEY (avatar_id) REFERENCES public.uploads(id)`
+- `profiles_id_fkey` — `FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE RESTRICT`
+- `profiles_bio_check` — `CHECK ((length(bio) <= 2000))`
+- `profiles_company_check` — `CHECK ((jsonb_typeof(company) = 'object'::text))`
+- `profiles_full_name_check` — `CHECK ((length(full_name) <= 160))`
+- `profiles_phone_check` — `CHECK ((length(phone) <= 40))`
+- `profiles_role_check` — `CHECK ((role = ANY (ARRAY['member'::text, 'instructor'::text, 'moderator'::text, 'support'::text, 'admin'::text])))`
+- `profiles_theme_check` — `CHECK ((theme = ANY (ARRAY['light'::text, 'dark'::text])))`
 
-## `public.ica_rate_limits`
+## `public.rate_limits`
 
 RLS ativada.
 
@@ -998,9 +998,9 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_rate_limits_pkey` — `PRIMARY KEY (actor_id, bucket, window_start)`
+- `rate_limits_pkey` — `PRIMARY KEY (actor_id, bucket, window_start)`
 
-## `public.ica_reauth_nonces`
+## `public.reauth_nonces`
 
 RLS ativada.
 
@@ -1014,12 +1014,12 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_reauth_nonces_pkey` — `PRIMARY KEY (token_hash)`
-- `ica_reauth_nonces_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.ica_profiles(id)`
-- `ica_reauth_nonces_session_id_fkey` — `FOREIGN KEY (session_id) REFERENCES public.ica_app_sessions(id) ON DELETE CASCADE`
-- `ica_reauth_nonces_token_hash_check` — `CHECK ((token_hash ~ '^[a-f0-9]{64}$'::text))`
+- `reauth_nonces_pkey` — `PRIMARY KEY (token_hash)`
+- `reauth_nonces_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.profiles(id)`
+- `reauth_nonces_session_id_fkey` — `FOREIGN KEY (session_id) REFERENCES public.app_sessions(id) ON DELETE CASCADE`
+- `reauth_nonces_token_hash_check` — `CHECK ((token_hash ~ '^[a-f0-9]{64}$'::text))`
 
-## `public.ica_replies`
+## `public.replies`
 
 RLS ativada.
 
@@ -1035,17 +1035,17 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_replies_pkey` — `PRIMARY KEY (id)`
-- `ica_replies_author_id_fkey` — `FOREIGN KEY (author_id) REFERENCES public.ica_profiles(id)`
-- `ica_replies_post_id_fkey` — `FOREIGN KEY (post_id) REFERENCES public.ica_posts(id)`
-- `ica_replies_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 10000)))`
-- `ica_replies_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'hidden'::text, 'removed'::text, 'archived'::text])))`
+- `replies_pkey` — `PRIMARY KEY (id)`
+- `replies_author_id_fkey` — `FOREIGN KEY (author_id) REFERENCES public.profiles(id)`
+- `replies_post_id_fkey` — `FOREIGN KEY (post_id) REFERENCES public.posts(id)`
+- `replies_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 10000)))`
+- `replies_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'hidden'::text, 'removed'::text, 'archived'::text])))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_replies_parent ON public.ica_replies USING btree (post_id, created_at, id)`
+- `CREATE INDEX replies_parent ON public.replies USING btree (post_id, created_at, id)`
 
-## `public.ica_reports`
+## `public.reports`
 
 RLS ativada.
 
@@ -1061,15 +1061,15 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_reports_pkey` — `PRIMARY KEY (id)`
-- `ica_reports_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.ica_profiles(id)`
-- `ica_reports_post_id_fkey` — `FOREIGN KEY (post_id) REFERENCES public.ica_posts(id)`
-- `ica_reports_reply_id_fkey` — `FOREIGN KEY (reply_id) REFERENCES public.ica_replies(id)`
-- `ica_reports_check` — `CHECK ((num_nonnulls(post_id, reply_id) = 1))`
-- `ica_reports_reason_check` — `CHECK (((length(reason) >= 3) AND (length(reason) <= 2000)))`
-- `ica_reports_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'resolved'::text, 'dismissed'::text])))`
+- `reports_pkey` — `PRIMARY KEY (id)`
+- `reports_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.profiles(id)`
+- `reports_post_id_fkey` — `FOREIGN KEY (post_id) REFERENCES public.posts(id)`
+- `reports_reply_id_fkey` — `FOREIGN KEY (reply_id) REFERENCES public.replies(id)`
+- `reports_check` — `CHECK ((num_nonnulls(post_id, reply_id) = 1))`
+- `reports_reason_check` — `CHECK (((length(reason) >= 3) AND (length(reason) <= 2000)))`
+- `reports_status_check` — `CHECK ((status = ANY (ARRAY['pending'::text, 'resolved'::text, 'dismissed'::text])))`
 
-## `public.ica_sections`
+## `public.sections`
 
 RLS ativada.
 
@@ -1085,17 +1085,17 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_sections_pkey` — `PRIMARY KEY (id)`
-- `ica_sections_module_id_fkey` — `FOREIGN KEY (module_id) REFERENCES public.ica_modules(id)`
-- `ica_sections_order_index_check` — `CHECK ((order_index >= 0))`
-- `ica_sections_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
-- `ica_sections_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
+- `sections_pkey` — `PRIMARY KEY (id)`
+- `sections_module_id_fkey` — `FOREIGN KEY (module_id) REFERENCES public.modules(id)`
+- `sections_order_index_check` — `CHECK ((order_index >= 0))`
+- `sections_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
+- `sections_title_check` — `CHECK (((length(title) >= 1) AND (length(title) <= 200)))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_sections_parent ON public.ica_sections USING btree (module_id, order_index, id)`
+- `CREATE INDEX sections_parent ON public.sections USING btree (module_id, order_index, id)`
 
-## `public.ica_spaces`
+## `public.spaces`
 
 RLS ativada.
 
@@ -1112,14 +1112,14 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_spaces_pkey` — `PRIMARY KEY (id)`
-- `ica_spaces_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
-- `ica_spaces_description_check` — `CHECK ((length(description) <= 4000))`
-- `ica_spaces_name_check` — `CHECK (((length(name) >= 1) AND (length(name) <= 160)))`
-- `ica_spaces_order_index_check` — `CHECK ((order_index >= 0))`
-- `ica_spaces_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
+- `spaces_pkey` — `PRIMARY KEY (id)`
+- `spaces_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
+- `spaces_description_check` — `CHECK ((length(description) <= 4000))`
+- `spaces_name_check` — `CHECK (((length(name) >= 1) AND (length(name) <= 160)))`
+- `spaces_order_index_check` — `CHECK ((order_index >= 0))`
+- `spaces_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
 
-## `public.ica_subscriptions`
+## `public.subscriptions`
 
 RLS ativada.
 
@@ -1136,19 +1136,19 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_subscriptions_pkey` — `PRIMARY KEY (id)`
-- `ica_subscriptions_order_id_key` — `UNIQUE (order_id)`
-- `ica_subscriptions_order_id_fkey` — `FOREIGN KEY (order_id) REFERENCES public.ica_orders(id)`
-- `ica_subscriptions_plan_id_fkey` — `FOREIGN KEY (plan_id) REFERENCES public.ica_plans(id)`
-- `ica_subscriptions_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
-- `ica_subscriptions_check` — `CHECK ((ends_at > starts_at))`
-- `ica_subscriptions_source_check` — `CHECK ((source = ANY (ARRAY['order'::text, 'courtesy'::text])))`
+- `subscriptions_pkey` — `PRIMARY KEY (id)`
+- `subscriptions_order_id_key` — `UNIQUE (order_id)`
+- `subscriptions_order_id_fkey` — `FOREIGN KEY (order_id) REFERENCES public.orders(id)`
+- `subscriptions_plan_id_fkey` — `FOREIGN KEY (plan_id) REFERENCES public.plans(id)`
+- `subscriptions_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
+- `subscriptions_check` — `CHECK ((ends_at > starts_at))`
+- `subscriptions_source_check` — `CHECK ((source = ANY (ARRAY['order'::text, 'courtesy'::text])))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_subscriptions_access ON public.ica_subscriptions USING btree (user_id, ends_at) WHERE (revoked_at IS NULL)`
+- `CREATE INDEX subscriptions_access ON public.subscriptions USING btree (user_id, ends_at) WHERE (revoked_at IS NULL)`
 
-## `public.ica_ticket_messages`
+## `public.ticket_messages`
 
 RLS ativada.
 
@@ -1162,16 +1162,16 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_ticket_messages_pkey` — `PRIMARY KEY (id)`
-- `ica_ticket_messages_author_id_fkey` — `FOREIGN KEY (author_id) REFERENCES public.ica_profiles(id)`
-- `ica_ticket_messages_ticket_id_fkey` — `FOREIGN KEY (ticket_id) REFERENCES public.ica_tickets(id)`
-- `ica_ticket_messages_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 20000)))`
+- `ticket_messages_pkey` — `PRIMARY KEY (id)`
+- `ticket_messages_author_id_fkey` — `FOREIGN KEY (author_id) REFERENCES public.profiles(id)`
+- `ticket_messages_ticket_id_fkey` — `FOREIGN KEY (ticket_id) REFERENCES public.tickets(id)`
+- `ticket_messages_body_check` — `CHECK (((length(body) >= 1) AND (length(body) <= 20000)))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_ticket_messages_parent ON public.ica_ticket_messages USING btree (ticket_id, created_at, id)`
+- `CREATE INDEX ticket_messages_parent ON public.ticket_messages USING btree (ticket_id, created_at, id)`
 
-## `public.ica_tickets`
+## `public.tickets`
 
 RLS ativada.
 
@@ -1187,17 +1187,17 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_tickets_pkey` — `PRIMARY KEY (id)`
-- `ica_tickets_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.ica_profiles(id)`
-- `ica_tickets_priority_check` — `CHECK ((priority = ANY (ARRAY['low'::text, 'normal'::text, 'high'::text, 'urgent'::text])))`
-- `ica_tickets_status_check` — `CHECK ((status = ANY (ARRAY['open'::text, 'in_progress'::text, 'waiting_member'::text, 'resolved'::text])))`
-- `ica_tickets_subject_check` — `CHECK (((length(subject) >= 3) AND (length(subject) <= 200)))`
+- `tickets_pkey` — `PRIMARY KEY (id)`
+- `tickets_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
+- `tickets_priority_check` — `CHECK ((priority = ANY (ARRAY['low'::text, 'normal'::text, 'high'::text, 'urgent'::text])))`
+- `tickets_status_check` — `CHECK ((status = ANY (ARRAY['open'::text, 'in_progress'::text, 'waiting_member'::text, 'resolved'::text])))`
+- `tickets_subject_check` — `CHECK (((length(subject) >= 3) AND (length(subject) <= 200)))`
 
 **Índices adicionais**
 
-- `CREATE INDEX ica_tickets_owner ON public.ica_tickets USING btree (user_id, created_at DESC)`
+- `CREATE INDEX tickets_owner ON public.tickets USING btree (user_id, created_at DESC)`
 
-## `public.ica_uploads`
+## `public.uploads`
 
 RLS ativada.
 
@@ -1224,25 +1224,25 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_uploads_pkey` — `PRIMARY KEY (id)`
-- `ica_uploads_path_key` — `UNIQUE (path)`
-- `ica_uploads_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.ica_profiles(id)`
-- `ica_uploads_course_id_fkey` — `FOREIGN KEY (course_id) REFERENCES public.ica_courses(id)`
-- `ica_uploads_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.ica_lessons(id)`
-- `ica_uploads_material_id_fkey` — `FOREIGN KEY (material_id) REFERENCES public.ica_materials(id)`
-- `ica_uploads_message_id_fkey` — `FOREIGN KEY (message_id) REFERENCES public.ica_ticket_messages(id)`
-- `ica_uploads_post_id_fkey` — `FOREIGN KEY (post_id) REFERENCES public.ica_posts(id)`
-- `ica_uploads_profile_id_fkey` — `FOREIGN KEY (profile_id) REFERENCES public.ica_profiles(id)`
-- `ica_uploads_ticket_id_fkey` — `FOREIGN KEY (ticket_id) REFERENCES public.ica_tickets(id)`
-- `ica_uploads_resource_check` — `CHECK ((num_nonnulls(ticket_id, post_id, lesson_id, material_id, course_id, profile_id) = CASE     WHEN (kind = 'feedback-screenshot'::text) THEN 0     ELSE 1 END))`
-- `ica_uploads_size_bytes_check` — `CHECK (((size_bytes >= 1) AND (size_bytes <= 524288000)))`
-- `ica_uploads_state_check` — `CHECK ((state = ANY (ARRAY['pending'::text, 'ready'::text])))`
+- `uploads_pkey` — `PRIMARY KEY (id)`
+- `uploads_path_key` — `UNIQUE (path)`
+- `uploads_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.profiles(id)`
+- `uploads_course_id_fkey` — `FOREIGN KEY (course_id) REFERENCES public.courses(id)`
+- `uploads_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)`
+- `uploads_material_id_fkey` — `FOREIGN KEY (material_id) REFERENCES public.materials(id)`
+- `uploads_message_id_fkey` — `FOREIGN KEY (message_id) REFERENCES public.ticket_messages(id)`
+- `uploads_post_id_fkey` — `FOREIGN KEY (post_id) REFERENCES public.posts(id)`
+- `uploads_profile_id_fkey` — `FOREIGN KEY (profile_id) REFERENCES public.profiles(id)`
+- `uploads_ticket_id_fkey` — `FOREIGN KEY (ticket_id) REFERENCES public.tickets(id)`
+- `uploads_resource_check` — `CHECK ((num_nonnulls(ticket_id, post_id, lesson_id, material_id, course_id, profile_id) = CASE     WHEN (kind = 'feedback-screenshot'::text) THEN 0     ELSE 1 END))`
+- `uploads_size_bytes_check` — `CHECK (((size_bytes >= 1) AND (size_bytes <= 524288000)))`
+- `uploads_state_check` — `CHECK ((state = ANY (ARRAY['pending'::text, 'ready'::text])))`
 
 **Índices adicionais**
 
-- `CREATE UNIQUE INDEX ica_feedback_screenshot_attempt ON public.ica_uploads USING btree (actor_id, resource_id) WHERE (kind = 'feedback-screenshot'::text)`
+- `CREATE UNIQUE INDEX feedback_screenshot_attempt ON public.uploads USING btree (actor_id, resource_id) WHERE (kind = 'feedback-screenshot'::text)`
 
-## `public.ica_votes`
+## `public.votes`
 
 RLS ativada.
 
@@ -1255,9 +1255,9 @@ RLS ativada.
 
 **Chaves e restrições**
 
-- `ica_votes_actor_id_post_id_key` — `UNIQUE (actor_id, post_id)`
-- `ica_votes_actor_id_reply_id_key` — `UNIQUE (actor_id, reply_id)`
-- `ica_votes_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.ica_profiles(id)`
-- `ica_votes_post_id_fkey` — `FOREIGN KEY (post_id) REFERENCES public.ica_posts(id)`
-- `ica_votes_reply_id_fkey` — `FOREIGN KEY (reply_id) REFERENCES public.ica_replies(id)`
-- `ica_votes_check` — `CHECK ((num_nonnulls(post_id, reply_id) = 1))`
+- `votes_actor_id_post_id_key` — `UNIQUE (actor_id, post_id)`
+- `votes_actor_id_reply_id_key` — `UNIQUE (actor_id, reply_id)`
+- `votes_actor_id_fkey` — `FOREIGN KEY (actor_id) REFERENCES public.profiles(id)`
+- `votes_post_id_fkey` — `FOREIGN KEY (post_id) REFERENCES public.posts(id)`
+- `votes_reply_id_fkey` — `FOREIGN KEY (reply_id) REFERENCES public.replies(id)`
+- `votes_check` — `CHECK ((num_nonnulls(post_id, reply_id) = 1))`

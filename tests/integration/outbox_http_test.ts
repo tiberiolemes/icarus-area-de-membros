@@ -11,17 +11,17 @@ async function sql(source: string, variables: string[] = []) {
   const result = await child.output(); assert(result.success, "Fixture SQL local não concluiu; saída privada omitida."); return new TextDecoder().decode(result.stdout);
 }
 async function fixture(email: string) {
-  await sql("update ica_private.local_demo_guard set enabled=true where singleton;");
+  await sql("update app_private.local_demo_guard set enabled=true where singleton;");
   try {
     const source = await Deno.readTextFile(new URL("../../supabase/tests/fixtures/payment-outbox.sql", import.meta.url));
     const line = (await sql(source, [`fixture_email=${email}`])).split("\n").find((v) => /^[a-f0-9-]{36}\|/.test(v)); assert(line, "Fixture não retornou pedido.");
     const [order_id, gateway_id, amount, value, method] = line.split("|"); return { order_id, gateway_id, amount_cents: Number(amount), value: Number(value), method };
-  } finally { await sql("update ica_private.local_demo_guard set enabled=false where singleton;"); }
+  } finally { await sql("update app_private.local_demo_guard set enabled=false where singleton;"); }
 }
 async function cleanup(order: string) {
-  await sql("update ica_private.local_demo_guard set enabled=true where singleton;");
+  await sql("update app_private.local_demo_guard set enabled=true where singleton;");
   try { await sql(await Deno.readTextFile(new URL("../../supabase/tests/fixtures/payment-outbox-cleanup.sql", import.meta.url)), [`fixture_order_id=${order}`]); }
-  finally { await sql("update ica_private.local_demo_guard set enabled=false where singleton;"); }
+  finally { await sql("update app_private.local_demo_guard set enabled=false where singleton;"); }
 }
 async function mailboxCount(email: string) {
   const response = await fetch("http://127.0.0.1:58524/api/v1/messages?limit=100"); assert(response.ok, "Mailpit indisponível.");
@@ -47,7 +47,7 @@ Deno.test("HTTP paid webhook automatically invites; failed send retries durably 
     const wait = Math.max(0, Date.parse(pending.retry_at) - Date.now() + 200); assert(wait <= 31_000, "Backoff inesperado."); await new Promise((resolve) => setTimeout(resolve, wait));
     const retry = await fetch(`${url}/functions/v1/process-invites`, { method: "POST", headers: { authorization: `Bearer ${service}`, "content-type": "application/json" }, body: "{}" }); assert(retry.status === 200, "Worker de serviço não reprocessou lote devido."); await retry.body?.cancel();
     await waitMail(emailB); const recovered = await waitState(b.order_id, "sent"); assert(recovered.status === "sent" && recovered.attempts === 2 && await mailboxCount(emailB) === 1, "Retry não enviou exatamente o convite esperado.");
-    const orders = await admin.from("ica_orders").select("status").in("id", [a.order_id, b.order_id]); assert(!orders.error && orders.data?.every((o) => o.status === "paid"), "Retry alterou pagamento.");
+    const orders = await admin.from("orders").select("status").in("id", [a.order_id, b.order_id]); assert(!orders.error && orders.data?.every((o) => o.status === "paid"), "Retry alterou pagamento.");
     await Deno.writeTextFile(`${destination}/.local/http-outbox-evidence.json`, JSON.stringify({ passed: true, native_http_paid_to_mailpit: true, webhook_duplicate_no_resend: true, failure_injection: "Auth invite transport429 only; DB/Auth create real", durable_retry_native_worker: true, retry_attempts: 2, no_extra_charge: true, checked_at: new Date().toISOString() }, null, 2), { mode: 0o600 });
   } finally { await cleanup(a.order_id); await cleanup(b.order_id); }
 });

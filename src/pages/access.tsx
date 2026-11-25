@@ -124,7 +124,8 @@ function Login({ target }: { target: string }) {
   const [checking, setChecking] = useState(false),
     [failure, setFailure] = useState(""),
     [needsConfirmation, setNeedsConfirmation] = useState(false);
-  const codeInput = useRef<HTMLInputElement>(null);
+  const codeInput = useRef<HTMLInputElement>(null),
+    remembering = useRef(false);
   useEffect(() => {
     let active = true;
     setFactors([]);
@@ -144,7 +145,8 @@ function Login({ target }: { target: string }) {
           data.currentLevel === "aal2" ||
           (data.currentLevel === "aal1" && data.nextLevel === "aal1")
         ) {
-          navigate(destination, { replace: true });
+          // Depois do código com a caixa marcada, quem segue é o envio, só após o servidor lembrar a sessão.
+          if (!remembering.current) navigate(destination, { replace: true });
           return;
         }
         const result = await client().auth.mfa.listFactors();
@@ -206,11 +208,18 @@ function Login({ target }: { target: string }) {
                 const factorId = factors.length === 1
                   ? factors[0].id
                   : value(data, "factor");
-                const { error } = await client().auth.mfa.challengeAndVerify({
-                  factorId,
-                  code: value(data, "code"),
-                });
-                if (error) throw error;
+                const remember = data.get("remember") === "on";
+                remembering.current = remember;
+                try {
+                  const { error } = await client().auth.mfa.challengeAndVerify({
+                    factorId,
+                    code: value(data, "code"),
+                  });
+                  if (error) throw error;
+                  if (remember) await rpc("app_remember_session");
+                } finally {
+                  remembering.current = false;
+                }
                 navigate(destination, { replace: true });
               } else {
                 setNeedsConfirmation(false);
@@ -267,6 +276,10 @@ function Login({ target }: { target: string }) {
                       required
                     />
                   </Field>
+                  <label className="check">
+                    <input type="checkbox" name="remember" />
+                    Lembrar por 15 dias
+                  </label>
                 </>
               )
               : (

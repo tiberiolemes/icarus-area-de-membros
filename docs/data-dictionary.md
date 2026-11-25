@@ -133,6 +133,9 @@ RLS ativada.
 | `last_activity_at` | `timestamp with time zone` | Não | `now()` |
 | `expires_at` | `timestamp with time zone` | Não | — |
 | `revoked_at` | `timestamp with time zone` | Sim | — |
+| `remember_until` | `timestamp with time zone` | Sim | — |
+
+`remember_until` só é gravado por `app_remember_session`, 15 dias após `auth.sessions.created_at`. Com ele, a sessão ignora a inatividade e termina nesse instante.
 
 **Chaves e restrições**
 

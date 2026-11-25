@@ -14,6 +14,7 @@ export const articles = [
       "Esqueceu a senha? Abra Recuperar acesso e solicite as instruções. O sistema não confirma a existência de uma conta pelo endereço informado.",
       "Complete o perfil e as perguntas de empresa. Responda os campos marcados como obrigatórios. Você pode editar essas respostas em Configurações.",
       "O segundo fator é opcional. Para ativá-lo, abra Sua conta → Segurança e valide o aplicativo autenticador. Nos próximos acessos, o código é solicitado no mesmo formulário de login, sem mudar de página. O servidor mantém essa exigência enquanto houver fator ativo.",
+      "Na tela do código, marque Lembrar por 15 dias para continuar conectado neste navegador sem novo login nem código, mesmo parado, até 15 dias depois do login. Use só em aparelho pessoal. Sem a caixa, a sessão termina após 2 horas sem uso, ou 30 minutos para a equipe. Sair encerra a sessão em todos os aparelhos.",
     ],
   },
   {

@@ -6,12 +6,12 @@ O Icarus é uma plataforma de área de membros e cursos online em React/Vite e S
 
 Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes. Numa instalação hospedada, siga [Aplicar migrações no Supabase hospedado](#aplicar-migrações-no-supabase-hospedado), que vale para a 0.1.6 e para a 0.2.0. O roteiro do [stack Docker completo](#atualizar-uma-instalação-docker-completa) foi escrito e ensaiado para a v0.1.6. A partir da 0.2.0, o banco foi ensaiado pelo [ensaio isolado](#ensaio-de-banco-isolado) (`install` da tag v0.2.0, `upgrade` e `verify` no mesmo Postgres), mas o stack Docker completo da 0.2.0 ainda não tem roteiro próprio ensaiado para as Edge Functions.
 
-| Versão instalada | Histórico esperado | Migrations novas até a 2.2.3 |
+| Versão instalada | Histórico esperado | Migrations novas até a 2.3.0 |
 | --- | --- | --- |
-| 2.2.2 | `202611230001` a `202611250001` | nenhuma |
-| 2.2.1 | `202611230001` a `202611230040` | `202611250001` |
-| 0.2.0 | `202611230001` a `202611230038` | `202611230039`, `202611230040` e `202611250001` |
-| 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` e `202611250001` |
+| 2.2.2 ou 2.2.3 | `202611230001` a `202611250001` | `202611250002` |
+| 2.2.1 | `202611230001` a `202611230040` | `202611250001` e `202611250002` |
+| 0.2.0 | `202611230001` a `202611230038` | `202611230039`, `202611230040`, `202611250001` e `202611250002` |
+| 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040`, `202611250001` e `202611250002` |
 
 Publique também as Edge Functions da tag:
 - na 2.2.2, `checkout` e `reauthenticate` passaram a limitar tentativas, a `checkout` confere o Turnstile e todas exigem `APP_ORIGIN` em produção;
@@ -114,7 +114,7 @@ Use este roteiro para o stack completo da v0.1.6 criado pelo Supabase CLI, com A
 
 ### Migrations e fluxos da árvore atual
 
-Aplique `202611230001` a `202611230040` e depois `202611250001` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
+Aplique `202611230001` a `202611230040` e depois `202611250001` e `202611250002` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
 
 | Migration | O que configurar ou validar |
 | --- | --- |
@@ -139,6 +139,7 @@ Aplique `202611230001` a `202611230040` e depois `202611250001` em ordem antes d
 | `039` | Conferir no Dashboard e no Ranking o intervalo personalizado, incluindo eventos na data final em Brasília. |
 | `040` | Abrir a vitrine com aluno novo e com aluno em andamento. Iniciar e retomar uma aula pelo cartão e conferir o acesso para cursos e módulos restritos. |
 | `202611250001` | Comprar como visitante, trocando o email e a `attempt_key` a cada tentativa, e conferir que a sexta tentativa no mesmo minuto, do mesmo IP, recebe 429. Repetir o mesmo email e conferir o 429 na quarta. Errar a senha da reautenticação seis vezes no minuto e conferir a liberação no minuto seguinte. Publicar a `checkout` e a `reauthenticate` da mesma tag. |
+| `202611250002` | Entrar com o código marcando Lembrar por 15 dias, ficar parado além de 2 h (membro) ou 30 min (equipe) e conferir que o acesso continua. Sem a caixa, conferir que a sessão expira como antes. Conferir que Sair encerra a sessão e que uma sessão só com senha continua recusada quando há fator verificado. |
 
 A validação de navegação também cobre entrada e confirmação de email, primeira senha, perguntas de onboarding, edição parcial do perfil e MFA opcional. A seed fornece perguntas iniciais editáveis. Cadastre os próprios cursos, aulas, materiais, planos, ofertas e documentos legais pelo fluxo administrativo apropriado.
 

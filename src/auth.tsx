@@ -204,6 +204,7 @@ export function AccountAssurance({ children }: { children: ReactNode }) {
 }
 
 function SessionGate({ children }: { children: ReactNode }) {
+  const notRemembered = (useLocation().state as { notRemembered?: boolean } | null)?.notRemembered;
   const [expiry, setExpiry] = useState<number | null>(null),
     [seconds, setSeconds] = useState<number | null>(null),
     [remembered, setRemembered] = useState(false),
@@ -278,6 +279,11 @@ function SessionGate({ children }: { children: ReactNode }) {
     );
   return (
     <>
+      {notRemembered && (
+        <Notice>
+          Você entrou, mas este navegador não ficou lembrado por 15 dias. No próximo acesso, o código será pedido normalmente.
+        </Notice>
+      )}
       {seconds !== null && seconds > 0 && seconds <= 60 && (
         <div className="session-warning" role="alert">
           {remembered

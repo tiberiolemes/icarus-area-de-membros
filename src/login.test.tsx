@@ -291,12 +291,21 @@ it("sem a caixa marcada entra como antes, sem lembrar a sessão", async () => {
   await screen.findByText("Destino autorizado");
   expect(requests.some((url) => url.includes("app_remember_session"))).toBe(false);
 });
-it("avisa quando o servidor recusa lembrar e não segue sozinho para o destino", async () => {
-  setup(true, false, undefined, true);
+it("entra com a sessão comum e avisa quando o lembrar falha depois do código", async () => {
+  const { requests } = setup(true, false, undefined, true);
   await password();
   await code(true);
-  expect(await screen.findByRole("alert")).toHaveTextContent("manter este navegador conectado");
-  expect(screen.getByTestId("location")).toHaveTextContent("/entrar");
+  await screen.findByText("Destino autorizado");
+  expect(screen.getByTestId("location")).toHaveTextContent("/admin/cursos");
+  expect(await screen.findByText(/Você entrou, mas este navegador não ficou lembrado por 15 dias/)).toBeInTheDocument();
+  expect(requests.filter((url) => url.includes("app_remember_session"))).toHaveLength(1);
+});
+it("não mostra o aviso de lembrar quando a marcação dá certo", async () => {
+  setup(true);
+  await password();
+  await code(true);
+  await screen.findByText("Destino autorizado");
+  expect(screen.queryByText(/não ficou lembrado/)).not.toBeInTheDocument();
 });
 
 it.each([

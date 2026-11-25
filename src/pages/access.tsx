@@ -145,7 +145,7 @@ function Login({ target }: { target: string }) {
           data.currentLevel === "aal2" ||
           (data.currentLevel === "aal1" && data.nextLevel === "aal1")
         ) {
-          // Depois do código com a caixa marcada, quem segue é o envio, só após o servidor lembrar a sessão.
+          // Com a caixa marcada, quem navega é o envio, depois de tentar lembrar, para levar o aviso de falha.
           if (!remembering.current) navigate(destination, { replace: true });
           return;
         }
@@ -209,6 +209,7 @@ function Login({ target }: { target: string }) {
                   ? factors[0].id
                   : value(data, "factor");
                 const remember = data.get("remember") === "on";
+                let notRemembered = false;
                 remembering.current = remember;
                 try {
                   const { error } = await client().auth.mfa.challengeAndVerify({
@@ -216,11 +217,13 @@ function Login({ target }: { target: string }) {
                     code: value(data, "code"),
                   });
                   if (error) throw error;
-                  if (remember) await rpc("app_remember_session");
-                } finally {
+                } catch (error) {
                   remembering.current = false;
+                  throw error;
                 }
-                navigate(destination, { replace: true });
+                // O código já passou: se lembrar falhar, a pessoa entra com a sessão comum e recebe o aviso.
+                if (remember) notRemembered = await rpc("app_remember_session").then(() => false, () => true);
+                navigate(destination, { replace: true, state: notRemembered ? { notRemembered } : undefined });
               } else {
                 setNeedsConfirmation(false);
                 const { error } = await client().auth.signInWithPassword({

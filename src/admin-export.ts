@@ -1,4 +1,4 @@
-import { date, money, roleLabel, rpc } from "./api";
+import { cache, date, money, roleLabel, rpc } from "./api";
 import type { Page } from "./api";
 
 export type AdminExportEntity = "profiles" | "orders";
@@ -56,6 +56,7 @@ export async function buildAdminCsv(entity: AdminExportEntity, query: string, fi
     }
     if (rows.length === expected) {
       await rpc("app_admin_log_csv_export", { p_entity: entity, p_query: query, ...filters });
+      void cache.invalidateQueries({ queryKey: ["app_admin_audit"] });
       const header =
         entity === "profiles"
           ? ["Nome", "Papel", "Situação"]

@@ -4,7 +4,7 @@ vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
 import { buildAdminCsv, csvCell } from "./admin-export";
-import { edge, errorMessage } from "./api";
+import { cache, edge, errorMessage } from "./api";
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -14,7 +14,10 @@ beforeEach(() => {
   localStorage.clear();
   vi.restoreAllMocks();
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  cache.clear();
+  vi.unstubAllGlobals();
+});
 describe("CSV de listas administrativas existentes", () => {
   it.each([21, 25])(
     "exporta os %i resultados filtrados além da primeira página, sem campos extras",
@@ -48,7 +51,10 @@ describe("CSV de listas administrativas existentes", () => {
           });
         }),
       );
+      const auditKey = ["app_admin_audit", { p_query: "", p_page: 1 }];
+      cache.setQueryData(auditKey, { items: [] });
       const csv = await buildAdminCsv("profiles", "selecionados");
+      expect(cache.getQueryState(auditKey)?.isInvalidated).toBe(true);
       expect(requests).toEqual([
         { name: "app_admin_list", args: { p_entity: "profiles", p_query: "selecionados", p_page: 1 } },
         { name: "app_admin_list", args: { p_entity: "profiles", p_query: "selecionados", p_page: 2 } },

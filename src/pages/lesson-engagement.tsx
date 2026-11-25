@@ -143,7 +143,7 @@ export function LessonEngagementTab({
   onOpen: () => void;
 }) {
   const Icon = tab === "comments" ? MessageSquare : NotebookPen;
-  const label = tab === "comments" ? "Comentários" : "Anotações Pessoais";
+  const label = tab === "comments" ? "Comentários" : "Anotações pessoais";
   const showCount = tab === "comments" && count !== undefined;
   return (
     <button
@@ -153,7 +153,7 @@ export function LessonEngagementTab({
       onClick={onOpen}
     >
       <Icon size={18} aria-hidden="true" />
-      <span className={tab === "notes" ? "stitch-lesson-wide-label stitch-light-only" : undefined}>{label}</span>
+      <span>{label}</span>
       {tab === "notes" && <>
         <span className="stitch-dark-only">{label}</span>
         <span className="stitch-lesson-mobile stitch-lesson-light-label">Anotações</span>

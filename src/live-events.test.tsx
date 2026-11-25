@@ -39,11 +39,12 @@ afterEach(() => {
 it("oferece a assinatura no encontro bloqueado e move o foco para gravações sem pedir links", async () => {
   const fetch = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
     const { p_recordings } = JSON.parse(String(init?.body));
-    return json({ items: p_recordings ? [] : [{ id: event.id, starts_at: event.starts_at, can_access: false }], has_more: false });
+    return json({ items: p_recordings ? [] : [{ id: event.id, starts_at: event.starts_at, title: event.title, guest: event.guest, can_access: false }], has_more: false });
   });
   vi.stubGlobal("fetch", fetch);
   show(<Events />);
-  expect(await screen.findByRole("heading", { name: "Encontro restrito" })).toBeVisible();
+  expect(await screen.findByRole("heading", { name: event.title })).toBeVisible();
+  expect(screen.getByText(event.guest)).toBeVisible();
   expect(screen.getByRole("link", { name: "Ver planos disponíveis" })).toHaveAttribute("href", "/app/configuracoes?aba=assinatura");
   expect(screen.queryByRole("button", { name: "Confirmar presença" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Entrar na sala" })).toBeNull();

@@ -36,7 +36,7 @@ export function useModules() {
 }
 
 const sections: Readonly<Record<string, ModuleKey | undefined>> = {
-  comunidade: "community", materiais: "materials", podcasts: "podcasts", ranking: "ranking",
+  ajuda: "help", comunidade: "community", materiais: "materials", podcasts: "podcasts", ranking: "ranking",
   "encontros-ao-vivo": "live_events", encontros: "live_events", suporte: "support", feedbacks: "feedback",
 };
 

@@ -172,7 +172,7 @@ export function useRpc<T>(
 export function internalPath(value: string | null, fallback = "/app/cursos") {
   if (
     !value ||
-    !/^\/(app|admin)(\/|\?|$)/.test(value) ||
+    !/^\/((app|admin)(\/|\?|$)|pedido\/)/.test(value) ||
     /[\\\u0000-\u001f]/.test(value)
   )
     return fallback;
@@ -180,9 +180,11 @@ export function internalPath(value: string | null, fallback = "/app/cursos") {
     const url = new URL(value, location.origin);
     if (
       url.origin !== location.origin ||
-      !/^\/(app|admin)(\/|$)/.test(url.pathname)
+      (!/^\/(app|admin)(\/|$)/.test(url.pathname) &&
+        !/^\/pedido\/[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(url.pathname))
     )
       return fallback;
+    if (url.pathname.startsWith("/pedido/")) return url.pathname;
     for (const key of [...url.searchParams.keys()])
       if (/token|password|senha|document|cpf|cnpj|secret/i.test(key))
         url.searchParams.delete(key);
@@ -253,6 +255,7 @@ export type Profile = {
   role: string;
   theme: "light" | "dark";
   plan_name: string;
+  current_plan_id?: string | null;
   access_ends_at: string | null;
   suspended: boolean;
   onboarding_complete: boolean;
@@ -297,6 +300,8 @@ export type Lesson = {
   order_index: number;
   can_access: boolean;
   completed: boolean;
+  position_seconds?: number;
+  last_activity_at?: string | null;
   body?: string;
   video_id?: string;
   storage_path?: string;
@@ -362,6 +367,7 @@ export type Ticket = {
   messages: {
     id: string;
     author_name: string;
+    author_id?: string;
     body: string;
     created_at: string;
     attachments: { id: string; name: string }[];

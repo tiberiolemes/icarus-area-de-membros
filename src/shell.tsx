@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation, useMatch } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   BookOpen,
-  ArrowLeft,
   CalendarDays,
-  CirclePlay,
-  GraduationCap,
   Files,
   Award,
   MessageSquare,
@@ -27,7 +24,6 @@ import {
   HelpCircle,
   ArrowUpRight,
   FolderOpen,
-  Moon,
   PlaneTakeoff,
   Podcast,
   Sun,
@@ -42,7 +38,6 @@ import { Action, AdminBadge, Notice, RouteFocus } from "./ui";
 import { Tour } from "./tour";
 import { UpdateNotice } from "./update-notice";
 import { MemberSearch } from "./pages/member-search";
-import { StitchIcon } from "./stitch-icon";
 import { BrandLogo, brandAssetUrl, defaultLogo } from "./brand";
 import { ModuleUnavailable, moduleLabel, moduleOfPath, pathOpen, useModules } from "./modules";
 import "./member-shell-stitch.css";
@@ -57,6 +52,9 @@ const memberNav = [
   ["Encontros ao vivo", "encontros-ao-vivo", CalendarDays],
   ["Suporte", "suporte", LifeBuoy],
 ] as const;
+const mobilePrimary = ["cursos", "comunidade", "ranking", "configuracoes"];
+const mobileExtra = ["materiais", "podcasts", "certificados", "encontros-ao-vivo", "suporte"];
+const memberRoutes = [...memberNav, ["Perfil", "configuracoes", UserRound] as const];
 const adminNav = [
   ["Visão geral", [
     ["Dashboard", "dashboard", LayoutDashboard, ["admin"]],
@@ -137,10 +135,10 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
   })).filter(({ routes }) => routes.length);
   const staffEntry = staffGroups[0]?.routes[0];
   const help = (admin || modules.help) && (
-    <Link to="/ajuda" onClick={onNavigate}>
+    <NavLink to={admin ? "/ajuda" : "/app/ajuda"} onClick={onNavigate}>
       <HelpCircle size={20} aria-hidden="true" />
       Central de ajuda
-    </Link>
+    </NavLink>
   );
   return (
     <>
@@ -204,7 +202,7 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
         )}
         {!admin && (
           <Action run={onToggleTheme}>
-            {dark ? <Moon size={20} aria-hidden="true" /> : <Sun size={20} aria-hidden="true" />}
+            <Sun size={20} aria-hidden="true" />
             Tema {dark ? "escuro" : "claro"}
             <small className="member-theme-state" aria-hidden="true">Ativo</small>
             <span className="sr-only">. Mudar para tema {dark ? "claro" : "escuro"}</span>
@@ -247,52 +245,22 @@ export function Shell() {
   const admin = pathname.startsWith("/admin");
   const modules = useModules();
   const offModule = pathOpen(modules, pathname) ? undefined : moduleOfPath(pathname);
-  const account = useMatch("/app/configuracoes");
-  const catalog = useMatch("/app/cursos");
-  const forum = useMatch("/app/comunidade");
-  const lesson = useMatch("/app/cursos/:curso/:modulo/:aula");
-  const mobileFrame = lesson ? "lesson" : catalog || forum ? "browse" : undefined;
-  const modulePath = lesson?.pathnameBase.slice(0, lesson.pathnameBase.lastIndexOf("/"));
-  const events = useMatch("/app/encontros-ao-vivo");
-  const thread = useMatch("/app/comunidade/:post");
   const adminOrders = useMatch("/admin/pedidos/*");
   const adminTickets = useMatch("/admin/suporte/*");
   const adminFeedbacks = useMatch("/admin/feedbacks");
   const adminSettings = useMatch("/admin/configuracoes");
   const adminSettingsTab = adminSettings ? new URLSearchParams(search).get("aba") : null;
   const adminTeam = adminSettingsTab === "equipe" || adminSettingsTab === "auditoria";
-  const memberView = catalog ? "catalog"
-    : account || events ? "text-rail"
-    : thread && thread.params.post !== "novo" ? "thread"
-    : undefined;
-  const accountInitials = memberView === "thread"
-    ? threadInitials(profile.full_name)
-    : profile.full_name?.slice(0, 1) || "I";
+  const accountInitials = threadInitials(profile.full_name);
   const adminView = adminOrders || adminTickets ? "operations" : adminTeam ? "team" : adminFeedbacks ? "feedback" : undefined;
   const [open, setOpen] = useState(false);
-  const [mobile, setMobile] = useState(false);
-  const stitchFrameIcons = mobile && mobileFrame;
-  const dark = profile.theme === "dark";
-  const CourseIcon = dark ? GraduationCap : CirclePlay;
-  const ForumIcon = dark ? MessagesSquare : Users;
-  const RankingIcon = dark ? ChartColumn : Trophy;
+  const primary = mobilePrimary.filter((path) => pathOpen(modules, "/app/" + path));
+  const [fifth, ...fallbacks] = mobileExtra.filter((path) => pathOpen(modules, "/app/" + path));
+  const quickPaths = [...primary, ...fallbacks.slice(0, 4 - primary.length), ...(fifth ? [fifth] : [])];
   // Admin acessa todo o conteúdo sem plano, então a badge Admin ocupa o lugar do plano.
   const planBadge = profile.role === "admin"
     ? <small className="mobile-frame-plan" data-role="admin"><AdminBadge /></small>
     : profile.plan_name && <small className="mobile-frame-plan" title={profile.plan_name}>{profile.plan_name}</small>;
-
-  function mobileIcon(name: ComponentProps<typeof StitchIcon>["name"], fallback: ComponentProps<typeof StitchIcon>["fallback"]) {
-    return stitchFrameIcons ? <StitchIcon name={name} fallback={fallback} /> : fallback;
-  }
-
-  useEffect(() => {
-    const media = window.matchMedia?.("(max-width: 639px)");
-    if (!media) return;
-    const update = () => setMobile(media.matches);
-    update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = profile.theme ?? "light";
@@ -307,8 +275,6 @@ export function Shell() {
   return (
     <div
       className={`app-shell stitch-shell ${admin ? "admin-shell-stitch" : "member-shell-stitch"}`}
-      data-member-view={memberView}
-      data-mobile-frame={mobileFrame}
       data-admin-view={adminView}
     >
       <a className="skip" href="#main" onClick={(event) => {
@@ -328,14 +294,12 @@ export function Shell() {
               aria-label="Abrir navegação"
               data-tour="navigation"
             >
-              {mobileFrame === "browse" ? mobileIcon("menu", <Menu aria-hidden="true" />) : <Menu aria-hidden="true" />}
+              <Menu aria-hidden="true" />
             </Dialog.Trigger>
             <Dialog.Portal>
               <Dialog.Overlay className="overlay" />
               <Dialog.Content
                 className={`drawer stitch-shell-drawer ${admin ? "admin-shell-stitch" : "member-shell-drawer"}`}
-                data-member-view={memberView}
-                data-mobile-frame={mobileFrame}
                 data-admin-view={adminView}
               >
                 <Dialog.Title className="sr-only">Navegação</Dialog.Title>
@@ -349,19 +313,14 @@ export function Shell() {
                   <X />
                 </Dialog.Close>
                 <ShellNavigation admin={admin} profile={profile} brand={brandMark("strong")} brandIcon={brandIcon} onToggleTheme={toggleTheme} onNavigate={() => setOpen(false)}
-                  drawerInitials={mobileFrame === "browse" ? accountInitials : undefined} />
+                  drawerInitials={admin ? undefined : accountInitials} />
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
-          {modulePath && (
-            <Link className="icon-button mobile-lesson-back" to={modulePath} state={{ restoreScroll: true }} aria-label="Voltar ao módulo">
-              {mobileIcon("arrow_back", <ArrowLeft size={20} aria-hidden="true" />)}
-            </Link>
-          )}
-          {mobileFrame && (
+          {!admin && (
             <div className="mobile-frame-label">
-              {lesson ? <span>Aula</span> : brandMark("span")}
-              {!lesson && planBadge}
+              {brandMark("span")}
+              {planBadge}
             </div>
           )}
           {admin ? <>
@@ -371,8 +330,7 @@ export function Shell() {
           <div className="topbar-tools">
             <Tour />
             {!admin && modules.feedback && <FeedbackButton key={JSON.stringify([profile.id, pathname])} />}
-            {lesson && planBadge}
-            {!admin && <NotificationBell key={profile.id} memberId={profile.id} stitchIcon={stitchFrameIcons === "browse"} />}
+            {!admin && <NotificationBell key={profile.id} memberId={profile.id} />}
             <Link className="account-link" to="/app/configuracoes" aria-label={`Sua conta: ${profile.full_name || "Membro"}`}>
               <AccountAvatar profile={profile} initials={accountInitials} admin={admin} />
               <span className="account-details">
@@ -391,17 +349,15 @@ export function Shell() {
               {profile.role === "admin" ? <> e ligar o módulo em <Link to="/admin/configuracoes?aba=modulos">Configurações &gt; Módulos</Link>.</> : "."}
             </Notice>
           )}
-          {!admin && offModule ? <ModuleUnavailable /> : <Outlet />}
+          {!admin && offModule && !(offModule === "help" && profile.role !== "member") ? <ModuleUnavailable /> : <Outlet />}
         </main>
       </div>
-      {mobileFrame === "browse" && (
+      {!admin && (
         <nav className="mobile-member-nav" aria-label="Navegação rápida">
-          <NavLink to="/app/cursos">{mobileIcon(dark ? "school" : "play_circle", <CourseIcon aria-hidden="true" />)}Cursos</NavLink>
-          {modules.community && <NavLink to="/app/comunidade">{mobileIcon(dark ? "forum" : "groups", <ForumIcon aria-hidden="true" />)}Comunidade</NavLink>}
-          {dark && modules.podcasts && <NavLink to="/app/podcasts">{mobileIcon("podcasts", <Podcast aria-hidden="true" />)}Podcasts</NavLink>}
-          {modules.ranking && <NavLink to="/app/ranking">{mobileIcon(dark ? "leaderboard" : "emoji_events", <RankingIcon aria-hidden="true" />)}Ranking</NavLink>}
-          {!dark && modules.materials && <NavLink to="/app/materiais">{mobileIcon("bookmarks", <FolderOpen aria-hidden="true" />)}Materiais</NavLink>}
-          <NavLink to="/app/configuracoes">{dark ? mobileIcon("person", <UserRound aria-hidden="true" />) : <UserRound aria-hidden="true" />}Perfil</NavLink>
+          {quickPaths.map((path) => {
+            const [title, , Icon] = memberRoutes.find((route) => route[1] === path)!;
+            return <NavLink key={path} to={"/app/" + path}><Icon aria-hidden="true" />{title}</NavLink>;
+          })}
         </nav>
       )}
     </div>

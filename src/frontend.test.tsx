@@ -259,6 +259,8 @@ describe("Confiança na fronteira do browser", () => {
     expect(internalPath("/app/cursos/curso/modulo/aula?q=ok")).toBe(
       "/app/cursos/curso/modulo/aula?q=ok",
     );
+    expect(internalPath("/pedido/00000000-0000-4000-8000-000000000001?token=ignorar")).toBe("/pedido/00000000-0000-4000-8000-000000000001");
+    expect(internalPath("/pedido/../checkout")).toBe("/app/cursos");
     expect(safeUrl("javascript:alert(1)")).toBeUndefined();
     expect(safeUrl("data:text/html,test")).toBeUndefined();
     // Vazia resolveria para a própria página e passaria por uma URL cadastrada.

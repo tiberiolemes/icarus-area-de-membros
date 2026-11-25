@@ -14,7 +14,7 @@ const logoDark = "logo/dark-22222222-2222-4222-8222-222222222222.webp";
 
 const { profile, settings, refetch, rpc, edge, signOut } = vi.hoisted(() => ({
   profile: { id: "member-1", full_name: "Pessoa Teste", plan_name: "Plano ativo", role: "member", theme: undefined as string | undefined, avatar_id: undefined as string | undefined },
-  settings: { name: "Icarus", logo_light: null as string | null, logo_dark: null as string | null },
+  settings: { name: "Icarus", logo_light: null as string | null, logo_dark: null as string | null, modules: {} as Record<string, boolean> },
   refetch: vi.fn(),
   rpc: vi.fn(),
   edge: vi.fn(),
@@ -52,6 +52,7 @@ beforeEach(() => {
   settings.name = "Icarus";
   settings.logo_light = null;
   settings.logo_dark = null;
+  settings.modules = {};
   profile.full_name = "Pessoa Teste";
   profile.role = "member";
   profile.plan_name = "Plano ativo";
@@ -73,9 +74,9 @@ it.each([
   ["/app/comunidade/post", " Alex  de Vance ", "AV"],
   ["/app/comunidade/post", "élodie", "É"],
   ["/app/comunidade/post", "", "I"],
-  ["/app/comunidade", "Alex Vance", "A"],
-  ["/app/comunidade/novo", "Alex Vance", "A"],
-  ["/app/comunidade/post/editar", "Alex Vance", "A"],
+  ["/app/comunidade", "Alex Vance", "AV"],
+  ["/app/comunidade/novo", "Alex Vance", "AV"],
+  ["/app/comunidade/post/editar", "Alex Vance", "AV"],
 ])("mantém o nome acessível e o fallback de %s para %s", (path, fullName, initials) => {
   profile.full_name = fullName;
   mount(path);
@@ -105,9 +106,10 @@ it("mantém a foto privada da conta no thread e volta às iniciais quando ela fa
 
 it("monta a busca no player e preserva o termo ao abrir o catálogo pela SPA", async () => {
   mount("/app/cursos/curso/modulo/aula");
-  expect(screen.getByRole("link", { name: "Cursos" })).toHaveAttribute("aria-current", "page");
-  expect(screen.getByRole("link", { name: "Voltar ao módulo" })).toHaveAttribute("href", "/app/cursos/curso/modulo");
-  expect(screen.queryByRole("navigation", { name: "Navegação rápida" })).not.toBeInTheDocument();
+  for (const name of ["Área de membros", "Navegação rápida"]) {
+    const nav = within(screen.getByRole("navigation", { name }));
+    expect(nav.getByRole("link", { name: "Cursos" })).toHaveAttribute("aria-current", "page");
+  }
   expect(screen.getByRole("link", { name: "Sua conta: Pessoa Teste" })).toHaveAttribute("href", "/app/configuracoes");
   expect(within(screen.getByRole("banner")).getByTitle("Plano ativo")).toHaveTextContent("Plano ativo");
   expect(screen.getByRole("button", { name: "Guia desta tela" })).toBeVisible();
@@ -131,7 +133,7 @@ it.each([["/app/cursos", "Cursos"], ["/app/comunidade", "Comunidade"]])(
     const nav = within(screen.getByRole("navigation", { name: "Navegação rápida" }));
     expect(nav.getByRole("link", { name: label, current: "page" })).toHaveAttribute("href", path);
     expect(nav.getAllByRole("link").map(link => link.getAttribute("href"))).toEqual([
-      "/app/cursos", "/app/comunidade", "/app/ranking", "/app/materiais", "/app/configuracoes",
+      "/app/cursos", "/app/comunidade", "/app/ranking", "/app/configuracoes", "/app/materiais",
     ]);
     fireEvent.click(nav.getByRole("link", { name: label === "Cursos" ? "Comunidade" : "Cursos" }));
     await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toHaveFocus());
@@ -139,17 +141,14 @@ it.each([["/app/cursos", "Cursos"], ["/app/comunidade", "Comunidade"]])(
   },
 );
 
-it.each(["/app/cursos", "/app/comunidade"])("abre Podcasts pelo atalho escuro em %s", async (path) => {
-  profile.theme = "dark";
-  mount(path);
+it.each(["light", "dark"])("mantém os atalhos nas demais telas com tema %s e usa o próximo módulo ligado", (theme) => {
+  profile.theme = theme;
+  settings.modules = { materials: false, podcasts: false };
+  mount("/app/suporte");
   const nav = within(screen.getByRole("navigation", { name: "Navegação rápida" }));
   expect(nav.getAllByRole("link").map(link => link.getAttribute("href"))).toEqual([
-    "/app/cursos", "/app/comunidade", "/app/podcasts", "/app/ranking", "/app/configuracoes",
+    "/app/cursos", "/app/comunidade", "/app/ranking", "/app/configuracoes", "/app/certificados",
   ]);
-  fireEvent.click(nav.getByRole("link", { name: "Podcasts" }));
-  const heading = screen.getByRole("heading", { name: "/app/podcasts" });
-  await waitFor(() => expect(heading).toHaveFocus());
-  expect(screen.queryByRole("navigation", { name: "Navegação rápida" })).not.toBeInTheDocument();
 });
 
 it("abre o Ranking real pela barra e mantém Materiais na gaveta escura", async () => {

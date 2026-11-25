@@ -9,7 +9,7 @@ export const event = {
   id: demoId(81), title: "Oficina · Planeje o primeiro curso", guest: "Equipe de demonstração",
   description: "Traga o tema da sua trilha para montar a primeira versão da ementa.",
   starts_at: futureDay, revision: 0, duration_minutes: 60,
-  can_access: true, can_rsvp: true, status: "published", access_mode: "members", plan_ids: [], meeting_url: "",
+  can_access: true, can_rsvp: true, status: "published", access_mode: "plans", plan_ids: [demoId(21)], meeting_url: "",
 };
 const text = (content: string) => `<p>${content}</p>`;
 const names = [
@@ -21,7 +21,7 @@ const names = [
 const profiles: Profile[] = demoAccounts.map((account, index) => ({
   id: demoId(index + 1), full_name: account.name, email: account.email,
   role: account.role, theme: "light", phone: "", bio: "", company: {},
-  plan_name: "Membro Pro", access_ends_at: null, suspended: false, onboarding_complete: true,
+  plan_name: "Membro Pro · Demonstração", current_plan_id: demoId(21), access_ends_at: null, suspended: false, onboarding_complete: true,
 }));
 export const plans: Plan[] = [
   { id: demoId(21), name: "Membro Pro · Demonstração", slug: "pro-demo", price_cents: 0, access_months: 12,
@@ -44,8 +44,10 @@ const posts: Post[] = [
 }));
 const tickets: Ticket[] = [{
   id: demoId(50), subject: "Onde encontro o roteiro de aula?", priority: "normal", status: "open",
-  created_at: date, messages: [{ id: demoId(51), author_name: profiles[0].full_name,
-    body: "Quero usar o roteiro para montar a minha trilha. Em qual pasta ele está?", created_at: date, attachments: [] }],
+  created_at: date, messages: [{ id: demoId(51), author_id: profiles[0].id, author_name: profiles[0].full_name,
+    body: "Quero usar o roteiro para montar a minha trilha. Em qual pasta ele está?", created_at: date, attachments: [] },
+    { id: demoId(52), author_id: profiles[1].id, author_name: profiles[1].full_name,
+      body: "Abra Materiais e escolha a pasta Roteiros de curso.", created_at: date, attachments: [] }],
 }];
 const folder = { id: demoId(61), name: "Roteiros de curso", count: 1 };
 export const material: Material = {

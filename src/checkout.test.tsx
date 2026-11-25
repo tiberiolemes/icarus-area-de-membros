@@ -16,9 +16,10 @@ vi.mock("./checkout-receipt", () => ({
   prepareReceipt: async () => ({}),
   receiptHash: async () => "fixture-hash",
   saveReceipt: async () => {},
-  loadReceipt: async () => "fixture-receipt",
+  loadReceipt: vi.fn(async () => "fixture-receipt" as string | null),
 }));
 import { cache } from "./api";
+import { loadReceipt } from "./checkout-receipt";
 import { Checkout, OrderStatus } from "./pages/checkout";
 afterEach(() => {
   cleanup();
@@ -181,4 +182,15 @@ it("aponta no próprio campo o aceite obrigatório que faltou", async () => {
   const terms = screen.getByRole("checkbox", { name: /Aceito os Termos/ });
   await waitFor(() => expect(terms).toHaveAttribute("aria-invalid", "true"));
   expect(document.getElementById(terms.getAttribute("aria-describedby")!)).toHaveTextContent("Marque esta opção para continuar.");
+});
+
+it("preserva o endereço do pedido no link de entrada sem recibo", async () => {
+  const order = "00000000-0000-4000-8000-000000000001";
+  vi.mocked(loadReceipt).mockResolvedValueOnce(undefined);
+  vi.stubGlobal("fetch", vi.fn(async () => Response.json({ name: "Icarus" })));
+  render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={["/pedido/" + order]}>
+    <Routes><Route path="/pedido/:pedido" element={<OrderStatus />} /></Routes>
+  </MemoryRouter></QueryClientProvider>);
+  expect(await screen.findByRole("link", { name: /^Entrar$/ }))
+    .toHaveAttribute("href", "/entrar?returnTo=" + encodeURIComponent("/pedido/" + order));
 });

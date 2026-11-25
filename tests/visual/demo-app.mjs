@@ -130,14 +130,14 @@ try {
       await page.waitForFunction(() => document.querySelector("video")?.readyState >= 2);
       await page.waitForFunction(() => document.querySelector("video")?.currentTime >= 3.9);
       await capture("player");
-      await button(width === 360 ? "Concluir Aula" : "Marcar como concluída").click();
+      await button("Marcar como concluída").click();
       await page.getByText("Aula concluída", { exact: true }).first().waitFor();
       const lessonUrl = page.url();
       await page.reload();
       await page.getByText("Aula concluída", { exact: true }).first().waitFor();
       await visit("/app/cursos/estrutura-cursos/primeiros-passos/~00000000-0000-4000-8000-000000000302");
       await heading("Revise a experiência do aluno").waitFor();
-      await button(width === 360 ? "Concluir Aula" : "Marcar como concluída").click();
+      await button("Marcar como concluída").click();
       await page.getByText(/certificado emitido/).first().waitFor();
       await visit("/app/certificados");
       await page.getByRole("link", { name: "Abrir certificado", exact: true }).click();
@@ -151,7 +151,7 @@ try {
       await page.getByText("Bem-vindos à comunidade", { exact: true }).first().waitFor();
       await capture("comunidade");
       await visit("/app/suporte");
-      await heading("Central de Suporte & Atendimento").waitFor();
+      await heading("Central de suporte").waitFor();
       await page.getByText("Onde encontro o roteiro de aula?", { exact: true }).first().waitFor();
       await capture("suporte");
       await visit("/app/suporte/novo");

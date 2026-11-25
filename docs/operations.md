@@ -141,6 +141,8 @@ Aplique `202611230001` a `202611230040` e depois `202611250001` e `202611250002`
 | `202611250001` | Comprar como visitante, trocando o email e a `attempt_key` a cada tentativa, e conferir que a sexta tentativa no mesmo minuto, do mesmo IP, recebe 429. Repetir o mesmo email e conferir o 429 na quarta. Errar a senha da reautenticação seis vezes no minuto e conferir a liberação no minuto seguinte. Publicar a `checkout` e a `reauthenticate` da mesma tag. |
 | `202611250002` | Entrar com o código marcando Lembrar por 15 dias, ficar parado além de 2 h (membro) ou 30 min (equipe) e conferir que o acesso continua. Sem a caixa, conferir que a sessão expira como antes. Conferir que Sair encerra a sessão e que uma sessão só com senha continua recusada quando há fator verificado. |
 
+**Lembrar por 15 dias** vale para todos os papéis, inclusive admin e equipe, e a caixa vem desmarcada. Oriente a equipe e os alunos a não marcá-la em computador compartilhado ou público: até o fim dos 15 dias, quem abrir aquele navegador entra sem senha nem código. Para encerrar antes, use Sair, que encerra a sessão da conta em todos os aparelhos. O limite é conferido no banco pela `202611250002`, e nenhuma configuração do Supabase Auth precisa mudar.
+
 A validação de navegação também cobre entrada e confirmação de email, primeira senha, perguntas de onboarding, edição parcial do perfil e MFA opcional. A seed fornece perguntas iniciais editáveis. Cadastre os próprios cursos, aulas, materiais, planos, ofertas e documentos legais pelo fluxo administrativo apropriado.
 
 ## Primeiro administrador sem conteúdo demo

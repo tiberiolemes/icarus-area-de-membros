@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.3 · 2026-11-25
+
+- Fundo contínuo na área de conteúdo. O catálogo pintava o cinza só num bloco de 1280 px com a altura do conteúdo, e sobravam faixas brancas ao lado e abaixo dele em telas largas ou com poucos cursos. No tema escuro, as faixas ficavam pretas, também em Materiais, Certificados e Encontros. Agora o `main` cobre toda a área até o fim da tela, e o conteúdo continua na mesma largura e posição. O roteiro `tests/visual/demo-app.mjs` confere o fundo em 1920, 1280 e 360 px nos dois temas.
+- Atualização da 2.2.2: gere o frontend da tag. Não há migration nem Edge Function nova.
+
 ## 2.2.2 · 2026-11-25
 
 - Checkout com limite de tentativas por minuto: 5 por IP (só pelo `cf-connecting-ip`, IPv6 pelo /64), 5 por conta e 3 por email, inclusive o da conta logada. Trocar a `attempt_key` não abre mais pedidos e sessões no Asaas sem parar. Acima do limite, a resposta é 429.

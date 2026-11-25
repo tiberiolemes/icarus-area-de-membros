@@ -9,8 +9,36 @@ const target = new URL(address);
 mkdirSync(output, { recursive: true });
 const { browser } = await launchChrome();
 
-async function open(width) {
-  const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
+// Pontos ao lado e abaixo do conteúdo cuja cor de fundo difere da cor dentro do main.
+function canvasGaps(page) {
+  return page.evaluate(async () => {
+    const main = document.querySelector("main.content"), workspace = main.parentElement;
+    const layers = [main, workspace, workspace.parentElement, document.body, document.documentElement];
+    const canvas = (x, y) => {
+      for (const layer of layers) {
+        const box = layer.getBoundingClientRect(), color = getComputedStyle(layer).backgroundColor;
+        const inside = layer === document.documentElement || (x >= box.left && x < box.right && y >= box.top && y < box.bottom);
+        if (inside && color !== "rgba(0, 0, 0, 0)") return color;
+      }
+    };
+    const frame = () => new Promise((resolve) => requestAnimationFrame(() => resolve()));
+    scrollTo(0, 0);
+    await frame();
+    const side = workspace.getBoundingClientRect(), y = workspace.querySelector(".topbar").getBoundingClientRect().bottom + 8;
+    const reference = canvas(side.left + side.width / 2, y);
+    const points = { esquerda: canvas(side.left + 1, y), direita: canvas(side.right - 1, y) };
+    scrollTo(0, document.documentElement.scrollHeight);
+    await frame();
+    const bar = document.querySelector(".mobile-member-nav");
+    const bottom = innerHeight - 2 - (bar && getComputedStyle(bar).display !== "none" ? bar.getBoundingClientRect().height : 0);
+    Object.assign(points, { base: canvas(side.left + side.width / 2, bottom), baseEsquerda: canvas(side.left + 1, bottom) });
+    scrollTo(0, 0);
+    return Object.entries(points).filter(([, color]) => color !== reference).map(([point, color]) => `${point}: ${color} ≠ ${reference}`);
+  });
+}
+
+async function open(width, height = 900) {
+  const context = await browser.newContext({ viewport: { width, height }, reducedMotion: "reduce" });
   const external = [], errors = [];
   await context.route("**/*", (route) => {
     const url = new URL(route.request().url());
@@ -42,6 +70,33 @@ async function open(width) {
 }
 
 try {
+  for (const [width, height] of [[1920, 1080], [1280, 1080], [360, 800]]) {
+    const { context, page, visit, button } = await open(width, height);
+    try {
+      await visit("/entrar");
+      await button("Entrar como aluno").click();
+      await page.locator(".showcase").waitFor();
+      for (const theme of ["claro", "escuro"]) {
+        if (theme === "escuro") {
+          await visit("/app/configuracoes?aba=perfil");
+          if (width === 360) await button("Abrir navegação").click();
+          await page.getByRole("button", { name: /Mudar para tema escuro/i }).first().click();
+          await page.waitForFunction(() => document.documentElement.dataset.theme === "dark");
+        }
+        for (const [path, ready] of [["/app/cursos", ".showcase-grid article"], ["/app/materiais", ".student-materials"],
+          ["/app/certificados", ".student-certificates"], ["/app/encontros-ao-vivo", ".live-events-page"]]) {
+          await visit(path);
+          await page.locator(ready).first().waitFor();
+          assert.deepEqual(await canvasGaps(page), [], `Fundo contínuo em ${path}, tema ${theme}, ${width}px`);
+        }
+        await visit("/app/cursos?q=sem-resultado");
+        await page.getByText("Nenhum curso corresponde aos filtros.", { exact: true }).waitFor();
+        assert.deepEqual(await canvasGaps(page), [], `Fundo contínuo no catálogo sem resultados, tema ${theme}, ${width}px`);
+      }
+    } finally { await context.close(); }
+  }
+  console.log("DEMO: fundo contínuo do catálogo, materiais, certificados e encontros aprovado.");
+
   for (const width of [1280, 360]) {
     const { context, page, visit, heading, button, capture, external, errors } = await open(width);
     try {

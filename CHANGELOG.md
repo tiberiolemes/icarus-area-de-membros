@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.5.1 · 2026-11-25
+
+Correções da auditoria de telas de 25/nov/2026, com o padrão aplicado na origem para valer em todas as telas.
+
+- Player: quando o vídeo ou o áudio não carrega, o botão Tentar carregar aparece nos dois temas (no claro ficava branco sobre branco) e o aluno lê "Não foi possível carregar o vídeo agora. Tente de novo; se continuar, avise o suporte." no lugar da mensagem técnica de configuração. No celular, o palco cresce com o aviso e o botão não é mais cortado.
+- Página do módulo: aulas, duração e progresso passam a ser os do próprio módulo. Antes mostravam os números do curso inteiro.
+- Bloqueios com título e saída. A conta suspensa, que o servidor recusa, deixa de ver só "Acesso indisponível." solto na tela: vê a moldura da plataforma, o título Acesso indisponível, a explicação de que a conta está suspensa ou sem acesso e Sair e usar outra conta. Acesso negado da equipe ganha o título Acesso restrito e Voltar ao painel na primeira área do papel. A página inexistente dentro do painel volta ao painel, e o onboarding obrigatório oferece Sair e usar outra conta.
+- Denúncias: cada linha mostra o título e o trecho do conteúdo denunciado (publicação ou resposta), o autor, quem denunciou e Abrir publicação; as pendentes vêm primeiro e Concluir análise só aparece nelas. Leitura pela nova RPC `app_admin_reports`, para admin e moderador.
+- Pedidos LGPD em Configurações → Privacidade: a lista mostra o titular com link para a ficha e os tipos e situações em português (Exportação de dados, Exclusão de conta; Recebido, Em análise, Concluído, Recusado). O admin registra o atendimento com a nova situação e o motivo, pela RPC `app_admin_set_privacy_request`, só em pedidos abertos e com auditoria `privacy:<situação>`. O registro não exporta nem exclui dados.
+- Um padrão de erro para todas as telas: aviso de erro, erro de campo e erro de ação usam a cor de erro do tema, no lugar das cópias por tela. A queda passageira do servidor (`PGRST000` a `PGRST003`) passa a dizer "O servidor não respondeu agora. Tente novamente em instantes.", e não mais que a operação está indisponível na instalação. Erros do login, do cadastro e da redefinição de senha que chegavam em inglês ganham frase em português. No catálogo, a seção Lançamento em breve some quando falha, sem repetir o erro e o botão. O estado vazio perdeu a linha solta e a meia largura, e o esqueleto de carregamento pulsa de leve (parado com movimento reduzido).
+- Título de página em todas as telas, inclusive as públicas (título da tela e nome da instalação), e foco no título ao trocar de tela pública. O título do painel e da Conta deixa de abrir com contorno de foco.
+- Cadastro fechado mostra um único aviso e não oferece mais o formulário. O aceite obrigatório dos termos, no cadastro e no checkout, mostra "Marque esta opção para continuar." ligado ao próprio campo.
+- Botões e selos não partem mais palavras ao meio (Editar em Podcasts no celular, selos do feed escuro, cartões do onboarding). Microtexto do currículo da aula com 11 px e contraste de 4,5:1 nos dois temas, e o filtro do currículo com texto de 16 px.
+- Atualização da 2.5.0: aplique a migration `202611250005` e gere o frontend da tag. Não há Edge Function nova. Faça backup e siga [Atualizar de versão](docs/operations.md#atualizar-de-versão).
+
 ## 2.5.0 · 2026-11-25
 
 - Módulos da plataforma em Configurações → Módulos. O admin liga e desliga, cada um por um interruptor em AJAX com a explicação do que deixa de aparecer: Comunidade, Materiais (a biblioteca), Podcasts e masterclasses, Ranking, Encontros ao vivo, Suporte, Central de ajuda e Feedback dos alunos. Cursos e Certificados são o núcleo da plataforma: aparecem na tela como Sempre ativo, sem interruptor, e não têm bloqueio nem pausa de emissão. Instalações novas e atualizadas começam com tudo ligado, então nada muda sozinho.

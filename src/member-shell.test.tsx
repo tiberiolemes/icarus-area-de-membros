@@ -18,6 +18,7 @@ vi.mock("./api", async (importOriginal) => ({
 }));
 vi.mock("./auth", () => ({ useBootstrap: () => ({ data: { profile, settings }, refetch }) }));
 vi.mock("./tour", () => ({ Tour: () => <button>Guia desta tela</button> }));
+vi.mock("./update-notice", () => ({ UpdateNotice: () => <p>Aviso de versão nova</p> }));
 
 function CurrentRoute() {
   const { pathname, search } = useLocation();
@@ -271,4 +272,15 @@ it("usa o nome personalizado na lateral e no topo móvel da administração", ()
   mount("/admin/cursos");
   expect(screen.getAllByText("Plataforma de teste")).toHaveLength(2);
   expect(screen.queryByRole("img", { name: "Icarus" })).not.toBeInTheDocument();
+});
+
+it.each([
+  ["admin", "/admin/cursos", true],
+  ["admin", "/app/cursos", false],
+  ["instructor", "/admin/cursos", false],
+  ["support", "/admin/suporte", false],
+])("mostra o aviso de versão nova só para %s no painel (%s)", (role, path, shown) => {
+  profile.role = role;
+  mount(path);
+  expect(screen.queryByText("Aviso de versão nova") !== null).toBe(shown);
 });

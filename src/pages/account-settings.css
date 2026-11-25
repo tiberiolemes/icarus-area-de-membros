@@ -128,10 +128,6 @@
   outline-offset: var(--stitch-focus-offset);
 }
 
-.student-account :is(.field-error, .notice[role="alert"]) {
-  color: var(--stitch-error);
-}
-
 .student-account :is(.field [aria-invalid="true"], .notice[role="alert"]) {
   border-color: var(--stitch-error);
 }

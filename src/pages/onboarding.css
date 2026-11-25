@@ -192,10 +192,6 @@
   outline-offset: var(--stitch-focus-offset);
 }
 
-.student-onboarding :is(.field-error, .notice[role="alert"]) {
-  color: var(--stitch-error);
-}
-
 .student-onboarding :is(.student-onboarding-questions .field [aria-invalid="true"], .notice[role="alert"]) {
   border-color: var(--stitch-error);
 }

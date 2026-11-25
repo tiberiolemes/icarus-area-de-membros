@@ -145,10 +145,10 @@ export function QueryState({
   if (query.isPending) return <Loading />;
   if (query.error)
     return (
-      <>
+      <div className="query-error">
         <Notice error>{errorMessage(query.error)}</Notice>
         <button onClick={() => query.refetch()}>Tentar novamente</button>
-      </>
+      </div>
     );
   return <>{children}</>;
 }

@@ -356,10 +356,6 @@ body:has(.support-page) {
   background: var(--stitch-surface-panel);
 }
 
-.support-page [role="alert"] {
-  color: var(--stitch-error);
-}
-
 .support-mobile-back {
   display: none;
 }

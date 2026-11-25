@@ -468,10 +468,6 @@
   padding-inline: var(--stitch-space-md);
 }
 
-.admin-commercial .notice[role="alert"] {
-  color: var(--stitch-error);
-}
-
 .admin-commercial .commercial-results > .notice {
   margin-inline: var(--stitch-space-md);
 }

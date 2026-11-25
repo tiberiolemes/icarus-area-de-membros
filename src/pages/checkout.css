@@ -230,10 +230,6 @@ body:has(.icarus-checkout) {
   border-color: var(--stitch-border-subtle);
 }
 
-.icarus-checkout [role="alert"] {
-  color: var(--stitch-error);
-}
-
 .icarus-checkout-consent .check {
   margin-block: 0;
 }

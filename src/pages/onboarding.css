@@ -186,7 +186,7 @@
   background: var(--stitch-surface-panel);
 }
 
-.student-onboarding :focus-visible,
+.student-onboarding :focus-visible:not([tabindex="-1"]),
 .student-onboarding .notice[role="alert"]:focus {
   outline: var(--stitch-focus-width) solid var(--stitch-focus);
   outline-offset: var(--stitch-focus-offset);
@@ -271,7 +271,7 @@
   justify-content: center;
   align-items: flex-start;
   gap: var(--stitch-space-xs);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   min-height: var(--stitch-control-min-size);
   min-width: var(--stitch-control-min-size);
   padding: var(--stitch-space-md);

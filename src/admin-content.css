@@ -384,7 +384,7 @@
   background: var(--stitch-action-hover);
 }
 
-.admin-content :focus-visible {
+.admin-content :focus-visible:not([tabindex="-1"]) {
   outline: var(--stitch-focus-width) solid var(--stitch-focus);
   outline-offset: var(--stitch-focus-offset);
 }

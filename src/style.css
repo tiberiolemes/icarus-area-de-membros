@@ -64,6 +64,12 @@ button,
     background var(--ic-motion-fast),
     color var(--ic-motion-fast);
 }
+/* Rótulo de botão e selo não parte palavra ao meio, mesmo dentro de área com overflow-wrap: anywhere. */
+button,
+.button,
+.badge {
+  overflow-wrap: normal;
+}
 button:hover,
 .button:hover {
   background: var(--ic-surface-muted);

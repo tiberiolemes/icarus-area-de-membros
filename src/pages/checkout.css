@@ -188,7 +188,7 @@ body:has(.icarus-checkout) {
   color: var(--stitch-on-action);
 }
 
-.icarus-checkout :focus-visible,
+.icarus-checkout :focus-visible:not([tabindex="-1"]),
 .icarus-checkout-method label:has(input:focus-visible),
 .icarus-checkout .check:has(input:focus-visible) {
   outline: var(--stitch-focus-width) solid var(--stitch-focus);

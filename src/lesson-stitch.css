@@ -869,16 +869,12 @@
 }
 
 .stitch-curriculum-filter input::placeholder {
-  color: var(--lesson-tertiary);
+  color: var(--stitch-text-secondary);
   background: transparent;
   padding: 0;
 }
 
 @media (min-width: 1024px) and (pointer: fine) {
-  .lesson-stitch .stitch-curriculum-filter input[type="search"] {
-    font-size: 12px;
-  }
-
   [data-theme="light"] .stitch-curriculum-field::before {
     content: "";
     position: absolute;
@@ -937,8 +933,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font: 400 10px / 20px var(--ic-font-family);
+  font: 400 var(--stitch-type-label-uppercase-size) / 20px var(--ic-font-family);
   text-transform: uppercase;
+  color: var(--stitch-text-secondary);
 }
 
 [data-theme="dark"] .stitch-module > summary small {
@@ -1002,7 +999,7 @@
   border-radius: 4px;
   color: var(--lesson-tertiary);
   background: var(--lesson-control);
-  font: 600 10px / 18px var(--ic-font-family);
+  font: 600 var(--stitch-type-label-uppercase-size) / 18px var(--ic-font-family);
 }
 
 .stitch-module-index {
@@ -1034,7 +1031,7 @@
   padding: 0 6px;
   color: var(--lesson-on-action);
   background: var(--lesson-action);
-  font: 700 9px / 16px var(--ic-font-family);
+  font: 700 var(--stitch-type-label-uppercase-size) / 16px var(--ic-font-family);
   letter-spacing: 0;
 }
 
@@ -1149,6 +1146,10 @@
   font-size: 11px;
   line-height: inherit;
   font-weight: var(--stitch-type-code-inline-weight);
+}
+
+[data-theme="dark"] .stitch-lesson-list a[aria-current="page"] small {
+  color: var(--stitch-text-secondary);
 }
 
 [data-theme="light"] .stitch-lesson-list a[aria-current="page"] small {
@@ -1585,7 +1586,7 @@
     padding: 0 6px;
     color: var(--stitch-text-heading);
     background: var(--lesson-mobile-raised);
-    font: 400 10px / 15px ui-monospace, monospace;
+    font: 400 var(--stitch-type-label-uppercase-size) / 15px ui-monospace, monospace;
   }
   .stitch-lesson-deck [role="tabpanel"] { padding: 12px 0 0; }
 

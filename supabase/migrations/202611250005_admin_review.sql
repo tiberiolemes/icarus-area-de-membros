@@ -1,6 +1,27 @@
 begin;
 -- 2.5.1: denúncias com o conteúdo denunciado e pedidos LGPD com titular e atendimento auditado.
--- A lista genérica app_admin_list segue igual; estas RPCs devolvem o mesmo formato {items,total,page,page_size}.
+-- A lista genérica expõe o ID de quem denunciou. Só o admin pode usá-la para denúncias.
+create or replace function app_private.entity_roles(p_entity text) returns text[] language sql immutable set search_path='' as $$ select case p_entity
+ when 'courses' then array['admin','instructor']
+ when 'modules' then array['admin','instructor']
+ when 'sections' then array['admin','instructor']
+ when 'lessons' then array['admin','instructor']
+ when 'material_folders' then array['admin','instructor']
+ when 'materials' then array['admin','instructor']
+ when 'plans' then array['admin']
+ when 'spaces' then array['admin','moderator']
+ when 'legal_versions' then array['admin']
+ when 'onboarding' then array['admin']
+ when 'onboarding_questions' then array['admin']
+ when 'profiles' then array['admin']
+ when 'orders' then array['admin']
+ when 'posts' then array['admin','moderator']
+ when 'replies' then array['admin','moderator']
+ when 'reports' then array['admin']
+ when 'tickets' then array['admin','support']
+ when 'audit_events' then array['admin']
+ when 'privacy_requests' then array['admin']
+ else '{}'::text[] end $$;
 
 create function public.app_admin_reports(p_query text default '',p_page integer default 1) returns jsonb language plpgsql security definer set search_path='' as $$
 declare u uuid:=app_private.require_role(array['admin','moderator']);result jsonb;begin
@@ -15,7 +36,7 @@ declare u uuid:=app_private.require_role(array['admin','moderator']);result json
   left join public.replies rp on rp.id=r.reply_id
   left join public.posts p on p.id=coalesce(r.post_id,rp.post_id)
   left join public.profiles author on author.id=coalesce(rp.author_id,p.author_id)
-  left join public.profiles reporter on reporter.id=r.actor_id
+  left join public.profiles reporter on reporter.id=r.actor_id and app_private.is_staff(u,array['admin'])
   where p_query='' or concat_ws(' ',r.reason,p.title,coalesce(rp.body,p.body),author.full_name) ilike '%'||p_query||'%'
  )
  select jsonb_build_object('items',coalesce((select jsonb_agg(to_jsonb(x)-'seq' order by x.seq) from(

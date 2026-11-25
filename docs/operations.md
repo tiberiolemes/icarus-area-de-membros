@@ -16,7 +16,7 @@ Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHA
 | 0.2.0 | `202611230001` a `202611230038` | `202611230039`, `202611230040` e `202611250001` a `202611250005` |
 | 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` e `202611250001` a `202611250005` |
 
-A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos. A `202611250005` só cria três RPCs de leitura e registro do painel (denúncias e pedidos LGPD), sem tabela nova nem alteração de dados.
+A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos. A `202611250005` cria três RPCs de leitura e registro do painel (denúncias e pedidos LGPD) e reserva a identidade de quem denunciou para administradores, inclusive na listagem genérica. A migration não cria tabelas nem altera dados.
 
 Publique também as Edge Functions da tag:
 - na 2.4.0, `upload` passou a receber a logo, o ícone e a assinatura do certificado (`kind=brand-asset`) e a gravá-los no bucket público `icarus-brand`, criado pela `202611250003`;

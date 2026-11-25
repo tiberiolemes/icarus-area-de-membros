@@ -16,7 +16,7 @@ const reports = page([
   { id: "r1", reason: "Fora do tema", status: "pending", created_at: "2026-11-25T12:00:00Z", reporter_name: "Bia Souza",
     target_type: "reply", post_id: "post-1", reply_id: "reply-1", title: "Rotina de estudos", excerpt: "Resposta com link suspeito.",
     author_name: "Ana Lima", author_id: "user-1", target_status: "approved" },
-  { id: "r2", reason: "Conteúdo antigo", status: "resolved", created_at: "2026-11-24T12:00:00Z", reporter_name: "Bia Souza",
+  { id: "r2", reason: "Conteúdo antigo", status: "resolved", created_at: "2026-11-24T12:00:00Z", reporter_name: null,
     target_type: "post", post_id: "post-2", reply_id: null, title: "Publicação removida", excerpt: "Texto removido.",
     author_name: "Ana Lima", author_id: "user-1", target_status: "removed" },
 ]);
@@ -50,10 +50,12 @@ it("mostra na denúncia o conteúdo, o autor e o caminho até a publicação, e 
   const pending = (await screen.findByText("Resposta com link suspeito.")).closest(".admin-row") as HTMLElement;
   expect(within(pending).getByText("Rotina de estudos")).toBeVisible();
   expect(within(pending).getByText(/Ana Lima/)).toBeVisible();
-  expect(within(pending).getByText(/Fora do tema/)).toBeVisible();
+  expect(within(pending).getByText(/Fora do tema · enviada por Bia Souza em/)).toBeVisible();
   expect(within(pending).getByRole("link", { name: "Abrir publicação" })).toHaveAttribute("href", "/admin/comunidade/post-1");
   expect(within(pending).getByRole("button", { name: "Concluir análise" })).toBeVisible();
   const resolved = screen.getByText("Texto removido.").closest(".admin-row") as HTMLElement;
+  expect(within(resolved).getByText(/Conteúdo antigo · enviada em/)).toBeVisible();
+  expect(within(resolved).queryByText(/enviada por/)).not.toBeInTheDocument();
   expect(within(resolved).queryByRole("button", { name: "Concluir análise" })).not.toBeInTheDocument();
 });
 

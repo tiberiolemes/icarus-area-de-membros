@@ -30,7 +30,7 @@ insert into public.reports(id,actor_id,post_id,reply_id,reason,status,created_at
  (pg_temp.id(42),pg_temp.id(4),null,pg_temp.id(30),'QA-REVISAO link suspeito','pending',now());
 insert into public.privacy_requests(id,user_id,kind,status) values(pg_temp.id(50),pg_temp.id(4),'export','pending'),(pg_temp.id(51),pg_temp.id(3),'deletion','completed');
 
--- Denúncias: moderador vê o conteúdo; membro não vê
+-- Moderador vê o conteúdo denunciado; só o admin vê quem denunciou.
 select pg_temp.login(2);
 set local role authenticated;
 create temporary table r as select public.app_admin_reports('QA-REVISAO',1) v;
@@ -40,7 +40,8 @@ select pg_temp.assert((select v->'items'->2->>'status' from r)='resolved','resol
 select pg_temp.assert((select v->'items'->0->>'target_type' from r)='reply' and (select v->'items'->0->>'post_id' from r)=pg_temp.id(20)::text,'resposta aponta o post onde está');
 select pg_temp.assert((select v->'items'->0->>'title' from r)='Rotina de estudos' and (select v->'items'->0->>'excerpt' from r)='Resposta com QA-LINK suspeito.','resposta traz título do post e trecho');
 select pg_temp.assert((select v->'items'->1->>'author_name' from r)='DEMONSTRAÇÃO Revisão 3' and (select v->'items'->1->>'author_id' from r)=pg_temp.id(3)::text,'autor do conteúdo');
-select pg_temp.assert((select v->'items'->1->>'reporter_name' from r)='DEMONSTRAÇÃO Revisão 4','quem denunciou');
+select pg_temp.assert(not exists(select 1 from r,jsonb_array_elements(v->'items') x where x->'reporter_name' is distinct from 'null'::jsonb),'moderador recebe nome de quem denunciou como nulo');
+select pg_temp.denied($q$select public.app_admin_list('reports')$q$,'moderador sem acesso ao identificador na lista genérica');
 select pg_temp.assert((select v->'items'->2->>'target_status' from r)='removed' and (select v->'items'->2->>'title' from r)='Publicação removida','alvo removido continua legível');
 select pg_temp.assert((public.app_admin_reports('QA-LINK',1)->>'total')::int=1,'busca no conteúdo denunciado');
 select pg_temp.denied('select public.app_admin_privacy_requests()','moderador sem pedidos LGPD');
@@ -52,9 +53,10 @@ select pg_temp.denied('select public.app_admin_reports()','membro sem denúncias
 select pg_temp.denied('select public.app_admin_privacy_requests()','membro sem pedidos LGPD');
 reset role;
 
--- Pedidos LGPD: admin vê o titular e registra o atendimento auditado
+-- Admin vê quem denunciou e registra o atendimento auditado dos pedidos LGPD.
 select pg_temp.login(1);
 set local role authenticated;
+select pg_temp.assert((public.app_admin_reports('QA-REVISAO',1)->'items'->1->>'reporter_name')='DEMONSTRAÇÃO Revisão 4','admin vê o nome de quem denunciou');
 create temporary table p as select public.app_admin_privacy_requests('Revisão',1) v;
 select pg_temp.assert((select (v->>'total')::int from p)=2,'admin lista os pedidos');
 select pg_temp.assert((select x->>'full_name' from p,jsonb_array_elements(v->'items') x where x->>'id'=pg_temp.id(50)::text)='DEMONSTRAÇÃO Revisão 4','titular do pedido');

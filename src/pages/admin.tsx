@@ -2314,8 +2314,8 @@ export function AdminCommunity() {
                 {statusName(text(report, "target_status"))}
               </p>
               <p>
-                Motivo da denúncia: {text(report, "reason")} · enviada por{" "}
-                {text(report, "reporter_name") || "Membro sem nome"} em{" "}
+                Motivo da denúncia: {text(report, "reason")} · enviada
+                {report.reporter_name != null && ` por ${text(report, "reporter_name").trim() || "Membro sem nome"}`} em{" "}
                 {date(text(report, "created_at"))}
               </p>
               <p>Estado: {reportStatus[text(report, "status")] ?? text(report, "status")}</p>

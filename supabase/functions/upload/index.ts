@@ -2,6 +2,7 @@ import { actor, defaults, rpc, type Dependencies } from "../_shared/client.ts";
 import { boundedBody, endpoint, HttpError, json, text, uuid } from "../_shared/http.ts";
 import { formats, matchesSignature } from "../_shared/files.ts";
 import { objectExists } from "../_shared/storage.ts";
+import { removeBrandLogo, saveBrandLogo } from "./brand.ts";
 export const createHandler = (d: Dependencies = defaults) => endpoint(async (req) => {
   const a = (await actor(req, d))!;
   if (req.headers.get("content-type")?.startsWith("application/json")) {
@@ -20,6 +21,7 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
       if (!matchesSignature(gate.content_type, bytes)) throw new HttpError(422, "INVALID_FILE", "Conteúdo incompatível; arquivo permanece indisponível.");
       return await rpc(a.admin, "app_upload_finalize", { p_actor_id: a.userInfo.id, p_id: id });
     }
+    if (body.action === "brand-logo-remove") return await removeBrandLogo(a, body.variant);
     if (body.action !== "reserve") throw new HttpError(422, "INVALID_INPUT", "Ação de upload inválida.");
     const kind = text(body.kind, 32), name = text(body.file_name, 180), format = formats[name.split(".").pop()!.toLowerCase()];
     if (!["lesson", "material"].includes(kind) || !format || body.content_type !== format.mime || !Number.isSafeInteger(body.size_bytes) || Number(body.size_bytes) < 1 || Number(body.size_bytes) > format.max || (kind === "lesson" && format.mime !== "video/mp4")) throw new HttpError(422, "INVALID_FILE", "Tipo ou tamanho de arquivo não permitido.");
@@ -30,7 +32,9 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   let form: FormData;
   try { form = await new Request(req.url, { method: "POST", headers: { "content-type": req.headers.get("content-type") || "" }, body: raw }).formData(); }
   catch { throw new HttpError(422, "INVALID_INPUT", "Envie o arquivo com os metadados."); }
-  const file = form.get("file"), kind = text(form.get("kind"), 32), resourceId = uuid(form.get("resource_id"));
+  const file = form.get("file"), kind = text(form.get("kind"), 32);
+  if (kind === "brand-logo") return await saveBrandLogo(a, form);
+  const resourceId = uuid(form.get("resource_id"));
   const screenshot = kind === "feedback-screenshot";
   if (!(file instanceof File) || !["course-cover", "lesson", "material", "post-image", "ticket-attachment", "avatar", "feedback-screenshot"].includes(kind)) throw new HttpError(422, "INVALID_INPUT", "Arquivo inválido.");
   const name = text(file.name, 180), format = formats[name.split(".").pop()!.toLowerCase()];

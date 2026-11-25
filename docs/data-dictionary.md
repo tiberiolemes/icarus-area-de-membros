@@ -1,6 +1,6 @@
 # Dicionário de dados do Icarus
 
-**51 tabelas e 374 colunas** nos esquemas `public` e `app_private`.
+**52 tabelas e 376 colunas** nos esquemas `public` e `app_private`.
 
 Veja o [mapa técnico](architecture.md) para localizar os fluxos e visualizar os relacionamentos. Este inventário descreve a estrutura das tabelas da aplicação. Os esquemas gerenciados pelo Supabase, `auth` e `storage`, aparecem quando são destino de uma chave estrangeira.
 
@@ -74,6 +74,20 @@ RLS ativada.
 - `installation_brand_name_check` — `CHECK (((char_length(name) >= 1) AND (char_length(name) <= 80)))`
 - `installation_brand_revision_check` — `CHECK ((revision >= 0))`
 - `installation_brand_singleton_check` — `CHECK (singleton)`
+
+## `app_private.installation_modules`
+
+RLS ativada.
+
+| Coluna | Tipo PostgreSQL | Aceita nulo | Padrão |
+| --- | --- | --- | --- |
+| `key` | `text` | Não | — |
+| `enabled` | `boolean` | Não | `true` |
+
+**Chaves e restrições**
+
+- `installation_modules_pkey` — `PRIMARY KEY (key)`
+- `installation_modules_key_check` — `CHECK ((key = ANY (ARRAY['community'::text, 'materials'::text, 'podcasts'::text, 'ranking'::text, 'live_events'::text, 'support'::text, 'help'::text, 'feedback'::text])))`
 
 ## `app_private.local_demo_guard`
 

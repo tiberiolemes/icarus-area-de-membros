@@ -8,6 +8,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { date, internalPath, rpc } from "../api";
 import type { Page } from "../api";
 import { StitchIcon } from "../stitch-icon";
+import { pathOpen, useModules } from "../modules";
 import { Empty, Heading, Loading, Notice } from "../ui";
 import "./notifications.css";
 
@@ -106,8 +107,10 @@ function NotificationRow({ item, busy, markRead }: {
   busy: boolean;
   markRead: (id: string, opensAnotherTab?: boolean) => Promise<boolean>;
 }) {
+  const modules = useModules();
   const path = internalPath(item.action_path, "");
-  const target = /^\/app(?:\/|\?|$)/.test(path) ? path : "";
+  // Aviso antigo de um módulo desligado fica sem botão, para não levar a um recurso indisponível.
+  const target = /^\/app(?:\/|\?|$)/.test(path) && pathOpen(modules, path) ? path : "";
   const section = target.split(/[/?]/)[2];
   const destination = Object.hasOwn(destinations, section) ? destinations[section as keyof typeof destinations] : undefined;
   const Icon = destination?.icon ?? Bell;

@@ -17,6 +17,7 @@ import type { Profile } from "../api";
 import { useAuth, useBootstrap } from "../auth";
 import { Captcha, captchaToken, resetCaptcha } from "../captcha";
 import { BrandLogo, brandAssetUrl, defaultLogo } from "../brand";
+import { readModules } from "../modules";
 import {
   Action,
   Field,
@@ -31,6 +32,7 @@ import {
 
 type PublicContext = {
   name: string;
+  modules?: unknown;
   logo_light?: string | null;
   logo_dark?: string | null;
   registration_enabled: boolean;
@@ -55,7 +57,7 @@ export function PublicFrame({ children }: { children: React.ReactNode }) {
             fallback={name === "Icarus" ? <img src={defaultLogo} alt="Icarus" width="244" height="64" />
               : <strong className="installation-name" title={name}>{name}</strong>} />
         </Link>
-        <Link to="/ajuda">Central de ajuda</Link>
+        {readModules(context.data?.modules).help && <Link to="/ajuda">Central de ajuda</Link>}
       </header>
       <main id="main" className="public-main">
         {children}

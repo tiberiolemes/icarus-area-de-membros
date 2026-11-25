@@ -1,7 +1,8 @@
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useAuth } from "../auth";
-import { rpc } from "../api";
-import { Action, Back, Heading, Search } from "../ui";
+import { useAuth, useBootstrap } from "../auth";
+import { rpc, useRpc } from "../api";
+import { ModuleUnavailable, moduleOfPath, pathOpen, readModules } from "../modules";
+import { Action, Back, Heading, Notice, Search } from "../ui";
 import { PublicFrame } from "./access";
 
 export const articles = [
@@ -164,21 +165,44 @@ export const articles = [
       "Em Analytics, escolha um curso publicado para consultar o funil e a conclusão por aula. A retenção por trecho depende de telemetria de vídeo.",
       "Em Configurações, abra Plataforma e marca para editar o nome exibido. Confira a prévia e salve para publicar. O nome aparece na área pública e nos cabeçalhos da plataforma.",
       "Em Plataforma e marca, envie a logo colorida, para fundo claro, e a branca, para fundo escuro, em PNG ou WebP de até 500 KB. Confira a prévia nos dois temas e salve cada uma. A logo substitui a do Icarus nos menus, nas telas de entrada, no checkout e no certificado. Sem a branca, a colorida vale nos dois temas. Remover devolve o nome da instalação ou a logo do Icarus. Em Ícone da plataforma, envie o favicon em PNG quadrado, de 180 × 180 px a 4096 px, recomendado 512 × 512 px. Ele aparece nas abas e no atalho do celular, em todas as telas; sem ele, fica o ícone do Icarus.",
+      "Em Configurações, abra Módulos para ligar ou desligar Comunidade, Materiais, Podcasts, Ranking, Encontros ao vivo, Suporte, Central de ajuda e Feedback dos alunos. Desligar esconde o recurso dos alunos e bloqueia o acesso no servidor, sem apagar dados, e religar traz tudo de volta. Cursos e Certificados ficam sempre ativos, e nenhuma exportação depende dos módulos. O painel de cada módulo continua acessível, com o selo Desativado. Os comentários das aulas seguem com Cursos, e um link de sala de encontro já entregue continua abrindo até você trocá-lo na sala.",
       "Em Configurações, revise perguntas e versões legais. Na aba Equipe, consulte os papéis e abra Gerenciar membros e equipe para alterar o acesso pela ficha.",
       "Em Auditoria, busque eventos por ação, ator ou alvo e navegue entre as páginas. A trilha mostra o motivo quando registrado.",
       "Em Integrações, escolha Gateway Asaas ou Bunny Stream. Atualizar estado consulta se há configuração no servidor. Configure as credenciais no servidor.",
     ],
   },
 ];
+// Artigo de um módulo desligado sai da lista, como o próprio módulo.
+const articleModule = (slug: string) => moduleOfPath("/app/" + ({ encontros: "encontros-ao-vivo", feedback: "feedbacks" }[slug] ?? slug));
+
 export function Help() {
   const { artigo } = useParams(),
     [params, setParams] = useSearchParams(),
     { session } = useAuth(),
+    profile = useBootstrap().data?.profile,
+    modules = readModules(useRpc<{ modules?: unknown }>("app_public_context").data?.modules),
+    staff = !!profile && profile.role !== "member",
+    visible = articles.filter((a) => {
+      const key = articleModule(a.slug);
+      return !key || modules[key];
+    }),
     q = params.get("q") ?? "",
-    article = articles.find((a) => a.slug === artigo);
+    article = visible.find((a) => a.slug === artigo);
+  if (!modules.help && !staff) {
+    return (
+      <PublicFrame>
+        <div className="reading">
+          <ModuleUnavailable home={session ? "/app/cursos" : "/entrar"} />
+        </div>
+      </PublicFrame>
+    );
+  }
   return (
     <PublicFrame>
       <div className="reading">
+        {!modules.help && (
+          <Notice>A Central de ajuda está desativada para os alunos. A equipe continua vendo os artigos.</Notice>
+        )}
         {artigo ? (
           <>
             <Back to="/ajuda" label="Central de ajuda" />
@@ -219,13 +243,15 @@ export function Help() {
                     </div>
                   </section>
                 )}
-                <section className="help-support" aria-labelledby="help-support-title">
-                  <h2 id="help-support-title">Ainda precisa de ajuda?</h2>
-                  <p>Abra uma solicitação para conversar com a equipe.</p>
-                  <Link className="button" to="/app/suporte/novo">
-                    Preciso de suporte
-                  </Link>
-                </section>
+                {pathOpen(modules, "/app/suporte") && (
+                  <section className="help-support" aria-labelledby="help-support-title">
+                    <h2 id="help-support-title">Ainda precisa de ajuda?</h2>
+                    <p>Abra uma solicitação para conversar com a equipe.</p>
+                    <Link className="button" to="/app/suporte/novo">
+                      Preciso de suporte
+                    </Link>
+                  </section>
+                )}
               </>
             ) : (
               <Link className="text-action" to="/ajuda">Ver todos os artigos</Link>
@@ -238,7 +264,7 @@ export function Help() {
             </Heading>
             <Search initial={q} onSearch={(q) => setParams({ q })} />
             <div className="help-list">
-              {articles
+              {visible
                 .filter((a) =>
                   (a.title + " " + a.steps.join(" "))
                     .toLocaleLowerCase("pt-BR")

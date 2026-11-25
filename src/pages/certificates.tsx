@@ -10,6 +10,7 @@ import { PublicFrame } from "./access";
 import { RichContent } from "../rich";
 import { exportCertificate } from "../certificate";
 import { BrandLogo, brandAssetUrl, defaultLogo } from "../brand";
+import { readModules } from "../modules";
 import { notificationListKey, reconcileNotificationQueries } from "./notifications";
 import "./student-resources.css";
 
@@ -22,7 +23,7 @@ function certificateStatus(certificate: Certificate) {
   return certificate.demo ? "Demonstração sem validade" : "Certificado válido";
 }
 
-type PublicBrand = { name?: string; logo_light?: string | null; logo_dark?: string | null };
+type PublicBrand = { name?: string; logo_light?: string | null; logo_dark?: string | null; modules?: unknown };
 
 function CertificateDocument({ certificate }: { certificate: Certificate }) {
   const brand = useRpc<PublicBrand>("app_public_context").data;
@@ -244,6 +245,7 @@ function CertificateLookup({ onLookup }: { onLookup: (code: string) => Promise<v
 }
 
 export function CertificatePage({ verify = false }: { verify?: boolean }) {
+  const modules = readModules(useRpc<PublicBrand>("app_public_context").data?.modules);
   const { codigo } = useParams();
   const navigate = useNavigate();
   const code = codigo?.toLowerCase();
@@ -314,7 +316,7 @@ export function CertificatePage({ verify = false }: { verify?: boolean }) {
               if (verify && code === nextCode) await query.refetch();
               else navigate(verificationPath(nextCode));
             }} />
-            <Link className="text-action" to="/ajuda/certificados">Ajuda sobre certificados</Link>
+            {modules.help && <Link className="text-action" to="/ajuda/certificados">Ajuda sobre certificados</Link>}
             <Link className="text-action" to="/app/certificados">Meus certificados</Link>
           </div>
         </div>

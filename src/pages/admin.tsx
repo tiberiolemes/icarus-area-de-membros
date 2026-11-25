@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import {
   Link,
@@ -6,9 +6,10 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ArrowDown,
+  Award,
   ArrowRight,
   ArrowUp,
   BookOpen,
@@ -17,7 +18,11 @@ import {
   CreditCard,
   Download,
   FileText,
+  Flag,
   FolderOpen,
+  LayoutGrid,
+  MessageSquare,
+  Reply,
   History,
   KeyRound,
   ListOrdered,
@@ -26,6 +31,8 @@ import {
   Presentation,
   RefreshCw,
   Shield,
+  ListChecks,
+  ToggleRight,
   Users,
   Video,
   X,
@@ -33,6 +40,7 @@ import {
 import {
   cache,
   date,
+  errorMessage,
   downloadBlob,
   edge,
   money,
@@ -70,6 +78,7 @@ import { AdminCatalogLaunch } from "./admin-catalog-launch";
 import { Reauth } from "./settings";
 import { Moderate, statusName } from "./community";
 import { useBootstrap } from "../auth";
+import { moduleLabel, modules, readModules, type ModuleKey } from "../modules";
 import { Upload } from "../upload";
 import "./admin-commercial.css";
 import "./admin-settings.css";
@@ -138,18 +147,21 @@ function useAll(entity: string) {
     },
   });
 }
+/** Com `icon`, a lista vira o cartão padrão das Configurações, com a busca na barra do cartão. */
 function AdminList({
   entity,
   title,
   action,
   children,
   section = false,
+  icon,
 }: {
   entity: string;
   title: string;
   action?: ReactNode;
   children: (item: Row) => ReactNode;
   section?: boolean;
+  icon?: ReactNode;
 }) {
   const [params, setParams] = useSearchParams(),
     q = params.get("q") ?? "",
@@ -160,10 +172,27 @@ function AdminList({
       p_page: page,
     }),
     exportEntity = entity === "profiles" || entity === "orders" ? entity : null;
+  // Preserva a aba e os demais filtros da URL ao buscar e paginar.
+  const go = (nextQuery: string, nextPage: number) => setParams((current) => {
+    const next = new URLSearchParams(current);
+    next.set("q", nextQuery);
+    next.set("page", String(nextPage));
+    return next;
+  });
+  const Wrapper = icon ? "section" : "div";
   return (
-    <>
-      <Heading title={title} action={action} level={section ? 2 : 1} />
-      <Search initial={q} onSearch={(q) => setParams({ q, page: "1" })} />
+    <Wrapper className={icon ? "settings-panel" : "admin-list"}>
+      {icon ? (
+        <header className="settings-toolbar">
+          <h2>{icon} {title}</h2>
+          <Search variant="stitch" initial={q} label={`Buscar em ${title.toLocaleLowerCase("pt-BR")}`} onSearch={(next) => go(next, 1)} />
+        </header>
+      ) : (
+        <>
+          <Heading title={title} action={action} level={section ? 2 : 1} />
+          <Search initial={q} onSearch={(next) => go(next, 1)} />
+        </>
+      )}
       {exportEntity && (
         <section className="actions" data-tour="admin-export">
           <Action
@@ -209,12 +238,12 @@ function AdminList({
             <Pager
               page={page}
               total={query.data.total}
-              onChange={(page) => setParams({ q, page: String(page) })}
+              onChange={(next) => go(q, next)}
             />
           </>
         )}
       </QueryState>
-    </>
+    </Wrapper>
   );
 }
 function IdentityFields({ row }: { row?: Row }) {
@@ -367,34 +396,31 @@ function OrderControl({
 }
 export function AdminCourses() {
   return (
-    <div className="admin-content">
-      <AdminList
-        entity="courses"
-        title="Cursos e aulas"
-        action={
-          <Link className="button primary" to="/admin/cursos/novo">
-            <Plus size={18} aria-hidden="true" />
-            Criar curso
-          </Link>
-        }
-      >
+    <AdminSurface
+      section="conteudo"
+      trail={["Administração", "Conteúdo"]}
+      title="Cursos e aulas"
+      description="Crie cursos, organize módulos e aulas e publique o conteúdo."
+      action={
+        <Link className="button primary" to="/admin/cursos/novo">
+          <Plus size={18} aria-hidden="true" />
+          Criar curso
+        </Link>
+      }
+    >
+      <AdminList entity="courses" title="Cursos" icon={<BookOpen size={20} aria-hidden="true" />}>
         {(course) => {
           const editor = `/admin/cursos/${encodeURIComponent(course.id)}`;
           return (
             <>
-              <div className="course-list-title">
-                <span className="content-icon">
-                  <BookOpen size={20} aria-hidden="true" />
-                </span>
-                <div>
-                  <h2>
-                    <Link to={editor}>{text(course, "title")}</Link>
-                  </h2>
-                  <p>
-                    {statusName(text(course, "status"))} · /
-                    {text(course, "slug")}
-                  </p>
-                </div>
+              <div>
+                <h3>
+                  <Link to={editor}>{text(course, "title")}</Link>
+                </h3>
+                <p>
+                  {statusName(text(course, "status"))} · /
+                  {text(course, "slug")}
+                </p>
               </div>
               <div className="actions">
                 <Link className="button" to={editor}>
@@ -408,7 +434,7 @@ export function AdminCourses() {
           );
         }}
       </AdminList>
-    </div>
+    </AdminSurface>
   );
 }
 export function CourseEditor() {
@@ -1109,23 +1135,25 @@ export function AdminMaterials() {
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
     [folder, setFolder] = useState<Row | null | undefined>(undefined);
   return (
-    <>
-      <AdminList
-        entity="materials"
-        title="Materiais"
-        action={
-          <div className="actions">
-            <button onClick={() => setFolder(null)}>Nova pasta</button>
-            <button className="primary" onClick={() => setEditing(null)}>
-              Novo material
-            </button>
-          </div>
-        }
-      >
+    <AdminSurface
+      section="materiais"
+      trail={["Administração", "Materiais"]}
+      title="Materiais"
+      description="Organize a biblioteca em pastas e envie os arquivos privados dos alunos."
+      action={
+        <div className="actions">
+          <button onClick={() => setFolder(null)}>Nova pasta</button>
+          <button className="primary" onClick={() => setEditing(null)}>
+            <Plus size={18} aria-hidden="true" /> Novo material
+          </button>
+        </div>
+      }
+    >
+      <AdminList entity="materials" title="Arquivos" icon={<FileText size={20} aria-hidden="true" />}>
         {(item) => (
           <>
             <div>
-              <h2>{text(item, "name")}</h2>
+              <h3>{text(item, "name")}</h3>
               <p>
                 {statusName(text(item, "status"))} · {text(item, "file_type")} ·{" "}
                 {text(item, "size_bytes")} bytes
@@ -1135,46 +1163,107 @@ export function AdminMaterials() {
           </>
         )}
       </AdminList>
-      <h2>Pastas</h2>
-      <QueryState query={folders}>
-        {folders.data?.map((item) => (
-          <div className="resource-row" key={item.id}>
-            <strong>{text(item, "name")}</strong>
-            <button onClick={() => setFolder(item)}>Editar pasta</button>
-          </div>
-        ))}
-      </QueryState>
+      <section className="settings-panel" aria-labelledby="materials-folders">
+        <header>
+          <h2 id="materials-folders"><FolderOpen size={20} aria-hidden="true" /> Pastas</h2>
+        </header>
+        <QueryState query={folders}>
+          {folders.data?.length ? folders.data.map((item) => (
+            <div className="resource-row" key={item.id}>
+              <strong>{text(item, "name")}</strong>
+              <button onClick={() => setFolder(item)}>Editar pasta</button>
+            </div>
+          )) : <Empty>Nenhuma pasta cadastrada.</Empty>}
+        </QueryState>
+      </section>
       {folder !== undefined && (
-        <section
-          className="inline-editor reading"
-          ref={focusEditor}
-          key={folder?.id ?? "new-folder"}
-        >
-          <h2>{folder ? "Editar pasta" : "Criar pasta"}</h2>
-          <Form
-            label="Salvar pasta"
-            secondaryAction={<button type="button" onClick={() => setFolder(undefined)}>Fechar editor</button>}
-            onSave={async (data) => {
-              await save("material_folders", folder?.id ?? null, {
-                name: value(data, "name"),
-                status: value(data, "status"),
-                ...accessData(data),
-                ...(!folder ? { parent_id: nullable(data, "parent_id") } : {}),
-              });
-              setFolder(undefined);
-            }}
-          >
-            <Field label="Nome da pasta">
-              <input
-                name="name"
-                required
-                defaultValue={text(folder ?? undefined, "name")}
-              />
-            </Field>
-            {!folder && (
-              <Field label="Pasta superior">
-                <select name="parent_id">
-                  <option value="">Raiz da biblioteca</option>
+        <section className="settings-panel">
+          <div className="reading inline-editor" ref={focusEditor} key={folder?.id ?? "new-folder"}>
+            <h2>{folder ? "Editar pasta" : "Criar pasta"}</h2>
+            <Form
+              label="Salvar pasta"
+              secondaryAction={<button type="button" onClick={() => setFolder(undefined)}>Fechar editor</button>}
+              onSave={async (data) => {
+                await save("material_folders", folder?.id ?? null, {
+                  name: value(data, "name"),
+                  status: value(data, "status"),
+                  ...accessData(data),
+                  ...(!folder ? { parent_id: nullable(data, "parent_id") } : {}),
+                });
+                setFolder(undefined);
+              }}
+            >
+              <Field label="Nome da pasta">
+                <input
+                  name="name"
+                  required
+                  defaultValue={text(folder ?? undefined, "name")}
+                />
+              </Field>
+              {!folder && (
+                <Field label="Pasta superior">
+                  <select name="parent_id">
+                    <option value="">Raiz da biblioteca</option>
+                    {folders.data?.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {text(f, "name")}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+              <StatusField row={folder ?? undefined} />
+              <AccessFields row={folder ?? undefined} />
+            </Form>
+            {folder && <Archive entity="material_folders" row={folder} />}
+          </div>
+        </section>
+      )}
+      {editing !== undefined && (
+        <section className="settings-panel">
+          <div className="reading inline-editor" ref={focusEditor} key={editing?.id ?? "new-material"}>
+            <h2>{editing ? "Editar material" : "Criar material"}</h2>
+            <Form
+              label="Salvar material"
+              secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
+              onSave={async (data) => {
+                const result = await save("materials", editing?.id ?? null, {
+                  name: value(data, "name"),
+                  description: value(data, "description"),
+                  folder_id: nullable(data, "folder_id"),
+                  lesson_id: nullable(data, "lesson_id"),
+                  file_type: value(data, "file_type"),
+                  status: value(data, "status"),
+                  ...accessData(data),
+                });
+                setEditing({
+                  ...editing,
+                  id: result.id,
+                  name: value(data, "name"),
+                  description: value(data, "description"),
+                  status: value(data, "status"),
+                });
+              }}
+            >
+              <Field label="Nome">
+                <input
+                  name="name"
+                  required
+                  defaultValue={text(editing ?? undefined, "name")}
+                />
+              </Field>
+              <Field label="Descrição">
+                <textarea
+                  name="description"
+                  defaultValue={text(editing ?? undefined, "description")}
+                />
+              </Field>
+              <Field label="Pasta">
+                <select
+                  name="folder_id"
+                  defaultValue={text(editing ?? undefined, "folder_id")}
+                >
+                  <option value="">Raiz</option>
                   {folders.data?.map((f) => (
                     <option key={f.id} value={f.id}>
                       {text(f, "name")}
@@ -1182,115 +1271,54 @@ export function AdminMaterials() {
                   ))}
                 </select>
               </Field>
+              <Field label="Aula vinculada">
+                <select
+                  name="lesson_id"
+                  defaultValue={text(editing ?? undefined, "lesson_id")}
+                >
+                  <option value="">Sem vínculo</option>
+                  {lessons.data?.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {text(l, "title")}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Tipo">
+                <select
+                  name="file_type"
+                  defaultValue={text(
+                    editing ?? undefined,
+                    "file_type",
+                    "application/pdf",
+                  )}
+                >
+                  {[
+                    "application/pdf",
+                    "application/zip",
+                    "video/mp4",
+                    "image/png",
+                    "image/jpeg",
+                    "text/plain",
+                    "audio/mpeg",
+                  ].map((type) => (
+                    <option key={type}>{type}</option>
+                  ))}
+                </select>
+              </Field>
+              <StatusField row={editing ?? undefined} />
+              <AccessFields row={editing ?? undefined} />
+            </Form>
+            {editing && (
+              <>
+                <Upload kind="material" resourceId={editing.id} />
+                <Archive entity="materials" row={editing} />
+              </>
             )}
-            <StatusField row={folder ?? undefined} />
-            <AccessFields row={folder ?? undefined} />
-          </Form>
-          {folder && <Archive entity="material_folders" row={folder} />}
+          </div>
         </section>
       )}
-      {editing !== undefined && (
-        <section
-          className="inline-editor reading"
-          ref={focusEditor}
-          key={editing?.id ?? "new-material"}
-        >
-          <h2>{editing ? "Editar material" : "Criar material"}</h2>
-          <Form
-            label="Salvar material"
-            secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
-            onSave={async (data) => {
-              const result = await save("materials", editing?.id ?? null, {
-                name: value(data, "name"),
-                description: value(data, "description"),
-                folder_id: nullable(data, "folder_id"),
-                lesson_id: nullable(data, "lesson_id"),
-                file_type: value(data, "file_type"),
-                status: value(data, "status"),
-                ...accessData(data),
-              });
-              setEditing({
-                ...editing,
-                id: result.id,
-                name: value(data, "name"),
-                description: value(data, "description"),
-                status: value(data, "status"),
-              });
-            }}
-          >
-            <Field label="Nome">
-              <input
-                name="name"
-                required
-                defaultValue={text(editing ?? undefined, "name")}
-              />
-            </Field>
-            <Field label="Descrição">
-              <textarea
-                name="description"
-                defaultValue={text(editing ?? undefined, "description")}
-              />
-            </Field>
-            <Field label="Pasta">
-              <select
-                name="folder_id"
-                defaultValue={text(editing ?? undefined, "folder_id")}
-              >
-                <option value="">Raiz</option>
-                {folders.data?.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {text(f, "name")}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Aula vinculada">
-              <select
-                name="lesson_id"
-                defaultValue={text(editing ?? undefined, "lesson_id")}
-              >
-                <option value="">Sem vínculo</option>
-                {lessons.data?.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {text(l, "title")}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Tipo">
-              <select
-                name="file_type"
-                defaultValue={text(
-                  editing ?? undefined,
-                  "file_type",
-                  "application/pdf",
-                )}
-              >
-                {[
-                  "application/pdf",
-                  "application/zip",
-                  "video/mp4",
-                  "image/png",
-                  "image/jpeg",
-                  "text/plain",
-                  "audio/mpeg",
-                ].map((type) => (
-                  <option key={type}>{type}</option>
-                ))}
-              </select>
-            </Field>
-            <StatusField row={editing ?? undefined} />
-            <AccessFields row={editing ?? undefined} />
-          </Form>
-          {editing && (
-            <>
-              <Upload kind="material" resourceId={editing.id} />
-              <Archive entity="materials" row={editing} />
-            </>
-          )}
-        </section>
-      )}
-    </>
+    </AdminSurface>
   );
 }
 const orderStatuses = ["paid", "pending", "refunded", "chargeback", "expired", "cancelled"] as const;
@@ -2210,31 +2238,23 @@ export function AdminOrders() {
   );
 }
 export function AdminCommunity() {
-  const [params, setParams] = useSearchParams(),
+  const [params] = useSearchParams(),
     tab = params.get("aba") ?? "moderacao",
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
     spaces = useAll("spaces");
+  const current = communityTabs.find(([id]) => id === tab) ?? communityTabs[0];
   return (
-    <>
-      <Heading title="Comunidade" action={
-        <Link className="button" to="/admin/comentarios-aula">Comentários de aula</Link>
-      } />
-      <NavigationTabs
-        label="Administração da comunidade"
-        selected={tab}
-        items={[
-          ["moderacao", "Publicações"],
-          ["respostas", "Respostas"],
-          ["denuncias", "Denúncias"],
-          ["espacos", "Espaços"],
-        ].map(([id, label]) => ({
-          id,
-          label,
-          onClick: () => setParams({ aba: id }),
-        }))}
-      />
+    <AdminSurface
+      section={"comunidade-" + current[0]}
+      trail={["Administração", "Comunidade", current[1]]}
+      title="Comunidade"
+      description="Modere publicações, respostas e denúncias e organize os espaços."
+      action={<Link className="button" to="/admin/comentarios-aula">Comentários de aula</Link>}
+      tabs={<NavigationTabs label="Administração da comunidade" selected={current[0]}
+        items={communityTabs.map(([id, label]) => ({ id, label, to: `?aba=${id}` }))} />}
+    >
       {tab === "moderacao" && (
-        <AdminList entity="posts" title="Fila de publicações" section>
+        <AdminList entity="posts" title="Fila de publicações" icon={<MessageSquare size={20} aria-hidden="true" />}>
           {(post) => (
             <div>
               <p className="meta">
@@ -2259,7 +2279,7 @@ export function AdminCommunity() {
         </AdminList>
       )}
       {tab === "respostas" && (
-        <AdminList entity="replies" title="Fila de respostas" section>
+        <AdminList entity="replies" title="Fila de respostas" icon={<Reply size={20} aria-hidden="true" />}>
           {(reply) => (
             <div>
               <p>
@@ -2282,7 +2302,7 @@ export function AdminCommunity() {
         </AdminList>
       )}
       {tab === "denuncias" && (
-        <AdminList entity="reports" title="Denúncias" section>
+        <AdminList entity="reports" title="Denúncias" icon={<Flag size={20} aria-hidden="true" />}>
           {(report) => (
             <div>
               <p>{text(report, "reason")}</p>
@@ -2317,72 +2337,86 @@ export function AdminCommunity() {
       )}
       {tab === "espacos" && (
         <>
-          <button className="primary" onClick={() => setEditing(null)}>
-            Criar espaço
-          </button>
-          <QueryState query={spaces}>
-            {spaces.data?.map((space) => (
-              <div className="resource-row" key={space.id}>
-                <div>
-                  <h2>{text(space, "name")}</h2>
-                  <p>{text(space, "description")}</p>
+          <section className="settings-panel" aria-labelledby="community-spaces">
+            <header className="settings-toolbar">
+              <h2 id="community-spaces"><LayoutGrid size={20} aria-hidden="true" /> Espaços</h2>
+              <button className="primary" onClick={() => setEditing(null)}>
+                <Plus size={18} aria-hidden="true" /> Criar espaço
+              </button>
+            </header>
+            <QueryState query={spaces}>
+              {spaces.data?.length ? spaces.data.map((space) => (
+                <div className="resource-row" key={space.id}>
+                  <div>
+                    <h3>{text(space, "name")}</h3>
+                    <p>{text(space, "description")}</p>
+                  </div>
+                  <button onClick={() => setEditing(space)}>Editar espaço</button>
                 </div>
-                <button onClick={() => setEditing(space)}>Editar espaço</button>
-              </div>
-            ))}
-          </QueryState>
+              )) : <Empty>Nenhum espaço cadastrado.</Empty>}
+            </QueryState>
+          </section>
           {editing !== undefined && (
-            <div className="inline-editor reading" key={editing?.id ?? "new"} ref={focusEditor}>
-              <h2>{editing ? "Editar espaço" : "Criar espaço"}</h2>
-              <Form
-                label="Salvar espaço"
-                secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
-                onSave={async (data) => {
-                  await save("spaces", editing?.id ?? null, {
-                    name: value(data, "name"),
-                    description: value(data, "description"),
-                    status: value(data, "status"),
-                    order_index: num(data, "order_index"),
-                    ...accessData(data),
-                  });
-                  setEditing(undefined);
-                }}
-              >
-                <Field label="Nome">
-                  <input
-                    name="name"
-                    required
-                    defaultValue={text(editing ?? undefined, "name")}
-                  />
-                </Field>
-                <Field label="Descrição">
-                  <textarea
-                    name="description"
-                    defaultValue={text(editing ?? undefined, "description")}
-                  />
-                </Field>
-                <Field label="Ordem">
-                  <input
-                    name="order_index"
-                    type="number"
-                    defaultValue={Number(editing?.order_index ?? 0)}
-                    min="0"
-                  />
-                </Field>
-                <StatusField row={editing ?? undefined} />
-                <AccessFields row={editing ?? undefined} />
-              </Form>
-              {editing && <Archive entity="spaces" row={editing} />}
-            </div>
+            <section className="settings-panel">
+              <div className="reading inline-editor" key={editing?.id ?? "new"} ref={focusEditor}>
+                <h2>{editing ? "Editar espaço" : "Criar espaço"}</h2>
+                <Form
+                  label="Salvar espaço"
+                  secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
+                  onSave={async (data) => {
+                    await save("spaces", editing?.id ?? null, {
+                      name: value(data, "name"),
+                      description: value(data, "description"),
+                      status: value(data, "status"),
+                      order_index: num(data, "order_index"),
+                      ...accessData(data),
+                    });
+                    setEditing(undefined);
+                  }}
+                >
+                  <Field label="Nome">
+                    <input
+                      name="name"
+                      required
+                      defaultValue={text(editing ?? undefined, "name")}
+                    />
+                  </Field>
+                  <Field label="Descrição">
+                    <textarea
+                      name="description"
+                      defaultValue={text(editing ?? undefined, "description")}
+                    />
+                  </Field>
+                  <Field label="Ordem">
+                    <input
+                      name="order_index"
+                      type="number"
+                      defaultValue={Number(editing?.order_index ?? 0)}
+                      min="0"
+                    />
+                  </Field>
+                  <StatusField row={editing ?? undefined} />
+                  <AccessFields row={editing ?? undefined} />
+                </Form>
+                {editing && <Archive entity="spaces" row={editing} />}
+              </div>
+            </section>
           )}
         </>
       )}
-    </>
+    </AdminSurface>
   );
 }
+const communityTabs = [
+  ["moderacao", "Publicações"],
+  ["respostas", "Respostas"],
+  ["denuncias", "Denúncias"],
+  ["espacos", "Espaços"],
+] as const;
 const settingsTabs = [
   ["onboarding", "Onboarding"],
   ["marca", "Plataforma e marca"],
+  ["modulos", "Módulos"],
   ["integracoes", "Integrações"],
   ["legal", "Documentos legais"],
   ["equipe", "Equipe"],
@@ -2400,8 +2434,37 @@ function PlatformSettingsTabs({ tab }: { tab: string }) {
   );
 }
 
-function SettingsSurface({ tab, sectionLabel, title, description, action, children }: {
-  tab: "equipe" | "auditoria" | "integracoes" | "marca";
+/** Página padrão do painel (classe admin-settings): trilha, título, descrição, ação à direita, abas e cartões. */
+function AdminSurface({ section, trail, title, description, action, tabs, children }: {
+  section: string;
+  trail: string[];
+  title: string;
+  description: string;
+  action?: ReactNode;
+  tabs?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="admin-settings" data-section={section}>
+      <p className="settings-breadcrumb">
+        {trail.map((item, index) => (
+          <Fragment key={item}>
+            {index > 0 && <ChevronRight size={14} aria-hidden="true" />}
+            <span>{item}</span>
+          </Fragment>
+        ))}
+      </p>
+      <Heading title={title} action={action}>{description}</Heading>
+      {tabs}
+      {children}
+      <Link className="button settings-help" to="/ajuda/administracao">Ajuda da administração</Link>
+    </div>
+  );
+}
+
+/** Configurações usam a página padrão com as abas da plataforma. */
+function SettingsSurface({ tab, sectionLabel, ...page }: {
+  tab: (typeof settingsTabs)[number][0];
   sectionLabel?: string;
   title: string;
   description: string;
@@ -2409,17 +2472,8 @@ function SettingsSurface({ tab, sectionLabel, title, description, action, childr
   children: ReactNode;
 }) {
   return (
-    <div className="admin-settings" data-section={tab}>
-      <p className="settings-breadcrumb">
-        <span>Administração</span><ChevronRight size={14} aria-hidden="true" />
-        <span>Configurações</span><ChevronRight size={14} aria-hidden="true" />
-        <span>{sectionLabel ?? settingsTabs.find(([id]) => id === tab)?.[1]}</span>
-      </p>
-      <Heading title={title} action={action}>{description}</Heading>
-      <PlatformSettingsTabs tab={tab} />
-      {children}
-      <Link className="button settings-help" to="/ajuda/administracao">Ajuda da administração</Link>
-    </div>
+    <AdminSurface section={tab} trail={["Administração", "Configurações", sectionLabel ?? settingsTabs.find(([id]) => id === tab)![1]]}
+      tabs={<PlatformSettingsTabs tab={tab} />} {...page} />
   );
 }
 
@@ -2461,6 +2515,80 @@ function AdminTeam() {
           <p>Para alterar um papel, abra a ficha do membro, informe o motivo e reautentique. A alteração fica registrada na trilha de auditoria.</p>
         </div>
         <Link className="button" to="?aba=auditoria">Consultar trilha de auditoria</Link>
+      </section>
+    </SettingsSurface>
+  );
+}
+
+// Núcleo da plataforma: aparece na lista para ficar claro que não desliga.
+const coreModules = [
+  { label: "Cursos", Icon: BookOpen, description: "Catálogo, aulas, progresso e comentários de aula." },
+  { label: "Certificados", Icon: Award, description: "Emissão, consulta e verificação pública dos certificados." },
+];
+
+function AdminModules() {
+  const boot = useBootstrap();
+  const state = readModules(boot.data?.settings?.modules);
+  const toggle = useMutation({
+    mutationFn: ({ key, enabled }: { key: ModuleKey; enabled: boolean }) =>
+      rpc("app_admin_set_module", { p_key: key, p_enabled: enabled }),
+    onSuccess: async () => {
+      void cache.invalidateQueries({ queryKey: ["app_public_context"] });
+      await boot.refetch();
+    },
+  });
+  const saved = toggle.variables;
+  return (
+    <SettingsSurface
+      tab="modulos"
+      title="Módulos da plataforma"
+      description="Escolha quais recursos os alunos veem. Desligar esconde e bloqueia, sem apagar dados."
+    >
+      <section className="settings-panel" data-tour="admin-settings-modules" aria-labelledby="settings-modules">
+        <header>
+          <h2 id="settings-modules"><ToggleRight size={20} aria-hidden="true" /> Recursos da área de membros</h2>
+          <p>
+            Um módulo desligado sai do menu, dos atalhos, do guia e das outras telas, e o servidor recusa o acesso dos alunos.
+            Nada é apagado, e religar traz tudo de volta. A equipe continua usando o painel de cada recurso. Nenhuma exportação muda: a de dados do membro e as do painel seguem completas.
+          </p>
+        </header>
+        <ul className="settings-modules">
+          {coreModules.map(({ label, Icon, description }) => (
+            <li key={label}>
+              <Icon size={20} aria-hidden="true" />
+              <div>
+                <h3>{label}</h3>
+                <p>{description}</p>
+              </div>
+              <span className="settings-module-state" data-on="true">Sempre ativo</span>
+            </li>
+          ))}
+          {modules.map(({ key, label, Icon, description }) => (
+            <li key={key}>
+              <Icon size={20} aria-hidden="true" />
+              <div>
+                <h3 id={`module-${key}`}>{label}</h3>
+                <p id={`module-${key}-description`}>{description}</p>
+              </div>
+              <span className="settings-module-state" data-on={state[key]}>{state[key] ? "Ativo" : "Desativado"}</span>
+              <button type="button" className="notification-switch" role="switch" aria-checked={state[key]}
+                aria-labelledby={`module-${key}`} aria-describedby={`module-${key}-description`}
+                aria-disabled={toggle.isPending || boot.isFetching}
+                onClick={() => {
+                  if (!toggle.isPending && !boot.isFetching) toggle.mutate({ key, enabled: !state[key] });
+                }}>
+                <span aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+        {toggle.isError && saved && (
+          <Notice error>Não foi possível {saved.enabled ? "ligar" : "desligar"} o módulo {moduleLabel(saved.key)}. {errorMessage(toggle.error)}</Notice>
+        )}
+        <p className="settings-module-status" role="status">
+          {toggle.isPending || (toggle.isSuccess && boot.isFetching) ? "Salvando…"
+            : toggle.isSuccess && saved ? `Módulo ${moduleLabel(saved.key)} ${saved.enabled ? "ligado" : "desligado"}.` : ""}
+        </p>
       </section>
     </SettingsSurface>
   );
@@ -2625,7 +2753,6 @@ function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
 export function AdminSettings() {
   const [params] = useSearchParams();
   const tab = params.get("aba") ?? "onboarding";
-  const [legal, setLegal] = useState<Row | null | undefined>(undefined);
   if (tab === "marca") return (
     <SettingsSurface
       tab="marca"
@@ -2635,253 +2762,266 @@ export function AdminSettings() {
       <AdminBrand />
     </SettingsSurface>
   );
+  if (tab === "modulos") return <AdminModules />;
   if (tab === "equipe") return <AdminTeam />;
   if (tab === "auditoria") return <AdminAudit />;
   if (tab === "integracoes") return <AdminIntegrations provider={params.get("provedor") === "bunny" ? "bunny" : "asaas"} />;
+  if (tab === "legal") return <LegalSettings />;
+  if (tab === "privacidade") return <PrivacySettings />;
+  return <OnboardingAdmin />;
+}
+function LegalSettings() {
+  const [legal, setLegal] = useState<Row | null | undefined>(undefined);
   return (
-    <>
-      <Heading title="Configurações da plataforma" />
-      <PlatformSettingsTabs tab={tab} />
-      {tab === "onboarding" && <OnboardingAdmin />}
-      {tab === "legal" && (
-        <>
-          <AdminList
-            entity="legal_versions"
-            title="Documentos versionados"
-            section
-            action={<button onClick={() => setLegal(null)}>Nova versão</button>}
-          >
-            {(doc) => (
-              <>
-                <div>
-                  <h3>
-                    {text(doc, "title")} · {text(doc, "version")}
-                  </h3>
-                  <p>
-                    {doc.published ? "Publicado" : "Não publicado"}
-                    {doc.demo ? " · Demonstração" : ""}
-                  </p>
-                </div>
-                <button onClick={() => setLegal(doc)}>Editar versão</button>
-              </>
-            )}
-          </AdminList>
-          {legal !== undefined && (
-            <div className="reading inline-editor" key={legal?.id ?? "new"} ref={focusEditor}>
-              <h2>{legal ? "Editar documento" : "Criar documento"}</h2>
-              <Form
-                label="Salvar documento"
-                secondaryAction={<button type="button" onClick={() => setLegal(undefined)}>Fechar editor</button>}
-                onSave={async (data) => {
-                  await save("legal_versions", legal?.id ?? null, {
-                    kind: value(data, "kind"),
-                    version: value(data, "version"),
-                    title: value(data, "title"),
-                    body: value(data, "body"),
-                    published: check(data, "published"),
-                    demo: check(data, "demo"),
-                  });
-                  void cache.invalidateQueries({ queryKey: ["app_public_context"] });
-                  setLegal(undefined);
-                }}
-              >
-                <Field label="Tipo">
-                  <select
-                    name="kind"
-                    defaultValue={text(legal ?? undefined, "kind", "terms")}
-                  >
-                    <option value="terms">Termos de uso</option>
-                    <option value="privacy">Privacidade</option>
-                  </select>
-                </Field>
-                <Field label="Versão">
-                  <input
-                    name="version"
-                    required
-                    defaultValue={text(legal ?? undefined, "version")}
-                  />
-                </Field>
-                <Field label="Título">
-                  <input
-                    name="title"
-                    required
-                    defaultValue={text(legal ?? undefined, "title")}
-                  />
-                </Field>
-                <Field label="Texto integral">
-                  <textarea
-                    name="body"
-                    rows={16}
-                    required
-                    defaultValue={text(legal ?? undefined, "body")}
-                  />
-                </Field>
-                <label className="check">
-                  <input
-                    name="published"
-                    type="checkbox"
-                    defaultChecked={!!legal?.published}
-                  />
-                  Publicado
-                </label>
-                <label className="check">
-                  <input
-                    name="demo"
-                    type="checkbox"
-                    defaultChecked={legal?.demo !== false}
-                  />
-                  Demonstração, sem validade jurídica
-                </label>
-                <Notice>
-                  Documentos de demonstração não liberam cadastro ou cobrança.
-                  Publique somente documentos aprovados para esta operação.
-                </Notice>
-              </Form>
-            </div>
-          )}
-        </>
-      )}
-      {tab === "privacidade" && (
-        <AdminList
-          entity="privacy_requests"
-          title="Solicitações de privacidade"
-          section
-        >
-          {(request) => (
+    <SettingsSurface
+      tab="legal"
+      title="Documentos legais"
+      description="Publique as versões dos termos de uso e da política de privacidade."
+      action={<button className="primary" onClick={() => setLegal(null)}><Plus size={18} aria-hidden="true" /> Nova versão</button>}
+    >
+      <AdminList entity="legal_versions" title="Documentos versionados" icon={<FileText size={20} aria-hidden="true" />}>
+        {(doc) => (
+          <>
             <div>
-              <h3>{text(request, "kind")}</h3>
+              <h3>
+                {text(doc, "title")} · {text(doc, "version")}
+              </h3>
               <p>
-                {statusName(text(request, "status"))} ·{" "}
-                {date(text(request, "created_at"))}
-              </p>
-              <p>
-                O processamento exige análise e retenção legal no servidor.
-                Nenhuma exclusão automática é simulada nesta tela.
+                {doc.published ? "Publicado" : "Não publicado"}
+                {doc.demo ? " · Demonstração" : ""}
               </p>
             </div>
-          )}
-        </AdminList>
+            <button onClick={() => setLegal(doc)}>Editar versão</button>
+          </>
+        )}
+      </AdminList>
+      {legal !== undefined && (
+        <section className="settings-panel">
+          <div className="reading inline-editor" key={legal?.id ?? "new"} ref={focusEditor}>
+            <h2>{legal ? "Editar documento" : "Criar documento"}</h2>
+            <Form
+              label="Salvar documento"
+              secondaryAction={<button type="button" onClick={() => setLegal(undefined)}>Fechar editor</button>}
+              onSave={async (data) => {
+                await save("legal_versions", legal?.id ?? null, {
+                  kind: value(data, "kind"),
+                  version: value(data, "version"),
+                  title: value(data, "title"),
+                  body: value(data, "body"),
+                  published: check(data, "published"),
+                  demo: check(data, "demo"),
+                });
+                void cache.invalidateQueries({ queryKey: ["app_public_context"] });
+                setLegal(undefined);
+              }}
+            >
+              <Field label="Tipo">
+                <select
+                  name="kind"
+                  defaultValue={text(legal ?? undefined, "kind", "terms")}
+                >
+                  <option value="terms">Termos de uso</option>
+                  <option value="privacy">Privacidade</option>
+                </select>
+              </Field>
+              <Field label="Versão">
+                <input
+                  name="version"
+                  required
+                  defaultValue={text(legal ?? undefined, "version")}
+                />
+              </Field>
+              <Field label="Título">
+                <input
+                  name="title"
+                  required
+                  defaultValue={text(legal ?? undefined, "title")}
+                />
+              </Field>
+              <Field label="Texto integral">
+                <textarea
+                  name="body"
+                  rows={16}
+                  required
+                  defaultValue={text(legal ?? undefined, "body")}
+                />
+              </Field>
+              <label className="check">
+                <input
+                  name="published"
+                  type="checkbox"
+                  defaultChecked={!!legal?.published}
+                />
+                Publicado
+              </label>
+              <label className="check">
+                <input
+                  name="demo"
+                  type="checkbox"
+                  defaultChecked={legal?.demo !== false}
+                />
+                Demonstração, sem validade jurídica
+              </label>
+              <Notice>
+                Documentos de demonstração não liberam cadastro ou cobrança.
+                Publique somente documentos aprovados para esta operação.
+              </Notice>
+            </Form>
+          </div>
+        </section>
       )}
-    </>
+    </SettingsSurface>
+  );
+}
+function PrivacySettings() {
+  return (
+    <SettingsSurface
+      tab="privacidade"
+      title="Solicitações de privacidade"
+      description="Acompanhe os pedidos de exportação e exclusão de dados dos membros."
+    >
+      <AdminList entity="privacy_requests" title="Solicitações registradas" icon={<Shield size={20} aria-hidden="true" />}>
+        {(request) => (
+          <div>
+            <h3>{text(request, "kind")}</h3>
+            <p>
+              {statusName(text(request, "status"))} ·{" "}
+              {date(text(request, "created_at"))}
+            </p>
+            <p>
+              O processamento exige análise e retenção legal no servidor.
+              Nenhuma exclusão automática é simulada nesta tela.
+            </p>
+          </div>
+        )}
+      </AdminList>
+    </SettingsSurface>
   );
 }
 function OnboardingAdmin() {
   const questions = useAll("onboarding_questions"),
     [selected, setSelected] = useState<Row | null | undefined>(undefined);
   return (
-    <>
-      <h2>Perguntas do onboarding</h2>
-      <p>
-        Configure as perguntas permitidas do perfil. A ordem e a obrigatoriedade
-        serão aplicadas no cadastro de perfil.
-      </p>
-      <button onClick={() => setSelected(null)}>Adicionar pergunta</button>
-      <QueryState query={questions}>
-        {questions.data?.map((question) => (
-          <div className="resource-row" key={question.id}>
-            <div>
-              <h3>{text(question, "label")}</h3>
-              <p>
-                {question.active ? "Ativa" : "Inativa"} ·{" "}
-                {question.required ? "Obrigatória" : "Opcional"}
-              </p>
+    <SettingsSurface
+      tab="onboarding"
+      title="Onboarding dos membros"
+      description="Configure as perguntas do perfil feitas no primeiro acesso."
+      action={<button className="primary" onClick={() => setSelected(null)}><Plus size={18} aria-hidden="true" /> Adicionar pergunta</button>}
+    >
+      <section className="settings-panel" aria-labelledby="settings-onboarding">
+        <header>
+          <h2 id="settings-onboarding"><ListChecks size={20} aria-hidden="true" /> Perguntas do onboarding</h2>
+          <p>A ordem e a obrigatoriedade valem no cadastro de perfil.</p>
+        </header>
+        <QueryState query={questions}>
+          {questions.data?.length ? questions.data.map((question) => (
+            <div className="resource-row" key={question.id}>
+              <div>
+                <h3>{text(question, "label")}</h3>
+                <p>
+                  {question.active ? "Ativa" : "Inativa"} ·{" "}
+                  {question.required ? "Obrigatória" : "Opcional"}
+                </p>
+              </div>
+              <button onClick={() => setSelected(question)}>
+                Editar pergunta
+              </button>
             </div>
-            <button onClick={() => setSelected(question)}>
-              Editar pergunta
-            </button>
-          </div>
-        ))}
-      </QueryState>
+          )) : <Empty>Nenhuma pergunta cadastrada.</Empty>}
+        </QueryState>
+      </section>
       {selected !== undefined && (
-        <div className="reading inline-editor" key={selected?.id ?? "new"} ref={focusEditor}>
-          <h2>{selected ? "Editar pergunta" : "Criar pergunta"}</h2>
-          <Form
-            label="Salvar pergunta"
-            secondaryAction={<button type="button" onClick={() => setSelected(undefined)}>Fechar editor</button>}
-            onSave={async (data) => {
-              await save("onboarding_questions", selected?.id ?? null, {
-                key: value(data, "key"),
-                label: value(data, "label"),
-                type: value(data, "type"),
-                options: value(data, "options").split("\n").filter(Boolean),
-                required: check(data, "required"),
-                active: check(data, "active"),
-                order_index: num(data, "order_index"),
-              });
-              setSelected(undefined);
-            }}
-          >
-            <Field label="Campo do perfil">
-              <select
-                name="key"
-                defaultValue={text(selected ?? undefined, "key", "name")}
-              >
-                {[
-                  "name",
-                  "segment",
-                  "role",
-                  "size",
-                  "stage",
-                  "revenue_range",
-                  "acquisition",
-                  "product_description",
-                ].map((key) => (
-                  <option key={key}>{key}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Pergunta">
-              <input
-                name="label"
-                required
-                defaultValue={text(selected ?? undefined, "label")}
-              />
-            </Field>
-            <Field label="Tipo de resposta">
-              <select
-                name="type"
-                defaultValue={text(selected ?? undefined, "type", "text")}
-              >
-                <option value="text">Texto curto</option>
-                <option value="textarea">Texto longo</option>
-                <option value="select">Lista de opções</option>
-              </select>
-            </Field>
-            <Field label="Opções, uma por linha">
-              <textarea
-                name="options"
-                defaultValue={((selected?.options as string[]) ?? []).join(
-                  "\n",
-                )}
-              />
-            </Field>
-            <Field label="Ordem">
-              <input
-                name="order_index"
-                type="number"
-                min="0"
-                defaultValue={Number(selected?.order_index ?? 0)}
-              />
-            </Field>
-            <label className="check">
-              <input
-                name="required"
-                type="checkbox"
-                defaultChecked={!!selected?.required}
-              />
-              Obrigatória
-            </label>
-            <label className="check">
-              <input
-                name="active"
-                type="checkbox"
-                defaultChecked={selected?.active !== false}
-              />
-              Ativa
-            </label>
-          </Form>
-        </div>
+        <section className="settings-panel">
+          <div className="reading inline-editor" key={selected?.id ?? "new"} ref={focusEditor}>
+            <h2>{selected ? "Editar pergunta" : "Criar pergunta"}</h2>
+            <Form
+              label="Salvar pergunta"
+              secondaryAction={<button type="button" onClick={() => setSelected(undefined)}>Fechar editor</button>}
+              onSave={async (data) => {
+                await save("onboarding_questions", selected?.id ?? null, {
+                  key: value(data, "key"),
+                  label: value(data, "label"),
+                  type: value(data, "type"),
+                  options: value(data, "options").split("\n").filter(Boolean),
+                  required: check(data, "required"),
+                  active: check(data, "active"),
+                  order_index: num(data, "order_index"),
+                });
+                setSelected(undefined);
+              }}
+            >
+              <Field label="Campo do perfil">
+                <select
+                  name="key"
+                  defaultValue={text(selected ?? undefined, "key", "name")}
+                >
+                  {[
+                    "name",
+                    "segment",
+                    "role",
+                    "size",
+                    "stage",
+                    "revenue_range",
+                    "acquisition",
+                    "product_description",
+                  ].map((key) => (
+                    <option key={key}>{key}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Pergunta">
+                <input
+                  name="label"
+                  required
+                  defaultValue={text(selected ?? undefined, "label")}
+                />
+              </Field>
+              <Field label="Tipo de resposta">
+                <select
+                  name="type"
+                  defaultValue={text(selected ?? undefined, "type", "text")}
+                >
+                  <option value="text">Texto curto</option>
+                  <option value="textarea">Texto longo</option>
+                  <option value="select">Lista de opções</option>
+                </select>
+              </Field>
+              <Field label="Opções, uma por linha">
+                <textarea
+                  name="options"
+                  defaultValue={((selected?.options as string[]) ?? []).join(
+                    "\n",
+                  )}
+                />
+              </Field>
+              <Field label="Ordem">
+                <input
+                  name="order_index"
+                  type="number"
+                  min="0"
+                  defaultValue={Number(selected?.order_index ?? 0)}
+                />
+              </Field>
+              <label className="check">
+                <input
+                  name="required"
+                  type="checkbox"
+                  defaultChecked={!!selected?.required}
+                />
+                Obrigatória
+              </label>
+              <label className="check">
+                <input
+                  name="active"
+                  type="checkbox"
+                  defaultChecked={selected?.active !== false}
+                />
+                Ativa
+              </label>
+            </Form>
+          </div>
+        </section>
       )}
-    </>
+    </SettingsSurface>
   );
 }

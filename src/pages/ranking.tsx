@@ -4,12 +4,13 @@ import { Award, BookOpenCheck, Crown, Heart, MessageSquare, Reply, Timer, Trophy
 import { rpc } from "../api";
 import { Empty, Heading, Loading, Notice, Pager } from "../ui";
 import { periodArgs, ReportPeriodPicker, type ReportPeriod } from "../report-period";
+import { useModules, type ModuleKey } from "../modules";
 import "./ranking.css";
 
-const actions = {
-  post: { label: "Post aprovado", Icon: MessageSquare },
-  reply: { label: "Resposta aprovada", Icon: Reply },
-  like: { label: "Curtida recebida em post", Icon: Heart },
+const actions: Record<"post" | "reply" | "like" | "lesson" | "certificate", { label: string; Icon: typeof Award; module?: ModuleKey }> = {
+  post: { label: "Post aprovado", Icon: MessageSquare, module: "community" },
+  reply: { label: "Resposta aprovada", Icon: Reply, module: "community" },
+  like: { label: "Curtida recebida em post", Icon: Heart, module: "community" },
   lesson: { label: "Aula concluída", Icon: BookOpenCheck },
   certificate: { label: "Certificado emitido", Icon: Award },
 };
@@ -112,6 +113,7 @@ function OwnStanding({ own, rulesId }: { own: OwnPlacement; rulesId: string }) {
 }
 
 export function Ranking({ memberId }: { memberId: string }) {
+  const modules = useModules();
   const rulesId = `ranking-regras-${useId()}`;
   const listHeading = useRef<HTMLHeadingElement>(null);
   const focusList = useRef(false);
@@ -162,7 +164,10 @@ export function Ranking({ memberId }: { memberId: string }) {
           <section className="ranking-card ranking-section">
             <h2 id={rulesId} tabIndex={-1}>Regras de pontuação</h2>
             <dl className="ranking-rules">
-              {(Object.keys(actions) as (keyof typeof actions)[]).map((key) => {
+              {(Object.keys(actions) as (keyof typeof actions)[]).filter((key) => {
+                const module = actions[key].module;
+                return !module || modules[module];
+              }).map((key) => {
                 const { label, Icon } = actions[key];
                 return (
                   <div key={key}>

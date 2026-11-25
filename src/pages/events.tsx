@@ -3,6 +3,7 @@ import { CalendarPlus, ChevronDown, CircleCheck, Clock, ExternalLink, LockKeyhol
 import { Link } from "react-router-dom";
 import { date, downloadBlob, rpc, useRpc } from "../api";
 import { Action, Empty, Heading, NavigationTabs, QueryState } from "../ui";
+import { useModules } from "../modules";
 import "./events.css";
 
 type EventPreview = { id: string; starts_at: string };
@@ -183,6 +184,7 @@ function EventSection({ recording }: { recording: boolean }) {
 }
 
 export function Events() {
+  const modules = useModules();
   const [selected, setSelected] = useState("event-agenda");
 
   function goTo(id: string) {
@@ -210,7 +212,7 @@ export function Events() {
         </div>
         <div className="event-actions">
           <Link className="button primary" to="/app/configuracoes?aba=assinatura">Consultar assinatura</Link>
-          <Link className="button" to="/ajuda/encontros">Ajuda sobre encontros</Link>
+          {modules.help && <Link className="button" to="/ajuda/encontros">Ajuda sobre encontros</Link>}
         </div>
       </section>
     </div>

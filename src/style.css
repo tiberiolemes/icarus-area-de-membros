@@ -579,6 +579,10 @@ h2 > a,
 .search input {
   min-width: 0;
 }
+/* O botão não encolhe abaixo do texto quando o campo cresce (o "Buscar" quebrava em Conteúdo). */
+.search > button {
+  flex-shrink: 0;
+}
 .filters {
   display: flex;
   align-items: flex-end;
@@ -694,6 +698,16 @@ h2 > a,
 .drawer nav a[aria-current="page"] {
   background: var(--ic-action);
   color: var(--ic-on-action);
+}
+/* Módulo desligado: o painel continua acessível, com o selo à direita do nome. */
+.module-off-badge {
+  margin-left: auto;
+  padding: 0 6px;
+  border-color: currentColor;
+  background: transparent;
+  color: inherit;
+  font-size: var(--stitch-type-label-md-size);
+  white-space: nowrap;
 }
 .rail-bottom {
   margin-top: auto;

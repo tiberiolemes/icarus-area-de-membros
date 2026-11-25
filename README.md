@@ -3,7 +3,7 @@
 ![Icarus · Área de membros e cursos online · Código aberto sob licença MIT](docs/assets/icarus-banner-github.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-2.4.0-black)
+![Version](https://img.shields.io/badge/version-2.5.0-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)
@@ -22,6 +22,7 @@ Aplicação nova em React, TypeScript, Vite e Supabase. A árvore desta versão 
 - Notificações no aplicativo e anúncios de cursos e módulos, com aviso para inscritos na publicação conforme permissões do membro.
 - Tickets com conversa e anexos privados; administração de conteúdo, membros, planos, pedidos e documentos legais.
 - Nome, logo e ícone (favicon) da instalação em Plataforma e marca. A logo colorida e a branca, em PNG ou WebP de até 500 KB, substituem a do Icarus nos menus, nas telas de entrada, no checkout e no certificado, inclusive antes do login. A assinatura do certificado é um PNG enviado em cada curso.
+- Módulos da plataforma em Configurações → Módulos. O admin desliga o que a comunidade não usa (Comunidade, Materiais, Podcasts, Ranking, Encontros ao vivo, Suporte, Central de ajuda e Feedback dos alunos). Desligar esconde o recurso dos alunos e bloqueia no servidor, sem apagar dados; religar traz tudo de volta. Cursos e Certificados ficam sempre ativos, e nenhuma exportação depende dos módulos.
 - Checkout hospedado Asaas preparado para Sandbox e mídia Bunny configurável. Dados de cartão não passam pela aplicação.
 - Ajuda pública e guias dos fluxos, sem conceder acesso ou progresso acadêmico.
 
@@ -99,7 +100,7 @@ Veja [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) e [CHANGELOG
 
 Icarus is an open-source membership and online course delivery platform for businesses and digital course creators. It includes private learning materials, certificates, support tickets and a human-moderated community. It uses React, TypeScript, Vite and Supabase, with the official Icarus Design System, self-hosted Inter and per-user light/dark preferences.
 
-This release is a fresh implementation; it does not use Frappe. Git history is preserved. Staff roles and subscription entitlements are separate; administrators carry a gold Admin badge on the account card and in the community. After the authenticator code, "Lembrar por 15 dias" keeps that browser signed in for up to 15 days from login, enforced by the database. Administrators can upload the installation logo, a color version for light backgrounds and a white one for dark backgrounds (PNG or WebP up to 500 KB), and a square PNG favicon; they replace the Icarus logo and icon everywhere, including the sign-in pages and the certificate. Each course can carry a PNG signature for its certificates. Server-side authorization is required for every protected operation.
+This release is a fresh implementation; it does not use Frappe. Git history is preserved. Staff roles and subscription entitlements are separate; administrators carry a gold Admin badge on the account card and in the community. After the authenticator code, "Lembrar por 15 dias" keeps that browser signed in for up to 15 days from login, enforced by the database. Administrators can upload the installation logo, a color version for light backgrounds and a white one for dark backgrounds (PNG or WebP up to 500 KB), and a square PNG favicon; they replace the Icarus logo and icon everywhere, including the sign-in pages and the certificate. Each course can carry a PNG signature for its certificates. Under Settings → Modules, administrators can turn off the features a community does not use (community, materials, podcasts, ranking, live events, support, help center and student feedback); a disabled module is hidden from members and refused by the server, data is kept, and turning it back on restores everything. Courses and certificates are always on, and no export depends on modules. Server-side authorization is required for every protected operation.
 
 [Try the public demo](https://tiberiolemes.github.io/icarus-area-de-membros/). Build the demo with `npm run build:demo` and serve the entire `demo-dist/` folder over HTTP on loopback or HTTPS on a static host. The demo uses the application’s routes, components and styles with fictional student and admin sessions and no backend. Update the [fixtures](demo/) when a demonstrated flow changes.
 

@@ -19,7 +19,7 @@ export async function bootstrap() {
 
 async function seedDemo(target) {
   const admin = localClient(target), path = resolve(root, '.local/demo-accounts.json');
-  const guard = (enabled) => target.docker(['exec', target.database, 'psql', '-X', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', `update ica_private.local_demo_guard set enabled=${enabled ? 'true' : 'false'} where singleton;`]);
+  const guard = (enabled) => target.docker(['exec', target.database, 'psql', '-X', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', `update app_private.local_demo_guard set enabled=${enabled ? 'true' : 'false'} where singleton;`]);
   const accounts = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {};
   for (const role of ['admin', 'member', 'pro', 'moderator', 'support']) {
     if (accounts[role]) {

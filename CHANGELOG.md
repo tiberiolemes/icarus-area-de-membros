@@ -1,12 +1,13 @@
 # Changelog
 
-## Não lançado
+## 2.2.1 · 2026-11-25
 
-- As tabelas do Icarus em `public` passam a usar o prefixo `ica_` (por exemplo, `public.ica_profiles`), assim como os índices nomeados, e o esquema interno muda de `app_private` para `ica_private`. Isso permite instalar o Icarus em um projeto Supabase compartilhado sem misturar nem alterar tabelas de outros sistemas. A liberação de RLS e grants da migration 001 agora alcança só as tabelas `ica_`.
-- Projeto Supabase compartilhado: a migration 041 limita os gatilhos de `auth.users` aos usuários do Icarus. O perfil passa a nascer na validação final do cadastro, e só para contas com marcador do Icarus. Cadastros de outros sistemas não ganham perfil nem são recusados. Uma conta que já existia no projeto precisa de bootstrap manual.
-- As migrations foram editadas no lugar. Uma instalação criada antes desta mudança precisa ser recriada do zero, porque não existe migration de renomeação.
-- Turnstile nas telas de entrar, cadastrar, recuperar senha e reenviar confirmação quando `VITE_TURNSTILE_SITE_KEY` estiver definido; o token segue para o CAPTCHA do Supabase Auth, que o confere no servidor.
-- A confirmação de senha da Edge `reauthenticate` usa a chave de serviço, que o CAPTCHA do Auth não exige.
+- Foto de perfil salva pelo botão Salvar foto, com aviso de foto pendente e proteção ao sair da tela. Antes, escolher a foto só criava a prévia, e Salvar perfil não a enviava. A foto aceita só JPG ou PNG de até 500 KB, conferidos no navegador pelo conteúdo real do arquivo e na Edge `upload`, que recusa o resto com 422.
+- Aviso "Versão X disponível" no painel, só para admins, com as notas da Release e o roteiro de atualização. O navegador do admin consulta as Releases públicas do GitHub no máximo uma vez por dia; `VITE_ICARUS_UPDATE_REPO` troca o repositório, e vazia desliga o aviso. O admin pode dispensar o aviso daquela versão.
+- Turnstile nas telas de entrar, cadastrar, recuperar senha e reenviar confirmação quando `VITE_TURNSTILE_SITE_KEY` estiver definido; o token segue para o CAPTCHA do Supabase Auth, que o confere no servidor. A confirmação de senha da Edge `reauthenticate` usa a chave de serviço, que o CAPTCHA do Auth não exige.
+- Vitrine de cursos com retomada da aula pelo cartão, calendário personalizado no Dashboard e no Ranking, guia que ilumina o elemento de cada passo e logo oficial no painel. Ajustes de contraste, hierarquia e leitura no celular.
+- Demonstração pública com as próprias telas do Icarus e dados fictícios, publicada no GitHub Pages.
+- Atualização da 0.2.0: aplique as migrations `202611230039` e `202611230040`, publique as Edge Functions e gere o frontend da tag. O banco existente segue com os mesmos nomes de tabelas, sem recriar nada. Faça backup e siga [Atualizar de versão](docs/operations.md#atualizar-de-versão). Revisões não lançadas do `main` que usavam tabelas com prefixo `ica_` não seguem este caminho.
 
 ## 0.2.0 · Entrega 01
 

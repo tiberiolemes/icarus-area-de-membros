@@ -26,7 +26,7 @@ function migrationFiles(dir) {
 }
 function version(name) { return name.split('_')[0]; }
 
-function migrationTransaction(file, bytes, prefix) {
+export function migrationTransaction(file, bytes, prefix) {
   const contents = bytes.toString('utf8').trim();
   const body = /^begin;\r?\n([\s\S]+)\r?\ncommit;$/i.exec(contents)?.[1];
   if (!body) throw Error(`Migration ${file} precisa estar delimitada por BEGIN e COMMIT em linhas próprias.`);

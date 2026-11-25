@@ -197,6 +197,28 @@ Deno.test("upload rejects disguised file before gate or storage", async () => {
   equal((await upload(d)(new Request("http://localhost/upload", { method: "POST", headers: { authorization: `Bearer ${jwt()}` }, body: form }))).status, 422);
   assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")));
 });
+Deno.test("avatar aceita só JPG ou PNG reais de até 500 KB", async () => {
+  const send = (d: Dependencies, file: File) => {
+    const form = new FormData(); form.set("kind", "avatar"); form.set("resource_id", id); form.set("file", file);
+    return upload(d)(new Request("http://localhost/upload", { method: "POST", headers: { authorization: `Bearer ${jwt()}` }, body: form }));
+  };
+  const jpeg = (size: number) => { const bytes = new Uint8Array(size); bytes.set([255, 216, 255, 224]); return bytes; };
+  const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13]);
+  for (const file of [
+    new File([jpeg(500 * 1024 + 1)], "avatar.jpg", { type: "image/jpeg" }),
+    new File([new TextEncoder().encode("RIFF\0\0\0\0WEBPVP8 ")], "avatar.webp", { type: "image/webp" }),
+    new File([new TextEncoder().encode("isto não é uma imagem")], "avatar.jpg", { type: "image/jpeg" }),
+  ]) {
+    const { d, requests } = deps();
+    equal((await send(d, file)).status, 422);
+    assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")), file.name);
+  }
+  for (const file of [new File([jpeg(500 * 1024)], "avatar.jpg", { type: "image/jpeg" }), new File([png], "avatar.png", { type: "image/png" })]) {
+    const { d, requests } = deps((url) => url.pathname.endsWith("app_upload_access") ? response({ id, bucket: "icarus-private", path: `avatar/${id}/${other}.jpg` }) : url.pathname.includes("/storage/v1/object/icarus-private/") ? response({ Key: "icarus-private/avatar" }) : url.pathname.endsWith("app_upload_finalize") ? response({ id, state: "ready" }) : undefined);
+    equal((await send(d, file)).status, 200);
+    equal(requests.find((r) => r.url.includes("app_upload_access"))?.body, { p_actor_id: id, p_kind: "avatar", p_resource_id: id, p_file_name: file.name, p_content_type: file.type, p_size_bytes: file.size });
+  }
+});
 Deno.test("large upload reserves only metadata and rejects above 500MiB", async () => {
   const { d, requests } = deps((url) => url.pathname.endsWith("app_upload_access") ? response({ id, bucket: "icarus-private", path: `material/${other}/${id}.pdf`, expires_at: new Date(Date.now() + 900_000).toISOString() }) : undefined);
   const body = { action: "reserve", kind: "material", resource_id: other, file_name: "demo.pdf", content_type: "application/pdf", size_bytes: 500 * 1024 * 1024 };

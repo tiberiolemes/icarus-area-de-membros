@@ -39,6 +39,7 @@ import { NotificationBell } from "./pages/notifications";
 import { FeedbackButton } from "./pages/feedback";
 import { Action, RouteFocus } from "./ui";
 import { Tour } from "./tour";
+import { UpdateNotice } from "./update-notice";
 import { MemberSearch } from "./pages/member-search";
 import { StitchIcon } from "./stitch-icon";
 import "./member-shell-stitch.css";
@@ -352,6 +353,7 @@ export function Shell() {
         </header>
         <main id="main" className="content" tabIndex={-1}>
           <RouteFocus />
+          {admin && profile.role === "admin" && <UpdateNotice />}
           <Outlet />
         </main>
       </div>

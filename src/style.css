@@ -393,6 +393,11 @@ h2 > a,
 .notice p:last-child {
   margin-bottom: 0;
 }
+.update-notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .empty {
   padding: 40px 0;
   color: var(--ic-text-secondary);

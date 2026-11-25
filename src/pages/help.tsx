@@ -130,7 +130,7 @@ export const articles = [
     slug: "conta",
     title: "Atualize perfil, tema, segurança e privacidade",
     steps: [
-      "Abra Configurações e atualize seu nome, telefone e bio. Em Sua empresa, edite as respostas do onboarding.",
+      "Abra Configurações e atualize seu nome, telefone e bio. Para trocar a foto, use Alterar foto, escolha um JPG ou PNG de até 500 KB, ajuste o recorte e clique em Salvar foto. Em Sua empresa, edite as respostas do onboarding.",
       "Abra Guia desta tela no cabeçalho, também no celular. O elemento de cada passo fica iluminado e o restante da tela escurece. Use Pausar para fechar e voltar ao botão.",
       "Alterne o tema no rodapé do menu ou escolha Claro ou Escuro em Aparência e salve. A preferência fica vinculada à sua conta.",
       "Em Segurança, solicite troca de email ou senha. A mudança de email exige confirmação. Você pode ativar a verificação em duas etapas quando quiser. Recomendamos ativá-la em contas administrativas.",
@@ -150,6 +150,7 @@ export const articles = [
       "Abra a edição de uma aula salva e use Editar apresentação para cadastrar subtítulo, capítulos, destaques, fórmula, checklist e CTA. Remover um item publicado também remove as marcações dele.",
       "Configure o responsável pelo certificado antes de habilitar a emissão. Use dados reais ou identifique uma demonstração.",
       "Em Materiais, crie pasta e registro do arquivo, depois envie o arquivo privado. Confira a confirmação do servidor.",
+      "Quando sai uma versão nova do Icarus, administradores veem Versão disponível no topo do painel. Abra Notas da versão e Como atualizar antes de atualizar, ou use Dispensar esta versão para ocultar o aviso até a próxima.",
       "Com uma conta administradora, use Administração no topo do menu da área de membros. Instrutores usam Painel de conteúdo, moderadores usam Moderação e a equipe de suporte usa Atendimento. No celular, abra o menu primeiro.",
       "Em Membros, use Abrir ficha na linha da pessoa. Cadastros sem nome mostram Membro sem nome e um identificador curto. Gerencie cortesia, validade, suspensão e papel na ficha. Informe motivo e reautentique. Cortesia não é pagamento.",
       "Na fila da comunidade, revise o conteúdo e confirme uma decisão com motivo. Na fila de suporte, responda a conversa e ajuste o estado.",

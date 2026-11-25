@@ -110,7 +110,7 @@ const steps = [
   {
     target: "settings",
     title: "Cuide da sua conta",
-    body: "Atualize perfil e empresa, salve o tema por usuário e ative o segundo fator opcional em Segurança. Recomendamos ativá-lo para contas administrativas. Depois de ativado, o código é confirmado no próprio login. Em Privacidade, exporte dados ou peça exclusão; a política fica abaixo dessas ações.",
+    body: "Atualize perfil e empresa. Para trocar a foto, use Alterar foto e confirme em Salvar foto. Salve o tema por usuário e ative o segundo fator opcional em Segurança. Recomendamos ativá-lo para contas administrativas. Depois de ativado, o código é confirmado no próprio login. Em Privacidade, exporte dados ou peça exclusão; a política fica abaixo dessas ações.",
   },
   {
     target: "notification-preferences",

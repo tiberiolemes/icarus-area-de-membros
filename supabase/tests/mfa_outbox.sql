@@ -18,7 +18,7 @@ create function pg_temp.headers(n integer,aal text default 'aal1') returns void 
 end $$;
 insert into auth.users(id,email,email_confirmed_at,raw_app_meta_data,raw_user_meta_data) select pg_temp.id(n),'mfa-outbox-'||n||'@example.test',case when n<=4 then now() end,'{"icarus_server_created":true}',jsonb_build_object('full_name','DEMONSTRAÇÃO MFA '||n) from generate_series(1,6)n;
 set constraints all immediate;
-update public.ica_profiles set role='admin' where id=pg_temp.id(4);
+update public.profiles set role='admin' where id=pg_temp.id(4);
 insert into auth.sessions(id,user_id,created_at,updated_at,aal) select ('e1000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,pg_temp.id(n),now(),now(),'aal1' from generate_series(1,4)n;
 insert into auth.mfa_factors(id,user_id,friendly_name,factor_type,status,created_at,updated_at) values(pg_temp.id(12),pg_temp.id(2),'DEMONSTRAÇÃO verified','totp','verified',now(),now()),(pg_temp.id(13),pg_temp.id(3),'DEMONSTRAÇÃO unverified','totp','unverified',now(),now());
 select pg_temp.login(1);
@@ -78,8 +78,8 @@ set local role authenticated;
 select pg_temp.denied('select public.app_catalog()','setup exception does not bypass member MFA');
 reset role;
 -- Financial state is synthetic and entirely rolled back; no provider or legal offer is configured.
-insert into public.ica_plans(id,name,slug,price_cents,access_months) values(pg_temp.id(50),'DEMONSTRAÇÃO outbox','demo-mfa-outbox',10000,12);
-insert into public.ica_orders(id,plan_id,attempt_key,amount_cents,access_months,method,installments,buyer_data,receipt_hash,gateway_id) select pg_temp.id(100+n),pg_temp.id(50),'demo-mfa-outbox-attempt-'||n,10000,12,'PIX',1,jsonb_build_object('name','DEMONSTRAÇÃO comprador','email',case n when 3 then 'mfa-outbox-5@example.test' when 4 then 'mfa-outbox-6@example.test' else 'outbox-uncreated-'||n||'@example.test' end),repeat('a',64),pg_temp.id(200+n)::text from generate_series(1,4)n;
+insert into public.plans(id,name,slug,price_cents,access_months) values(pg_temp.id(50),'DEMONSTRAÇÃO outbox','demo-mfa-outbox',10000,12);
+insert into public.orders(id,plan_id,attempt_key,amount_cents,access_months,method,installments,buyer_data,receipt_hash,gateway_id) select pg_temp.id(100+n),pg_temp.id(50),'demo-mfa-outbox-attempt-'||n,10000,12,'PIX',1,jsonb_build_object('name','DEMONSTRAÇÃO comprador','email',case n when 3 then 'mfa-outbox-5@example.test' when 4 then 'mfa-outbox-6@example.test' else 'outbox-uncreated-'||n||'@example.test' end),repeat('a',64),pg_temp.id(200+n)::text from generate_series(1,4)n;
 set local role service_role;
 select pg_temp.assert(public.app_process_payment(jsonb_build_object('id','demo-mfa-outbox-paid-1','type','paid','order_id',pg_temp.id(101),'gateway_id',pg_temp.id(201),'amount_cents',10000,'method','PIX'))->>'status'='paid','paid event durable before invitation');
 select pg_temp.assert((public.app_claim_payment_invite(pg_temp.id(101),pg_temp.id(111))->>'claimed')::boolean,'first consumer owns invitation lease');
@@ -89,8 +89,8 @@ select pg_temp.denied('select public.app_finish_payment_invite(pg_temp.id(101),p
 select pg_temp.assert(public.app_finish_payment_invite(pg_temp.id(101),pg_temp.id(111),false)->>'status'='pending','definitive email failure durable pending');
 select pg_temp.assert(not (public.app_claim_payment_invite(pg_temp.id(101),pg_temp.id(112))->>'claimed')::boolean,'backoff prevents immediate retry');
 reset role;
-select pg_temp.assert((select status='paid' and finalized_at is null from public.ica_orders where id=pg_temp.id(101)),'email failure preserves paid without granting access');
-update public.ica_invitation_outbox set next_attempt_at=now()-interval '1 second' where order_id=pg_temp.id(101);
+select pg_temp.assert((select status='paid' and finalized_at is null from public.orders where id=pg_temp.id(101)),'email failure preserves paid without granting access');
+update public.invitation_outbox set next_attempt_at=now()-interval '1 second' where order_id=pg_temp.id(101);
 set local role service_role;
 select pg_temp.assert((public.app_claim_payment_invite(pg_temp.id(101),pg_temp.id(112))->>'attempts')::integer=2,'controlled retry second attempt');
 select pg_temp.assert(public.app_finish_payment_invite(pg_temp.id(101),pg_temp.id(112),true)->>'status'='sent','send success recorded separately');
@@ -98,12 +98,12 @@ select pg_temp.assert(public.app_process_payment(jsonb_build_object('id','demo-m
 select pg_temp.assert(not (public.app_claim_payment_invite(pg_temp.id(101),pg_temp.id(113))->>'claimed')::boolean,'sent invitation never reclaimed');
 select pg_temp.assert(not (public.app_finalize_paid_order(pg_temp.id(101))->>'finalized')::boolean,'email sent never means account confirmed');
 reset role;
-select pg_temp.assert(not exists(select 1 from public.ica_subscriptions where order_id=pg_temp.id(101)),'sent invitation grants no subscription');
+select pg_temp.assert(not exists(select 1 from public.subscriptions where order_id=pg_temp.id(101)),'sent invitation grants no subscription');
 set local role service_role;
 select public.app_process_payment(jsonb_build_object('id','demo-mfa-outbox-paid-2','type','paid','order_id',pg_temp.id(102),'gateway_id',pg_temp.id(202),'amount_cents',10000,'method','PIX')) as paid2 \gset
 select public.app_claim_payment_invite(pg_temp.id(102),pg_temp.id(121)) as claim2 \gset
 reset role;
-update public.ica_invitation_outbox set claimed_until=now()-interval '1 second' where order_id=pg_temp.id(102);
+update public.invitation_outbox set claimed_until=now()-interval '1 second' where order_id=pg_temp.id(102);
 set local role service_role;
 select pg_temp.assert(public.app_claim_payment_invite(pg_temp.id(102),pg_temp.id(122))->>'status'='uncertain','expired send lease requires reconciliation');
 select pg_temp.assert(not (public.app_claim_payment_invite(pg_temp.id(102),pg_temp.id(123))->>'claimed')::boolean,'uncertainty cannot automatically resend');
@@ -123,8 +123,8 @@ set local role service_role;
 select pg_temp.assert((public.app_finalize_paid_order(pg_temp.id(104))->>'finalized')::boolean,'confirmed rightful beneficiary finalized');
 select pg_temp.assert(public.app_finish_payment_invite(pg_temp.id(104),pg_temp.id(141),true)->>'status'='completed','late finish preserves completed state');
 reset role;
-select pg_temp.assert((select count(*)=1 from public.ica_subscriptions where order_id=pg_temp.id(104)),'one entitlement despite late invitation callback');
-select pg_temp.assert((select count(*)=4 from public.ica_orders where plan_id=pg_temp.id(50)),'retries create no new orders or charges');
+select pg_temp.assert((select count(*)=1 from public.subscriptions where order_id=pg_temp.id(104)),'one entitlement despite late invitation callback');
+select pg_temp.assert((select count(*)=4 from public.orders where plan_id=pg_temp.id(50)),'retries create no new orders or charges');
 select pg_temp.assert(not has_function_privilege('anon','public.app_claim_payment_invite(uuid,uuid)','EXECUTE') and not has_function_privilege('authenticated','public.app_finish_payment_invite(uuid,uuid,boolean)','EXECUTE'),'outbox service-only grants closed');
 select count(*) as mfa_outbox_assertions from mfa_outbox_results;
 rollback;

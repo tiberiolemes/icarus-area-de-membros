@@ -1,5 +1,7 @@
+begin;
+
 -- Shared civil-date semantics for report periods. All public consumers keep their own actor and throttle.
-create function ica_private.report_days(p_period text, p_from date, p_through date)
+create function app_private.report_days(p_period text, p_from date, p_through date)
 returns daterange language plpgsql stable set search_path='' as $$
 declare
   today date := (now() at time zone 'America/Sao_Paulo')::date;
@@ -7,7 +9,7 @@ declare
   last_day date := today;
 begin
   if p_period is distinct from 'custom' and (p_from is not null or p_through is not null) then
-    perform ica_private.fail('Período inválido.');
+    perform app_private.fail('Período inválido.');
   end if;
   case p_period
     when 'today' then first_day := today;
@@ -27,42 +29,42 @@ begin
     when 'custom' then
       if p_from is null or p_through is null or p_from < date '0001-01-01'
          or p_through > today or p_from > p_through then
-        perform ica_private.fail('Período inválido.');
+        perform app_private.fail('Período inválido.');
       end if;
       first_day := p_from; last_day := p_through;
-    else perform ica_private.fail('Período inválido.');
+    else perform app_private.fail('Período inválido.');
   end case;
   return daterange(first_day,last_day,'[]');
 end $$;
-revoke all on function ica_private.report_days(text,date,date) from public, anon, authenticated, service_role;
+revoke all on function app_private.report_days(text,date,date) from public, anon, authenticated, service_role;
 
 create function public.app_admin_dashboard(p_period text, p_from date, p_through date)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare
-  actor_id uuid := ica_private.admin_reporting_actor();
+  actor_id uuid := app_private.admin_reporting_actor();
   observed_at timestamptz := now();
-  days daterange := ica_private.report_days(p_period,p_from,p_through);
+  days daterange := app_private.report_days(p_period,p_from,p_through);
   from_day date := lower(days);
   through_day date := upper(days)-1;
   until_at timestamptz := least(observed_at, upper(days)::timestamp at time zone 'America/Sao_Paulo');
   from_at timestamptz;
   result jsonb;
 begin
-  perform ica_private.throttle(actor_id, 'admin_dashboard', 20);
+  perform app_private.throttle(actor_id, 'admin_dashboard', 20);
   from_at := from_day::timestamp at time zone 'America/Sao_Paulo';
 
   with new_members as (
-    select created_at as happened_at from public.ica_profiles
+    select created_at as happened_at from public.profiles
     where role='member' and not demo and created_at >= from_at and created_at < until_at
   ), paid_orders as (
-    select o.method, o.amount_cents from public.ica_orders o
-    left join public.ica_profiles p on p.id=o.user_id
+    select o.method, o.amount_cents from public.orders o
+    left join public.profiles p on p.id=o.user_id
     where o.status='paid' and o.paid_at >= from_at and o.paid_at < until_at and not coalesce(p.demo,false)
   ), first_activations as (
     select min(greatest(o.finalized_at,s.starts_at)) as happened_at
-    from public.ica_subscriptions s
-    join public.ica_orders o on o.id=s.order_id and o.user_id=s.user_id
-    join public.ica_profiles p on p.id=s.user_id
+    from public.subscriptions s
+    join public.orders o on o.id=s.order_id and o.user_id=s.user_id
+    join public.profiles p on p.id=s.user_id
     where s.source='order' and o.finalized_at is not null and o.paid_at is not null
       and p.role='member' and not p.demo
       and greatest(o.finalized_at,s.starts_at) < least(s.ends_at,coalesce(s.revoked_at,s.ends_at))
@@ -71,9 +73,9 @@ begin
        and min(greatest(o.finalized_at,s.starts_at)) < until_at
   ), access_terms as (
     select s.user_id, s.starts_at, s.ends_at, o.amount_cents, o.access_months
-    from public.ica_subscriptions s
-    join public.ica_orders o on o.id=s.order_id and o.user_id=s.user_id and o.status='paid'
-    join public.ica_profiles p on p.id=s.user_id
+    from public.subscriptions s
+    join public.orders o on o.id=s.order_id and o.user_id=s.user_id and o.status='paid'
+    join public.profiles p on p.id=s.user_id
     where s.source='order' and s.revoked_at is null and s.ends_at > observed_at
       and o.paid_at is not null and o.paid_at < observed_at
       and o.finalized_at is not null and o.finalized_at < observed_at
@@ -109,17 +111,17 @@ begin
     select count(*) filter (where lp.completed_at >= from_at) as total,
       count(distinct lp.user_id) filter (where lp.completed_at >= ((through_day-6)::timestamp at time zone 'America/Sao_Paulo')) as members_7d,
       count(distinct lp.user_id) filter (where lp.completed_at >= ((through_day-29)::timestamp at time zone 'America/Sao_Paulo')) as members_30d
-    from public.ica_lesson_progress lp join public.ica_profiles p on p.id=lp.user_id
+    from public.lesson_progress lp join public.profiles p on p.id=lp.user_id
     where p.role='member' and not p.demo and lp.completed_at < until_at
       and lp.completed_at >= least(from_at, (through_day-29)::timestamp at time zone 'America/Sao_Paulo')
   ), posts as (
     select count(*) filter (where x.created_at >= from_at and x.created_at < until_at) as created,
       count(*) filter (where x.status='pending') as pending
-    from public.ica_posts x join public.ica_profiles p on p.id=x.author_id
+    from public.posts x join public.profiles p on p.id=x.author_id
     where not p.demo and x.created_at < observed_at and ((x.created_at >= from_at and x.created_at < until_at) or x.status='pending')
   ), tickets as (
     select t.id,t.user_id,t.created_at,t.status
-    from public.ica_tickets t join public.ica_profiles p on p.id=t.user_id
+    from public.tickets t join public.profiles p on p.id=t.user_id
     where not p.demo and t.created_at < observed_at and ((t.created_at >= from_at and t.created_at < until_at) or t.status<>'resolved')
   ), ticket_counts as (
     select count(*) filter (where created_at >= from_at and created_at < until_at) as created,
@@ -128,8 +130,8 @@ begin
     select count(r.first_at) as answered, round(avg(extract(epoch from r.first_at-t.created_at))) as average_seconds
     from tickets t
     cross join lateral (
-      select min(m.created_at) as first_at from public.ica_ticket_messages m
-      join public.ica_profiles author on author.id=m.author_id and not author.demo
+      select min(m.created_at) as first_at from public.ticket_messages m
+      join public.profiles author on author.id=m.author_id and not author.demo
       where m.ticket_id=t.id and m.author_id<>t.user_id and m.created_at>=t.created_at and m.created_at<until_at
     ) r
     where t.created_at >= from_at and t.created_at < until_at
@@ -163,7 +165,7 @@ end $$;
 create function public.app_ranking(p_period text, p_page integer, p_from date, p_through date)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
-  viewer uuid := ica_private.actor();
+  viewer uuid := app_private.actor();
   viewer_role text;
   viewer_demo boolean;
   zone constant text := 'America/Sao_Paulo';
@@ -174,12 +176,12 @@ begin
   if p_period is null or p_period not in ('current','previous','overall','today','yesterday','7d','14d','30d','90d','year','last_year','custom')
     or (p_period='overall' and (p_from is not null or p_through is not null))
     or p_page is null or p_page not between 1 and 100000 then
-    perform ica_private.fail('Período ou página inválidos.');
+    perform app_private.fail('Período ou página inválidos.');
   end if;
-  perform ica_private.throttle(viewer, 'ranking', 60);
-  select role, demo into viewer_role, viewer_demo from public.ica_profiles where id = viewer;
+  perform app_private.throttle(viewer, 'ranking', 60);
+  select role, demo into viewer_role, viewer_demo from public.profiles where id = viewer;
   if p_period is distinct from 'overall' then
-    days := ica_private.report_days(p_period,p_from,p_through);
+    days := app_private.report_days(p_period,p_from,p_through);
     period_start := lower(days)::timestamp at time zone zone;
     -- Current competition closes on the first of next month; the event query still stops at now().
     period_end := (case when p_period='current' then lower(days)::timestamp + interval '1 month'
@@ -191,39 +193,39 @@ begin
       ('post', 5, 1), ('reply', 3, 2), ('like', 1, 3), ('lesson', 8, 4), ('certificate', 15, 5)
     ), totals as (
       select e.recipient_id, sum(rules.points) as points
-      from ica_private.ranking_events e
+      from app_private.ranking_events e
       join rules using (kind)
-      join public.ica_profiles member on member.id = e.recipient_id
+      join public.profiles member on member.id = e.recipient_id
         and member.role = 'member' and not member.suspended and member.demo = viewer_demo
       where e.occurred_at <= now()
         and (period_start is null or e.occurred_at >= period_start)
         and (period_end is null or e.occurred_at < period_end)
         and case e.kind
           when 'post' then exists (
-            select from public.ica_posts p join public.ica_spaces s on s.id = p.space_id
+            select from public.posts p join public.spaces s on s.id = p.space_id
             where p.id = e.source_id and p.author_id = e.recipient_id
               and p.status = 'approved' and s.status = 'published'
           )
           when 'reply' then exists (
-            select from public.ica_replies r join public.ica_posts p on p.id = r.post_id
-            join public.ica_spaces s on s.id = p.space_id
+            select from public.replies r join public.posts p on p.id = r.post_id
+            join public.spaces s on s.id = p.space_id
             where r.id = e.source_id and r.author_id = e.recipient_id
               and r.status = 'approved' and p.status = 'approved' and s.status = 'published'
           )
           when 'like' then exists (
-            select from public.ica_votes v join public.ica_posts p on p.id = v.post_id
-            join public.ica_spaces s on s.id = p.space_id
-            join public.ica_profiles a on a.id = v.actor_id
+            select from public.votes v join public.posts p on p.id = v.post_id
+            join public.spaces s on s.id = p.space_id
+            join public.profiles a on a.id = v.actor_id
             where v.post_id = e.source_id and v.actor_id = e.actor_id and p.author_id = e.recipient_id
               and p.status = 'approved' and s.status = 'published'
               and a.role = 'member' and not a.suspended and a.demo = viewer_demo
           )
           when 'lesson' then exists (
-            select from public.ica_lesson_progress l where l.lesson_id = e.source_id
+            select from public.lesson_progress l where l.lesson_id = e.source_id
               and l.user_id = e.recipient_id and l.completed_at is not null
           )
           when 'certificate' then exists (
-            select from public.ica_certificates c where c.id = e.source_id
+            select from public.certificates c where c.id = e.source_id
               and c.user_id = e.recipient_id and c.revoked_at is null
           )
         end
@@ -269,3 +271,5 @@ revoke all on function public.app_admin_dashboard(text,date,date), public.app_ra
   from public, anon, authenticated, service_role;
 grant execute on function public.app_admin_dashboard(text,date,date), public.app_ranking(text,integer,date,date)
   to authenticated;
+
+commit;

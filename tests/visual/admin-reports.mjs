@@ -61,6 +61,7 @@ assert(Number.isInteger(port) && port >= 8300 && port <= 8399, "Reserve uma port
 const origin = "http://127.0.0.1:" + port;
 process.env.VITE_SUPABASE_URL = origin;
 process.env.VITE_SUPABASE_ANON_KEY = "fixture-only";
+process.env.VITE_ICARUS_UPDATE_REPO = ""; // fixtures recusam hosts externos: sem consulta às Releases do GitHub
 const vite = await createServer({
   cacheDir: join(out, "vite-cache"),
   clearScreen: false,

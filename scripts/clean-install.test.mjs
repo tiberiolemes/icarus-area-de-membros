@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { migrationTransaction } from './clean-install.mjs';
 
 const scripts = dirname(fileURLToPath(import.meta.url));
 const dbId = 'a'.repeat(64);
@@ -82,7 +83,7 @@ if (tool === 'docker') {
     } else if (rest.includes('pg_dump')) console.log('dump fixture');
     else if (rest[0] === 'tar' || rest[0] === 'sh') console.log('storage fixture');
     else if (rest.includes('-c')) {
-      assert.match(rest.at(-1), /^update ica_private\.local_demo_guard set enabled=(true|false) where singleton;$/);
+      assert.match(rest.at(-1), /^update app_private\.local_demo_guard set enabled=(true|false) where singleton;$/);
       container.demoGuard = rest.at(-1).includes('=true');
       save();
     } else {
@@ -473,4 +474,9 @@ test('backup, demo and first-admin use the registered IDs and reject a changed d
     noWriteCalls(invalid.calls);
     assert.deepEqual(f.load(), replaced);
   }
+});
+
+test('every source migration can be applied by the QA upgrade', () => {
+  const dir = resolve(scripts, '../supabase/migrations');
+  for (const file of readdirSync(dir)) assert.doesNotThrow(() => migrationTransaction(file, readFileSync(resolve(dir, file)), []), file);
 });

@@ -2,6 +2,19 @@
 
 O Icarus é uma plataforma de área de membros e cursos online em React/Vite e Supabase, com licença MIT. Cada instalação atende uma organização. Os comandos de desenvolvimento usam o projeto Docker `icarus-courses-local` e as portas `58521` (API), `58522` (Postgres), `58524` (Mailpit) e `8088` (Vite). A instalação hospedada exige domínio, TLS, SMTP, configuração e credenciais próprias.
 
+## Atualizar de versão
+
+Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes. Numa instalação hospedada, siga [Aplicar migrações no Supabase hospedado](#aplicar-migrações-no-supabase-hospedado), que vale para a 0.1.6 e para a 0.2.0. O roteiro do [stack Docker completo](#atualizar-uma-instalação-docker-completa) foi escrito e ensaiado para a v0.1.6. A partir da 0.2.0, o banco foi ensaiado pelo [ensaio isolado](#ensaio-de-banco-isolado) (`install` da tag v0.2.0, `upgrade` e `verify` no mesmo Postgres), mas o stack Docker completo da 0.2.0 ainda não tem roteiro próprio ensaiado para as Edge Functions.
+
+| Versão instalada | Histórico esperado | Migrations novas na 2.2.1 |
+| --- | --- | --- |
+| 0.2.0 | `202611230001` a `202611230038` | `202611230039` e `202611230040` |
+| 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` |
+
+Na 2.2.1, publique também as Edge Functions, porque `upload` passou a recusar foto de perfil fora de JPG ou PNG de até 500 KB e `reauthenticate` confere a senha com a chave de serviço. Revisões não lançadas do `main` que usavam tabelas com prefixo `ica_` não seguem este caminho.
+
+Admins veem no painel o aviso "Versão X disponível" quando sai uma Release maior que a instalada. Para isso, o navegador do admin consulta `https://api.github.com/repos/<dono>/<repositório>/releases/latest` no máximo uma vez a cada 24 horas, guardando a resposta no `localStorage`. A consulta não leva dados de membros, cursos ou configuração. Como em qualquer chamada do navegador a outro site, o GitHub recebe o IP, o navegador e o domínio do painel (cabeçalhos `Origin` e `Referer`). Uma falha também fica guardada por 24 horas, para o painel não repetir a consulta a cada recarga. O repositório padrão é o oficial, `tiberiolemes/icarus-area-de-membros`. Para acompanhar outro, gere o build com `VITE_ICARUS_UPDATE_REPO=dono/repositório`; com a variável vazia, o aviso fica desligado e nada é consultado. O Icarus não publica uma Content Security Policy própria. Se o seu servidor definir uma, inclua `https://api.github.com` em `connect-src`. Com a consulta bloqueada, sem rede ou no limite de requisições do GitHub, o aviso só não aparece.
+
 ## Requisitos do Docker dedicado
 
 Execute o instalador em uma máquina ou VM Linux de teste reservada. Use Docker Engine estável da série **29.x**, a partir da **29.10.0**, e a distribuição oficial completa do Supabase CLI **2.109.1** no PATH. O Docker 28.0 corrigiu o alcance de portas de loopback no segmento L2 e o 28.3.3 corrigiu a exposição após recarga do firewalld (CVE-2025-54388). A série 28 está fora da manutenção upstream. O preflight confere o Linux, a versão estável e a identidade do daemon. [Publicação de portas](https://docs.docker.com/engine/network/port-publishing/) · [Correção no Docker 28.3.3](https://docs.docker.com/engine/release-notes/28/#2833) · [Ramos mantidos pelo Moby](https://github.com/moby/moby/blob/master/project/BRANCHES-AND-TAGS.md#docker-engine-branches) · [Docker 29.10.0](https://docs.docker.com/engine/release-notes/29/#29100).
@@ -95,7 +108,7 @@ Use este roteiro para o stack completo da v0.1.6 criado pelo Supabase CLI, com A
 
 ### Migrations e fluxos da árvore atual
 
-Aplique `202611230001` a `202611230041` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
+Aplique `202611230001` a `202611230040` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
 
 | Migration | O que configurar ou validar |
 | --- | --- |
@@ -119,7 +132,6 @@ Aplique `202611230001` a `202611230041` em ordem antes de servir este frontend. 
 | `038` | Verificar o retorno do checkout visitante no mesmo navegador, o prazo do recibo e a consulta da conta titular após expirar. |
 | `039` | Conferir no Dashboard e no Ranking o intervalo personalizado, incluindo eventos na data final em Brasília. |
 | `040` | Abrir a vitrine com aluno novo e com aluno em andamento. Iniciar e retomar uma aula pelo cartão e conferir o acesso para cursos e módulos restritos. |
-| `041` | Projeto Supabase compartilhado: só usuários com marcador do Icarus ganham perfil (`icarus_server_created` ou `icarus_local_demo` no `app_metadata`, ou `legal_version_ids` no cadastro do Icarus). Cadastros de outros sistemas passam sem perfil e sem recusa. Uma conta que já existia no projeto antes do Icarus não ganha perfil sozinha e precisa de bootstrap manual. |
 
 A validação de navegação também cobre entrada e confirmação de email, primeira senha, perguntas de onboarding, edição parcial do perfil e MFA opcional. A seed fornece perguntas iniciais editáveis. Cadastre os próprios cursos, aulas, materiais, planos, ofertas e documentos legais pelo fluxo administrativo apropriado.
 
@@ -182,7 +194,7 @@ supabase migration list --linked
 supabase db push --linked --dry-run
 ```
 
-Em um projeto novo, o histórico do Icarus deve estar vazio e todas as migrations da tag devem aparecer no plano. Na v0.1.6, o histórico deve estar completo de `202611230001` até `202611230020` e o plano deve começar na `202611230021`. Se o histórico divergir ou houver DDL aplicado manualmente, verifique o schema contra a tag original em uma cópia antes de prosseguir. `migration repair` só corrige metadados do histórico e exige prova da mudança já aplicada ou revertida. [Histórico de migrações](https://supabase.com/docs/reference/cli/supabase-migration-list) · [Aplicação e dry-run](https://supabase.com/docs/reference/cli/supabase-db-push)
+Em um projeto novo, o histórico do Icarus deve estar vazio e todas as migrations da tag devem aparecer no plano. Na v0.1.6, o histórico deve estar completo de `202611230001` até `202611230020` e o plano deve começar na `202611230021`. Na v0.2.0, o histórico vai até `202611230038` e o plano lista só `202611230039` e `202611230040`. Se o histórico divergir ou houver DDL aplicado manualmente, verifique o schema contra a tag original em uma cópia antes de prosseguir. `migration repair` só corrige metadados do histórico e exige prova da mudança já aplicada ou revertida. [Histórico de migrações](https://supabase.com/docs/reference/cli/supabase-migration-list) · [Aplicação e dry-run](https://supabase.com/docs/reference/cli/supabase-db-push)
 
 Depois de validar o destino e o plano, aplique e confira o histórico e o dry-run final. O push padrão aplica as migrations pendentes. Para uma instalação vazia que queira as perguntas iniciais do formulário, use `supabase db push --linked --include-seed` no primeiro push. Preserve a seed original em instalações em uso. Se a aplicação falhar, preserve o diagnóstico e confira schema e histórico antes de tentar novamente, inclusive se o `COMMIT` da migration já ocorreu e seu registro falhou. Restaure e valide uma cópia do backup antes de qualquer retorno de versão.
 
@@ -236,12 +248,12 @@ declare
   target_id constant uuid := '00000000-0000-0000-0000-000000000000';
   target_email constant text := 'responsavel@example.invalid';
 begin
-  lock table public.ica_profiles in share row exclusive mode;
-  if exists (select 1 from public.ica_profiles where role = 'admin') then
+  lock table public.profiles in share row exclusive mode;
+  if exists (select 1 from public.profiles where role = 'admin') then
     raise exception 'Já existe um administrador nesta instalação.';
   end if;
 
-  update public.ica_profiles p
+  update public.profiles p
      set role = 'admin'
     from auth.users u
    where u.id = target_id and p.id = u.id and lower(u.email) = lower(target_email)
@@ -250,14 +262,14 @@ begin
      and u.raw_app_meta_data @> '{"icarus_server_created": true, "icarus_password_setup_required": false}'::jsonb
      and not p.password_setup_required
      and exists (
-       select 1 from public.ica_audit_events e
+       select 1 from public.audit_events e
        where e.actor_id = p.id and e.target_id = p.id and e.target_type = 'profiles'
          and e.action = 'password-setup-complete'
      );
   if not found then
     raise exception 'Confirme UUID, e-mail, convite e primeira senha do titular.';
   end if;
-  perform ica_private.audit(null, 'first-admin-bootstrap', 'profiles', target_id);
+  perform app_private.audit(null, 'first-admin-bootstrap', 'profiles', target_id);
 end $$;
 ```
 
@@ -286,7 +298,7 @@ node scripts/backup.mjs dump
 node scripts/backup.mjs verify-restore
 ```
 
-O primeiro comando produz `.local/backups/icarus.dump`, `icarus-storage.tar.gz` e manifesto de hashes600. O dump preserva owners e ACLs (REVOKE/GRANT); não usar `--no-privileges` no dump ou restore. O segundo restaura SQL em banco novo isolado e binários em diretório temporário isolado, compara contagens/hashes SQL, conteúdo binário, owners, RLS, policies, default ACLs e privilégios efetivos de todas as funções/tabelas dos schemas public/ica_private/auth/storage para anon/authenticated/service_role. Preserva a origem e remove somente os destinos QA criados. O teste negativo `verify-restore --omit-acl-negative` deve falhar mesmo com linhas/binários iguais, comprovando que a guarda detecta a perda de grants.
+O primeiro comando produz `.local/backups/icarus.dump`, `icarus-storage.tar.gz` e manifesto de hashes600. O dump preserva owners e ACLs (REVOKE/GRANT); não usar `--no-privileges` no dump ou restore. O segundo restaura SQL em banco novo isolado e binários em diretório temporário isolado, compara contagens/hashes SQL, conteúdo binário, owners, RLS, policies, default ACLs e privilégios efetivos de todas as funções/tabelas dos schemas public/app_private/auth/storage para anon/authenticated/service_role. Preserva a origem e remove somente os destinos QA criados. O teste negativo `verify-restore --omit-acl-negative` deve falhar mesmo com linhas/binários iguais, comprovando que a guarda detecta a perda de grants.
 
 O pacote contém aplicação/Auth/Storage/extensions e histórico nativo quando existente; não inclui serviços externos nem configuração/roles do cluster Supabase. O restore exige cluster Supabase compatível, roles nativas já criadas e operador `supabase_admin` privilegiado para preservar ownership/ACL. Não substituir roles nem afrouxar default privileges para fazê-lo passar. Para servidor futuro, manter também uma cópia criptografada separada dos secrets/configs e executar o mesmo ensaio de restauração com imagens/roles compatíveis.
 

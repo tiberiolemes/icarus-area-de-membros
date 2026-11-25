@@ -1,15 +1,15 @@
 begin;
 
-create function ica_private.admin_reporting_actor()
+create function app_private.admin_reporting_actor()
 returns uuid language plpgsql security definer set search_path='' as $$
-declare actor_id uuid := ica_private.require_role(array['admin']);
+declare actor_id uuid := app_private.require_role(array['admin']);
 begin
   -- Reporting requires AAL2 even when account MFA is optional.
   if (auth.jwt()->>'aal') is distinct from 'aal2' or not exists (
     select from auth.sessions where id=(auth.jwt()->>'session_id')::uuid
       and user_id=actor_id and aal='aal2'
   ) then
-    perform ica_private.fail('Confirme o segundo fator para continuar.');
+    perform app_private.fail('Confirme o segundo fator para continuar.');
   end if;
   return actor_id;
 end $$;
@@ -17,7 +17,7 @@ end $$;
 create function public.app_admin_dashboard(p_period text default '30d')
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare
-  actor_id uuid := ica_private.admin_reporting_actor();
+  actor_id uuid := app_private.admin_reporting_actor();
   observed_at timestamptz := now();
   today date := (observed_at at time zone 'America/Sao_Paulo')::date;
   from_day date;
@@ -28,23 +28,23 @@ begin
     when '30d' then from_day := today - 29;
     when '90d' then from_day := today - 89;
     when 'year' then from_day := date_trunc('year', today::timestamp)::date;
-    else perform ica_private.fail('Período inválido.');
+    else perform app_private.fail('Período inválido.');
   end case;
-  perform ica_private.throttle(actor_id, 'admin_dashboard', 20);
+  perform app_private.throttle(actor_id, 'admin_dashboard', 20);
   from_at := from_day::timestamp at time zone 'America/Sao_Paulo';
 
   with new_members as (
-    select created_at as happened_at from public.ica_profiles
+    select created_at as happened_at from public.profiles
     where role='member' and not demo and created_at >= from_at and created_at < observed_at
   ), paid_orders as (
-    select o.method, o.amount_cents from public.ica_orders o
-    left join public.ica_profiles p on p.id=o.user_id
+    select o.method, o.amount_cents from public.orders o
+    left join public.profiles p on p.id=o.user_id
     where o.status='paid' and o.paid_at >= from_at and o.paid_at < observed_at and not coalesce(p.demo,false)
   ), first_activations as (
     select min(greatest(o.finalized_at,s.starts_at)) as happened_at
-    from public.ica_subscriptions s
-    join public.ica_orders o on o.id=s.order_id and o.user_id=s.user_id
-    join public.ica_profiles p on p.id=s.user_id
+    from public.subscriptions s
+    join public.orders o on o.id=s.order_id and o.user_id=s.user_id
+    join public.profiles p on p.id=s.user_id
     where s.source='order' and o.finalized_at is not null and o.paid_at is not null
       and p.role='member' and not p.demo
       and greatest(o.finalized_at,s.starts_at) < least(s.ends_at,coalesce(s.revoked_at,s.ends_at))
@@ -53,9 +53,9 @@ begin
        and min(greatest(o.finalized_at,s.starts_at)) < observed_at
   ), access_terms as (
     select s.user_id, s.starts_at, s.ends_at, o.amount_cents, o.access_months
-    from public.ica_subscriptions s
-    join public.ica_orders o on o.id=s.order_id and o.user_id=s.user_id and o.status='paid'
-    join public.ica_profiles p on p.id=s.user_id
+    from public.subscriptions s
+    join public.orders o on o.id=s.order_id and o.user_id=s.user_id and o.status='paid'
+    join public.profiles p on p.id=s.user_id
     where s.source='order' and s.revoked_at is null and s.ends_at > observed_at
       and o.paid_at is not null and o.paid_at < observed_at
       and o.finalized_at is not null and o.finalized_at < observed_at
@@ -89,17 +89,17 @@ begin
     select count(*) filter (where lp.completed_at >= from_at) as total,
       count(distinct lp.user_id) filter (where lp.completed_at >= ((today-6)::timestamp at time zone 'America/Sao_Paulo')) as members_7d,
       count(distinct lp.user_id) filter (where lp.completed_at >= ((today-29)::timestamp at time zone 'America/Sao_Paulo')) as members_30d
-    from public.ica_lesson_progress lp join public.ica_profiles p on p.id=lp.user_id
+    from public.lesson_progress lp join public.profiles p on p.id=lp.user_id
     where p.role='member' and not p.demo and lp.completed_at < observed_at
       and lp.completed_at >= least(from_at, (today-29)::timestamp at time zone 'America/Sao_Paulo')
   ), posts as (
     select count(*) filter (where x.created_at >= from_at) as created,
       count(*) filter (where x.status='pending') as pending
-    from public.ica_posts x join public.ica_profiles p on p.id=x.author_id
+    from public.posts x join public.profiles p on p.id=x.author_id
     where not p.demo and x.created_at < observed_at and (x.created_at >= from_at or x.status='pending')
   ), tickets as (
     select t.id,t.user_id,t.created_at,t.status
-    from public.ica_tickets t join public.ica_profiles p on p.id=t.user_id
+    from public.tickets t join public.profiles p on p.id=t.user_id
     where not p.demo and t.created_at < observed_at and (t.created_at >= from_at or t.status<>'resolved')
   ), ticket_counts as (
     select count(*) filter (where created_at >= from_at) as created,
@@ -108,8 +108,8 @@ begin
     select count(r.first_at) as answered, round(avg(extract(epoch from r.first_at-t.created_at))) as average_seconds
     from tickets t
     cross join lateral (
-      select min(m.created_at) as first_at from public.ica_ticket_messages m
-      join public.ica_profiles author on author.id=m.author_id and not author.demo
+      select min(m.created_at) as first_at from public.ticket_messages m
+      join public.profiles author on author.id=m.author_id and not author.demo
       where m.ticket_id=t.id and m.author_id<>t.user_id and m.created_at>=t.created_at and m.created_at<observed_at
     ) r
     where t.created_at >= from_at
@@ -143,20 +143,20 @@ end $$;
 create function public.app_admin_analytics_courses(p_page integer default 1)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare
-  actor_id uuid := ica_private.admin_reporting_actor();
+  actor_id uuid := app_private.admin_reporting_actor();
   result jsonb;
 begin
   if p_page is null or p_page not between 1 and 100000 then
-    perform ica_private.fail('Página inválida.');
+    perform app_private.fail('Página inválida.');
   end if;
-  perform ica_private.throttle(actor_id, 'admin_analytics_courses', 20);
+  perform app_private.throttle(actor_id, 'admin_analytics_courses', 20);
 
   with items as (
-    select id,title from public.ica_courses where status='published'
+    select id,title from public.courses where status='published'
     order by title,id limit 20 offset (p_page-1)*20
   )
   select jsonb_build_object('items',coalesce((select jsonb_agg(jsonb_build_object('id',id,'title',title) order by title,id) from items),'[]'::jsonb),
-    'total',(select count(*) from public.ica_courses where status='published'),'page',p_page,'page_size',20)
+    'total',(select count(*) from public.courses where status='published'),'page',p_page,'page_size',20)
   into result;
   return result;
 end $$;
@@ -164,26 +164,26 @@ end $$;
 create function public.app_admin_course_analytics(p_course_id uuid,p_page integer default 1)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare
-  actor_id uuid := ica_private.admin_reporting_actor();
+  actor_id uuid := app_private.admin_reporting_actor();
   result jsonb;
 begin
-  if p_course_id is null then perform ica_private.fail('Curso indisponível.'); end if;
+  if p_course_id is null then perform app_private.fail('Curso indisponível.'); end if;
   if p_page is null or p_page not between 1 and 100000 then
-    perform ica_private.fail('Página inválida.');
+    perform app_private.fail('Página inválida.');
   end if;
-  perform ica_private.throttle(actor_id, 'admin_course_analytics', 20);
+  perform app_private.throttle(actor_id, 'admin_course_analytics', 20);
 
   with course as (
-    select id,required_lesson_ids from public.ica_courses where id=p_course_id and status='published'
+    select id,required_lesson_ids from public.courses where id=p_course_id and status='published'
   ), first_module as (
-    select m.id,m.title from public.ica_modules m join course c on c.id=m.course_id
+    select m.id,m.title from public.modules m join course c on c.id=m.course_id
     where m.status='published' order by m.order_index,m.id limit 1
   ), curriculum as (
     select l.id,l.title,l.duration_seconds,m.title as module_title,m.id as module_id,
       l.id=any(c.required_lesson_ids) as required,
       row_number() over(order by m.order_index,m.id,s.order_index,s.id,l.order_index,l.id) as ord
-    from course c join public.ica_modules m on m.course_id=c.id join public.ica_sections s on s.module_id=m.id
-    join public.ica_lessons l on l.section_id=s.id
+    from course c join public.modules m on m.course_id=c.id join public.sections s on s.module_id=m.id
+    join public.lessons l on l.section_id=s.id
     where m.status='published' and s.status='published' and l.status='published'
   ), rules as (
     select count(*) filter (where required and module_id=(select id from first_module)) as module_required,
@@ -191,8 +191,8 @@ begin
     from curriculum
   ), progress as (
     select lp.user_id,lp.lesson_id,lp.completed_at is not null as complete,c.required,c.module_id
-    from curriculum c join public.ica_lesson_progress lp on lp.lesson_id=c.id
-    join public.ica_profiles p on p.id=lp.user_id
+    from curriculum c join public.lesson_progress lp on lp.lesson_id=c.id
+    join public.profiles p on p.id=lp.user_id
     where p.role='member' and not p.demo
   ), per_member as (
     select count(*) filter (where complete and required and module_id=(select id from first_module)) as module_done,
@@ -223,11 +223,11 @@ begin
       'total',(select count(*) from curriculum),'page',p_page,'page_size',20)
   ) into result from funnel f where exists(select from course);
 
-  if result is null then perform ica_private.fail('Curso indisponível.'); end if;
+  if result is null then perform app_private.fail('Curso indisponível.'); end if;
   return result;
 end $$;
 
-revoke execute on function ica_private.admin_reporting_actor() from public, anon, authenticated, service_role;
+revoke execute on function app_private.admin_reporting_actor() from public, anon, authenticated, service_role;
 revoke execute on function public.app_admin_dashboard(text), public.app_admin_analytics_courses(integer),
   public.app_admin_course_analytics(uuid,integer) from public, anon, authenticated, service_role;
 grant execute on function public.app_admin_dashboard(text), public.app_admin_analytics_courses(integer),

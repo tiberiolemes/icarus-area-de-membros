@@ -57,25 +57,25 @@ select pg_temp.id(n),'presentation-'||n||'@example.test',now(),'{"icarus_server_
 set constraints all immediate;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
 select pg_temp.id(10+n),pg_temp.id(n),now(),now(),'aal2' from generate_series(1,5) n;
-update public.ica_profiles set role=case id when pg_temp.id(3) then 'instructor'
+update public.profiles set role=case id when pg_temp.id(3) then 'instructor'
  when pg_temp.id(4) then 'moderator' else 'admin' end
 where id in (pg_temp.id(3),pg_temp.id(4),pg_temp.id(5));
 
-insert into public.ica_courses(id,slug,title,status,access_mode) values
+insert into public.courses(id,slug,title,status,access_mode) values
  (pg_temp.id(100),'presentation-open','Curso disponível','published','members'),
  (pg_temp.id(101),'presentation-locked','Curso por assinatura','published','subscribers');
-insert into public.ica_modules(id,course_id,slug,title,status)
+insert into public.modules(id,course_id,slug,title,status)
 select pg_temp.id(110+n),pg_temp.id(100+n),'modulo','Módulo','published' from generate_series(0,1) n;
-insert into public.ica_sections(id,module_id,title,status)
+insert into public.sections(id,module_id,title,status)
 select pg_temp.id(120+n),pg_temp.id(110+n),'Seção','published' from generate_series(0,1) n;
-insert into public.ica_lessons(id,section_id,slug,title,type,body,duration_seconds,status) values
+insert into public.lessons(id,section_id,slug,title,type,body,duration_seconds,status) values
  (pg_temp.id(130),pg_temp.id(120),'principal','Aula principal','video','<p>Objetivo original</p>',600,'published'),
  (pg_temp.id(131),pg_temp.id(120),'legado','Aula legada','text','',0,'published'),
  (pg_temp.id(132),pg_temp.id(121),'bloqueada','Aula por assinatura','video','',600,'published'),
  (pg_temp.id(133),pg_temp.id(120),'rascunho','Aula em rascunho','video','',600,'draft');
-insert into public.ica_plans(id,name,slug,price_cents,access_months)
+insert into public.plans(id,name,slug,price_cents,access_months)
 values (pg_temp.id(140),'Plano teste','presentation-test',0,1);
-insert into public.ica_subscriptions(user_id,plan_id,ends_at,source)
+insert into public.subscriptions(user_id,plan_id,ends_at,source)
 values (pg_temp.id(1),pg_temp.id(140),now()+interval '1 day','courtesy');
 
 select pg_temp.ok((select bool_and(
@@ -90,7 +90,7 @@ select pg_temp.ok((select count(*)=2 and bool_and(
  relrowsecurity and not has_table_privilege('anon',oid,'SELECT,INSERT,UPDATE,DELETE')
  and not has_table_privilege('authenticated',oid,'SELECT,INSERT,UPDATE,DELETE')
  and not has_table_privilege('service_role',oid,'SELECT,INSERT,UPDATE,DELETE')
-) from pg_class where oid in ('public.ica_lesson_presentations'::regclass,'public.ica_lesson_checklist_items'::regclass)),
+) from pg_class where oid in ('public.lesson_presentations'::regclass,'public.lesson_checklist_items'::regclass)),
  'RLS ativa e ACL direta fechada');
 
 set local role anon;
@@ -105,8 +105,8 @@ select pg_temp.denied('select public.app_lesson_presentation(pg_temp.id(130),nul
 select pg_temp.denied('select public.app_lesson_presentation(pg_temp.id(130),true)','membro sem modo editor');
 select pg_temp.denied('select public.app_admin_save_lesson_presentation(pg_temp.id(130),pg_temp.presentation())',
  'membro sem escrita editorial mesmo com claim de admin');
-select pg_temp.denied('select * from public.ica_lesson_checklist_items','checklist sem SELECT direto','permission');
-select pg_temp.denied('select * from public.ica_lesson_presentations','apresentação sem SELECT direto','permission');
+select pg_temp.denied('select * from public.lesson_checklist_items','checklist sem SELECT direto','permission');
+select pg_temp.denied('select * from public.lesson_presentations','apresentação sem SELECT direto','permission');
 
 select pg_temp.login(4);
 select pg_temp.denied('select public.app_lesson_presentation(pg_temp.id(133),true)','moderador sem modo editor');
@@ -247,9 +247,9 @@ select pg_temp.ok(public.app_lesson_presentation(pg_temp.id(132))->'checked_ids'
  'alterar a definição da primeira aula preserva o mesmo ID na outra');
 
 reset role;
-select pg_temp.ok(not exists(select from public.ica_lesson_checklist_items
+select pg_temp.ok(not exists(select from public.lesson_checklist_items
  where lesson_id=pg_temp.id(130) and item_id='a_2'),'remoção limpa dados dos dois membros');
-update public.ica_subscriptions set revoked_at=now() where user_id=pg_temp.id(1);
+update public.subscriptions set revoked_at=now() where user_id=pg_temp.id(1);
 set local role authenticated;
 select pg_temp.login(1);
 select pg_temp.denied('select public.app_lesson_presentation(pg_temp.id(132))','assinatura revogada bloqueia leitura',
@@ -288,8 +288,8 @@ select pg_temp.login(5);
 select pg_temp.ok(public.app_admin_save_lesson_presentation(pg_temp.id(130),'null'::jsonb)
  =jsonb_build_object('lesson_id',pg_temp.id(130)),'JSON null limpa apresentação');
 reset role;
-select pg_temp.ok(not exists(select from public.ica_lesson_presentations where lesson_id=pg_temp.id(130))
- and not exists(select from public.ica_lesson_checklist_items where lesson_id=pg_temp.id(130)),
+select pg_temp.ok(not exists(select from public.lesson_presentations where lesson_id=pg_temp.id(130))
+ and not exists(select from public.lesson_checklist_items where lesson_id=pg_temp.id(130)),
  'JSON null remove imediatamente a apresentação e as marcações');
 
 set local role authenticated;
@@ -306,12 +306,12 @@ select pg_temp.login(5);
 select pg_temp.ok(public.app_admin_save_lesson_presentation(pg_temp.id(130),'{}'::jsonb)
  =jsonb_build_object('lesson_id',pg_temp.id(130)),'objeto vazio equivale a limpar');
 reset role;
-select pg_temp.ok(not exists(select from public.ica_lesson_presentations where lesson_id=pg_temp.id(130))
- and not exists(select from public.ica_lesson_checklist_items where lesson_id=pg_temp.id(130)),
+select pg_temp.ok(not exists(select from public.lesson_presentations where lesson_id=pg_temp.id(130))
+ and not exists(select from public.lesson_checklist_items where lesson_id=pg_temp.id(130)),
  'objeto vazio remove imediatamente a apresentação e as marcações');
 
-update public.ica_lessons set status='archived' where id=pg_temp.id(133);
-update public.ica_app_sessions set revoked_at=now() where id=pg_temp.id(11);
+update public.lessons set status='archived' where id=pg_temp.id(133);
+update public.app_sessions set revoked_at=now() where id=pg_temp.id(11);
 set local role authenticated;
 select pg_temp.login(3);
 select pg_temp.denied('select public.app_admin_save_lesson_presentation(pg_temp.id(133),pg_temp.presentation())',

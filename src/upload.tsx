@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { client, edge, errorMessage, uploadStorage } from "./api";
-import { Field, Notice } from "./ui";
+import { Field, Notice, Unsaved } from "./ui";
+
+// O recorte reencoda em JPEG, então só aqui dá para conferir o conteúdo real do arquivo escolhido.
+const avatarSignatures: Record<string, number[]> = {
+  "image/jpeg": [255, 216, 255],
+  "image/png": [137, 80, 78, 71, 13, 10, 26, 10],
+};
 
 export function Upload({
   kind,
@@ -40,12 +46,21 @@ export function Upload({
       const size = Math.min(image.width, image.height),
         x = ((image.width - size) * crop) / 100,
         y = ((image.height - size) * crop) / 100;
-      ctx.clearRect(0, 0, 512, 512);
+      // O recorte sai em JPEG, que não guarda transparência: sem fundo, ela viraria preto.
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, 512, 512);
       ctx.drawImage(image, x, y, size, size, 0, 0, 512, 512);
+    };
+    image.onerror = () => {
+      setPreview("");
+      setState("");
+      setError("Não foi possível ler esta foto. Escolha outro JPG ou PNG.");
+      if (file.current) file.current.value = "";
     };
     image.src = preview;
     return () => {
       image.onload = null;
+      image.onerror = null;
     };
   }, [preview, crop]);
   useEffect(
@@ -127,7 +142,9 @@ export function Upload({
         });
         if (error) throw error;
       }
-      setState("Arquivo enviado e associado ao registro.");
+      setState(
+        kind === "avatar" ? "Foto salva." : "Arquivo enviado e associado ao registro.",
+      );
       if (file.current) file.current.value = "";
       setPreview("");
       onUploaded?.();
@@ -147,6 +164,7 @@ export function Upload({
   }
   return (
     <section className="upload" aria-busy={busy}>
+      <Unsaved dirty={!!preview} />
       <Field
         label={
           kind === "ticket-attachment"
@@ -158,7 +176,9 @@ export function Upload({
               : "Enviar arquivo"
         }
         hint={
-          kind === "lesson"
+          kind === "avatar"
+            ? "JPG ou PNG de até 500 KB."
+            : kind === "lesson"
             ? "MP4 de até 500 MiB no armazenamento da plataforma."
             : kind === "material"
             ? "Até 500 MiB, conforme o tipo permitido pelo servidor. O andamento abaixo não estima percentual."
@@ -170,32 +190,40 @@ export function Upload({
           type="file"
           disabled={busy}
           accept={
-            kind.includes("image") ||
-            kind === "course-cover" ||
             kind === "avatar"
+              ? "image/jpeg,image/png"
+              : kind.includes("image") || kind === "course-cover"
               ? "image/png,image/jpeg,image/webp"
               : kind === "lesson"
                 ? "video/mp4"
                 : undefined
           }
-          onChange={(e) => {
+          onChange={async (e) => {
+            const input = e.currentTarget,
+              selected = input.files?.[0];
             setError("");
             setState("");
-            const selected = e.target.files?.[0];
-            if (kind === "avatar" && selected) {
-              if (
-                !["image/jpeg", "image/png", "image/webp"].includes(
-                  selected.type,
-                ) ||
-                selected.size > 5 * 1024 ** 2
-              ) {
-                setError("Escolha uma imagem PNG, JPG ou WebP de até 5 MiB.");
-                e.target.value = "";
-                return;
-              }
-              setPreview(URL.createObjectURL(selected));
-              setCrop(50);
+            if (kind !== "avatar") return;
+            setPreview("");
+            if (!selected) return;
+            const head = new Uint8Array(
+              await selected.slice(0, 8).arrayBuffer().catch(() => new ArrayBuffer(0)),
+            );
+            // Outra escolha chegou durante a leitura: ela decide a prévia.
+            if (input.files?.[0] !== selected) return;
+            const tooBig = selected.size > 500 * 1024;
+            if (tooBig || !avatarSignatures[selected.type]?.every((byte, i) => head[i] === byte)) {
+              setError(
+                tooBig
+                  ? "Esta foto passa de 500 KB. Escolha uma menor, em JPG ou PNG."
+                  : "Escolha uma foto JPG ou PNG de até 500 KB.",
+              );
+              input.value = "";
+              return;
             }
+            setPreview(URL.createObjectURL(selected));
+            setCrop(50);
+            setState("Foto escolhida, ainda não salva. Ajuste o recorte e clique em Salvar foto.");
           }}
         />
       </Field>
@@ -220,8 +248,13 @@ export function Upload({
         </div>
       )}
       <div className="actions">
-        <button type="button" disabled={busy} onClick={upload}>
-          Enviar arquivo
+        <button
+          type="button"
+          className={kind === "avatar" ? "primary" : undefined}
+          disabled={busy || (kind === "avatar" && !preview)}
+          onClick={upload}
+        >
+          {kind === "avatar" ? "Salvar foto" : "Enviar arquivo"}
         </button>
         {busy && (
           <button type="button" onClick={() => controller.current?.abort()}>

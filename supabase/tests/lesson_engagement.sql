@@ -39,31 +39,31 @@ select pg_temp.id(n),'engagement-'||n||'@example.test',now(),'{"icarus_server_cr
 set constraints all immediate;
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
 select pg_temp.id(10+n),pg_temp.id(n),now(),now(),'aal2' from generate_series(1,6) n;
-update public.ica_profiles set role=case id when pg_temp.id(3) then 'instructor'
+update public.profiles set role=case id when pg_temp.id(3) then 'instructor'
  when pg_temp.id(4) then 'moderator' when pg_temp.id(5) then 'support' else 'admin' end
 where id in (pg_temp.id(3),pg_temp.id(4),pg_temp.id(5),pg_temp.id(6));
 
-insert into public.ica_courses(id,slug,title,status,access_mode) values
+insert into public.courses(id,slug,title,status,access_mode) values
  (pg_temp.id(100),'engagement-open','Curso disponível','published','members'),
  (pg_temp.id(101),'engagement-locked','Curso por assinatura','published','subscribers'),
  (pg_temp.id(102),'engagement-draft','Curso em rascunho','draft','members');
-insert into public.ica_modules(id,course_id,slug,title,status)
+insert into public.modules(id,course_id,slug,title,status)
 select pg_temp.id(110+n),pg_temp.id(100+n),'modulo','Módulo','published' from generate_series(0,2) n;
-insert into public.ica_sections(id,module_id,title,status)
+insert into public.sections(id,module_id,title,status)
 select pg_temp.id(120+n),pg_temp.id(110+n),'Seção','published' from generate_series(0,2) n;
-insert into public.ica_lessons(id,section_id,slug,title,type,duration_seconds,status,is_preview) values
+insert into public.lessons(id,section_id,slug,title,type,duration_seconds,status,is_preview) values
  (pg_temp.id(130),pg_temp.id(120),'first','Aula principal','video',600,'published',false),
  (pg_temp.id(131),pg_temp.id(120),'second','Outra aula','text',0,'published',false),
  (pg_temp.id(132),pg_temp.id(121),'locked','Aula por assinatura','video',600,'published',false),
  (pg_temp.id(133),pg_temp.id(121),'preview','Aula de prévia','video',60,'published',true),
  (pg_temp.id(134),pg_temp.id(122),'draft','Aula em rascunho','text',0,'draft',false);
-insert into public.ica_plans(id,name,slug,price_cents,access_months)
+insert into public.plans(id,name,slug,price_cents,access_months)
 values (pg_temp.id(140),'Plano teste','engagement-test',0,1);
-insert into public.ica_subscriptions(user_id,plan_id,ends_at,source)
+insert into public.subscriptions(user_id,plan_id,ends_at,source)
 values (pg_temp.id(1),pg_temp.id(140),now()+interval '1 day','courtesy');
-insert into public.ica_spaces(id,name,status,access_mode)
+insert into public.spaces(id,name,status,access_mode)
 values (pg_temp.id(159),'Espaço para teste de exportação','published','members');
-insert into public.ica_posts(id,space_id,author_id,title,body,status,previous_status,archived_by,archive_source)
+insert into public.posts(id,space_id,author_id,title,body,status,previous_status,archived_by,archive_source)
 values
  (pg_temp.id(160),pg_temp.id(159),pg_temp.id(1),'Arquivado pela equipe','Texto autoral',
   'archived','approved',pg_temp.id(6),'admin'),
@@ -86,10 +86,10 @@ select pg_temp.ok((select count(*)=3 and bool_and(
  relrowsecurity and not has_table_privilege('anon',oid,'SELECT,INSERT,UPDATE,DELETE')
  and not has_table_privilege('authenticated',oid,'SELECT,INSERT,UPDATE,DELETE')
  and not has_table_privilege('service_role',oid,'SELECT,INSERT,UPDATE,DELETE')
-) from pg_class where oid in ('public.ica_lesson_favorites'::regclass,'public.ica_lesson_notes'::regclass,
- 'public.ica_lesson_comments'::regclass)),'RLS ativa e ACL direta fechada');
+) from pg_class where oid in ('public.lesson_favorites'::regclass,'public.lesson_notes'::regclass,
+ 'public.lesson_comments'::regclass)),'RLS ativa e ACL direta fechada');
 select pg_temp.ok(not has_function_privilege('authenticated',
- 'ica_private.lesson_engagement_actor(uuid,boolean)','EXECUTE'),'helper privado sem grant');
+ 'app_private.lesson_engagement_actor(uuid,boolean)','EXECUTE'),'helper privado sem grant');
 select pg_temp.ok(has_function_privilege('authenticated','public.app_export_data()','EXECUTE')
  and not has_function_privilege('anon','public.app_export_data()','EXECUTE'),'export preserva ACL do titular');
 
@@ -106,7 +106,7 @@ select pg_temp.ok(public.app_lesson_favorite(pg_temp.id(130),true)='{"saved":tru
 select pg_temp.ok(public.app_lesson_favorite(pg_temp.id(130),false)='{"saved":false}','desfavoritar');
 select pg_temp.ok(public.app_lesson_favorite(pg_temp.id(130),false)='{"saved":false}','desfavoritar novamente');
 reset role;
-select pg_temp.ok(not exists(select from public.ica_lesson_favorites
+select pg_temp.ok(not exists(select from public.lesson_favorites
  where user_id=pg_temp.id(1) and lesson_id=pg_temp.id(130)),'desfavoritar repetido remove vínculo da tabela');
 set local role authenticated;
 select pg_temp.ok(public.app_lesson_favorite(pg_temp.id(130),true)='{"saved":true}','favorito final');
@@ -124,19 +124,19 @@ select pg_temp.denied('select public.app_save_lesson_note(pg_temp.id(131),pg_tem
 select pg_temp.denied('select public.app_delete_lesson_note(pg_temp.id(131),pg_temp.saved(''note''))',
  'exclusão vinculada à aula','Anotação indisponível.');
 reset role;
-update public.ica_lesson_notes set updated_at='2000-01-01 UTC' where id=pg_temp.saved('note');
+update public.lesson_notes set updated_at='2000-01-01 UTC' where id=pg_temp.saved('note');
 set local role authenticated;
 select pg_temp.ok(public.app_save_lesson_note(pg_temp.id(130),pg_temp.saved('note'),'Atualizada',72)=
  jsonb_build_object('id',pg_temp.saved('note')),'edição mantém ID');
 reset role;
 select pg_temp.ok((select body='Atualizada' and position_seconds=72 and updated_at>'2000-01-01 UTC'
- from public.ica_lesson_notes where id=pg_temp.saved('note')),'edição persiste corpo, tempo e timestamp novo');
-select updated_at as edited_at from public.ica_lesson_notes where id=pg_temp.saved('note') \gset
+ from public.lesson_notes where id=pg_temp.saved('note')),'edição persiste corpo, tempo e timestamp novo');
+select updated_at as edited_at from public.lesson_notes where id=pg_temp.saved('note') \gset
 set local role authenticated;
 select public.app_save_lesson_note(pg_temp.id(130),pg_temp.saved('note'),U&'\202FAtualizada\00A0',72);
 reset role;
 select pg_temp.ok((select body='Atualizada' and position_seconds=72 and updated_at=:'edited_at'::timestamptz
- from public.ica_lesson_notes where id=pg_temp.saved('note')),'repetir edição normalizada preserva estado e timestamp');
+ from public.lesson_notes where id=pg_temp.saved('note')),'repetir edição normalizada preserva estado e timestamp');
 set local role authenticated;
 select pg_temp.denied('select public.app_lesson_notes(pg_temp.id(130),null)','página nula negada','Página inválida.');
 select pg_temp.denied('select public.app_lesson_notes(pg_temp.id(130),2147483647)','página gigante negada','Página inválida.');
@@ -163,9 +163,9 @@ select pg_temp.ok(public.app_delete_lesson_note(pg_temp.id(131),pg_temp.saved('o
  jsonb_build_object('id',pg_temp.saved('other_lesson_note')),'titular pode excluir');
 select pg_temp.denied('select public.app_delete_lesson_note(pg_temp.id(131),pg_temp.saved(''other_lesson_note''))',
  'exclusão repetida não encontra nota','Anotação indisponível.');
-select pg_temp.denied('select * from public.ica_lesson_notes','authenticated sem leitura direta de notas','permission');
-select pg_temp.denied('select * from public.ica_lesson_favorites','authenticated sem leitura direta de favoritos','permission');
-select pg_temp.denied('select * from public.ica_lesson_comments','authenticated sem leitura direta de comentários','permission');
+select pg_temp.denied('select * from public.lesson_notes','authenticated sem leitura direta de notas','permission');
+select pg_temp.denied('select * from public.lesson_favorites','authenticated sem leitura direta de favoritos','permission');
+select pg_temp.denied('select * from public.lesson_comments','authenticated sem leitura direta de comentários','permission');
 
 insert into engagement_ids
 select 'root',(created->>'id')::uuid
@@ -299,14 +299,14 @@ select pg_temp.ok(public.app_lesson_comments(pg_temp.id(130))->'items'->2->>'sta
 reset role;
 
 select pg_temp.ok((select count(*)=1 and bool_and(actor_id=pg_temp.id(4) and decision='approve' and reason=U&'Motivo\202Fhumano')
- from public.ica_moderation_events where target_type='lesson_comment' and target_id=pg_temp.saved('root')),
+ from public.moderation_events where target_type='lesson_comment' and target_id=pg_temp.saved('root')),
  'repetir moderação mantém um único registro para a decisão final');
 select pg_temp.ok((select count(*)=1 and bool_and(action='moderate:approve' and actor_id=pg_temp.id(4) and reason=U&'Motivo\202Fhumano')
- from public.ica_audit_events where target_type='lesson_comment' and target_id=pg_temp.saved('root')),
+ from public.audit_events where target_type='lesson_comment' and target_id=pg_temp.saved('root')),
  'autor, decisão e motivo auditados');
 do $$ begin
  begin
-  insert into public.ica_lesson_comments(lesson_id,author_id,parent_id,body,is_instructor)
+  insert into public.lesson_comments(lesson_id,author_id,parent_id,body,is_instructor)
   values (pg_temp.id(131),pg_temp.id(2),pg_temp.saved('root'),'Resposta indevida',false);
   raise exception 'FAIL: FK aceitou pai de outra aula';
  exception when foreign_key_violation then
@@ -314,20 +314,20 @@ do $$ begin
  end;
 end $$;
 
-grant select on public.ica_lesson_favorites,public.ica_lesson_notes,public.ica_lesson_comments to authenticated;
+grant select on public.lesson_favorites,public.lesson_notes,public.lesson_comments to authenticated;
 set local role authenticated;
-select pg_temp.ok(not exists(select from public.ica_lesson_notes)
- and not exists(select from public.ica_lesson_favorites)
- and not exists(select from public.ica_lesson_comments),'RLS protege tabelas mesmo diante de grant de leitura');
+select pg_temp.ok(not exists(select from public.lesson_notes)
+ and not exists(select from public.lesson_favorites)
+ and not exists(select from public.lesson_comments),'RLS protege tabelas mesmo diante de grant de leitura');
 reset role;
-revoke select on public.ica_lesson_favorites,public.ica_lesson_notes,public.ica_lesson_comments from authenticated;
+revoke select on public.lesson_favorites,public.lesson_notes,public.lesson_comments from authenticated;
 
 create function pg_temp.fail_audit() returns trigger language plpgsql as $$
 begin
  if new.target_type='lesson_comment' then raise exception 'Falha de auditoria de teste'; end if;
  return new;
 end $$;
-create trigger engagement_test_audit before insert on public.ica_audit_events
+create trigger engagement_test_audit before insert on public.audit_events
  for each row execute function pg_temp.fail_audit();
 set local role authenticated;
 insert into engagement_ids
@@ -338,13 +338,13 @@ select pg_temp.denied($q$select public.app_moderate_lesson_comment(pg_temp.id(13
 select pg_temp.ok(public.app_lesson_comments(pg_temp.id(130),1,true)->'items'->0->>'id'=
  pg_temp.saved('audit_rollback')::text,'comentário continua na fila');
 reset role;
-select pg_temp.ok(not exists(select from public.ica_moderation_events where target_id=pg_temp.saved('audit_rollback')),
+select pg_temp.ok(not exists(select from public.moderation_events where target_id=pg_temp.saved('audit_rollback')),
  'falha também reverte o registro de moderação');
-drop trigger engagement_test_audit on public.ica_audit_events;
+drop trigger engagement_test_audit on public.audit_events;
 
-insert into public.ica_lesson_notes(user_id,lesson_id,body,updated_at)
+insert into public.lesson_notes(user_id,lesson_id,body,updated_at)
 select pg_temp.id(1),pg_temp.id(130),'Página nota '||n,now()+n*interval '1 day' from generate_series(1,21) n;
-insert into public.ica_lesson_comments(lesson_id,author_id,body,status,is_instructor,created_at)
+insert into public.lesson_comments(lesson_id,author_id,body,status,is_instructor,created_at)
 select pg_temp.id(130),pg_temp.id(3),'Página comentário '||n,'approved',true,now()+n*interval '1 day'
 from generate_series(1,21) n;
 set local role authenticated;
@@ -399,7 +399,7 @@ select pg_temp.ok((select jsonb_array_length(:'peer_export'::jsonb->'lesson_comm
  'colega exporta resposta sem identificar comentário pai de terceiro');
 reset role;
 
-update public.ica_subscriptions set revoked_at=now() where user_id=pg_temp.id(1) and plan_id=pg_temp.id(140);
+update public.subscriptions set revoked_at=now() where user_id=pg_temp.id(1) and plan_id=pg_temp.id(140);
 set local role authenticated;
 select pg_temp.login(1);
 select pg_temp.denied('select public.app_lesson_engagement(pg_temp.id(132))',
@@ -446,13 +446,13 @@ select pg_temp.ok(:'admin_export'::jsonb->'lesson_favorites'='[]'
  and :'admin_export'::jsonb->'lesson_notes'='[]'
  and :'admin_export'::jsonb->'lesson_comments'='[]','admin sem interações próprias recebe listas vazias');
 reset role;
-update public.ica_app_sessions set revoked_at=now() where id=pg_temp.id(11);
+update public.app_sessions set revoked_at=now() where id=pg_temp.id(11);
 set local role authenticated;
 select pg_temp.login(1);
 select pg_temp.denied('select public.app_lesson_engagement(pg_temp.id(130))',
  'sessão revogada corta novas interações','Sessão expirada. Entre novamente.');
 reset role;
-update public.ica_profiles set suspended=true where id=pg_temp.id(2);
+update public.profiles set suspended=true where id=pg_temp.id(2);
 set local role authenticated;
 select pg_temp.login(2);
 select pg_temp.denied('select public.app_lesson_comments(pg_temp.id(130))',

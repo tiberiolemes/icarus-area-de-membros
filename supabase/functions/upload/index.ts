@@ -36,6 +36,7 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   const name = text(file.name, 180), format = formats[name.split(".").pop()!.toLowerCase()];
   if (screenshot && !/^.+\.(png|jpe?g|webp)$/i.test(file.name)) throw new HttpError(422, "INVALID_FILE", "O print precisa ter extensão PNG, JPG ou WebP.");
   if (!format || file.type !== format.mime || file.size === 0 || file.size > Math.min(format.max, 20 * 1024 * 1024) || (["post-image", "course-cover", "avatar", "feedback-screenshot"].includes(kind) && !file.type.startsWith("image/")) || (kind === "lesson" && file.type !== "video/mp4")) throw new HttpError(422, "INVALID_FILE", "Tipo ou tamanho de arquivo não permitido.");
+  if (kind === "avatar" && (!["image/jpeg", "image/png"].includes(file.type) || file.size > 500 * 1024)) throw new HttpError(422, "INVALID_FILE", "A foto precisa ser JPG ou PNG de até 500 KB.");
   const bytes = new Uint8Array(await file.slice(0, 16).arrayBuffer());
   const matches = matchesSignature(file.type, bytes);
   if (!matches) throw new HttpError(422, "INVALID_FILE", "O conteúdo não corresponde ao tipo informado.");

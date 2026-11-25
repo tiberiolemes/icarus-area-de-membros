@@ -122,7 +122,7 @@ it("preserva o estado confirmado depois de responder e não duplica arquivo list
     "fetch",
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const reply = String(input).includes("app_ticket_reply");
-      const list = String(input).includes("app_tickets");
+      const list = String(input).includes("app_admin_ticket_queue");
       if (reply) status = JSON.parse(String(init?.body)).p_status;
       return new Response(
         JSON.stringify(

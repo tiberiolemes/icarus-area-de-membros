@@ -3,9 +3,10 @@ import type { FormEvent, ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
-import { errorMessage, rpc } from "../api";
+import { errorMessage, rpc, useRpc } from "../api";
 import { RoleGate, useAuth } from "../auth";
-import { Back, Heading, Loading, Notice, Unsaved } from "../ui";
+import { Loading, Notice, QueryState, SubmitInHeading, Unsaved } from "../ui";
+import { AdminSurface } from "./admin-surface";
 import "./admin-lesson-presentation.css";
 
 type Chapter = { title: string; start_seconds: number; duration_seconds?: number };
@@ -144,12 +145,20 @@ type EditorProps = { lessonId: string; lessonTitle?: string; onClose?: () => voi
 
 export function AdminLessonPresentationPage() {
   const { id, lessonId } = useParams();
+  const validLesson = Boolean(id && lessonId && lessonIdPattern.test(id) && lessonIdPattern.test(lessonId));
+  const query = useRpc<{ course_title: string; module_title: string; lesson_title: string }>("app_admin_lesson_context",
+    { p_course_id: id, p_lesson_id: lessonId }, validLesson);
+  const data = query.data;
+  const coursePath = id ? `/admin/cursos/${encodeURIComponent(id)}?aba=estrutura` : "/admin/cursos";
   return (
-    <>
-      <Back to={id ? `/admin/cursos/${encodeURIComponent(id)}?aba=estrutura` : "/admin/cursos"} label="Voltar à estrutura do curso" />
-      <Heading title="Editar apresentação" />
-      <AdminLessonPresentation lessonId={lessonId ?? ""} />
-    </>
+    <AdminSurface formAction section="aula-apresentacao"
+      trail={["Administração", { label: data?.course_title ?? "Cursos e aulas", to: coursePath }, ...(data ? [data.module_title] : []), "Apresentação"]}
+      title={data ? data.lesson_title : "Editar apresentação"}
+      description="Edite os capítulos e os materiais complementares da aula.">
+      {validLesson ? <QueryState query={query}>
+        {data && <AdminLessonPresentation lessonId={lessonId!} />}
+      </QueryState> : <Notice error>Selecione uma aula cadastrada para editar sua apresentação.</Notice>}
+    </AdminSurface>
   );
 }
 
@@ -329,6 +338,7 @@ function OptionalBlock<T extends Record<string, string>>({ name, label, value, f
 function PresentationForm({ initial, onSave, onClose }: {
   initial: Presentation | null; onSave: (presentation: Presentation | null) => Promise<void>; onClose?: () => void;
 }) {
+  const formId = useId();
   const [saved, setSaved] = useState(() => fromPresentation(initial));
   const [draft, setDraft] = useState(saved);
   const [errors, setErrors] = useState<Errors>({});
@@ -380,7 +390,7 @@ function PresentationForm({ initial, onSave, onClose }: {
   return (
     <>
       <Unsaved dirty={dirty} />
-      <form noValidate autoComplete="off" onSubmit={submit} aria-busy={busy}>
+      <form id={formId} noValidate autoComplete="off" onSubmit={submit} aria-busy={busy}>
         <fieldset disabled={busy}>
           <EditorField name="subtitle" label="Subtítulo (opcional)" value={draft.subtitle}
             error={errors.subtitle} onChange={(subtitle) => update({ subtitle })} />
@@ -436,9 +446,11 @@ function PresentationForm({ initial, onSave, onClose }: {
         <div className="lesson-presentation-editor__footer">
           {message && <div tabIndex={-1} ref={feedback}><Notice error={message.error}>{message.text}</Notice></div>}
           <div className="form-actions">
-            <button className="primary" type="submit" disabled={busy || !dirty}>
-              {busy ? "Salvando…" : "Salvar apresentação"}
-            </button>
+            <SubmitInHeading>
+              <button className="primary" type="submit" form={formId} disabled={busy || !dirty}>
+                {busy ? "Salvando…" : "Salvar apresentação"}
+              </button>
+            </SubmitInHeading>
             {onClose && <button type="button" disabled={busy} onClick={() => {
               if (!dirty || window.confirm(discardMessage)) onClose();
             }}>Fechar editor</button>}

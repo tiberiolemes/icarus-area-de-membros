@@ -81,13 +81,22 @@ export function seed() {
   })));
   return {
     profiles: structuredClone(profiles), posts: structuredClone(posts), tickets: structuredClone(tickets),
-    records: { courses, modules, sections, lessons, material_folders: [folder], materials: [material], events: [{ ...event }], spaces, plans } as Record<string, Row[]>,
-    replies: [] as Row[], feedbacks: [] as Row[],
+    records: { courses, modules, sections, lessons, material_folders: [folder], materials: [material], events: [{ ...event }], spaces, plans,
+      orders: [{ id: demoId(71), user_id: demoId(1), amount_cents: 9900, method: "PIX", status: "paid", created_at: date, paid_at: date, finalized_at: date }],
+      podcast_episodes: [{ id: demoId(78), youtube_id: "qaOpExample", kind: "podcast", title: "Episódio de demonstração",
+        description: "Episódio fictício para testar o editor.", published_at: date, status: "draft", is_featured: false,
+        chapters: [], spotify_url: null, watched: false }],
+      audit_events: [{ id: demoId(73), actor_id: demoId(2), actor_name: profiles[1].full_name, action_label: "Criação", target_label: "Encontro",
+        target_id: event.id, target_name: event.title, target_path: "/admin/encontros", created_at: date, reason: null }] } as Record<string, Row[]>,
+    replies: [] as Row[], feedbacks: [{ id: demoId(74), author_name: profiles[0].full_name, kind: "suggestion", status: "new",
+      body: "Sugestão fictícia: incluir um índice nos materiais.", excerpt: "Sugestão fictícia: incluir um índice nos materiais.",
+      created_at: date, revision: 1, has_screenshot: false }] as Row[],
     alertsRead: [] as string[], launches: [] as string[], eventRsvps: [] as string[],
     progress: { [profiles[0].id]: { [demoId(300)]: { completed: true, position_seconds: 0 },
       [demoId(301)]: { completed: false, position_seconds: 4 } } } as Record<string, Record<string, { completed: boolean; position_seconds: number }>>,
     favorites: {} as Record<string, boolean>,
-    lessonComments: [] as Row[], notes: [] as Row[], presentations: {
+    lessonComments: [{ id: demoId(75), lesson_id: demoId(301), owner: demoId(1), author_name: profiles[0].full_name,
+      body: "Comentário fictício: posso usar este roteiro em outros cursos?", status: "pending", created_at: date }] as Row[], notes: [] as Row[], presentations: {
       [demoId(301)]: {
         subtitle: "Da ementa à primeira aula pronta",
         chapters: [{ title: "Defina o objetivo", start_seconds: 0, duration_seconds: 6 },

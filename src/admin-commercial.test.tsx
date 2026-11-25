@@ -34,6 +34,7 @@ function show(path: string, items: object[], total = items.length) {
       total,
       page: args.p_page,
       page_size: 20,
+      metrics: { paid: 5, pending: 12, revenue_cents: 450000 },
     });
   });
   vi.stubGlobal("fetch", requests);
@@ -83,7 +84,7 @@ it("busca membros no servidor e conserva a ação de abrir a ficha", async () =>
   expect(JSON.parse(String(requests.mock.lastCall?.[1].body))).toEqual({
     p_entity: "profiles",
     p_query: "empresa",
-    p_page: 1,
+    p_page: 1, p_role: null, p_plan: null, p_status: null,
   });
 });
 
@@ -117,23 +118,23 @@ it("consulta a situação no servidor em todas as páginas e volta à busca gera
   expect(pending).toHaveAttribute("aria-pressed", "true");
   await screen.findByText("45 registros · página 1 de 3");
   expect(JSON.parse(String(requests.mock.lastCall?.[1].body))).toEqual({
-    p_entity: "orders", p_query: " pending ", p_page: 1,
+    p_entity: "orders", p_query: "", p_page: 1, p_role: null, p_plan: null, p_status: "pending",
   });
   fireEvent.click(screen.getByRole("button", { name: "Próxima" }));
   await screen.findByText("45 registros · página 2 de 3");
   expect(JSON.parse(String(requests.mock.lastCall?.[1].body))).toEqual({
-    p_entity: "orders", p_query: " pending ", p_page: 2,
+    p_entity: "orders", p_query: "", p_page: 2, p_role: null, p_plan: null, p_status: "pending",
   });
   fireEvent.change(screen.getByRole("searchbox"), { target: { value: id } });
   fireEvent.submit(screen.getByRole("search"));
   await screen.findByText("45 registros · página 1 de 3");
   expect(pending).toHaveAttribute("aria-pressed", "false");
   expect(JSON.parse(String(requests.mock.lastCall?.[1].body))).toEqual({
-    p_entity: "orders", p_query: id, p_page: 1,
+    p_entity: "orders", p_query: id, p_page: 1, p_role: null, p_plan: null, p_status: null,
   });
 });
 
-it("distingue o total do servidor do valor dos pedidos pagos da página", async () => {
+it("exibe o valor dos pedidos pagos em todo o resultado do servidor", async () => {
   show("/admin/pedidos?q=2026", [
     order,
     { ...order, id: "paid", status: "paid", amount_cents: 4500 },
@@ -142,10 +143,10 @@ it("distingue o total do servidor do valor dos pedidos pagos da página", async 
 
   const overview = (await screen.findByText("Total encontrado")).closest("dl")!;
   expect(within(overview).getByText("26")).toBeInTheDocument();
-  expect(within(overview).getByText("Na busca atual")).toBeInTheDocument();
+  expect(within(overview).getAllByText("Na busca atual").length).toBeGreaterThan(0);
   const paid = within(overview).getByText("Valor dos pedidos pagos").closest("div")!;
-  expect(within(paid).getByText(/45,00/)).toBeInTheDocument();
-  expect(within(paid).getByText("Nesta página")).toBeInTheDocument();
+  expect(within(paid).getByText(/4\.500,00/)).toBeInTheDocument();
+  expect(within(paid).getByText("Na busca atual")).toBeInTheDocument();
 });
 
 it("expõe o benefício de um plano como texto e preserva o valor cadastrado", async () => {

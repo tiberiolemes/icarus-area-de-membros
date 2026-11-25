@@ -20,6 +20,7 @@ import {
   Settings,
   Users,
   CreditCard,
+  ReceiptText,
   Menu,
   X,
   LogOut,
@@ -57,21 +58,33 @@ const memberNav = [
   ["Suporte", "suporte", LifeBuoy],
 ] as const;
 const adminNav = [
-  ["Conteúdo", "cursos", BookOpen, ["admin", "instructor"]],
-  ["Dashboard", "dashboard", LayoutDashboard, ["admin"]],
-  ["Analytics", "analytics", ChartColumn, ["admin"]],
-  ["Materiais", "materiais", Files, ["admin", "instructor"]],
-  ["Membros", "membros", Users, ["admin"]],
-  ["Planos", "planos", CreditCard, ["admin"]],
-  ["Pedidos", "pedidos", CreditCard, ["admin"]],
-  ["Encontros ao vivo", "encontros", CalendarDays, ["admin"]],
-  ["Podcasts", "podcasts", Podcast, ["admin"]],
-  ["Comunidade", "comunidade", MessageSquare, ["admin", "moderator"]],
-  ["Suporte", "suporte", LifeBuoy, ["admin", "support"]],
-  ["Feedbacks dos alunos", "feedbacks", MessageSquareText, ["admin"]],
-  ["Configurações", "configuracoes", Settings, ["admin"]],
+  ["Visão geral", [
+    ["Dashboard", "dashboard", LayoutDashboard, ["admin"]],
+    ["Analytics", "analytics", ChartColumn, ["admin"]],
+  ]],
+  ["Conteúdo", [
+    ["Cursos e aulas", "cursos", BookOpen, ["admin", "instructor"]],
+    ["Materiais", "materiais", Files, ["admin", "instructor"]],
+  ]],
+  ["Alunos e vendas", [
+    ["Membros", "membros", Users, ["admin"]],
+    ["Planos", "planos", CreditCard, ["admin"]],
+    ["Pedidos", "pedidos", ReceiptText, ["admin"]],
+  ]],
+  ["Engajamento", [
+    ["Encontros ao vivo", "encontros", CalendarDays, ["admin"]],
+    ["Podcasts", "podcasts", Podcast, ["admin"]],
+    ["Comunidade", "comunidade", MessageSquare, ["admin", "moderator"]],
+    ["Comentários de aula", "comentarios-aula", MessagesSquare, ["admin", "moderator"]],
+  ]],
+  ["Operações", [
+    ["Suporte", "suporte", LifeBuoy, ["admin", "support"]],
+    ["Feedbacks dos alunos", "feedbacks", MessageSquareText, ["admin"]],
+  ]],
+  ["Configurações", [
+    ["Configurações", "configuracoes", Settings, ["admin"]],
+  ]],
 ] as const;
-
 
 const staffEntryLabels: Readonly<Record<string, string | undefined>> = {
   admin: "Administração",
@@ -119,10 +132,10 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
 }) {
   const dark = profile.theme === "dark";
   const modules = useModules();
-  const staffRoutes = adminNav.filter((item) =>
-    (item[3] as readonly string[]).includes(profile.role),
-  );
-  const [staffEntry] = staffRoutes;
+  const staffGroups = adminNav.map(([label, routes]) => ({
+    label, routes: routes.filter(([, , , roles]) => (roles as readonly string[]).includes(profile.role)),
+  })).filter(({ routes }) => routes.length);
+  const staffEntry = staffGroups[0]?.routes[0];
   const help = (admin || modules.help) && (
     <Link to="/ajuda" onClick={onNavigate}>
       <HelpCircle size={20} aria-hidden="true" />
@@ -131,7 +144,7 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
   );
   return (
     <>
-      <Link className="rail-brand" to="/app/cursos" onClick={onNavigate}>
+      <Link className="rail-brand" to={admin && staffEntry ? `/admin/${staffEntry[1]}` : "/app/cursos"} onClick={onNavigate}>
         {admin ? (
           <>
             {brandIcon && <PlaneTakeoff size={32} aria-hidden="true" />}
@@ -156,16 +169,23 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
         aria-label={admin ? "Administração" : "Área de membros"}
         data-tour="navigation"
       >
-        {(admin ? staffRoutes : memberNav).map(([title, path, Icon]) => {
-          const to = (admin ? "/admin/" : "/app/") + path;
-          const open = pathOpen(modules, to);
-          return (admin || open) && (
-            <NavLink key={path} to={to} onClick={onNavigate}>
-              <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
-              {title}
-              {!open && <> <small className="badge module-off-badge">Desativado</small></>}
-            </NavLink>
-          );
+        {admin ? staffGroups.map(({ label, routes }) => (
+          <div key={label} className="admin-nav-group" role="group" aria-label={label}>
+            {label !== "Configurações" && <span aria-hidden="true">{label}</span>}
+            {routes.map(([title, path, Icon]) => {
+              const to = `/admin/${path}`;
+              return <NavLink key={path} to={to} onClick={onNavigate}>
+                <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
+                {title}
+                {!pathOpen(modules, to) && <> <small className="badge module-off-badge">Desativado</small></>}
+              </NavLink>;
+            })}
+          </div>
+        )) : memberNav.map(([title, path, Icon]) => {
+          const to = "/app/" + path;
+          return pathOpen(modules, to) && <NavLink key={path} to={to} onClick={onNavigate}>
+            <Icon size={20} strokeWidth={1.75} aria-hidden="true" /> {title}
+          </NavLink>;
         })}
         {!admin && help}
       </nav>
@@ -190,7 +210,7 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
             <span className="sr-only">. Mudar para tema {dark ? "claro" : "escuro"}</span>
           </Action>
         )}
-        {admin && staffRoutes.length > 0 && (
+        {admin && staffEntry && (
           <Link to="/app/cursos" onClick={onNavigate}>
             <ArrowUpRight size={20} aria-hidden="true" />
             Área do aluno

@@ -1,3 +1,4 @@
+import { AdminSurface } from "./admin-surface";
 import { useState } from "react";
 import {
   ArrowUpRight,
@@ -108,19 +109,16 @@ export function Tickets({ admin = false }: { admin?: boolean }) {
 function AdminTickets() {
   const { ticket } = useParams();
   const [params] = useSearchParams();
-  const page = params.get("page");
+  const queryString = params.toString();
   return (
-    <div className="support-page support-admin">
-      <Heading title="Gestão de Tickets & Atendimento ao Aluno">
-        Acompanhe a fila de atendimento e responda aos chamados autorizados.
-      </Heading>
+    <AdminSurface className="support-page support-admin" section="suporte"
+      trail={["Administração", ticket ? { label: "Suporte", to: "/admin/suporte" } : "Suporte", ...(ticket ? ["Chamado"] : [])]}
+      title="Gestão de chamados e atendimento" description="Acompanhe a fila de atendimento e responda aos chamados.">
       {ticket && (
         <div className="support-mobile-back">
           <Back
             to={
-              page
-                ? "/admin/suporte?page=" + encodeURIComponent(page)
-                : "/admin/suporte"
+              queryString ? "/admin/suporte?" + queryString : "/admin/suporte"
             }
           />
         </div>
@@ -147,7 +145,7 @@ function AdminTickets() {
           </section>
         )}
       </div>
-    </div>
+    </AdminSurface>
   );
 }
 
@@ -166,88 +164,78 @@ function TicketQueue({
     requestedPage <= 100000
       ? requestedPage
       : 1;
-  const query = useRpc<Page<Ticket>>("app_tickets", { p_page: page });
   const base = admin ? "/admin/suporte" : "/app/suporte";
-  const [status, setStatus] = useState("");
-  const [priority, setPriority] = useState("");
-  const [search, setSearch] = useState("");
-  const items = query.data?.items.filter(
-    (ticket) =>
-      (!status ||
-        (status === "active"
-          ? ticket.status !== "resolved"
-          : ticket.status === status)) &&
-      (!priority || ticket.priority === priority) &&
-      ticket.subject
-        .toLocaleLowerCase("pt-BR")
-        .includes(search.trim().toLocaleLowerCase("pt-BR")),
+  const [memberStatus, setMemberStatus] = useState("");
+  const [draft, setDraft] = useState(params.get("q") ?? "");
+  const status = admin ? params.get("situacao") ?? "" : memberStatus;
+  const priority = params.get("prioridade") ?? "";
+  const search = params.get("q") ?? "";
+  function update(key: string, value: string) {
+    setParams((previous) => {
+      const next = new URLSearchParams(previous);
+      next.delete("page");
+      if (value) next.set(key, value);
+      else next.delete(key);
+      return next;
+    }, { replace: true });
+  }
+  const query = useRpc<Page<Ticket> & { counts?: Record<string, number>; first_response_seconds?: number | null }>(
+    admin ? "app_admin_ticket_queue" : "app_tickets",
+    admin ? { p_page: page, p_query: search, p_status: status || null, p_priority: priority || null } : { p_page: page },
   );
+  const counts = query.data?.counts ?? {};
+  const response = query.data?.first_response_seconds;
+  const active = (counts.open ?? 0) + (counts.in_progress ?? 0) + (counts.waiting_member ?? 0);
+  const all = active + (counts.resolved ?? 0);
+  const items = query.data?.items?.filter((ticket) => admin || !status ||
+    (status === "active" ? ticket.status !== "resolved" : ticket.status === status));
 
   return (
-    <QueryState query={query}>
-      {query.data && items && (
+    <>
+      {admin && (
         <>
-          {query.data.total > 0 && (
+          {query.data && <dl className="admin-list-metrics" aria-label="Indicadores dos chamados">
+            <div><dt>Em aberto</dt><dd>{active}</dd></div>
+            <div><dt>Aguardando o membro</dt><dd>{counts.waiting_member ?? 0}</dd></div>
+            {response != null && <div><dt>Média da primeira resposta</dt><dd>{response < 60 ? `${response} s` : `${Math.round(response / 60)} min`}</dd></div>}
+          </dl>}
+          <form className="support-filters" data-tour="support-filters" onSubmit={(event) => { event.preventDefault(); update("q", draft.trim()); }}>
+            <Field label="Buscar por assunto">
+              <input type="search" value={draft} maxLength={200} onChange={(event) => setDraft(event.target.value)} />
+            </Field>
+            <button type="submit">Buscar</button>
+            <Field label="Prioridade">
+              <select value={priority} onChange={(event) => update("prioridade", event.target.value)}>
+                <option value="">Todas</option>
+                {priorities.map((item) => <option key={item} value={item}>{priorityName(item)}</option>)}
+              </select>
+            </Field>
+          </form>
+          <div className="tabs support-status-tabs" role="group" aria-label="Situação dos chamados">
+            {["", ...statuses].map((item) => <button key={item} type="button" aria-pressed={status === item}
+              onClick={() => update("situacao", item)}>
+              {item ? statusName(item) : "Todos"}{query.isSuccess && ` (${item ? counts[item] ?? 0 : all})`}
+            </button>)}
+          </div>
+        </>
+      )}
+      <QueryState query={query}>
+        {query.data && items && (
+          <>
+          {!admin && query.data.total > 0 && (
             <fieldset className="support-filters">
-              <legend className={admin ? undefined : "sr-only"}>
-                Filtrar nesta página
-              </legend>
-              {admin ? (
-                <>
-                  <Field label="Buscar por assunto">
-                    <input
-                      type="search"
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                    />
-                  </Field>
-                  <div className="support-filter-options">
-                    <Field label="Status">
-                      <select
-                        value={status}
-                        onChange={(event) => setStatus(event.target.value)}
-                      >
-                        <option value="">Todos</option>
-                        {statuses.map((item) => (
-                          <option key={item} value={item}>
-                            {statusName(item)}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label="Prioridade">
-                      <select
-                        value={priority}
-                        onChange={(event) => setPriority(event.target.value)}
-                      >
-                        <option value="">Todas</option>
-                        {priorities.map((item) => (
-                          <option key={item} value={item}>
-                            {priorityName(item)}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                  </div>
-                </>
-              ) : (
-                <div className="support-member-filters">
-                  {[
-                    ["", "Todos"],
-                    ["active", "Em aberto"],
-                    ["resolved", "Resolvidos"],
-                  ].map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      aria-pressed={status === value}
-                      onClick={() => setStatus(value)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <legend className="sr-only">Filtrar nesta página</legend>
+              <div className="support-member-filters">
+                {[
+                  ["", "Todos"],
+                  ["active", "Em aberto"],
+                  ["resolved", "Resolvidos"],
+                ].map(([value, label]) => (
+                  <button key={value} type="button" aria-pressed={status === value} onClick={() => setMemberStatus(value)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
             </fieldset>
           )}
           <ul className="support-queue">
@@ -257,7 +245,7 @@ function TicketQueue({
                   className="support-panel support-ticket-link"
                   to={{
                     pathname: base + "/" + ticket.id,
-                    search: page > 1 ? "?page=" + page : "",
+                    search: admin ? params.toString() : page > 1 ? "?page=" + page : "",
                   }}
                   aria-current={selected === ticket.id ? "page" : undefined}
                 >
@@ -290,16 +278,17 @@ function TicketQueue({
                   : "Você ainda não tem chamados."}
             </Empty>
           )}
-          {query.data.total > 20 && (
+          {(query.data.total > 20 || (admin && page > 1)) && (
             <Pager
               page={page}
               total={query.data.total}
-              onChange={(next) => setParams({ page: String(next) })}
+              onChange={(next) => admin ? update("page", String(next)) : setParams({ page: String(next) })}
             />
           )}
         </>
       )}
-    </QueryState>
+      </QueryState>
+    </>
   );
 }
 export const priorityName = (priority: string) =>
@@ -475,6 +464,7 @@ function TicketConversation({
                 await Promise.all([
                   query.refetch(),
                   cache.invalidateQueries({ queryKey: ["app_tickets"] }),
+                  cache.invalidateQueries({ queryKey: ["app_admin_ticket_queue"] }),
                 ]);
               }}
             >

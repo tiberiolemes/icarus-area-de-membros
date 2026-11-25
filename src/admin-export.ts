@@ -18,15 +18,16 @@ export function csvCell(value: unknown) {
   if (/^[\s\u0000-\u001f\u200B\uFEFF]*[=+\-@]/u.test(text)) text = "'" + text;
   return '"' + text.replaceAll('"', '""') + '"';
 }
-export async function buildAdminCsv(entity: AdminExportEntity, query: string) {
+export async function buildAdminCsv(entity: AdminExportEntity, query: string, filters?: { p_role: string | null; p_plan: string | null; p_status: string | null }) {
   const rows: ExportRow[] = [],
     ids = new Set<string>();
   let expected: number | undefined;
   for (let page = 1; page <= Math.ceil(exportLimit / 20); page++) {
-    const result = await rpc<Page<ExportRow>>("app_admin_list", {
+    const result = await rpc<Page<ExportRow>>(filters ? "app_admin_commercial" : "app_admin_list", {
       p_entity: entity,
       p_query: query,
       p_page: page,
+      ...filters,
     });
     if (
       !Number.isInteger(result.total) ||

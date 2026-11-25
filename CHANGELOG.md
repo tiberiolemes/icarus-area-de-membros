@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.6.0 · 2026-11-25
+
+- Dashboard, Analytics, Membros, Planos, Pedidos, Encontros, Podcasts, Suporte, Feedbacks e os editores passam a usar o padrão de Equipe, com trilha, título, descrição e ações no cabeçalho. A navegação agrupa as áreas por tarefa e a marca leva à primeira tela disponível do painel.
+- Dashboard e Analytics exibem apenas indicadores com fonte de dados. Planos apresenta as contagens de ativos e inativos do resultado completo, com edição de preço em reais.
+- Membros permite filtrar por papel, plano vigente e situação. O atalho da tela Equipe aplica o filtro de equipe. Apenas o admin recebe e-mail no diretório e na ficha, com autorização na RPC.
+- Pedidos aceita busca por identificador ou valor em reais. Suporte filtra todos os chamados por assunto, prioridade e situação. Indicadores e exportação usam o resultado completo do filtro.
+- Na Comunidade, publicações e respostas abrem nos pendentes, com aprovação direta e motivo nas demais ações aplicáveis. Comentários de aula ganham fila única e paginada para os cursos disponíveis à moderação.
+- A auditoria apresenta nomes, ações em português e links para os registros disponíveis. Materiais mostra tipos de arquivo e tamanhos legíveis.
+- Podcasts e masterclasses podem ser arquivados e restaurados como rascunho. Feedbacks mostra contagens por situação, abas e detalhe lateral.
+- Atualização da 2.5.1: aplique `202611250006` e gere o frontend. As Edge Functions da 2.5.1 continuam compatíveis. Veja [Atualizar de versão](docs/operations.md#atualizar-de-versão).
+
 ## 2.5.1 · 2026-11-25
 
 Correções da auditoria de telas de 25/nov/2026, com o padrão aplicado na origem para valer em todas as telas.

@@ -170,14 +170,14 @@ it("filtra a fila no servidor e atualiza a situação confirmada com revisão", 
     if (name === "app_admin_feedback_status") return Response.json({ status: "planned", revision: 3 });
     throw new Error("Rota fora da fixture");
   }));
-  render(<QueryClientProvider client={cache}><AdminFeedbacks /></QueryClientProvider>);
+  render(<QueryClientProvider client={cache}><MemoryRouter><AdminFeedbacks /></MemoryRouter></QueryClientProvider>);
   fireEvent.change(screen.getByLabelText("Tipo"), { target: { value: "bug" } });
-  fireEvent.change(screen.getByLabelText("Situação"), { target: { value: "new" } });
+  fireEvent.click(screen.getByRole("button", { name: /^Novo/ }));
   fireEvent.click(await screen.findByRole("button", { name: /Ver feedback de Aluno de teste/ }));
   const dialog = screen.getByRole("dialog", { name: "Detalhe do feedback" });
   expect(await within(dialog).findByText("Descrição inteira.")).toBeVisible();
   fireEvent.change(within(dialog).getByLabelText(/Situação atual/), { target: { value: "planned" } });
-  const form = within(dialog).getByRole("button", { name: "Salvar situação" }).closest("form")!;
+  const form = (within(dialog).getByRole("button", { name: "Salvar situação" }) as HTMLButtonElement).form!;
   expect(fireEvent.submit(form)).toBe(false);
   expect(await within(dialog).findByText("Situação atual · Planejado")).toBeVisible();
   expect(calls).toContainEqual({ name: "app_admin_feedbacks", body: { p_kind: "bug", p_status: "new", p_page: 1 } });
@@ -201,7 +201,7 @@ it("repõe a seleção após conflito e exige escolher novamente antes de salvar
     }
     return Response.json({ status: "planned", revision: 3 });
   }));
-  render(<QueryClientProvider client={cache}><AdminFeedbacks /></QueryClientProvider>);
+  render(<QueryClientProvider client={cache}><MemoryRouter><AdminFeedbacks /></MemoryRouter></QueryClientProvider>);
   fireEvent.click(await screen.findByRole("button", { name: /Ver feedback de Aluno de teste/ }));
   const dialog = within(screen.getByRole("dialog", { name: "Detalhe do feedback" }));
   fireEvent.change(await dialog.findByLabelText(/Situação atual/), { target: { value: "planned" } });
@@ -210,7 +210,7 @@ it("repõe a seleção após conflito e exige escolher novamente antes de salvar
   expect(dialog.getByLabelText("Situação atual · Em análise")).toHaveValue("reviewing");
   const save = dialog.getByRole("button", { name: "Salvar situação" });
   expect(save).toBeDisabled();
-  expect(fireEvent.submit(save.closest("form")!)).toBe(false);
+  expect(fireEvent.submit((save as HTMLButtonElement).form!)).toBe(false);
   expect(updates).toHaveLength(1);
   fireEvent.change(dialog.getByLabelText(/Situação atual/), { target: { value: "planned" } });
   fireEvent.click(save);
@@ -242,7 +242,7 @@ it.each([
     if (name === "app_admin_feedbacks") return Response.json({ items: [item], counts: { new: 1 }, total: 1 });
     throw new Error("Rota fora da fixture");
   }));
-  render(<QueryClientProvider client={cache}><AdminFeedbacks /></QueryClientProvider>);
+  render(<QueryClientProvider client={cache}><MemoryRouter><AdminFeedbacks /></MemoryRouter></QueryClientProvider>);
   fireEvent.click(await screen.findByRole("button", { name: /Ver feedback de Aluno de teste/ }));
   const dialog = within(screen.getByRole("dialog", { name: "Detalhe do feedback" }));
   fireEvent.change(await dialog.findByLabelText("Situação atual · Novo"), { target: { value: "planned" } });
@@ -264,6 +264,6 @@ it.each([
   expect(dialog.getByLabelText(`Situação atual · ${label}`)).toHaveValue(status);
   const submit = dialog.getByRole("button", { name: "Salvar situação" });
   expect(submit).toBeDisabled();
-  fireEvent.submit(submit.closest("form")!);
+  fireEvent.submit((submit as HTMLButtonElement).form!);
   expect(save).toHaveBeenCalledTimes(1);
 });

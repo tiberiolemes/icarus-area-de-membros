@@ -1,9 +1,10 @@
+import { AdminSurface } from "./admin-surface";
 import { useState } from "react";
-import { ArrowRight, AudioLines, CalendarDays, CreditCard, Headset, MessagesSquare, Repeat2, TrendingUp, Users, Wallet } from "lucide-react";
+import { ArrowRight, CalendarDays, CreditCard, Headset, MessagesSquare, Repeat2, Wallet } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { date, money, rpc } from "../api";
-import { Empty, Heading, QueryState } from "../ui";
+import { Empty, QueryState } from "../ui";
 import { periodArgs, ReportPeriodPicker, type ReportPeriod } from "../report-period";
 import "./admin-analytics.css";
 
@@ -104,12 +105,12 @@ export function AdminDashboard({ analyticsPath }: { analyticsPath: string }) {
   const data = query.data;
 
   return (
-    <div className="admin-reports admin-dashboard">
-      <Heading title="Dashboard Executivo & Métricas" action={
+    <AdminSurface className="admin-reports admin-dashboard" section="dashboard" trail={["Administração", "Dashboard"]}
+      title="Dashboard executivo e métricas" description="Receita, aprendizagem, comunidade e atendimento em uma visão consolidada." action={
         <div id="dashboard-periodo">
           <ReportPeriodPicker tour="dashboard-periodo" value={period} onChange={setPeriod} />
         </div>
-      }>Receita, aprendizagem, comunidade e atendimento em uma visão consolidada.</Heading>
+      }>
       <QueryState query={query}>
         {data && <>
           <p className="reports-date" role="status" title={`Consulta em ${date(data.observed_at)} (Brasília)`}>
@@ -118,8 +119,6 @@ export function AdminDashboard({ analyticsPath }: { analyticsPath: string }) {
           </p>
           <dl className="reports-kpis" id="dashboard-indicadores">
             <div><dt>MRR equivalente <Wallet aria-hidden="true" /></dt><dd className="reports-number reports-currency">{kpiMoney(data.mrr_cents)}</dd><dd className="reports-note">Vigências pagas atuais, valor mensalizado</dd></div>
-            <div><dt>Membros ativos <Users aria-hidden="true" /></dt><dd>Sem medição</dd><dd className="reports-note">Atividade geral em 7 e 30 dias</dd></div>
-            <div><dt>Community → Pro <TrendingUp aria-hidden="true" /></dt><dd>Sem medição</dd><dd className="reports-note">Histórico de transições de plano indisponível</dd></div>
             <div><dt>Receita de pedidos <CreditCard aria-hidden="true" /></dt><dd className="reports-number reports-currency">{kpiMoney(data.revenue_cents)}</dd><dd className="reports-note">Pagos no período, com status pago</dd></div>
             <div><dt>Vencimentos em 30 dias <Repeat2 aria-hidden="true" /></dt><dd className="reports-number">{numbers.format(data.renewals_due)}</dd><dd className="reports-note">Membros com acesso pago a vencer nos próximos 30 dias a partir de hoje</dd></div>
           </dl>
@@ -152,10 +151,6 @@ export function AdminDashboard({ analyticsPath }: { analyticsPath: string }) {
                 <div><dt>Posts pendentes agora</dt><dd>{numbers.format(data.pending_posts)}</dd></div>
               </dl>
             </section>
-            <section className="reports-panel">
-              <h2><AudioLines aria-hidden="true" /> Telemetria de vídeo</h2>
-              <p>Retenção por trecho e desempenho da entrega de vídeo ainda não têm medição disponível.</p>
-            </section>
           </div>
           <section className="reports-panel" id="dashboard-pagamentos">
             <h2>Pagamentos por método</h2>
@@ -171,6 +166,6 @@ export function AdminDashboard({ analyticsPath }: { analyticsPath: string }) {
           </section>
         </>}
       </QueryState>
-    </div>
+    </AdminSurface>
   );
 }

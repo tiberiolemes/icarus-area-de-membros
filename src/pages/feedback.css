@@ -157,3 +157,15 @@ button.feedback-card:hover { background: var(--stitch-surface-hover); }
   .feedback-filters .field { flex-basis: 100%; }
   .feedback-column { min-height: 0; }
 }
+
+
+.dialog.feedback-detail-panel {
+  inset: 0 0 0 auto;
+  transform: none;
+  width: min(100%, 31rem);
+  max-height: 100dvh;
+  border-radius: 0;
+  padding: var(--stitch-space-lg);
+  background: var(--stitch-surface-panel);
+  color: var(--stitch-text-primary);
+}

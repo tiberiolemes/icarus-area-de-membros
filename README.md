@@ -3,7 +3,7 @@
 ![Icarus · Área de membros e cursos online · Código aberto sob licença MIT](docs/assets/icarus-banner-github.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-2.5.1-black)
+![Version](https://img.shields.io/badge/version-2.6.0-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)
@@ -85,6 +85,8 @@ node scripts/test-integrations.mjs --local
 Banco e integrações nativas exigem instalação local e fixtures próprias. Para esta árvore, aplique todas as migrations em ordem e valide o stack nativo antes de liberar o uso. O ensaio de banco isolado e os requisitos por migration estão no [guia de operação](docs/operations.md). O [aceite técnico 0.1.0](docs/acceptance/release-0.1.0.md) e a [revisão visual 0.1.2](docs/audit/06-ux-accessibility.md) registram evidências de seus respectivos recortes.
 
 O [modelo do GitHub Actions](docs/ci/README.md) descreve a automação. A execução da trilha nativa em Actions aguarda um runner com Docker dedicado.
+
+Desde a 2.6.0, o painel segue o padrão de Equipe e controle de acesso. Membros, pedidos e chamados têm filtros e indicadores calculados no servidor. Somente administradores recebem o e-mail do membro no diretório e na ficha. A moderação reúne comentários pendentes numa fila e a auditoria mostra nomes e ações em português. Para atualizar da 2.5.1, aplique a migration `202611250006` antes de servir o novo frontend. Veja o [roteiro de atualização](docs/operations.md#atualizar-de-versão).
 
 ## Limites
 

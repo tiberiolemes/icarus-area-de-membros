@@ -937,3 +937,15 @@
 @media (max-width: 340px) {
   .app-shell.member-shell-stitch[data-mobile-frame="lesson"] .mobile-frame-plan { display: none; }
 }
+
+
+.admin-nav-group {
+  display: grid;
+  gap: var(--stitch-space-xs);
+}
+.admin-nav-group > span {
+  padding-inline: var(--stitch-space-sm);
+  color: var(--stitch-text-secondary);
+  font-size: var(--stitch-type-body-sm-size);
+  margin-block-start: var(--stitch-space-sm);
+}

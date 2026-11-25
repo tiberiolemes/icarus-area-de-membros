@@ -139,11 +139,6 @@ const steps = [
     body: "Escolha um curso publicado para abrir o funil e a tabela de aulas. As contagens usam os registros de progresso.",
   },
   {
-    target: "analytics-retencao",
-    title: "Confira a cobertura da retenção",
-    body: "A medição por trecho requer eventos de reprodução. A tabela de progresso informa marcações de conclusão.",
-  },
-  {
     target: "admin-settings-brand",
     title: "Edite o nome, a logo e o ícone da plataforma",
     body: "Use Salvar nome para publicar o nome. Se outra sessão tiver alterado o nome, revise o valor publicado antes de reenviar. Em Logo da plataforma, envie a versão colorida e a branca, confira a prévia nos dois temas e salve cada uma. Remover devolve o nome da instalação ou a logo do Icarus. Em Ícone da plataforma, envie o favicon em PNG quadrado.",
@@ -169,9 +164,19 @@ const steps = [
     body: "Escolha Gateway Asaas ou Bunny Stream. Atualizar estado consulta a configuração no servidor.",
   },
   {
+    target: "member-filters",
+    title: "Encontre membros por papel, plano e situação",
+    body: "Use os filtros juntos ou procure por nome, empresa ou e-mail. Equipe reúne os papéis administrativos e de operação. O resultado e a exportação seguem os filtros atuais.",
+  },
+  {
+    target: "support-filters",
+    title: "Filtre a fila de atendimento",
+    body: "Busque pelo assunto, escolha uma prioridade ou abra uma situação. As contagens consideram todos os chamados correspondentes ao assunto e à prioridade.",
+  },
+  {
     target: "order-filters",
     title: "Consulte os pedidos por situação",
-    body: "Escolha uma situação para filtrar o livro de vendas. A busca por ID ou valor em centavos consulta todas as situações. O CSV segue a consulta atual.",
+    body: "Escolha uma situação para filtrar o livro de vendas. A busca por ID ou valor em reais consulta todas as situações. O CSV segue a consulta atual.",
   },
   {
     target: "admin-export",

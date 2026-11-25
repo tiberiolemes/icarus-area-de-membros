@@ -1,3 +1,5 @@
+begin;
+
 -- Shared civil-date semantics for report periods. All public consumers keep their own actor and throttle.
 create function app_private.report_days(p_period text, p_from date, p_through date)
 returns daterange language plpgsql stable set search_path='' as $$
@@ -269,3 +271,5 @@ revoke all on function public.app_admin_dashboard(text,date,date), public.app_ra
   from public, anon, authenticated, service_role;
 grant execute on function public.app_admin_dashboard(text,date,date), public.app_ranking(text,integer,date,date)
   to authenticated;
+
+commit;

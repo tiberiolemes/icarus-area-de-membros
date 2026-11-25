@@ -1,3 +1,5 @@
+begin;
+
 -- Catálogo do aluno: filtrar/ordenar antes da paginação e resolver o destino pelo titular.
 create function public.app_catalog_showcase(p_query text default '', p_page integer default 1,
   p_filter text default 'all', p_sort text default 'recent') returns jsonb
@@ -80,3 +82,5 @@ begin
 end $$;
 revoke all on function public.app_catalog_showcase(text,integer,text,text) from public,anon,authenticated,service_role;
 grant execute on function public.app_catalog_showcase(text,integer,text,text) to authenticated;
+
+commit;

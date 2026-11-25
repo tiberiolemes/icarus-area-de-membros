@@ -3,7 +3,7 @@
 ![Icarus · Área de membros e cursos online · Código aberto sob licença MIT](docs/assets/icarus-banner-github.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.2.0-black)
+![Version](https://img.shields.io/badge/version-2.2.1-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)
@@ -59,11 +59,11 @@ npm run local:status
 npm run local:stop
 ```
 
-Para uma instalação v0.1.6 existente, siga o roteiro de atualização do [Docker local completo](docs/operations.md#atualizar-uma-instalação-docker-completa) ou do [Supabase hospedado](docs/operations.md#aplicar-migrações-no-supabase-hospedado). Os dois roteiros conferem o histórico e exigem backup antes da aplicação. Para configurar uma cópia hospedada vazia, configure [a instalação](docs/operations.md#instalação-hospedada-e-recursos-comerciais) e [o primeiro administrador](docs/operations.md#primeiro-administrador-hospedado). O servidor frontend precisa de fallback de rotas para `index.html`.
+Para uma instalação v0.2.0 ou v0.1.6 existente, veja [Atualizar de versão](docs/operations.md#atualizar-de-versão) e siga o roteiro de atualização do [Docker local completo](docs/operations.md#atualizar-uma-instalação-docker-completa) ou do [Supabase hospedado](docs/operations.md#aplicar-migrações-no-supabase-hospedado). Os dois roteiros conferem o histórico e exigem backup antes da aplicação. Para configurar uma cópia hospedada vazia, configure [a instalação](docs/operations.md#instalação-hospedada-e-recursos-comerciais) e [o primeiro administrador](docs/operations.md#primeiro-administrador-hospedado). O servidor frontend precisa de fallback de rotas para `index.html`.
 
 ## Configuração e segurança
 
-`local:start` gera `.env.local` conforme as variáveis de `.env.example`. Para um build que se conecte a uma instalação própria, configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com a URL e a chave pública do projeto antes de `npm run build`. Guarde `service_role`, Asaas e Bunny exclusivamente no ambiente **servidor**.
+`local:start` gera `.env.local` conforme as variáveis de `.env.example`. Para um build que se conecte a uma instalação própria, configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com a URL e a chave pública do projeto antes de `npm run build`. Guarde `service_role`, Asaas e Bunny exclusivamente no ambiente **servidor**. O painel avisa os admins quando sai uma versão nova: o navegador deles consulta as Releases públicas do GitHub uma vez por dia. `VITE_ICARUS_UPDATE_REPO` troca o repositório consultado, e vazia desliga o aviso ([detalhes](docs/operations.md#atualizar-de-versão)).
 
 Antes de abrir uma instalação ao público, configure Supabase, HTTPS, URLs de retorno, SMTP, MFA, backup, oferta e textos jurídicos aprovados. Homologue Asaas Sandbox e Bunny nessa instalação. Esta entrega não cria infraestrutura cloud nem atesta operação externa. Cobrança em produção permanece bloqueada até homologação correspondente.
 
@@ -106,7 +106,7 @@ Use the source archive or checkout for the intended GitHub tag. The npm package 
 
 Apply all migrations for this source tree, then verify native Auth, Postgres, Storage, Edge Functions and local email. This tree includes course search, lesson notes, favorites, checklists, moderated comments, in-app notifications and catalog launch announcements. Members can browse podcasts, masterclasses and live events. Administrators manage the catalog and schedule. Podcast watch marks are included in the member data export.
 
-Read [operations](docs/operations.md) and [API documentation](docs/api.md) before installation. The [architecture map](docs/architecture.md) links user flows to the [data dictionary](docs/data-dictionary.md). To upgrade an existing v0.1.6 installation, follow the [full local Docker](docs/operations.md#atualizar-uma-instalação-docker-completa) or [hosted Supabase](docs/operations.md#aplicar-migrações-no-supabase-hospedado) procedure. For a new hosted installation, follow the [first administrator procedure](docs/operations.md#primeiro-administrador-hospedado). Configure the Supabase URL and public key in the `VITE_*` variables before building. Keep service-role and provider secrets server-side. Configure HTTPS, redirect URLs, email, MFA support, backups and approved legal content before opening registration.
+Read [operations](docs/operations.md) and [API documentation](docs/api.md) before installation. The [architecture map](docs/architecture.md) links user flows to the [data dictionary](docs/data-dictionary.md). To upgrade an existing v0.2.0 or v0.1.6 installation, read [upgrading](docs/operations.md#atualizar-de-versão) and follow the [full local Docker](docs/operations.md#atualizar-uma-instalação-docker-completa) or [hosted Supabase](docs/operations.md#aplicar-migrações-no-supabase-hospedado) procedure. For a new hosted installation, follow the [first administrator procedure](docs/operations.md#primeiro-administrador-hospedado). Configure the Supabase URL and public key in the `VITE_*` variables before building. Keep service-role and provider secrets server-side. Configure HTTPS, redirect URLs, email, MFA support, backups and approved legal content before opening registration.
 
 Asaas checkout is prepared for Sandbox acceptance; production billing remains disabled. Bunny, external email, tax documents and hosted deployment have not been certified by local tests. No real payment is made by the test suite. Future phases, AI and multi-tenancy are outside this release.
 

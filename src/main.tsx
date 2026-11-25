@@ -163,10 +163,10 @@ const Router = import.meta.env.MODE === "demo" ? HashRouter : BrowserRouter;
 function App() {
   return (
     <QueryClientProvider client={cache}>
-      <InstallationIcon />
       <Router>
         <ErrorBoundary>
           <AuthProvider>
+            <InstallationIcon />
             <Suspense fallback={<Loading />}>
               <Routes>
                 <Route

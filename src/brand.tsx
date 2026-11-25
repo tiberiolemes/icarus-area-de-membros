@@ -1,5 +1,6 @@
 import { cloneElement, useEffect, type ReactElement } from "react";
 import { supabase, useRpc } from "./api";
+import { useAuth } from "./auth";
 
 export const defaultLogo = import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg";
 export const defaultIcon = import.meta.env.BASE_URL + "brand/icarus-icone.svg";
@@ -14,6 +15,12 @@ export function brandAssetUrl(path: unknown) {
 
 /** Troca o favicon e o ícone de atalho pelos da instalação; sem eles, ficam os do Icarus que vêm no index.html. */
 export function InstallationIcon() {
+  // O login limpa o cache das consultas: remontar por sessão refaz a leitura do contexto público.
+  const { session } = useAuth();
+  return <AppliedIcon key={session?.user.id ?? ""} />;
+}
+
+function AppliedIcon() {
   const icon = brandAssetUrl(useRpc<{ icon?: string | null }>("app_public_context").data?.icon);
   useEffect(() => {
     const links = document.head.querySelectorAll<HTMLLinkElement>('link[rel="icon"], link[rel="apple-touch-icon"]');

@@ -453,7 +453,9 @@ h2 > a,
 }
 .query-error {
   display: grid;
-  justify-items: start;
+}
+.query-error > button {
+  justify-self: start;
 }
 .notice p:last-child {
   margin-bottom: 0;

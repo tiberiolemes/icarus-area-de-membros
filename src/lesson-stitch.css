@@ -462,6 +462,12 @@
   padding: 16px;
 }
 
+/* Com erro, o palco cresce com o conteúdo para o botão não ser cortado no celular. */
+.stitch-lesson-media:has(> .stitch-media-error) {
+  aspect-ratio: auto;
+  min-height: 200px;
+}
+
 /* O palco do player é preto nos dois temas: aviso e botão levam superfície própria. */
 .stitch-lesson-media .stitch-media-error .notice {
   border-color: transparent;

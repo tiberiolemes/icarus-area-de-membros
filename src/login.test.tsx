@@ -351,3 +351,12 @@ it("papel sem permissão vê título e o caminho para a própria área do painel
   expect(screen.getByRole("alert")).toHaveTextContent("Você não tem permissão para esta área.");
   expect(screen.getByRole("link", { name: "Voltar ao painel" })).toHaveAttribute("href", "/admin/comunidade");
 });
+
+it("cadastro fechado mostra um aviso com a saída e não oferece o formulário", async () => {
+  startAt = "/cadastro";
+  setup(false);
+  expect(await screen.findByText(/Os documentos legais ainda não foram publicados/)).toBeVisible();
+  expect(document.querySelectorAll(".notice")).toHaveLength(1);
+  expect(screen.getByRole("link", { name: "Voltar para entrar" })).toHaveAttribute("href", expect.stringContaining("/entrar"));
+  expect(screen.queryByRole("button", { name: "Criar conta" })).not.toBeInTheDocument();
+});

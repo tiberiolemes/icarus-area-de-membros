@@ -159,3 +159,26 @@ it.each([
     expect(sent).not.toHaveProperty("price_cents");
   },
 );
+
+it("aponta no próprio campo o aceite obrigatório que faltou", async () => {
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    const result = url.includes("app_public_context")
+      ? { plans: [{ id: "plan-id", slug: "demo", name: "DEMONSTRAÇÃO", price_cents: 100, access_months: 12, benefits: [] }],
+        legal_ready: true, legal_versions: [{ id: "terms-id", kind: "terms" }] }
+      : url.includes("capabilities") ? { asaas: true } : null;
+    if (!result) throw new Error("O envio não deveria sair sem o aceite");
+    return new Response(JSON.stringify(result), { status: 200, headers: { "Content-Type": "application/json" } });
+  }));
+  render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={["/checkout?plano=demo"]}>
+    <Routes><Route path="/checkout" element={<Checkout />} /></Routes>
+  </MemoryRouter></QueryClientProvider>);
+  await screen.findByLabelText("Nome completo");
+  fireEvent.change(screen.getByLabelText("Nome completo"), { target: { value: "DEMONSTRAÇÃO QA" } });
+  fireEvent.change(screen.getByLabelText("Email"), { target: { value: "qa@demo.icarus.invalid" } });
+  fireEvent.change(screen.getByLabelText("CPF ou CNPJ"), { target: { value: "00000000000" } });
+  fireEvent.submit(screen.getByRole("button", { name: /Continuar/ }).closest("form")!);
+  const terms = screen.getByRole("checkbox", { name: /Aceito os Termos/ });
+  await waitFor(() => expect(terms).toHaveAttribute("aria-invalid", "true"));
+  expect(document.getElementById(terms.getAttribute("aria-describedby")!)).toHaveTextContent("Marque esta opção para continuar.");
+});

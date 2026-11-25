@@ -190,7 +190,8 @@ export function Password({
 }
 function validationMessage(input: HTMLInputElement) {
   const v = input.validity;
-  if (v.valueMissing) return "Preencha este campo.";
+  if (v.valueMissing)
+    return input.type === "checkbox" ? "Marque esta opção para continuar." : "Preencha este campo.";
   if (v.typeMismatch)
     return input.type === "email"
       ? "Informe um email válido."
@@ -240,6 +241,39 @@ export function Field({
           })
         : children}
       {hint && <small id={id + "-hint"}>{hint}</small>}
+      {error && (
+        <small className="field-error" id={id + "-error"}>
+          {error}
+        </small>
+      )}
+    </label>
+  );
+}
+/** Caixa de seleção com o erro de validação ligado a ela, como no Field. */
+export function CheckField({
+  name,
+  required = false,
+  disabled = false,
+  children,
+}: {
+  name: string;
+  required?: boolean;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  const id = useId(),
+    error = useContext(FormErrors)[name];
+  return (
+    <label className="check">
+      <input
+        type="checkbox"
+        name={name}
+        required={required}
+        disabled={disabled}
+        aria-invalid={!!error}
+        aria-describedby={error ? id + "-error" : undefined}
+      />
+      {children}
       {error && (
         <small className="field-error" id={id + "-error"}>
           {error}

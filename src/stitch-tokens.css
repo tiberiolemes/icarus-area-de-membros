@@ -161,6 +161,9 @@
   --stitch-on-error-surface: #93000a;
   --stitch-status-success: #065f46;
   --stitch-status-success-surface: #ecfdf5;
+  --stitch-admin-badge-surface: #f2c94c;
+  --stitch-on-admin-badge: #3d2b00;
+  --stitch-admin-badge-border: #b8860b;
   --stitch-progress-track: #e4e4e7;
   --stitch-progress-fill: #09090b;
 
@@ -244,6 +247,9 @@
   --stitch-on-error-surface: #ffdad6;
   --stitch-status-success: #34d399;
   --stitch-status-success-surface: rgb(16 185 129 / 10%);
+  --stitch-admin-badge-surface: #f2c94c;
+  --stitch-on-admin-badge: #3d2b00;
+  --stitch-admin-badge-border: #f2c94c;
   --stitch-progress-track: #1f1f1f;
   --stitch-progress-fill: #fff;
 

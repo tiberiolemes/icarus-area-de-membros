@@ -26,6 +26,7 @@ import type { Page, Post, Space } from "../api";
 import { useAuth } from "../auth";
 import {
   Action,
+  AdminBadge,
   Back,
   Empty,
   Field,
@@ -81,7 +82,6 @@ function PostMeta({ post }: { post: Post & { avatar_id?: string | null } }) {
     instructor: "Instrutor",
     moderator: "Moderação",
     support: "Suporte",
-    admin: "Administração",
   }[post.author_role];
   return (
     <div className="community-author">
@@ -98,7 +98,7 @@ function PostMeta({ post }: { post: Post & { avatar_id?: string | null } }) {
       <div className="community-author-details">
         <div className="community-byline">
           <strong>{post.author_name}</strong>
-          <span className="badge">{role ?? (post.plan_name || "Membro")}</span>
+          {post.author_role === "admin" ? <AdminBadge /> : <span className="badge">{role ?? (post.plan_name || "Membro")}</span>}
         </div>
         <time dateTime={post.created_at}>{date(post.created_at)}</time>
       </div>

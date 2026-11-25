@@ -753,6 +753,20 @@
       line-height: 12px;
     }
 
+    .mobile-frame-plan[data-role="admin"] {
+      max-width: none;
+      overflow: visible;
+      padding: 0;
+      background: transparent;
+      line-height: 0;
+
+      .admin-badge {
+        padding: 0 var(--stitch-space-xs);
+        font-size: 10px;
+        line-height: 14px;
+      }
+    }
+
     .account-link .avatar {
       background: var(--stitch-action);
       color: var(--stitch-on-action);
@@ -915,6 +929,8 @@
   .app-shell.member-shell-stitch[data-mobile-frame="lesson"] {
     .mobile-frame-label { font-size: var(--stitch-type-body-lg-size); }
     .mobile-frame-plan { max-width: 40px; }
+    /* Sem espaço para a badge inteira ao lado de "Aula"; ela segue nas demais telas. */
+    .mobile-frame-plan[data-role="admin"] { display: none; }
   }
 }
 

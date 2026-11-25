@@ -417,6 +417,17 @@ h2 > a,
   vertical-align: middle;
   line-height: 1.5;
 }
+/* Dourado com texto escuro: 8,6:1 nos dois temas; a borda separa do fundo claro. */
+.badge.admin-badge {
+  gap: 4px;
+  border-color: var(--stitch-admin-badge-border);
+  border-radius: var(--stitch-radius-sm);
+  background: var(--stitch-admin-badge-surface);
+  color: var(--stitch-on-admin-badge);
+  font-size: var(--stitch-type-label-uppercase-size);
+  line-height: var(--stitch-type-label-uppercase-line);
+  white-space: nowrap;
+}
 .skeleton {
   padding: 24px;
   min-height: 180px;

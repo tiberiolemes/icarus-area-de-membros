@@ -74,6 +74,7 @@ export const articles = [
       "Abra a publicação para responder ou votar. Respostas também passam por revisão. Em telas maiores, o painel lateral mostra o espaço quando disponível e permite voltar às publicações dele.",
       "No detalhe da sua publicação, use Arquivar publicação para preservar o histórico sem exibi-lo aos demais membros. Restaurar publicação recupera o estado anterior, sem aprovar conteúdo pendente ou rejeitado. Arquivamentos da equipe não podem ser desfeitos por esse controle.",
       "Para denunciar, descreva o motivo. A denúncia entra na fila da equipe; a contagem não remove o conteúdo automaticamente.",
+      "A badge dourada Admin, com coroa, identifica quem administra a plataforma. Ela aparece ao lado do nome nas publicações e no lugar do plano no cartão da conta. O papel vem do servidor e não pode ser alterado no perfil.",
     ],
   },
   {

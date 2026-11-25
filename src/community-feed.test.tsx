@@ -307,3 +307,18 @@ it("envia resposta por AJAX, mantém o texto na falha e confirma o envio para re
     ),
   ).toHaveLength(2);
 });
+
+it("mostra a badge Admin dourada com coroa para o autor admin e mantém a do plano para o membro", async () => {
+  const admin = { ...topic, id: "admin-post", title: "Aviso da equipe", author_name: "Pessoa Admin", author_id: "admin", author_role: "admin", plan_name: "Membro Pro" };
+  const member = { ...topic, plan_name: "Membro Pro" };
+  mount(() => Response.json({ ...feed, items: [admin, member] }));
+  await screen.findByRole("link", { name: admin.title });
+  const [adminByline, memberByline] = Array.from(document.querySelectorAll<HTMLElement>(".community-byline"));
+  const badge = adminByline.querySelector(".badge.admin-badge");
+  expect(badge).toHaveTextContent(/^Admin$/);
+  expect(badge!.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+  expect(adminByline).not.toHaveTextContent("Administração");
+  expect(adminByline).not.toHaveTextContent("Membro Pro");
+  expect(memberByline.querySelector(".badge")).toHaveTextContent(/^Membro Pro$/);
+  expect(memberByline.querySelector(".admin-badge")).toBeNull();
+});

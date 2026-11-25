@@ -24,7 +24,7 @@ Aplicação nova em React, TypeScript, Vite e Supabase. A árvore desta versão 
 - Checkout hospedado Asaas preparado para Sandbox e mídia Bunny configurável. Dados de cartão não passam pela aplicação.
 - Ajuda pública e guias dos fluxos, sem conceder acesso ou progresso acadêmico.
 
-Papéis de equipe e direitos de assinatura são independentes. O servidor valida identidade, sessão, plano, titularidade e estado atual de cada recurso.
+Papéis de equipe e direitos de assinatura são independentes. O servidor valida identidade, sessão, plano, titularidade e estado atual de cada recurso. Administradores aparecem com a badge dourada Admin no cartão da conta e na comunidade.
 
 ## Demonstração navegável
 
@@ -98,7 +98,7 @@ Veja [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) e [CHANGELOG
 
 Icarus is an open-source membership and online course delivery platform for businesses and digital course creators. It includes private learning materials, certificates, support tickets and a human-moderated community. It uses React, TypeScript, Vite and Supabase, with the official Icarus Design System, self-hosted Inter and per-user light/dark preferences.
 
-This release is a fresh implementation; it does not use Frappe. Git history is preserved. Staff roles and subscription entitlements are separate. Server-side authorization is required for every protected operation.
+This release is a fresh implementation; it does not use Frappe. Git history is preserved. Staff roles and subscription entitlements are separate; administrators carry a gold Admin badge on the account card and in the community. Server-side authorization is required for every protected operation.
 
 [Try the public demo](https://tiberiolemes.github.io/icarus-area-de-membros/). Build the demo with `npm run build:demo` and serve the entire `demo-dist/` folder over HTTP on loopback or HTTPS on a static host. The demo uses the application’s routes, components and styles with fictional student and admin sessions and no backend. Update the [fixtures](demo/) when a demonstrated flow changes.
 

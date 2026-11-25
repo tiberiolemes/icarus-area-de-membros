@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import {
   Link,
@@ -14,7 +14,6 @@ import {
   ArrowUp,
   BookOpen,
   Check,
-  ChevronRight,
   CreditCard,
   Download,
   FileText,
@@ -59,6 +58,7 @@ import {
   Empty,
   Field,
   Form,
+  FormHeadingTarget,
   Heading,
   Modal,
   NavigationTabs,
@@ -81,7 +81,7 @@ import { useBootstrap } from "../auth";
 import { moduleLabel, modules, readModules, type ModuleKey } from "../modules";
 import { Upload } from "../upload";
 import "./admin-commercial.css";
-import "./admin-settings.css";
+import { AdminSurface } from "./admin-surface";
 import "../admin-content.css";
 
 type Row = { id: string; [key: string]: unknown };
@@ -122,6 +122,7 @@ async function save(
     p_data: data,
   });
   await cache.invalidateQueries({ queryKey: ["app_admin_list"] });
+  if (entity === "plans") await cache.invalidateQueries({ queryKey: ["app_admin_commercial"] });
   return result;
 }
 function useAll(entity: string) {
@@ -156,10 +157,14 @@ function AdminList({
   children,
   section = false,
   icon,
+  listArgs,
+  filters,
 }: {
   entity: string;
   /** RPC própria da lista, no mesmo formato paginado da app_admin_list. */
-  rpc?: "app_admin_reports" | "app_admin_privacy_requests";
+  rpc?: "app_admin_reports" | "app_admin_privacy_requests" | "app_admin_moderation_queue";
+  listArgs?: Record<string, string | null>;
+  filters?: (result: Page<Row> & { pending?: number } | undefined) => ReactNode;
   title: string;
   action?: ReactNode;
   children: (item: Row) => ReactNode;
@@ -169,8 +174,8 @@ function AdminList({
   const [params, setParams] = useSearchParams(),
     q = params.get("q") ?? "",
     page = Number(params.get("page") || 1),
-    query = useRpc<Page<Row>>(listRpc ?? "app_admin_list", listRpc
-      ? { p_query: q, p_page: page }
+    query = useRpc<Page<Row> & { pending?: number }>(listRpc ?? "app_admin_list", listRpc
+      ? { p_query: q, p_page: page, ...listArgs }
       : { p_entity: entity, p_query: q, p_page: page }),
     exportEntity = entity === "profiles" || entity === "orders" ? entity : null;
   // Preserva a aba e os demais filtros da URL ao buscar e paginar.
@@ -219,6 +224,7 @@ function AdminList({
           </small>
         </section>
       )}
+      {filters?.(query.data)}
       <QueryState query={query}>
         {query.data && (
           <>
@@ -450,19 +456,10 @@ export function CourseEditor() {
       params.get("aba") === "estrutura" ? "structure" : "course",
     );
   return (
-    <div className="admin-content">
-      <Back to="/admin/cursos" label="Cursos e aulas" />
-      <Heading
-        title={
-          isNew
-            ? "Criar curso"
-            : course
-              ? text(course, "title")
-              : "Editar curso"
-        }
-      >
-        Organize o currículo, configure o acesso e revise o conteúdo publicado.
-      </Heading>
+    <AdminSurface className="admin-content" section="curso-editor" formAction
+      trail={["Administração", { label: "Cursos e aulas", to: "/admin/cursos" }, isNew ? "Novo curso" : "Editar curso"]}
+      title={isNew ? "Criar curso" : course ? text(course, "title") : "Editar curso"}
+      description="Organize o currículo, configure o acesso e revise o conteúdo publicado.">
       <QueryState query={courses}>
         {(isNew || course) && (
           <>
@@ -506,6 +503,7 @@ export function CourseEditor() {
               <div className="reading content-panel">
                 <Form
                   key={id}
+                  submitInHeading
                   label={isNew ? "Criar curso" : "Salvar curso"}
                   onSave={async (data) => {
                     const saved = await save("courses", isNew ? null : id!, {
@@ -547,6 +545,7 @@ export function CourseEditor() {
             {tab === "certificate" && course && (
               <div className="reading content-panel">
                 <Form
+                  submitInHeading
                   label="Salvar configuração do certificado"
                   onSave={(data) =>
                     save("courses", course.id, {
@@ -600,7 +599,7 @@ export function CourseEditor() {
           <Notice error>Curso não encontrado.</Notice>
         )}
       </QueryState>
-    </div>
+    </AdminSurface>
   );
 }
 const structureLabels = {
@@ -657,6 +656,7 @@ function Structure({ course }: { course: Row }) {
   useEffect(() => {
     if (!selected) opener.current?.focus();
   }, [selected]);
+  const [structureSubmit, setStructureSubmit] = useState<HTMLDivElement | null>(null);
   function openEditor(target: StructureSelection) {
     return (event: MouseEvent<HTMLButtonElement>) => {
       opener.current = event.currentTarget;
@@ -914,6 +914,7 @@ function Structure({ course }: { course: Row }) {
           <SectionHeading
             title={`${currentRow ? "Editar" : "Criar"} ${structureLabels[selected.entity]}`}
             actions={
+              <div className="editor-actions"><div className="heading-submit" ref={setStructureSubmit} />
               <button
                 className="content-icon-action"
                 type="button"
@@ -923,6 +924,7 @@ function Structure({ course }: { course: Row }) {
               >
                 <X size={18} aria-hidden="true" />
               </button>
+              </div>
             }
           />
           {currentRow && (
@@ -946,6 +948,7 @@ function Structure({ course }: { course: Row }) {
               )}
             </div>
           )}
+          <FormHeadingTarget.Provider value={structureSubmit}>
           <StructureForm
             entity={selected.entity}
             row={currentRow}
@@ -959,6 +962,7 @@ function Structure({ course }: { course: Row }) {
               setSelected((current) => (current === selected ? null : current));
             }}
           />
+          </FormHeadingTarget.Provider>
         </section>
       )}
     </div>
@@ -978,7 +982,7 @@ function StructureForm({
   const [uploading, setUploading] = useState(false);
   return (
     <>
-      <Form
+      <Form submitInHeading
         label="Salvar conteúdo"
         submitDisabled={uploading}
         onSave={async (data) => {
@@ -1130,11 +1134,24 @@ function StructureForm({
     </>
   );
 }
+const materialTypes: Record<string, string> = {
+  "application/pdf": "PDF", "application/zip": "ZIP", "video/mp4": "Vídeo MP4",
+  "image/png": "Imagem PNG", "image/jpeg": "Imagem JPEG", "text/plain": "Texto", "audio/mpeg": "Áudio MP3",
+};
+const fileNumber = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+function materialSize(size: number) {
+  if (size >= 1_048_576) return `${fileNumber.format(size / 1_048_576)} MB`;
+  if (size >= 1024) return `${fileNumber.format(size / 1024)} KB`;
+  return `${fileNumber.format(size)} B`;
+}
+
 export function AdminMaterials() {
   const folders = useAll("material_folders"),
     lessons = useAll("lessons"),
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
     [folder, setFolder] = useState<Row | null | undefined>(undefined);
+  const [folderSubmit, setFolderSubmit] = useState<HTMLDivElement | null>(null);
+  const [materialSubmit, setMaterialSubmit] = useState<HTMLDivElement | null>(null);
   return (
     <AdminSurface
       section="materiais"
@@ -1156,8 +1173,8 @@ export function AdminMaterials() {
             <div>
               <h3>{text(item, "name")}</h3>
               <p>
-                {statusName(text(item, "status"))} · {text(item, "file_type")} ·{" "}
-                {text(item, "size_bytes")} bytes
+                {statusName(text(item, "status"))} · {materialTypes[text(item, "file_type")] ?? "Arquivo"} ·{" "}
+                {materialSize(Number(item.size_bytes))}
               </p>
             </div>
             <button onClick={() => setEditing(item)}>Editar material</button>
@@ -1180,8 +1197,10 @@ export function AdminMaterials() {
       {folder !== undefined && (
         <section className="settings-panel">
           <div className="reading inline-editor" ref={focusEditor} key={folder?.id ?? "new-folder"}>
-            <h2>{folder ? "Editar pasta" : "Criar pasta"}</h2>
-            <Form
+            <SectionHeading title={folder ? "Editar pasta" : "Criar pasta"}
+              actions={<div className="heading-submit" ref={setFolderSubmit} />} />
+            <FormHeadingTarget.Provider value={folderSubmit}>
+            <Form submitInHeading
               label="Salvar pasta"
               secondaryAction={<button type="button" onClick={() => setFolder(undefined)}>Fechar editor</button>}
               onSave={async (data) => {
@@ -1216,6 +1235,7 @@ export function AdminMaterials() {
               <StatusField row={folder ?? undefined} />
               <AccessFields row={folder ?? undefined} />
             </Form>
+            </FormHeadingTarget.Provider>
             {folder && <Archive entity="material_folders" row={folder} />}
           </div>
         </section>
@@ -1223,8 +1243,10 @@ export function AdminMaterials() {
       {editing !== undefined && (
         <section className="settings-panel">
           <div className="reading inline-editor" ref={focusEditor} key={editing?.id ?? "new-material"}>
-            <h2>{editing ? "Editar material" : "Criar material"}</h2>
-            <Form
+            <SectionHeading title={editing ? "Editar material" : "Criar material"}
+              actions={<div className="heading-submit" ref={setMaterialSubmit} />} />
+            <FormHeadingTarget.Provider value={materialSubmit}>
+            <Form submitInHeading
               label="Salvar material"
               secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
               onSave={async (data) => {
@@ -1294,22 +1316,15 @@ export function AdminMaterials() {
                     "application/pdf",
                   )}
                 >
-                  {[
-                    "application/pdf",
-                    "application/zip",
-                    "video/mp4",
-                    "image/png",
-                    "image/jpeg",
-                    "text/plain",
-                    "audio/mpeg",
-                  ].map((type) => (
-                    <option key={type}>{type}</option>
+                  {Object.entries(materialTypes).map(([type, label]) => (
+                    <option key={type} value={type}>{label}</option>
                   ))}
                 </select>
               </Field>
               <StatusField row={editing ?? undefined} />
               <AccessFields row={editing ?? undefined} />
             </Form>
+            </FormHeadingTarget.Provider>
             {editing && (
               <>
                 <Upload kind="material" resourceId={editing.id} />
@@ -1334,8 +1349,8 @@ function CommercialList({
   description,
   section,
   searchHint,
-  summarize,
   action,
+  editor,
   children,
 }: {
   entity: "profiles" | "plans" | "orders";
@@ -1343,23 +1358,36 @@ function CommercialList({
   description: string;
   section: string;
   searchHint: string;
-  summarize: (items: Row[]) => [label: string, value: number | string][];
-  action?: ReactNode;
+    action?: ReactNode;
+  editor?: ReactNode;
   children: (items: Row[]) => ReactNode;
 }) {
   const [params, setParams] = useSearchParams();
   const situation = entity === "orders"
     ? orderStatuses.find((status) => status === params.get("situacao"))
     : undefined;
-  const q = situation ? "" : params.get("q") ?? "";
-  // The orders RPC searches "uuid status amount_cents"; spaces match the full status.
-  const queryTerm = situation ? ` ${situation} ` : q;
+  const q = params.get("q") ?? "";
+  const role = entity === "profiles" ? params.get("papel") ?? "" : "";
+  const plan = entity === "profiles" ? params.get("plano") ?? "" : "";
+  const memberStatus = entity === "profiles" ? params.get("estado") ?? "" : "";
   const page = Number(params.get("page") || 1);
-  const query = useRpc<Page<Row>>("app_admin_list", {
-    p_entity: entity,
-    p_query: queryTerm,
-    p_page: page,
+  const filters = { p_role: role || null, p_plan: plan || null, p_status: situation || memberStatus || null };
+  const query = useRpc<Page<Row> & { metrics: Record<string, number>; plans?: { id: string; name: string }[] }>("app_admin_commercial", {
+    p_entity: entity, p_query: q, p_page: page, ...filters,
   });
+  const setFilter = (name: string, value: string) => setParams((previous) => {
+    const next = new URLSearchParams(previous);
+    next.delete("page");
+    if (value) next.set(name, value);
+    else next.delete(name);
+    return next;
+  });
+  const scope = situation ? "Na situação selecionada" : q || role || plan || memberStatus ? "Na busca atual" : "Em todo o cadastro";
+  const metrics = query.data?.metrics;
+  const indicators: [string, number | string | undefined][] = !metrics ? [] : entity === "profiles"
+    ? [["Sem suspensão", metrics.active], ["Suspensos", metrics.suspended], ["Com plano vigente", metrics.with_plan]]
+    : entity === "plans" ? [["Ativos", metrics.active], ["Inativos", metrics.inactive]]
+    : [["Pedidos pagos", metrics.paid], ["Pedidos pendentes", metrics.pending], ["Valor dos pedidos pagos", metrics.revenue_cents == null ? undefined : money(metrics.revenue_cents)]];
   const total = query.data?.total ?? 0;
   const search = (
     <Search
@@ -1367,14 +1395,14 @@ function CommercialList({
       placeholder={searchHint}
       label={entity === "orders" ? "Buscar pedidos" : undefined}
       initial={q}
-      onSearch={(q) => setParams({ q, page: "1" })}
+      onSearch={(q) => entity === "orders" ? setParams({ q }) : setFilter("q", q)}
     />
   );
 
   return (
-    <>
-      <Heading
-        title={title}
+    <AdminSurface className={`admin-commercial ${entity === "plans" ? "admin-commercial-plans" : ""}`}
+      section={entity} trail={["Administração", { profiles: "Membros", plans: "Planos", orders: "Pedidos" }[entity]]}
+      title={title} description={description}
         action={
           <div className="commercial-heading-actions">
             {action}
@@ -1383,7 +1411,7 @@ function CommercialList({
                 <Action
                   disabled={!query.isSuccess || !total || total > exportLimit}
                   run={async () => {
-                    const csv = await buildAdminCsv(entity, queryTerm);
+                    const csv = await buildAdminCsv(entity, q, filters);
                     downloadBlob(
                       new Blob([csv], { type: "text/csv;charset=utf-8" }),
                       `${entity === "profiles" ? "membros" : "pedidos"}-icarus.csv`,
@@ -1402,23 +1430,21 @@ function CommercialList({
           </div>
         }
       >
-        {description}
-      </Heading>
       {query.isSuccess && (
         <dl className="commercial-metrics" aria-label="Resumo dos resultados">
           <div>
             <dt>Total encontrado</dt>
             <dd>
               <strong>{total.toLocaleString("pt-BR")}</strong>
-              <small>{situation ? "Na situação selecionada" : q ? "Na busca atual" : "Em todo o cadastro"}</small>
+              <small>{scope}</small>
             </dd>
           </div>
-          {summarize(query.data.items).map(([label, metric]) => (
+          {indicators.filter(([, metric]) => metric !== undefined).map(([label, metric]) => (
             <div key={label}>
               <dt>{label}</dt>
               <dd>
-                <strong>{metric.toLocaleString("pt-BR")}</strong>
-                <small>Nesta página</small>
+                <strong>{metric?.toLocaleString("pt-BR")}</strong>
+                <small>{scope}</small>
               </dd>
             </div>
           ))}
@@ -1427,10 +1453,30 @@ function CommercialList({
       {entity !== "plans" && (
         <div className="commercial-toolbar">
           {search}
+          {entity === "profiles" && <div className="admin-list-filters" data-tour="member-filters">
+            <Field label="Papel">
+              <select value={role} onChange={(event) => setFilter("papel", event.target.value)}>
+                <option value="">Todos os papéis</option><option value="staff">Equipe</option>
+                {["admin", "instructor", "moderator", "support", "member"].map((item) =>
+                  <option key={item} value={item}>{roleLabel(item)}</option>)}
+              </select>
+            </Field>
+            <Field label="Plano vigente">
+              <select value={plan} onChange={(event) => setFilter("plano", event.target.value)}>
+                <option value="">Todos os planos</option><option value="none">Sem plano vigente</option>
+                {query.data?.plans?.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
+              </select>
+            </Field>
+            <Field label="Situação">
+              <select value={memberStatus} onChange={(event) => setFilter("estado", event.target.value)}>
+                <option value="">Todas as situações</option><option value="active">Ativo</option><option value="suspended">Suspenso</option>
+              </select>
+            </Field>
+          </div>}
           {entity === "orders" && (
             <div className="commercial-order-filters" data-tour="order-filters">
               <div className="commercial-statuses" role="group" aria-label="Situação dos pedidos">
-                <button type="button" aria-pressed={!queryTerm} onClick={() => setParams({})}>
+                <button type="button" aria-pressed={!situation && !q} onClick={() => setParams({})}>
                   Todos
                 </button>
                 {orderStatuses.map((status) => (
@@ -1471,16 +1517,14 @@ function CommercialList({
               <Pager
                 page={page}
                 total={total}
-                onChange={(page) => setParams({
-                  ...(situation ? { situacao: situation } : { q }),
-                  page: String(page),
-                })}
+                onChange={(page) => setFilter("page", String(page))}
               />
             </>
           )}
         </QueryState>
       </section>
-    </>
+      {editor}
+    </AdminSurface>
   );
 }
 
@@ -1532,24 +1576,12 @@ function CommercialCell({
 
 export function AdminMembers() {
   return (
-    <div className="admin-commercial">
       <CommercialList
         entity="profiles"
         title="Gestão de membros e CRM"
         description="Consulte cadastros, planos e vigências. A ficha reúne o progresso e o histórico de cada membro."
         section="Diretório de membros"
-        searchHint="Buscar por nome ou empresa"
-        summarize={(members) => [
-          [
-            "Sem suspensão",
-            members.filter((member) => !member.suspended).length,
-          ],
-          ["Suspensos", members.filter((member) => member.suspended).length],
-          [
-            "Com plano vigente",
-            members.filter((member) => member.plan_name).length,
-          ],
-        ]}
+        searchHint="Buscar por nome, empresa ou e-mail"
         action={
           <Link className="button" to="/admin/comunidade">
             Moderação da comunidade
@@ -1585,6 +1617,7 @@ export function AdminMembers() {
                       <div>
                         {name}
                         <small>{roleLabel(text(member, "role"))}</small>
+                        {typeof member.email === "string" && <small>{member.email}</small>}
                       </div>
                     </div>
                   </th>
@@ -1622,7 +1655,6 @@ export function AdminMembers() {
           </CommercialTable>
         )}
       </CommercialList>
-    </div>
   );
 }
 
@@ -1648,15 +1680,16 @@ function MemberDetailPanel({ id }: { id?: string }) {
     [reason, setReason] = useState(""),
     [applied, setApplied] = useState(false);
   return (
-    <div className="admin-commercial">
-      <Back to="/admin/membros" />
-      <Heading title={member ? memberName(member) : "Ficha do membro"} />
+    <AdminSurface className="admin-commercial" section="membros-ficha"
+      trail={["Administração", { label: "Membros", to: "/admin/membros" }, "Detalhes"]}
+      title={member ? memberName(member) : "Ficha do membro"} description="Perfil, acesso e histórico do membro.">
       <QueryState query={members}>
         {member ? (
           <div className="commercial-detail">
             <section className="commercial-panel">
               <h2>Perfil e acesso</h2>
               <dl>
+                {typeof member.email === "string" && <><dt>E-mail</dt><dd>{member.email}</dd></>}
                 <dt>Empresa</dt>
                 <dd>{memberCompany(member)?.name || "Não informada"}</dd>
                 <dt>Papel</dt>
@@ -1808,7 +1841,7 @@ function MemberDetailPanel({ id }: { id?: string }) {
           <Empty>Membro não encontrado.</Empty>
         )}
       </QueryState>
-    </div>
+    </AdminSurface>
   );
 }
 function MemberFacts({ detail }: { detail: MemberDetail }) {
@@ -1849,7 +1882,8 @@ function MemberFacts({ detail }: { detail: MemberDetail }) {
         </details>
       </section>
       <section className="commercial-panel">
-        <h2>Aprendizado ({detail.courses.total} cursos)</h2>
+        <h2>Aprendizado ({detail.courses.total} {detail.courses.total === 1 ? "curso" : "cursos"})</h2>
+        {detail.courses.total === 0 && <Empty>Nenhum curso com progresso.</Empty>}
         {detail.courses.items.map((course) => (
           <div className="plan-row" key={course.id}>
             <h3>{course.title}</h3>
@@ -1863,6 +1897,7 @@ function MemberFacts({ detail }: { detail: MemberDetail }) {
       </section>
       <section className="commercial-panel">
         <h2>Pedidos ({detail.orders.total})</h2>
+        {detail.orders.total === 0 && <Empty>Nenhum pedido registrado.</Empty>}
         {detail.orders.items.map((order) => (
           <p key={order.id}>
             <Link className="text-action" to={"/admin/pedidos/" + order.id}>
@@ -1874,6 +1909,7 @@ function MemberFacts({ detail }: { detail: MemberDetail }) {
       </section>
       <section className="commercial-panel">
         <h2>Tickets ({detail.tickets.total})</h2>
+        {detail.tickets.total === 0 && <Empty>Nenhum chamado registrado.</Empty>}
         {detail.tickets.items.map((ticket) => (
           <p key={ticket.id}>
             <Link className="text-action" to={"/admin/suporte/" + ticket.id}>
@@ -1896,18 +1932,107 @@ function MemberFacts({ detail }: { detail: MemberDetail }) {
 export function AdminPlans() {
   const [editing, setEditing] = useState<Row | null | undefined>(undefined);
   const [saved, setSaved] = useState(false);
+  const [submitTarget, setSubmitTarget] = useState<HTMLDivElement | null>(null);
   return (
-    <div className="admin-commercial admin-commercial-plans">
       <CommercialList
         entity="plans"
         title="Planos e ofertas"
         description="Gerencie os preços, a duração de acesso e os benefícios de cada plano."
         section="Planos cadastrados"
         searchHint="Buscar plano"
-        summarize={(plans) => [
-          ["Ativos", plans.filter((plan) => plan.active).length],
-          ["Inativos", plans.filter((plan) => !plan.active).length],
-        ]}
+        editor={editing !== undefined && (
+        <section
+          className="commercial-panel commercial-plan-editor"
+          ref={focusEditor}
+          key={editing?.id ?? "new"}
+        >
+          <SectionHeading title={editing ? "Editar plano" : "Criar plano"}
+            actions={<div className="heading-submit" ref={setSubmitTarget} />} />
+          <FormHeadingTarget.Provider value={submitTarget}>
+          <Form
+            submitInHeading
+            label="Salvar plano"
+            onDone={() => {
+              setSaved(true);
+              setEditing(undefined);
+            }}
+            secondaryAction={
+              <button type="button" onClick={() => setEditing(undefined)}>
+                Fechar editor
+              </button>
+            }
+            onSave={async (data) => {
+              await save("plans", editing?.id ?? null, {
+                name: value(data, "name"),
+                slug: value(data, "slug"),
+                price_cents: Math.round(num(data, "price") * 100),
+                access_months: num(data, "access_months"),
+                benefits: value(data, "benefits")
+                  .split("\n")
+                  .map((v) => v.trim())
+                  .filter(Boolean),
+                active: check(data, "active"),
+              });
+            }}
+          >
+            <Field label="Nome">
+              <input
+                name="name"
+                required
+                defaultValue={text(editing ?? undefined, "name")}
+              />
+            </Field>
+            <Field label="Endereço (slug)">
+              <input
+                name="slug"
+                required
+                defaultValue={text(editing ?? undefined, "slug")}
+                pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              />
+            </Field>
+            <Field
+              label="Preço em reais"
+            >
+              <input
+                name="price"
+                type="number"
+                required
+                min="0"
+                step="0.01"
+                max="21474836.47"
+                defaultValue={Number(editing?.price_cents ?? 0) / 100}
+              />
+            </Field>
+            <Field label="Meses de acesso">
+              <input
+                name="access_months"
+                type="number"
+                min="1"
+                max="120"
+                required
+                defaultValue={Number(editing?.access_months ?? 12)}
+              />
+            </Field>
+            <Field label="Benefícios, um por linha">
+              <textarea
+                name="benefits"
+                defaultValue={((editing?.benefits as string[]) ?? []).join(
+                  "\n",
+                )}
+              />
+            </Field>
+            <label className="check">
+              <input
+                type="checkbox"
+                name="active"
+                defaultChecked={editing?.active !== false}
+              />
+              Plano ativo
+            </label>
+          </Form>
+          </FormHeadingTarget.Provider>
+        </section>
+        )}
         action={
           <button
             className="primary"
@@ -1921,7 +2046,8 @@ export function AdminPlans() {
           </button>
         }
       >
-        {(plans) => (
+        {(plans) => <>
+          {saved && <Notice>Plano salvo com sucesso.</Notice>}
           <div className="commercial-plans">
             {plans.map((plan) => (
               <article
@@ -1966,105 +2092,8 @@ export function AdminPlans() {
               </article>
             ))}
           </div>
-        )}
+        </>}
       </CommercialList>
-      {saved && <Notice>Plano salvo com sucesso.</Notice>}
-      {editing !== undefined && (
-        <section
-          className="commercial-panel commercial-plan-editor"
-          key={editing?.id ?? "new"}
-          ref={focusEditor}
-        >
-          <h2>{editing ? "Editar plano" : "Criar plano"}</h2>
-          <Form
-            label="Salvar plano"
-            onDone={() => {
-              setSaved(true);
-              setEditing(undefined);
-            }}
-            secondaryAction={
-              <button type="button" onClick={() => setEditing(undefined)}>
-                Fechar editor
-              </button>
-            }
-            onSave={async (data) => {
-              await save("plans", editing?.id ?? null, {
-                name: value(data, "name"),
-                slug: value(data, "slug"),
-                price_cents: num(data, "price_cents"),
-                access_months: num(data, "access_months"),
-                benefits: value(data, "benefits")
-                  .split("\n")
-                  .map((v) => v.trim())
-                  .filter(Boolean),
-                active: check(data, "active"),
-              });
-            }}
-          >
-            <Field label="Nome">
-              <input
-                name="name"
-                required
-                defaultValue={text(editing ?? undefined, "name")}
-              />
-            </Field>
-            <Field label="Endereço (slug)">
-              <input
-                name="slug"
-                required
-                defaultValue={text(editing ?? undefined, "slug")}
-                pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-              />
-            </Field>
-            <Field
-              label="Preço em centavos"
-              hint="Exemplo: 10000 representa R$ 100,00."
-            >
-              <input
-                name="price_cents"
-                type="number"
-                required
-                min="0"
-                step="1"
-                defaultValue={Number(editing?.price_cents ?? 0)}
-              />
-            </Field>
-            <Field label="Meses de acesso">
-              <input
-                name="access_months"
-                type="number"
-                min="1"
-                max="120"
-                required
-                defaultValue={Number(editing?.access_months ?? 12)}
-              />
-            </Field>
-            <Field label="Benefícios, um por linha">
-              <textarea
-                name="benefits"
-                defaultValue={((editing?.benefits as string[]) ?? []).join(
-                  "\n",
-                )}
-              />
-            </Field>
-            <label className="check">
-              <input
-                type="checkbox"
-                name="active"
-                defaultChecked={editing?.active !== false}
-              />
-              Plano ativo
-            </label>
-          </Form>
-        </section>
-      )}
-      <section className="commercial-panel commercial-campaigns">
-        <h2>Cupons e campanhas</h2>
-        <p>
-          Cupons, links UTM e textos de upgrade ainda não estão disponíveis.
-        </p>
-      </section>
-    </div>
   );
 }
 function orderMethod(order: Row) {
@@ -2096,9 +2125,9 @@ function OrderDetail({ id }: { id: string }) {
   );
   const order = orders.data?.items.find((item) => item.id === id);
   return (
-    <div className="admin-commercial">
-      <Back to="/admin/pedidos" />
-      <Heading title="Detalhes do pedido" />
+    <AdminSurface className="admin-commercial" section="pedidos-ficha"
+      trail={["Administração", { label: "Pedidos", to: "/admin/pedidos" }, "Detalhes"]}
+      title="Detalhes do pedido" description="Confira o pagamento e a concessão de acesso.">
       {!validId ? (
         <Empty>Pedido não encontrado.</Empty>
       ) : (
@@ -2158,7 +2187,7 @@ function OrderDetail({ id }: { id: string }) {
           )}
         </QueryState>
       )}
-    </div>
+    </AdminSurface>
   );
 }
 
@@ -2167,32 +2196,12 @@ export function AdminOrders() {
   if (id) return <OrderDetail id={id} />;
 
   return (
-    <div className="admin-commercial">
       <CommercialList
         entity="orders"
         title="Pedidos e faturamento"
         description="Consulte transações, valores dos pedidos e os estados confirmados pelo servidor."
         section="Livro de vendas"
-        searchHint="ID ou valor em centavos"
-        summarize={(orders) => {
-          const paid = orders.filter((order) => order.status === "paid");
-          return [
-            ["Pedidos pagos", paid.length],
-            [
-              "Pedidos pendentes",
-              orders.filter((order) => order.status === "pending").length,
-            ],
-            [
-              "Valor dos pedidos pagos",
-              money(
-                paid.reduce(
-                  (total, order) => total + Number(order.amount_cents),
-                  0,
-                ),
-              ),
-            ],
-          ];
-        }}
+        searchHint="Buscar por ID ou valor em reais"
       >
         {(orders) => (
           <CommercialTable
@@ -2235,7 +2244,6 @@ export function AdminOrders() {
           </CommercialTable>
         )}
       </CommercialList>
-    </div>
   );
 }
 export function AdminCommunity() {
@@ -2244,6 +2252,13 @@ export function AdminCommunity() {
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
     spaces = useAll("spaces");
   const current = communityTabs.find(([id]) => id === tab) ?? communityTabs[0];
+  const pending = params.get("situacao") !== "todas";
+  const moderationFilters = (result: Page<Row> & { pending?: number } | undefined) =>
+    <NavigationTabs label="Situação da moderação" selected={pending ? "pending" : "all"}
+      items={[
+        { id: "pending", label: result?.pending == null ? "Pendentes" : `Pendentes (${result.pending})`, to: `?aba=${tab}&situacao=pendentes` },
+        { id: "all", label: "Todas", to: `?aba=${tab}&situacao=todas` },
+      ]} />;
   return (
     <AdminSurface
       section={"comunidade-" + current[0]}
@@ -2255,7 +2270,8 @@ export function AdminCommunity() {
         items={communityTabs.map(([id, label]) => ({ id, label, to: `?aba=${id}` }))} />}
     >
       {tab === "moderacao" && (
-        <AdminList entity="posts" title="Fila de publicações" icon={<MessageSquare size={20} aria-hidden="true" />}>
+        <AdminList entity="posts" rpc="app_admin_moderation_queue" listArgs={{ p_entity: "posts", p_status: pending ? "pending" : null }}
+          filters={moderationFilters} title="Fila de publicações" icon={<MessageSquare size={20} aria-hidden="true" />}>
           {(post) => (
             <div>
               <p className="meta">
@@ -2270,6 +2286,7 @@ export function AdminCommunity() {
               <p className="clamp">{text(post, "body")}</p>
               <Moderate
                 type="post"
+                status={text(post, "status")}
                 id={post.id}
                 after={() =>
                   cache.invalidateQueries({ queryKey: ["app_admin_list"] })
@@ -2280,7 +2297,8 @@ export function AdminCommunity() {
         </AdminList>
       )}
       {tab === "respostas" && (
-        <AdminList entity="replies" title="Fila de respostas" icon={<Reply size={20} aria-hidden="true" />}>
+        <AdminList entity="replies" rpc="app_admin_moderation_queue" listArgs={{ p_entity: "replies", p_status: pending ? "pending" : null }}
+          filters={moderationFilters} title="Fila de respostas" icon={<Reply size={20} aria-hidden="true" />}>
           {(reply) => (
             <div>
               <p>
@@ -2293,6 +2311,7 @@ export function AdminCommunity() {
               </Link>
               <Moderate
                 type="reply"
+                status={text(reply, "status")}
                 id={reply.id}
                 after={() =>
                   cache.invalidateQueries({ queryKey: ["app_admin_list"] })
@@ -2324,6 +2343,11 @@ export function AdminCommunity() {
                   Abrir publicação
                 </Link>
               )}
+              {report.status === "pending" && (report.reply_id || report.post_id) ? (
+                <Moderate type={report.target_type === "reply" ? "reply" : "post"}
+                  status={text(report, "target_status")} id={text(report, report.target_type === "reply" ? "reply_id" : "post_id")}
+                  after={() => cache.invalidateQueries({ queryKey: ["app_admin_reports"] })} />
+              ) : null}
               {text(report, "status") === "pending" && <Form
                 label="Concluir análise"
                 onSave={async (data) => {
@@ -2451,34 +2475,6 @@ function PlatformSettingsTabs({ tab }: { tab: string }) {
   );
 }
 
-/** Página padrão do painel (classe admin-settings): trilha, título, descrição, ação à direita, abas e cartões. */
-function AdminSurface({ section, trail, title, description, action, tabs, children }: {
-  section: string;
-  trail: string[];
-  title: string;
-  description: string;
-  action?: ReactNode;
-  tabs?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <div className="admin-settings" data-section={section}>
-      <p className="settings-breadcrumb">
-        {trail.map((item, index) => (
-          <Fragment key={item}>
-            {index > 0 && <ChevronRight size={14} aria-hidden="true" />}
-            <span>{item}</span>
-          </Fragment>
-        ))}
-      </p>
-      <Heading title={title} action={action}>{description}</Heading>
-      {tabs}
-      {children}
-      <Link className="button settings-help" to="/ajuda/administracao">Ajuda da administração</Link>
-    </div>
-  );
-}
-
 /** Configurações usam a página padrão com as abas da plataforma. */
 function SettingsSurface({ tab, sectionLabel, ...page }: {
   tab: (typeof settingsTabs)[number][0];
@@ -2508,7 +2504,7 @@ function AdminTeam() {
       title="Equipe e controle de acesso"
       description="Consulte os papéis da equipe e gerencie o acesso pela ficha de cada membro."
       action={
-        <Link className="button primary" to="/admin/membros">
+        <Link className="button primary" to="/admin/membros?papel=staff">
           <Users size={18} aria-hidden="true" /> Gerenciar membros e equipe
         </Link>
       }
@@ -2613,9 +2609,12 @@ function AdminModules() {
 
 type AuditEvent = {
   id: string;
-  action: string;
+  action_label: string;
   actor_id: string | null;
-  target_type: string;
+  actor_name: string | null;
+  target_label: string;
+  target_name: string | null;
+  target_path: string | null;
   target_id: string | null;
   reason: string | null;
   created_at: string;
@@ -2629,8 +2628,7 @@ function AdminAudit() {
   function navigate(nextQuery: string, nextPage: number) {
     setParams({ aba: "auditoria", q: nextQuery, page: String(nextPage) });
   }
-  const events = useRpc<Page<AuditEvent>>("app_admin_list", {
-    p_entity: "audit_events",
+  const events = useRpc<Page<AuditEvent>>("app_admin_audit", {
     p_query: q,
     p_page: page,
   });
@@ -2657,9 +2655,12 @@ function AdminAudit() {
                     <li key={event.id}>
                       <dl>
                         <div><dt>Data e hora</dt><dd><time dateTime={event.created_at}>{date(event.created_at)}</time></dd></div>
-                        <div><dt>Ator</dt><dd>{event.actor_id ?? "Sem ator identificado"}</dd></div>
-                        <div><dt>Ação</dt><dd><strong>{event.action}</strong></dd></div>
-                        <div><dt>Alvo</dt><dd>{event.target_type}{event.target_id && <small>{event.target_id}</small>}</dd></div>
+                        <div><dt>Ator</dt><dd>{event.actor_id ? <Link to={`/admin/membros/${event.actor_id}`}>{event.actor_name || "Membro sem nome"}</Link> : "Sistema"}</dd></div>
+                        <div><dt>Ação</dt><dd><strong>{event.action_label}</strong></dd></div>
+                        <div><dt>Alvo</dt><dd>{event.target_path ? <Link to={event.target_path}>{event.target_name ?? event.target_label}</Link> : event.target_name ?? event.target_label}
+                          {event.target_name && <small>{event.target_label}</small>}
+                          {event.target_id && <details><summary>Identificador</summary><code>{event.target_id}</code></details>}
+                        </dd></div>
                         <div><dt>Motivo</dt><dd>{event.reason || "Sem motivo registrado"}</dd></div>
                       </dl>
                     </li>

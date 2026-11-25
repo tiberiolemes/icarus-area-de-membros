@@ -1,8 +1,9 @@
+import { AdminSurface } from "./admin-surface";
 import { useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppError, rpc, useRpc } from "../api";
 import type { Page } from "../api";
-import { Back, Empty, Field, Form, Heading, Notice, Pager, QueryState, value } from "../ui";
+import { Back, Empty, Field, Form, Modal, Notice, Pager, QueryState, Search, value } from "../ui";
 import {
   chapterTime, episodeDay, episodeKind, refreshPodcasts, spotifyEpisodePattern, youtubeIdPattern,
 } from "./podcasts";
@@ -10,7 +11,9 @@ import type { Chapter, Episode, EpisodeDetail } from "./podcasts";
 
 const route = "/admin/podcasts";
 const editorDate = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" });
-const statusLabel = { draft: "Rascunho", published: "Publicado" };
+const statusLabel = { draft: "Rascunho", published: "Publicado", archived: "Arquivado" };
+type AdminEpisode = Omit<Episode, "status"> & { status: keyof typeof statusLabel };
+type AdminEpisodeDetail = Omit<EpisodeDetail, "status"> & AdminEpisode;
 
 function externalUrl(input: string) {
   if (!input.startsWith("https://") || /[\\\s]/.test(input)) return null;
@@ -58,19 +61,40 @@ export function parseChapters(input: string): Chapter[] {
   });
 }
 
-function EpisodeEditor({ episode }: { episode?: EpisodeDetail }) {
+function EpisodeEditor({ episode }: { episode?: AdminEpisodeDetail }) {
   const navigate = useNavigate();
   const { state } = useLocation();
   const [status, setStatus] = useState(episode?.status ?? "draft");
   const [featured, setFeatured] = useState(episode?.is_featured ?? false);
+  const [confirming, setConfirming] = useState(false);
+  const archived = episode?.status === "archived";
   const savedId = useRef<string>(undefined);
   return (
-    <div className="podcast-surface" data-tour="podcast-editor">
-      <Back to={route} label="Voltar aos episódios" />
-      <Heading title={episode ? "Editar episódio" : "Novo episódio"} />
+    <AdminSurface className="podcast-surface" section="podcast-editor" formAction
+      trail={["Administração", { label: "Podcasts", to: route }, episode ? "Editar episódio" : "Novo episódio"]}
+      title={episode ? "Editar episódio" : "Novo episódio"}
+      description={episode?.title ?? "Preencha os dados do episódio e defina sua publicação."}
+      action={episode && <Modal open={confirming} onOpenChange={setConfirming}
+        title={archived ? "Restaurar episódio" : "Arquivar episódio"}
+        description={archived ? "O episódio voltará como rascunho." : "O episódio sairá do catálogo. O histórico será preservado."}
+        trigger={<button>{archived ? "Restaurar" : "Arquivar"}</button>}>
+        <Form label={archived ? "Restaurar episódio" : "Arquivar episódio"} onDone={() => {
+          setConfirming(false);
+          if (archived) setStatus("draft");
+          setFeatured(false);
+        }} onSave={async () => {
+          await rpc("app_admin_archive_podcast", { p_id: episode.id, p_archived: !archived });
+          await refreshPodcasts();
+        }}>
+          <p>{episode.title}</p>
+        </Form>
+      </Modal>}>
+      <section className="settings-panel" data-tour="podcast-editor">
       {state?.created && <Notice>Episódio cadastrado.</Notice>}
       <Form
         label="Salvar episódio"
+        submitInHeading
+        disabled={archived}
         className="podcast-editor"
         onSave={async (data) => {
           const youtube = episode?.youtube_id ?? parseYouTube(value(data, "youtube_url"));
@@ -125,8 +149,9 @@ function EpisodeEditor({ episode }: { episode?: EpisodeDetail }) {
           <input name="spotify_url" type="url" maxLength={500} defaultValue={episode?.spotify_url ?? ""} />
         </Field>
         <Field label="Estado" hint="Rascunhos ficam fora do catálogo do aluno.">
-          <select name="status" value={status} onChange={(event) => setStatus(event.target.value as Episode["status"])}>
+          <select name="status" value={archived ? "archived" : status} onChange={(event) => setStatus(event.target.value as Episode["status"])}>
             <option value="draft">Rascunho</option><option value="published">Publicado</option>
+            {archived && <option value="archived">Arquivado</option>}
           </select>
         </Field>
         {status === "published" && (
@@ -136,25 +161,31 @@ function EpisodeEditor({ episode }: { episode?: EpisodeDetail }) {
           </label>
         )}
       </Form>
-    </div>
+      </section>
+    </AdminSurface>
   );
 }
 
 function EditPodcast({ id }: { id: string }) {
-  const query = useRpc<EpisodeDetail>("app_podcast", { p_id: id, p_admin: true });
-  return <QueryState query={query}>{query.data && <EpisodeEditor episode={query.data} />}</QueryState>;
+  const query = useRpc<AdminEpisodeDetail>("app_podcast", { p_id: id, p_admin: true });
+  return query.data ? <EpisodeEditor episode={query.data} /> : <AdminSurface section="podcast-editor"
+    trail={["Administração", { label: "Podcasts", to: route }, "Editar episódio"]}
+    title="Editar episódio" description="Confira os dados do episódio.">
+    <QueryState query={query}>{null}</QueryState>
+  </AdminSurface>;
 }
 
 function AdminPodcastList() {
   const [page, setPage] = useState(1);
-  const query = useRpc<Page<Episode>>("app_podcasts", { p_page: page, p_admin: true });
+  const [term, setTerm] = useState("");
+  const query = useRpc<Page<AdminEpisode>>("app_podcasts", { p_page: page, p_query: term, p_admin: true });
   const data = query.data;
   return (
-    <div className="podcast-surface" data-tour="admin-podcasts">
-      <Heading title="Podcasts e masterclasses"
-        action={<Link className="button primary" to={`${route}/novo`}>Novo episódio</Link>}>
-        Gerencie os episódios e escolha o destaque do catálogo.
-      </Heading>
+    <AdminSurface className="podcast-surface" section="podcasts" trail={["Administração", "Podcasts"]}
+      title="Podcasts e masterclasses" description="Gerencie os episódios e escolha o destaque do catálogo."
+      action={<Link className="button primary" to={`${route}/novo`}>Novo episódio</Link>}>
+      <section className="settings-panel" data-tour="admin-podcasts">
+        <Search label="Buscar episódios" variant="stitch" initial={term} onSearch={(value) => { setTerm(value); setPage(1); }} />
       <QueryState query={query}>
         {data && (data.items.length > 0 ? (
           <ul className="podcast-admin-list">
@@ -174,7 +205,8 @@ function AdminPodcastList() {
         ) : <Empty>Nenhum episódio cadastrado nesta página.</Empty>)}
         {data && (data.total > 20 || page > 1) && <Pager page={page} total={data.total} onChange={setPage} />}
       </QueryState>
-    </div>
+      </section>
+    </AdminSurface>
   );
 }
 

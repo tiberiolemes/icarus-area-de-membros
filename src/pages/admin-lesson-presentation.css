@@ -1,7 +1,7 @@
 .lesson-presentation-editor {
   max-inline-size: 48rem;
   min-inline-size: 0;
-  color: var(--ic-text);
+  color: var(--stitch-text-primary);
 }
 
 .lesson-presentation-editor__heading {
@@ -17,7 +17,7 @@
 
 .lesson-presentation-editor__heading p,
 .lesson-presentation-editor__hint {
-  color: var(--ic-text-secondary);
+  color: var(--stitch-text-secondary);
   overflow-wrap: anywhere;
 }
 
@@ -29,7 +29,7 @@
 .lesson-presentation-editor__block {
   margin-block-start: 24px;
   padding-block-start: 24px;
-  border-block-start: 1px solid var(--ic-border);
+  border-block-start: 1px solid var(--stitch-border-subtle);
 }
 
 .lesson-presentation-editor__block h3 {
@@ -46,8 +46,8 @@
 
 .lesson-presentation-editor__items > li {
   min-inline-size: 0;
-  border: 1px solid var(--ic-border);
-  border-radius: var(--ic-radius-control);
+  border: 1px solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-md);
   padding: 12px;
 }
 
@@ -89,7 +89,7 @@
 .lesson-presentation-editor__footer {
   margin-block-start: 24px;
   padding-block-start: 12px;
-  border-block-start: 1px solid var(--ic-border);
+  border-block-start: 1px solid var(--stitch-border-subtle);
 }
 
 .lesson-presentation-editor__footer .form-actions {

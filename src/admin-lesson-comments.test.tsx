@@ -31,6 +31,8 @@ function show(role: string, path: string, reviewDenied = false) {
     const args = JSON.parse(String(init?.body));
     requests.push({ name, args });
     switch (name) {
+      case "app_admin_lesson_comment_queue":
+        return page(pending ? [{ ...comment, lesson_id: lesson.id, lesson_title: lesson.title, course_title: course.title, course_slug: course.slug, can_open_lesson: !reviewDenied }] : []);
       case "app_catalog":
         return page([course], args.p_page);
       case "app_course":
@@ -69,7 +71,7 @@ afterEach(() => {
 });
 
 it("permite ao moderador localizar a aula e voltar aos cursos com a busca preservada", async () => {
-  const requests = show("moderator", root);
+  const requests = show("moderator", root + "?aba=cursos");
   const search = screen.getByRole("searchbox", { name: "Buscar" });
   fireEvent.change(search, { target: { value: "Curso de teste" } });
   fireEvent.submit(screen.getByRole("search"));
@@ -124,4 +126,29 @@ it("exibe a negativa do servidor mesmo com aula acessível no currículo carrega
   expect(await screen.findByRole("alert")).toHaveTextContent("Aula indisponível para seu acesso.");
   expect(screen.queryByRole("button", { name: "Registrar decisão" })).toBeNull();
   expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeVisible();
+});
+
+
+it("aprova da fila unificada sem abrir o curso", async () => {
+  const requests = show("moderator", root);
+  expect(await screen.findByText("Pendentes (1)")).toBeVisible();
+  expect(screen.getByRole("link", { name: /Curso de teste · Aula de teste/ })).toHaveAttribute("href", `${coursePath}/${lesson.id}`);
+  fireEvent.click(screen.getByRole("button", { name: "Aprovar" }));
+  expect(await screen.findByText("Nenhum comentário pendente nesta página.")).toBeVisible();
+  expect(requests).toContainEqual({
+    name: "app_moderate_lesson_comment", args: {
+      p_lesson_id: lesson.id, p_id: comment.id, p_decision: "approve", p_reason: "Aprovação manual.",
+    },
+  });
+});
+
+
+it("modera um comentário de aula paga sem oferecer um link para a aula bloqueada", async () => {
+  const requests = show("moderator", root, true);
+  expect(await screen.findByText("Curso de teste · Aula de teste")).toBeVisible();
+  expect(screen.queryByRole("link", { name: "Curso de teste · Aula de teste" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Aprovar" }));
+  expect(await screen.findByText("Nenhum comentário pendente nesta página.")).toBeVisible();
+  expect(requests.map(({ name }) => name)).toContain("app_moderate_lesson_comment");
+  expect(requests.map(({ name }) => name)).not.toContain("app_course");
 });

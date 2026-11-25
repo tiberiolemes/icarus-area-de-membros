@@ -105,14 +105,19 @@ const earned = (profile: Profile) => publishedCourses().map((record) => courseDe
 const moderationStatus: Readonly<Record<string, string | undefined>> = {
   approve: "approved", reject: "rejected", hide: "hidden", remove: "removed",
 };
-const recordsFor = (entity: string) => {
-  if (entity === "profiles") return state.profiles;
-  if (entity === "posts") return state.posts;
+const recordsFor = (entity: string): Row[] => {
+  if (entity === "profiles") return state.profiles as unknown as Row[];
+  if (entity === "posts") return state.posts as unknown as Row[];
   if (entity === "replies") return state.replies;
-  if (entity === "tickets") return state.tickets;
+  if (entity === "tickets") return state.tickets as unknown as Row[];
   if (entity === "legal_versions") return legalVersions;
   return state.records[entity] ?? [];
 };
+function countByStatus(rows: readonly (Row | Ticket)[]) {
+  const counts: Record<string, number> = {};
+  for (const row of rows) counts[str(row.status)] = (counts[str(row.status)] ?? 0) + 1;
+  return counts;
+}
 const saveRow = (rows: Row[], values: Args, id: string) => {
   const row = rows.find((item) => item.id === id);
   if (row) Object.assign(row, values, { id });
@@ -301,6 +306,67 @@ function call(name: string, a: Args, profile: Profile) {
       if (a.p_status) ticket.status = str(a.p_status);
       return { id, status: ticket.status };
     }
+    case "app_admin_commercial": {
+      const entity = str(a.p_entity);
+      const rows = recordsFor(entity).filter((row) => {
+        if (entity === "profiles") {
+          return matches(query, row.full_name, row.email, JSON.stringify(row.company)) &&
+            (!a.p_role || (a.p_role === "staff" ? row.role !== "member" : row.role === a.p_role)) &&
+            (!a.p_status || Boolean(row.suspended) === (a.p_status === "suspended")) &&
+            (!a.p_plan || (a.p_plan === "none" ? !row.plan_name : a.p_plan === plans[0].id && row.plan_name));
+        }
+        if (entity === "plans") return matches(query, row.name);
+        const amount = Number(query.replace(/^R\$\s*/i, "").replaceAll(".", "").replace(",", ".")) * 100;
+        return (!a.p_status || row.status === a.p_status) &&
+          (matches(query, row.id) || Math.round(amount) === row.amount_cents);
+      });
+      const paid = rows.filter((item) => item.status === "paid");
+      const metrics = entity === "profiles" ? {
+        active: rows.filter((item) => !item.suspended).length, suspended: rows.filter((item) => item.suspended).length,
+        with_plan: rows.filter((item) => item.plan_name).length,
+      } : entity === "plans" ? {
+        active: rows.filter((item) => item.active).length, inactive: rows.filter((item) => !item.active).length,
+      } : {
+        paid: paid.length, pending: rows.filter((item) => item.status === "pending").length,
+        revenue_cents: paid.reduce((total, item) => total + Number(item.amount_cents), 0),
+      };
+      return { ...page(rows), metrics, ...(entity === "profiles" ? { plans: recordsFor("plans") } : {}) };
+    }
+    case "app_admin_ticket_queue": {
+      const base = state.tickets.filter((row) => matches(query, row.subject) && (!a.p_priority || row.priority === a.p_priority));
+      return { ...page(base.filter((row) => !a.p_status || row.status === a.p_status)),
+        counts: countByStatus(base), first_response_seconds: null };
+    }
+    case "app_admin_moderation_queue": {
+      const base = recordsFor(str(a.p_entity)).filter((row) => matches(query, row.title, row.body, row.author_name));
+      return { ...page(base.filter((row) => !a.p_status || row.status === a.p_status)),
+        pending: base.filter((row) => row.status === "pending").length };
+    }
+    case "app_admin_lesson_comment_queue":
+      return page(state.lessonComments.filter((row) => row.status === "pending").flatMap((row) => {
+        const target = findLesson(row.lesson_id, profile);
+        return target ? [{ ...row, course_title: (target.course as Row).title, course_slug: (target.course as Row).slug, lesson_title: (target.lesson as Row).title, can_open_lesson: target.lesson.can_access }] : [];
+      }));
+    case "app_admin_lesson_context": {
+      const target = findLesson(lessonId, profile);
+      return target && target.course.id === a.p_course_id
+        ? { course_title: (target.course as Row).title, module_title: (target.module as Row).title, lesson_title: (target.lesson as Row).title }
+        : missing();
+    }
+    case "app_admin_log_csv_export": {
+      const events = state.records.audit_events ??= [];
+      const reason = Object.fromEntries(Object.entries({
+        busca_preenchida: a.p_search_filled === true, papel: a.p_role, plano: a.p_plan, situacao: a.p_status,
+      }).filter(([, value]) => value != null));
+      saveRow(events, {
+        actor_id: profile.id, actor_name: profile.full_name, action_label: "Exportação CSV",
+        target_label: a.p_entity === "profiles" ? "Membros" : "Pedidos",
+        created_at: new Date().toISOString(), reason: JSON.stringify(reason),
+      }, id);
+      return null;
+    }
+    case "app_admin_audit": return page(recordsFor("audit_events").filter((row) =>
+      matches(query, row.actor_name, row.action_label, row.target_label, row.target_name, row.reason)));
     case "app_admin_list": return page(recordsFor(str(a.p_entity)).filter((row) =>
       matches(query, ...Object.values(row)) && (!a.p_status || !("status" in row) || row.status === a.p_status)));
     case "app_admin_save": {
@@ -368,7 +434,29 @@ function call(name: string, a: Args, profile: Profile) {
         duration_minutes: a.p_duration_minutes, status: a.p_status, access_mode: a.p_access_mode, plan_ids: a.p_plan_ids,
         revision: Number(a.p_revision ?? 0) + 1, meeting_url: "", recording_url: null,
       }, id);
-    case "app_podcasts": return { ...page(), featured_id: null };
+    case "app_podcasts": {
+      const episodes = recordsFor("podcast_episodes").filter((row) => a.p_admin || row.status === "published");
+      return { ...page(episodes.filter((row) => matches(query, row.title))), featured_id: episodes.find((row) => row.is_featured)?.id ?? null };
+    }
+    case "app_podcast": return recordsFor("podcast_episodes").find((row) => row.id === id && (a.p_admin || row.status === "published")) ?? missing();
+    case "app_admin_save_podcast": {
+      const episodes = state.records.podcast_episodes ??= [];
+      if (a.p_is_featured) for (const row of episodes) row.is_featured = false;
+      return saveRow(episodes, {
+        youtube_id: a.p_youtube_id, kind: a.p_kind, title: a.p_title, description: a.p_description,
+        published_at: a.p_published_at, status: a.p_status, is_featured: a.p_is_featured,
+        chapters: a.p_chapters, spotify_url: a.p_spotify_url, watched: false,
+      }, id);
+    }
+    case "app_admin_archive_podcast": {
+      const item = recordsFor("podcast_episodes").find((row) => row.id === id);
+      if (!item) return missing();
+      if (a.p_archived || item.status === "archived") {
+        item.status = a.p_archived ? "archived" : "draft";
+        item.is_featured = false;
+      }
+      return { id, status: item.status };
+    }
     case "app_ranking": {
       const items = [32, 24, 18].map((points, index) => ({ position: index + 1, points, tied: false, is_self: !admin && index === 1 }));
       return { ...page(items), starts_at: date, ends_at: futureDay, time_zone: "America/Sao_Paulo", prizes: null,
@@ -378,7 +466,10 @@ function call(name: string, a: Args, profile: Profile) {
     case "app_help_feedback": return { ok: true };
     case "app_submit_feedback": return saveRow(state.feedbacks, { kind: a.p_kind, status: "new", body: a.p_body,
       excerpt: str(a.p_body).slice(0, 160), author_name: profile.full_name, created_at: new Date().toISOString(), revision: 0, has_screenshot: false }, id);
-    case "app_admin_feedbacks": return { ...page(state.feedbacks), counts: {} };
+    case "app_admin_feedbacks": {
+      const base = state.feedbacks.filter((row) => !a.p_kind || row.kind === a.p_kind);
+      return { ...page(base.filter((row) => !a.p_status || row.status === a.p_status)), counts: countByStatus(base) };
+    }
     case "app_admin_feedback": return state.feedbacks.find((item) => item.id === id) ?? missing();
     case "app_admin_feedback_status": {
       const item = state.feedbacks.find((row) => row.id === id);

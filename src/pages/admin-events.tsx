@@ -1,7 +1,8 @@
+import { AdminSurface } from "./admin-surface";
 import { useState } from "react";
 import { CalendarDays, Plus } from "lucide-react";
 import { cache, date, rpc, useRpc } from "../api";
-import { Empty, Field, Form, Heading, Modal, Notice, Pager, QueryState, value } from "../ui";
+import { Empty, Field, Form, Modal, Notice, Pager, QueryState, value } from "../ui";
 import "./events.css";
 
 type PlanChoice = { id: string; name: string };
@@ -33,7 +34,7 @@ function EventEditor({ event, plans, refresh }: {
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <Modal title={event ? "Editar encontro" : "Novo encontro"}
+    <Modal formAction title={event ? "Editar encontro" : "Novo encontro"}
       description="Agende a sessão, defina os planos com acesso e informe os links."
       trigger={<button className={event ? undefined : "primary"}>{event ? "Editar" : <><Plus size={18} aria-hidden="true" /> Novo encontro</>}</button>}
       open={open} onOpenChange={setOpen}>
@@ -54,7 +55,7 @@ function EventForm({ event: current, plans, onDone }: {
   const [id] = useState(() => event?.id ?? crypto.randomUUID());
   const [mode, setMode] = useState<AdminEvent["access_mode"]>(event?.access_mode ?? "plans");
   return (
-    <Form label="Salvar encontro" onDone={onDone} onSave={async (data) => {
+    <Form submitInHeading label="Salvar encontro" onDone={onDone} onSave={async (data) => {
       const selected = mode === "plans" ? data.getAll("plans") : [];
       if (mode === "plans" && selected.length === 0) throw new Error("Selecione pelo menos um plano com acesso.");
       await rpc("app_admin_save_live_event", {
@@ -135,31 +136,33 @@ export function AdminEvents() {
   }
 
   return (
-    <div className="live-events event-admin" data-tour="admin-live-events">
-      <Heading title="Encontros ao vivo">Agende sessões, gerencie confirmações e publique gravações.</Heading>
-      {saved && <Notice>Encontro salvo.</Notice>}
-      <QueryState query={query}>
-        {query.data && <>
-          <div className="event-admin-toolbar"><EventEditor plans={query.data.plans} refresh={refresh} /></div>
-          {query.data.items.length === 0 && <Empty>Nenhum encontro cadastrado.</Empty>}
-          <div className="event-upcoming">
-            {query.data.items.map((event) => <article key={event.id} className="event-card event-admin-row">
-              <div className="event-content">
-                <div className="event-meta"><CalendarDays size={16} aria-hidden="true" /> <time dateTime={event.starts_at}>{date(event.starts_at)}</time> · {statusLabels[event.status]}</div>
-                <h2>{event.title}</h2>
-                <p>{event.guest} · {event.duration_minutes} min{event.recording_url ? " · Gravação cadastrada" : ""}</p>
-              </div>
-              <div className="event-admin-actions">
-                <EventEditor event={event} plans={query.data!.plans} refresh={refresh} />
-                <Modal title="Presenças confirmadas" description={event.title} trigger={<button>Ver RSVPs</button>}>
-                  <Confirmations id={event.id} />
-                </Modal>
-              </div>
-            </article>)}
-          </div>
-          {(query.data.total > 20 || page > 1) && <Pager page={page} total={query.data.total} onChange={setPage} />}
-        </>}
-      </QueryState>
-    </div>
+    <AdminSurface className="live-events event-admin" section="encontros" trail={["Administração", "Encontros ao vivo"]}
+      title="Encontros ao vivo" description="Agende sessões, gerencie confirmações e publique gravações."
+      action={query.data && <EventEditor plans={query.data.plans} refresh={refresh} />}>
+      <div data-tour="admin-live-events" className="settings-panel">
+        {saved && <Notice>Encontro salvo.</Notice>}
+        <QueryState query={query}>
+          {query.data && <>
+            {query.data.items.length === 0 && <Empty>Nenhum encontro cadastrado.</Empty>}
+            <div className="event-upcoming">
+              {query.data.items.map((event) => <article key={event.id} className="event-card event-admin-row">
+                <div className="event-content">
+                  <div className="event-meta"><CalendarDays size={16} aria-hidden="true" /> <time dateTime={event.starts_at}>{date(event.starts_at)}</time> · {statusLabels[event.status]}</div>
+                  <h2>{event.title}</h2>
+                  <p>{event.guest} · {event.duration_minutes} min{event.recording_url ? " · Gravação cadastrada" : ""}</p>
+                </div>
+                <div className="event-admin-actions">
+                  <EventEditor event={event} plans={query.data!.plans} refresh={refresh} />
+                  <Modal title="Presenças confirmadas" description={event.title} trigger={<button>Ver presenças</button>}>
+                    <Confirmations id={event.id} />
+                  </Modal>
+                </div>
+              </article>)}
+            </div>
+            {(query.data.total > 20 || page > 1) && <Pager page={page} total={query.data.total} onChange={setPage} />}
+          </>}
+        </QueryState>
+      </div>
+    </AdminSurface>
   );
 }

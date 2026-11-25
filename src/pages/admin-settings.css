@@ -43,7 +43,7 @@
   margin: 0;
 }
 
-.admin-settings .page-heading > div { flex: 1 1 24rem; }
+.admin-settings .page-heading > div:first-child { flex: 1 1 24rem; }
 
 .admin-settings .page-heading h1 {
   margin-block: 0 var(--stitch-space-xs);
@@ -255,3 +255,55 @@
     letter-spacing: var(--stitch-type-headline-lg-mobile-tracking);
   }
 }
+
+
+.admin-settings .settings-breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--stitch-control-min-size);
+  min-inline-size: var(--stitch-control-min-size);
+  color: var(--stitch-text-secondary);
+}
+
+.editor-title, .editor-actions, .admin-list-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stitch-space-sm);
+}
+
+.dialog .editor-title {
+  justify-content: space-between;
+  padding-inline-end: var(--stitch-control-min-size);
+}
+
+.heading-submit:empty, .editor-actions:has(.heading-submit:only-child:empty), .form-actions:empty {
+  display: none;
+}
+
+.admin-list-filters > label {
+  flex: 1 1 9rem;
+}
+
+.admin-settings .tabs button:not([aria-current], [aria-pressed="true"], :hover) {
+  background: transparent;
+}
+.admin-settings .tabs button:is([aria-current="page"], [aria-pressed="true"]) {
+  background: var(--stitch-surface-segment-active);
+  color: var(--stitch-text-heading);
+}
+
+
+.admin-list-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: var(--stitch-space-sm);
+}
+.admin-list-metrics > div {
+  border: 1px solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-md);
+  padding: var(--stitch-space-sm) var(--stitch-space-md);
+  background: var(--stitch-surface-card);
+}
+.admin-list-metrics dt { color: var(--stitch-text-secondary); }
+.admin-list-metrics dd { font-weight: var(--stitch-type-headline-sm-weight); }

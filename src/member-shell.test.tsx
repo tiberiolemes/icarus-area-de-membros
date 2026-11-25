@@ -213,7 +213,7 @@ it("mostra erro de gravação e mantém a aparência confirmada", async () => {
 });
 
 it.each([
-  ["admin", "Administração", "/admin/cursos"],
+  ["admin", "Administração", "/admin/dashboard"],
   ["member", undefined, undefined],
   ["instructor", "Painel de conteúdo", "/admin/cursos"],
   ["moderator", "Moderação", "/admin/comunidade"],
@@ -250,7 +250,7 @@ it.each([
 
 it.each([
   ["support", "/admin/suporte", "Suporte", ["/admin/suporte"]],
-  ["moderator", "/admin/comunidade", "Moderador", ["/admin/comunidade"]],
+  ["moderator", "/admin/comunidade", "Moderador", ["/admin/comunidade", "/admin/comentarios-aula"]],
   ["instructor", "/admin/cursos", "Instrutor", ["/admin/cursos", "/admin/materiais"]],
 ] as const)("mantém o menu e a identidade administrativos para %s", (role, path, label, destinations) => {
   profile.role = role;

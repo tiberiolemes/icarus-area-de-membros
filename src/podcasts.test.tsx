@@ -87,7 +87,7 @@ it("envia o cadastro por AJAX com campos normalizados e abre a edição após su
   fireEvent.input(screen.getByLabelText("Capítulos"), { target: { value: "09:00 Dados" } });
   fireEvent.click(screen.getByRole("button", { name: "Salvar episódio" }));
   expect(await screen.findByRole("heading", { name: "Editar episódio" })).toBeVisible();
-  expect(screen.getByText("Episódio cadastrado.")).toBeVisible();
+  expect(await screen.findByText("Episódio cadastrado.")).toBeVisible();
   expect(requests[0]).toMatchObject({
     name: "app_admin_save_podcast",
     args: { p_youtube_id: "00000000001", p_title: "Demonstração", p_published_at: "2026-11-24T00:00:00-03:00",

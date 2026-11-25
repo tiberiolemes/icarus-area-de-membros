@@ -239,3 +239,13 @@
     gap: var(--ic-space-2);
   }
 }
+
+
+.admin-settings .lesson-engagement {
+  --engagement-line: var(--stitch-border-subtle);
+  --engagement-muted: var(--stitch-text-secondary);
+}
+.admin-settings .lesson-engagement-item {
+  background: var(--stitch-surface-card);
+  color: var(--stitch-text-primary);
+}

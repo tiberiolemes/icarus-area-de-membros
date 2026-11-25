@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import type { FormEvent, InputHTMLAttributes, ReactNode } from "react";
 import { Link, useLocation, useNavigationType } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -284,6 +285,13 @@ export function CheckField({
     </>
   );
 }
+export const FormHeadingTarget = createContext<HTMLElement | null>(null);
+
+export function SubmitInHeading({ children, enabled = true }: { children: ReactNode; enabled?: boolean }) {
+  const target = useContext(FormHeadingTarget);
+  return enabled && target ? createPortal(children, target) : children;
+}
+
 export function Form({
   children,
   onSave,
@@ -294,6 +302,7 @@ export function Form({
   disabled = false,
   submitDisabled = false,
   secondaryAction,
+  submitInHeading = false,
 }: {
   children: ReactNode;
   onSave: (data: FormData, form: HTMLFormElement) => Promise<unknown>;
@@ -304,7 +313,9 @@ export function Form({
   disabled?: boolean;
   submitDisabled?: boolean;
   secondaryAction?: ReactNode;
+  submitInHeading?: boolean;
 }) {
+  const formId = useId();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [saved, setSaved] = useState(false),
@@ -344,6 +355,7 @@ export function Form({
       <FormBusy.Provider value={busy}>
         <Unsaved dirty={dirty} />
         <form
+          id={formId}
           className={`form ${className}`}
           noValidate
           onInput={() => {
@@ -374,9 +386,11 @@ export function Form({
           <fieldset disabled={busy || disabled}>
             {children}
             <div className="form-actions">
-              <button className="primary" type="submit" disabled={busy || disabled || submitDisabled}>
-                {busy ? "Enviando…" : label}
-              </button>
+              <SubmitInHeading enabled={submitInHeading}>
+                <button className="primary" type="submit" form={formId} disabled={busy || disabled || submitDisabled}>
+                  {busy ? "Enviando…" : label}
+                </button>
+              </SubmitInHeading>
               {secondaryAction}
               {saved && successMessage && (
                 <span role="status">
@@ -478,6 +492,8 @@ export function Modal({
   description,
   open,
   onOpenChange,
+  formAction = false,
+  contentClass = "",
 }: {
   title: string;
   trigger: ReactNode;
@@ -485,18 +501,24 @@ export function Modal({
   description?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  formAction?: boolean;
+  contentClass?: string;
 }) {
+  const [target, setTarget] = useState<HTMLDivElement | null>(null);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="overlay" />
-        <Dialog.Content className="dialog">
-          <Dialog.Title>{title}</Dialog.Title>
+        <Dialog.Content className={`dialog ${contentClass}`}>
+          {formAction ? <div className="editor-title">
+            <Dialog.Title>{title}</Dialog.Title>
+            <div className="heading-submit" ref={setTarget} />
+          </div> : <Dialog.Title>{title}</Dialog.Title>}
           <Dialog.Description>
             {description ?? "Revise os dados antes de confirmar."}
           </Dialog.Description>
-          {children}
+          <FormHeadingTarget.Provider value={target}>{children}</FormHeadingTarget.Provider>
           <Dialog.Close className="icon-button close" aria-label="Fechar">
             <X />
           </Dialog.Close>

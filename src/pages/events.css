@@ -448,9 +448,9 @@
 .event-admin .event-card {
   min-width: 0;
   display: grid;
-  border: 1px solid var(--ic-border);
+  border: 1px solid var(--stitch-border-subtle);
   border-radius: 20px;
-  background: var(--ic-background);
+  background: var(--stitch-canvas);
   padding: 24px;
   grid-template-columns: minmax(0, 1fr) minmax(230px, 32%);
   gap: 24px;
@@ -463,7 +463,7 @@
 }
 
 .event-admin .event-content p {
-  color: var(--ic-text-secondary);
+  color: var(--stitch-text-secondary);
   margin: 8px 0;
 }
 
@@ -472,7 +472,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  color: var(--ic-text-secondary);
+  color: var(--stitch-text-secondary);
   font-size: .875rem;
 }
 
@@ -496,7 +496,7 @@
   display: grid;
   gap: 4px;
   padding: 12px 0;
-  border-bottom: 1px solid var(--ic-border);
+  border-bottom: 1px solid var(--stitch-border-subtle);
 }
 
 @media (max-width: 680px) {
@@ -513,7 +513,7 @@
 
 .event-plan-options {
   min-width: 0;
-  border: 1px solid var(--ic-border);
+  border: 1px solid var(--stitch-border-subtle);
   border-radius: 12px;
   padding: 4px 12px;
 }

@@ -1,10 +1,10 @@
+import { AdminSurface } from "./admin-surface";
 import { useState } from "react";
-import { AudioLines, BookOpenCheck, Clock3, PlayCircle, Route, Timer, TrendingDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { BookOpenCheck, PlayCircle, Route } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { rpc } from "../api";
 import type { Page } from "../api";
-import { Empty, Heading, Pager, QueryState } from "../ui";
+import { Empty, Pager, QueryState } from "../ui";
 import "./admin-analytics.css";
 
 type CourseOption = { id: string; title: string };
@@ -27,7 +27,6 @@ type CourseAnalytics = {
 const count = new Intl.NumberFormat("pt-BR");
 const ratio = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 });
 const percent = (part: number, total: number) => total > 0 ? ratio.format(part / total) : "—";
-const countOrDash = (value: number | null) => value === null ? "—" : count.format(value);
 const shareOfStarted = (part: number, total: number) => total > 0
   ? `${percent(part, total)} dos que iniciaram` : "Sem base de progresso";
 const duration = (seconds: number) => seconds > 0
@@ -51,10 +50,8 @@ function CourseReport({ courseId }: { courseId: string }) {
       {data && <>
         <dl className="reports-kpis" id="analytics-indicadores">
           <div><dt>Iniciaram o curso <PlayCircle aria-hidden="true" /></dt><dd className="reports-number">{count.format(data.started)}</dd><dd className="reports-note">Com progresso registrado</dd></div>
-          <div><dt>Concluíram módulo 1 <Route aria-hidden="true" /></dt><dd className="reports-number">{countOrDash(data.module_completed)}</dd><dd className="reports-note">{data.module_completed === null ? "Sem etapa obrigatória publicada" : shareOfStarted(data.module_completed, data.started)}</dd></div>
-          <div><dt>Concluíram o curso <BookOpenCheck aria-hidden="true" /></dt><dd className="reports-number">{countOrDash(data.course_completed)}</dd><dd className="reports-note">{data.course_completed === null ? "Currículo obrigatório indisponível" : shareOfStarted(data.course_completed, data.started)}</dd></div>
-          <div><dt>Tempo por sessão <Timer aria-hidden="true" /></dt><dd>Sem medição</dd><dd className="reports-note">Tempo efetivo de reprodução</dd></div>
-          <div><dt>Ponto de abandono <TrendingDown aria-hidden="true" /></dt><dd>Sem medição</dd><dd className="reports-note">Posição de saída por aula</dd></div>
+          {data.module_completed !== null && <div><dt>Concluíram módulo 1 <Route aria-hidden="true" /></dt><dd className="reports-number">{count.format(data.module_completed)}</dd><dd className="reports-note">{shareOfStarted(data.module_completed, data.started)}</dd></div>}
+          {data.course_completed !== null && <div><dt>Concluíram o curso <BookOpenCheck aria-hidden="true" /></dt><dd className="reports-number">{count.format(data.course_completed)}</dd><dd className="reports-note">{shareOfStarted(data.course_completed, data.started)}</dd></div>}
         </dl>
         <section className="reports-panel" id="analytics-funil">
           <h2>Jornada curricular</h2>
@@ -72,13 +69,6 @@ function CourseReport({ courseId }: { courseId: string }) {
               </li>)}
             </ol>}
           <small>A conclusão de cada etapa exige as respectivas aulas obrigatórias. A conclusão do curso independe da emissão de certificado.</small>
-        </section>
-        <section className="reports-panel" id="analytics-retencao" data-tour="analytics-retencao">
-          <h2><AudioLines aria-hidden="true" /> Retenção por aula</h2>
-          <div className="reports-coverage">
-            <strong>Telemetria de reprodução indisponível</strong>
-            <p>A retenção por trecho só pode ser calculada com registros dos trechos efetivamente reproduzidos. O progresso salvo permite acompanhar as conclusões na tabela abaixo.</p>
-          </div>
         </section>
         <section className="reports-panel" id="analytics-aulas" aria-busy={query.isFetching}>
           <h2>Diagnóstico por aula</h2>
@@ -103,10 +93,6 @@ function CourseReport({ courseId }: { courseId: string }) {
           {data.lessons.total > data.lessons.page_size || data.lessons.page > 1
             ? <Pager label="Paginação de aulas" page={data.lessons.page} total={data.lessons.total} onChange={setPage} /> : null}
         </section>
-        <section className="reports-panel" id="analytics-coortes">
-          <h2><Clock3 aria-hidden="true" /> Atividade por coorte</h2>
-          <p>Sem histórico de matrícula por curso e de atividade semanal para acompanhar as coortes.</p>
-        </section>
       </>}
     </QueryState>
   );
@@ -126,13 +112,9 @@ export function AdminAnalytics({ dashboardPath }: { dashboardPath: string }) {
   const active = query.data?.items.find((course) => course.id === courseId) ?? query.data?.items[0];
 
   return (
-    <div className="admin-reports admin-analytics">
-      <nav className="reports-crumb" aria-label="Localização">
-        <Link to={dashboardPath}>Dashboard executivo</Link><span aria-hidden="true">/</span><span aria-current="page">Analytics de aprendizagem</span>
-      </nav>
-      <Heading title="Analytics de Aprendizagem & Funil de Retenção">
-        Acompanhe o progresso pelo currículo publicado e as conclusões que foram registradas.
-      </Heading>
+    <AdminSurface className="admin-reports admin-analytics" section="analytics"
+      trail={["Administração", { label: "Dashboard", to: dashboardPath }, "Analytics"]}
+      title="Analytics de aprendizagem" description="Acompanhe o progresso pelo currículo publicado e as conclusões registradas.">
       <QueryState query={query}>
         <div className="reports-filters" id="analytics-curso" data-tour="analytics-curso" aria-busy={query.isFetching}>
           <label>
@@ -152,6 +134,6 @@ export function AdminAnalytics({ dashboardPath }: { dashboardPath: string }) {
         {active ? <CourseReport key={active.id} courseId={active.id} /> :
           <Empty>{coursePage === 1 ? "Publique um curso para acompanhar o progresso." : "Nenhum curso publicado nesta página."}</Empty>}
       </QueryState>
-    </div>
+    </AdminSurface>
   );
 }

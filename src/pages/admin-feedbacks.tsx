@@ -1,8 +1,9 @@
+import { AdminSurface } from "./admin-surface";
 import { Image, Link as LinkIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { cache, date, rpc, useRpc, type Page } from "../api";
 import { PrivateImage } from "../media";
-import { Empty, Field, Form, Heading, Modal, Pager, QueryState, value } from "../ui";
+import { Empty, Field, Form, Modal, NavigationTabs, Pager, QueryState, value } from "../ui";
 import { feedbackTypes } from "./feedback";
 import "./feedback.css";
 
@@ -52,7 +53,7 @@ function FeedbackDetail({ id, onChange }: { id: string; onChange: () => void }) 
           <summary>Ver print</summary>
           {printOpen && <PrivateImage kind="feedback-screenshot" id={item.screenshot_id} alt="Print enviado com o feedback" className="feedback-print" />}
         </details>}
-        <Form label="Salvar situação" submitDisabled={selected === item.status} onSave={async (data) => {
+        <Form submitInHeading label="Salvar situação" submitDisabled={selected === item.status} onSave={async (data) => {
           try {
             const updated = await rpc<Pick<Detail, "status" | "revision">>("app_admin_feedback_status", {
               ...args, p_status: value(data, "status"), p_revision: item.revision,
@@ -86,7 +87,7 @@ function FeedbackCard({ item, refresh }: { item: Summary; refresh: () => void })
   const [open, setOpen] = useState(false);
   const changed = useRef(false);
   return (
-    <Modal title="Detalhe do feedback" description="Consulte o relato e atualize a situação da triagem."
+    <Modal formAction contentClass="feedback-detail-panel" title="Detalhe do feedback" description="Consulte o relato e atualize a situação da triagem."
       open={open} onOpenChange={(next) => {
         setOpen(next);
         if (!next && changed.current) { changed.current = false; refresh(); }
@@ -123,37 +124,41 @@ export function AdminFeedbacks() {
     });
   }
   return (
-    <section className="admin-feedbacks" data-tour="admin-feedbacks">
-      <Heading title="Feedbacks dos alunos">Acompanhe sugestões e problemas enviados pela área do aluno.</Heading>
-      <div className="feedback-filters" ref={filters}>
-        <Field label="Tipo">
-          <select value={kind} onChange={(event) => { setKind(event.target.value); setPage(1); }}>
-            <option value="">Todos os tipos</option>
-            {Object.entries(feedbackTypes).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-          </select>
-        </Field>
-        <Field label="Situação">
-          <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}>
-            <option value="">Todas as situações</option>
-            {statusKeys.map((key) => <option key={key} value={key}>{statuses[key]}</option>)}
-          </select>
-        </Field>
-      </div>
-      <QueryState query={query}>
-        {result && <>
-          {result.total === 0 ? <Empty>Nenhum feedback para os filtros escolhidos.</Empty> : (
-            <div className="feedback-board" data-filtered={!!status}>
-              {statusKeys.filter((key) => !status || key === status).map((key) => (
-                <section className="feedback-column" key={key} aria-labelledby={`feedback-column-${key}`}>
-                  <header><h2 id={`feedback-column-${key}`}>{statuses[key]}</h2><span>{result.counts[key] ?? 0}</span></header>
-                  {result.items.filter((item) => item.status === key).map((item) => <FeedbackCard key={item.id} item={item} refresh={refresh} />)}
-                </section>
-              ))}
-            </div>
-          )}
-          {(page > 1 || result.total > 20) && <Pager page={page} total={result.total} onChange={setPage} />}
-        </>}
-      </QueryState>
-    </section>
+    <AdminSurface className="admin-feedbacks" section="feedbacks" trail={["Administração", "Feedbacks"]}
+      title="Feedbacks dos alunos" description="Acompanhe sugestões e problemas enviados pela área do aluno.">
+      <section className="settings-panel" data-tour="admin-feedbacks">
+        {result && <dl className="admin-list-metrics" aria-label="Feedbacks por situação">
+          {statusKeys.map((key) => <div key={key}><dt>{statuses[key]}</dt><dd>{result.counts[key] ?? 0}</dd></div>)}
+        </dl>}
+        <div className="feedback-filters" ref={filters}>
+          <Field label="Tipo">
+            <select value={kind} onChange={(event) => { setKind(event.target.value); setPage(1); }}>
+              <option value="">Todos os tipos</option>
+              {Object.entries(feedbackTypes).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+            </select>
+          </Field>
+        </div>
+        <NavigationTabs label="Situação dos feedbacks" selected={status}
+          items={["", ...statusKeys].map((key) => ({
+            id: key, label: key ? `${statuses[key as Status]} (${result?.counts[key as Status] ?? 0})` : "Todos",
+            onClick: () => { setStatus(key); setPage(1); },
+          }))} />
+        <QueryState query={query}>
+          {result && <>
+            {result.total === 0 ? <Empty>Nenhum feedback para os filtros escolhidos.</Empty> : (
+              <div className="feedback-board" data-filtered={!!status}>
+                {statusKeys.filter((key) => !status || key === status).map((key) => (
+                  <section className="feedback-column" key={key} aria-labelledby={`feedback-column-${key}`}>
+                    <header><h2 id={`feedback-column-${key}`}>{statuses[key]}</h2><span>{result.counts[key] ?? 0}</span></header>
+                    {result.items.filter((item) => item.status === key).map((item) => <FeedbackCard key={item.id} item={item} refresh={refresh} />)}
+                  </section>
+                ))}
+              </div>
+            )}
+            {(page > 1 || result.total > 20) && <Pager page={page} total={result.total} onChange={setPage} />}
+          </>}
+        </QueryState>
+      </section>
+    </AdminSurface>
   );
 }

@@ -179,7 +179,8 @@ try {
       await page.locator(".showcase").waitFor();
       await capture("catalogo-escuro");
       await visit("/admin/dashboard");
-      await page.getByRole("alert").filter({ hasText: "Acesso restrito" }).waitFor();
+      await heading("Acesso restrito").waitFor();
+      await page.getByRole("alert").filter({ hasText: "Você não tem permissão para esta área." }).waitFor();
       assert.deepEqual(errors, []);
       assert.deepEqual(external, []);
     } finally { await context.close(); }
@@ -189,7 +190,7 @@ try {
       const { page, visit, heading, button, capture, external, errors } = admin;
       await visit("/entrar");
       await button("Entrar como administrador").click();
-      await heading("Dashboard Executivo & Métricas").waitFor();
+      await heading("Dashboard executivo e métricas").waitFor();
       await page.locator(".reports-kpis").waitFor();
       const adminLogo = page.getByRole("img", { name: "Icarus", exact: true });
       await adminLogo.waitFor();
@@ -233,10 +234,9 @@ try {
       await capture("moderacao");
       const post = page.getByText("Checklist para publicar um curso", { exact: true }).first();
       const card = post.locator("../..");
-      await card.getByText("Moderação manual", { exact: true }).click();
-      await card.getByLabel("Motivo da decisão").fill("Conteúdo adequado à comunidade.");
-      page.once("dialog", (dialog) => dialog.accept());
-      await card.getByRole("button", { name: "Confirmar decisão" }).click();
+      await card.getByRole("button", { name: "Aprovar" }).click();
+      await post.waitFor({ state: "hidden" });
+      await page.getByRole("link", { name: "Todas", exact: true }).click();
       await page.getByRole("link", { name: "Checklist para publicar um curso", exact: true }).locator("../..").getByText(/^Publicado/).waitFor();
       await visit("/admin/suporte");
       await page.getByText("Onde encontro o roteiro de aula?", { exact: true }).first().waitFor();

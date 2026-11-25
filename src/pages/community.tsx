@@ -1,3 +1,4 @@
+import { AdminSurface } from "./admin-surface";
 import { useCallback, useRef, useState } from "react";
 import {
   Link,
@@ -645,7 +646,7 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
     if (!open && !canArchive && !canRestore)
       requestAnimationFrame(() => postFocus.current?.focus());
   }
-  return (
+  const content = (
     <section
       className={
         admin
@@ -653,10 +654,7 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
           : "community community-thread community-member-thread"
       }
     >
-      <Back
-        to={admin ? "/admin/comunidade" : "/app/comunidade?" + params}
-        label={admin ? "Fila de moderação" : "Voltar à comunidade"}
-      />
+      {!admin && <Back to={"/app/comunidade?" + params} label="Voltar à comunidade" />}
       <QueryState query={query}>
         {data && (
           <div className="community-columns">
@@ -667,7 +665,7 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
                 tabIndex={-1}
               >
                 <PostMeta post={data.post} />
-                <Heading title={data.post.title ?? "Publicação"} />
+                {!admin && <Heading title={data.post.title ?? "Publicação"} />}
                 {archiveNotice && <Notice>{archiveNotice}</Notice>}
                 {data.post.status !== "approved" && (
                   <Notice>
@@ -787,6 +785,8 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
                 {data.can_moderate && data.post.status !== "archived" && (
                   <Moderate
                     type="post"
+                    direct={admin}
+                    status={data.post.status}
                     id={data.post.id}
                     after={() => query.refetch()}
                   />
@@ -828,6 +828,8 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
                     {data.can_moderate && (
                       <Moderate
                         type="reply"
+                        direct={admin}
+                        status={reply.status}
                         id={reply.id}
                         after={() => query.refetch()}
                       />
@@ -888,51 +890,69 @@ export function PostPage({ admin = false }: { admin?: boolean }) {
       </QueryState>
     </section>
   );
+  return admin ? <AdminSurface section="publicacao"
+    trail={["Administração", { label: "Fila de moderação", to: "/admin/comunidade" }, "Publicação"]}
+    title={data?.post.title ?? "Publicação"} description="Leia a discussão e registre a decisão de moderação.">
+    {content}
+  </AdminSurface> : content;
 }
-export function Moderate({
-  id,
-  type,
-  after,
-}: {
+export function Moderate({ id, type, status, after, direct = true }: {
   id: string;
   type: "post" | "reply";
+  status?: string;
+  direct?: boolean;
   after: () => unknown;
 }) {
+  const [decision, setDecision] = useState<"reject" | "hide" | "remove">();
+  const labels = { reject: "Rejeitar", hide: "Ocultar", remove: "Remover" };
+  async function apply(choice: string, reason: string) {
+    await rpc("app_moderate", {
+      p_target_type: type, p_target_id: id, p_decision: choice, p_reason: reason,
+    });
+    await Promise.all([
+      after(),
+      cache.invalidateQueries({ queryKey: ["app_feed"] }),
+      cache.invalidateQueries({ queryKey: ["app_post"] }),
+      cache.invalidateQueries({ queryKey: ["app_admin_list"] }),
+      cache.invalidateQueries({ queryKey: ["app_admin_moderation_queue"] }),
+      cache.invalidateQueries({ queryKey: ["app_admin_reports"] }),
+    ]);
+  }
+  if (!direct) return <details className="moderate">
+    <summary>Moderação manual</summary>
+    <Form label="Confirmar decisão" onSave={async (data) => {
+      if (!window.confirm("Confirmar esta decisão de moderação?")) throw new Error("Decisão cancelada.");
+      await apply(value(data, "decision"), value(data, "reason"));
+    }}>
+      <Field label="Decisão">
+        <select name="decision">
+          <option value="approve">Aprovar</option>
+          <option value="reject">Rejeitar</option>
+          <option value="hide">Ocultar</option>
+          <option value="remove">Remover</option>
+        </select>
+      </Field>
+      <Field label="Motivo da decisão"><textarea name="reason" required minLength={5} maxLength={2000} /></Field>
+    </Form>
+  </details>;
+  if (status === "archived") return null;
   return (
-    <details className="moderate">
-      <summary>Moderação manual</summary>
-      <Form
-        label="Confirmar decisão"
-        onSave={async (data) => {
-          if (!window.confirm("Confirmar esta decisão de moderação?"))
-            throw new Error("Decisão cancelada.");
-          await rpc("app_moderate", {
-            p_target_type: type,
-            p_target_id: id,
-            p_decision: value(data, "decision"),
-            p_reason: value(data, "reason"),
-          });
-          await Promise.all([
-            after(),
-            cache.invalidateQueries({ queryKey: ["app_feed"] }),
-            cache.invalidateQueries({ queryKey: ["app_post"] }),
-            cache.invalidateQueries({ queryKey: ["app_admin_list"] }),
-            cache.invalidateQueries({ queryKey: ["app_admin_reports"] }),
-          ]);
-        }}
-      >
-        <Field label="Decisão">
-          <select name="decision">
-            <option value="approve">Aprovar</option>
-            <option value="reject">Rejeitar</option>
-            <option value="hide">Ocultar</option>
-            <option value="remove">Remover</option>
-          </select>
-        </Field>
-        <Field label="Motivo da decisão">
-          <textarea name="reason" required minLength={5} maxLength={2000} />
-        </Field>
-      </Form>
-    </details>
+    <div className="actions">
+      {status !== "approved" && <Action run={() => apply("approve", "Aprovação manual.")}>Aprovar</Action>}
+      {(["reject", "hide", "remove"] as const).filter((choice) =>
+        !(choice === "reject" && status && status !== "pending") &&
+        !(choice === "hide" && (status === "hidden" || status === "removed")) &&
+        !(choice === "remove" && status === "removed"),
+      ).map((choice) => <Modal key={choice} title={labels[choice] + (type === "post" ? " publicação" : " resposta")}
+        open={decision === choice} onOpenChange={(open) => setDecision(open ? choice : undefined)}
+        trigger={<button>{labels[choice]}</button>}>
+        <Form label={labels[choice]} onDone={() => setDecision(undefined)}
+          onSave={(data) => apply(choice, value(data, "reason"))}>
+          <Field label="Motivo da decisão">
+            <textarea name="reason" required minLength={3} maxLength={2000} />
+          </Field>
+        </Form>
+      </Modal>)}
+    </div>
   );
 }

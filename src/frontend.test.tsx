@@ -508,18 +508,9 @@ describe("SDK e componentes do domínio com fetch controlado", () => {
         }),
     );
     vi.stubGlobal("fetch", fetcher);
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     const after = vi.fn();
-    wrap(<Moderate id="post-id" type="post" after={after} />);
-    fireEvent.click(screen.getByText("Moderação manual"));
-    fireEvent.change(screen.getByLabelText("Motivo da decisão"), {
-      target: { value: "Conteúdo revisado manualmente" },
-    });
-    fireEvent.submit(
-      screen
-        .getByRole("button", { name: "Confirmar decisão" })
-        .closest("form")!,
-    );
+    wrap(<Moderate id="post-id" type="post" status="pending" after={after} />);
+    fireEvent.click(screen.getByRole("button", { name: "Aprovar" }));
     await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
     expect(after).not.toHaveBeenCalled();
     expect(JSON.parse(String(fetcher.mock.calls[0][1]?.body))).toMatchObject({

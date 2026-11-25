@@ -123,7 +123,7 @@ async function exercise(browser, view, theme, width) {
       };
     });
     assert.equal(geometry.document[0], width);
-    assert.equal(geometry.kpiColumns, width < 640 ? 2 : 5);
+    assert.equal(geometry.kpiColumns, width < 640 ? 2 : 3);
     assert.equal(geometry.theme, theme);
     assert.match(geometry.font, /^Inter/);
     assert(geometry.controls.every((control) => control.width >= 44 && control.height >= 44), JSON.stringify(geometry.controls));
@@ -159,7 +159,7 @@ async function exercise(browser, view, theme, width) {
       await page.getByText("19/11/2026 a 21/11/2026 · Horário de Brasília").waitFor();
       assert.deepEqual(calls.at(-1).args, { p_period: "custom", p_from: "2026-11-19", p_through: "2026-11-21" });
       await page.getByRole("link", { name: "Analisar cursos" }).press("Enter");
-      await page.getByRole("heading", { name: "Analytics de Aprendizagem & Funil de Retenção" }).waitFor();
+      await page.getByRole("heading", { name: "Analytics de aprendizagem" }).waitFor();
     } else {
       const selector = page.getByRole("combobox", { name: "Curso selecionado" });
       const table = page.getByRole("region", { name: "Tabela de progresso por aula" });
@@ -175,7 +175,7 @@ async function exercise(browser, view, theme, width) {
       await selector.selectOption(courses[1].id);
       await page.getByText("Nenhum progresso registrado neste curso.").waitFor();
       await page.getByText("Nenhuma aula publicada neste curso.").waitFor();
-      await page.getByText("Telemetria de reprodução indisponível").waitFor();
+      assert.equal(await page.getByText("Telemetria de reprodução indisponível").count(), 0);
       assert.equal(await selector.evaluate((node) => document.activeElement === node), true);
       assert.equal(calls.at(-1).args.p_page, 1);
     }

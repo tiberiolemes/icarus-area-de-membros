@@ -67,7 +67,7 @@ export function Captcha() {
 export function captchaToken(data: FormData) {
   if (!captchaEnabled) return undefined;
   const token = String(data.get(field) ?? "");
-  if (!token) throw new Error("Aguarde a verificação de segurança terminar e tente novamente.");
+  if (!token) throw new Error("Conclua a verificação de segurança e tente novamente. Se ela não aparecer, recarregue a página.");
   return token;
 }
 

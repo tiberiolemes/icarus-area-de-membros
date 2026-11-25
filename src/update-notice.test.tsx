@@ -150,3 +150,17 @@ it.each([
   await new Promise((resolve) => setTimeout(resolve, 0));
   empty();
 });
+
+it.each([
+  ["sem rede", () => Promise.reject(new TypeError("Failed to fetch"))],
+  ["consulta abortada ao recarregar", () => Promise.reject(new DOMException("aborted", "AbortError"))],
+])("não guarda a falha %s, que não chega ao GitHub", async (_, answer) => {
+  fetchMock.mockImplementationOnce(answer);
+  const first = mount();
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+  first.unmount();
+  fetchMock.mockResolvedValue(release("v99.0.0"));
+  mount();
+  expect(await screen.findByText("Versão 99.0.0 disponível.")).toBeInTheDocument();
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+});

@@ -16,6 +16,11 @@ export async function rpc(client: SupabaseClient, name: string, args: Record<str
   }
   return data;
 }
+/** Limite de tentativas do banco: a recusa vira 429 com mensagem própria, e não o 422 genérico. */
+export async function throttle(client: SupabaseClient, name: string, args: Record<string, unknown>) {
+  try { await rpc(client, name, args); }
+  catch (e) { throw e instanceof HttpError && e.status === 422 ? new HttpError(429, "RATE_LIMITED", "Muitas tentativas. Aguarde um minuto e tente novamente.") : e; }
+}
 export async function actor(req: Request, d: Dependencies, optional = false) {
   const auth = req.headers.get("authorization");
   if (!auth && optional) return null;

@@ -1,4 +1,4 @@
-import { actor, defaults, rpc, type Dependencies } from "../_shared/client.ts";
+import { actor, defaults, rpc, throttle, type Dependencies } from "../_shared/client.ts";
 import { endpoint, HttpError, json, nonce, sha256, text } from "../_shared/http.ts";
 export const createHandler = (d: Dependencies = defaults) => endpoint(async (req) => {
   const a = (await actor(req, d))!;
@@ -7,6 +7,8 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   const password = body.password as string;
   const hasMfa = a.userInfo.factors?.some((f) => f.status === "verified");
   if (hasMfa && a.claims.aal !== "aal2") throw new HttpError(403, "MFA_REQUIRED", "Confirme o segundo fator para continuar.");
+  // A senha é conferida com a chave de serviço, fora do CAPTCHA e do limite por IP do Auth: o limite fica por usuário.
+  await throttle(a.admin, "app_reauth_throttle", { p_actor_id: a.userInfo.id });
   const verifier = a.verifier();
   try {
     const checked = await verifier.auth.signInWithPassword({ email: a.userInfo.email!, password });

@@ -50,13 +50,20 @@ export async function json(req: Request): Promise<Record<string, unknown>> {
     return value;
   } catch (e) { if (e instanceof HttpError) throw e; throw new HttpError(400, "INVALID_JSON", "Solicitação inválida."); }
 }
+/** Origem do app. Fora do modo local ela é obrigatória: sem APP_ORIGIN, convites e CORS apontariam para o loopback de desenvolvimento. */
+export function appOrigin(get: Env) {
+  const origin = get("APP_ORIGIN");
+  if (origin) return origin;
+  if (get("ICARUS_MODE") !== "local") throw new HttpError(503, "CONFIGURATION_REQUIRED", "APP_ORIGIN não configurado na instalação.");
+  return "http://127.0.0.1:8088";
+}
 export function endpoint(handler: (req: Request) => Promise<unknown>, get: Env = env, allowGet = false) {
   return async (req: Request): Promise<Response> => {
     const origin = req.headers.get("origin");
-    const allowed = get("APP_ORIGIN") || "http://127.0.0.1:8088";
     const headers: Record<string, string> = { "Content-Type": "application/json", "Cache-Control": "no-store", "Vary": "Origin", "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info", "Access-Control-Allow-Methods": allowGet ? "GET,POST,OPTIONS" : "POST,OPTIONS" };
-    if (origin === allowed) headers["Access-Control-Allow-Origin"] = allowed;
     try {
+      const allowed = appOrigin(get);
+      if (origin === allowed) headers["Access-Control-Allow-Origin"] = allowed;
       if (origin && origin !== allowed) throw new HttpError(403, "FORBIDDEN", "Origem não permitida.");
       if (req.method === "OPTIONS") return new Response(null, { status: 204, headers });
       if (req.method !== "POST" && !(allowGet && req.method === "GET")) throw new HttpError(405, "METHOD_NOT_ALLOWED", "Método não permitido.");

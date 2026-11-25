@@ -4,7 +4,7 @@ O Icarus é uma plataforma de área de membros e cursos online em React/Vite e S
 
 ## Atualizar de versão
 
-Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes, pelo roteiro do seu tipo de instalação: [stack Docker completo](#atualizar-uma-instalação-docker-completa) ou [Supabase hospedado](#aplicar-migrações-no-supabase-hospedado).
+Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes. Numa instalação hospedada, siga [Aplicar migrações no Supabase hospedado](#aplicar-migrações-no-supabase-hospedado), que vale para a 0.1.6 e para a 0.2.0. O roteiro do [stack Docker completo](#atualizar-uma-instalação-docker-completa) foi escrito e ensaiado para a v0.1.6. A partir da 0.2.0, o banco foi ensaiado pelo [ensaio isolado](#ensaio-de-banco-isolado) (`install` da tag v0.2.0, `upgrade` e `verify` no mesmo Postgres), mas o stack Docker completo da 0.2.0 ainda não tem roteiro próprio ensaiado para as Edge Functions.
 
 | Versão instalada | Histórico esperado | Migrations novas na 2.2.1 |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHA
 
 Na 2.2.1, publique também as Edge Functions, porque `upload` passou a recusar foto de perfil fora de JPG ou PNG de até 500 KB e `reauthenticate` confere a senha com a chave de serviço. Revisões não lançadas do `main` que usavam tabelas com prefixo `ica_` não seguem este caminho.
 
-Admins veem no painel o aviso "Versão X disponível" quando sai uma Release maior que a instalada. Para isso, o navegador do admin consulta `https://api.github.com/repos/<dono>/<repositório>/releases/latest` no máximo uma vez a cada 24 horas, guardando a resposta no `localStorage`. Nenhum dado da instalação vai na consulta; o GitHub recebe o IP e o navegador de quem abriu o painel. O repositório padrão é o oficial, `tiberiolemes/icarus-area-de-membros`. Para acompanhar outro, gere o build com `VITE_ICARUS_UPDATE_REPO=dono/repositório`; com a variável vazia, o aviso fica desligado e nada é consultado. O Icarus não publica uma Content Security Policy própria. Se o seu servidor definir uma, inclua `https://api.github.com` em `connect-src`. Com a consulta bloqueada, sem rede ou no limite de requisições do GitHub, o aviso só não aparece.
+Admins veem no painel o aviso "Versão X disponível" quando sai uma Release maior que a instalada. Para isso, o navegador do admin consulta `https://api.github.com/repos/<dono>/<repositório>/releases/latest` no máximo uma vez a cada 24 horas, guardando a resposta no `localStorage`. A consulta não leva dados de membros, cursos ou configuração. Como em qualquer chamada do navegador a outro site, o GitHub recebe o IP, o navegador e o domínio do painel (cabeçalhos `Origin` e `Referer`). Uma falha também fica guardada por 24 horas, para o painel não repetir a consulta a cada recarga. O repositório padrão é o oficial, `tiberiolemes/icarus-area-de-membros`. Para acompanhar outro, gere o build com `VITE_ICARUS_UPDATE_REPO=dono/repositório`; com a variável vazia, o aviso fica desligado e nada é consultado. O Icarus não publica uma Content Security Policy própria. Se o seu servidor definir uma, inclua `https://api.github.com` em `connect-src`. Com a consulta bloqueada, sem rede ou no limite de requisições do GitHub, o aviso só não aparece.
 
 ## Requisitos do Docker dedicado
 
@@ -49,7 +49,7 @@ Somente após essas confirmações, remova o `owner.json` desse lock, se present
 
 ### Atualizar uma instalação Docker completa
 
-Use este roteiro para o stack completo da v0.1.6 ou da v0.2.0 criado pelo Supabase CLI, com API em `58521`, Postgres em `58522` e Mailpit em `58524`. O instalador da versão nova exige um daemon vazio na primeira partida. Neste roteiro, o stack existente continua sob o controle dos comandos da versão instalada, com os mesmos volumes e dados. A atualização usa a tag nova como fonte das migrations, Edge Functions e frontend.
+Use este roteiro para o stack completo da v0.1.6 criado pelo Supabase CLI, com API em `58521`, Postgres em `58522` e Mailpit em `58524`. O instalador da versão nova exige um daemon vazio na primeira partida. Neste roteiro, o stack existente continua sob o controle dos comandos da versão instalada, com os mesmos volumes e dados. A atualização usa a tag nova como fonte das migrations, Edge Functions e frontend.
 
 1. Em uma janela de manutenção, suspenda frontend, webhooks e jobs que escrevam no stack. Mantenha Postgres e Storage acessíveis para o backup. No daemon de origem, registre os IDs completos dos containers Postgres e Storage e confirme os volumes nos mounts. Na raiz da tag v0.1.6, com os mesmos contexto e socket Docker da instalação, execute:
 
@@ -72,7 +72,7 @@ Use este roteiro para o stack completo da v0.1.6 ou da v0.2.0 criado pelo Supaba
    icarus_cli_local db push --local --dry-run
    ```
 
-   Para uma v0.1.6 íntegra, o banco deve registrar `202611230001` a `202611230020` e a prévia deve listar somente as migrations a partir da `202611230021` até a última da tag nova. Para uma v0.2.0 íntegra, o banco deve registrar `202611230001` a `202611230038` e a prévia deve listar somente `202611230039` e `202611230040`. Se houver lacuna, versão extra ou SQL aplicado manualmente sem registro, pare e compare o schema e os recibos com a fonte em uma cópia. `migration repair` altera somente o histórico. Use esse comando apenas em uma reconciliação explícita com prova do DDL já efetivo. Evite reset do banco, reexecução de seed e limpeza de volumes.
+   Para uma v0.1.6 íntegra, o banco deve registrar `202611230001` a `202611230020` e a prévia deve listar somente as migrations a partir da `202611230021` até a última da tag nova. Se houver lacuna, versão extra ou SQL aplicado manualmente sem registro, pare e compare o schema e os recibos com a fonte em uma cópia. `migration repair` altera somente o histórico. Use esse comando apenas em uma reconciliação explícita com prova do DDL já efetivo. Evite reset do banco, reexecução de seed e limpeza de volumes.
 
 3. Depois do ensaio e da conferência do destino, execute a aplicação e confira que as duas colunas do histórico coincidem, cada versão aparece uma vez e o novo dry-run está vazio:
 

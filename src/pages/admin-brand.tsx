@@ -36,7 +36,7 @@ const assetCopy: Record<AssetVariant, { title: string; noun: string; preview: st
   },
   signature: {
     title: "Assinatura", noun: "assinatura", preview: "Prévia da assinatura", current: "Assinatura atual",
-    use: "Aparece acima do nome do responsável no certificado: na tela, na verificação pública e no PNG e PDF. Certificados já emitidos mantêm a assinatura da emissão.",
+    use: "Aparece acima do nome do responsável no certificado: na tela, na verificação pública e no PNG e PDF. Certificados já emitidos mantêm a assinatura da emissão. A imagem fica pública: envie uma rubrica feita para certificados, não a assinatura de contratos.",
     empty: "Nenhuma assinatura enviada.", hint: "PNG com fundo transparente, até 500 KB. Mínimo de 200 × 60 px e máximo de 2000 px de cada lado; recomendado 600 × 200 px.",
     confirm: "Remover a assinatura? Os próximos certificados saem sem a imagem; os já emitidos mantêm a deles.",
     saved: "Assinatura salva.", removed: "Assinatura removida.",

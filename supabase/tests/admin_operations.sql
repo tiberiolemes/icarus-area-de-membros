@@ -32,7 +32,7 @@ update public.profiles set role=case id when pg_temp.id(1) then 'admin' when pg_
  when pg_temp.id(3) then 'support' when pg_temp.id(4) then 'instructor' else 'member' end,
  suspended=id=pg_temp.id(28) where id in (select pg_temp.id(n) from generate_series(1,28)n);
 insert into auth.sessions(id,user_id,created_at,updated_at,aal)
-select pg_temp.id(40+n),pg_temp.id(n),now(),now(),'aal1' from generate_series(1,6)n;
+select pg_temp.id(40+n),pg_temp.id(n),now(),now(),'aal1' from generate_series(1,7)n;
 
 insert into public.plans(id,name,slug,price_cents,access_months,active)
 values(pg_temp.id(100),'Operação fictícia','admin-operations-plan',9900,12,true);
@@ -87,13 +87,13 @@ select pg_temp.ok(public.app_admin_audit('',2)->'items'->0->>'id'=pg_temp.id(620
 select pg_temp.ok(public.app_admin_audit('   ',2)=public.app_admin_audit('',2),'busca vazia ignora espaços');
 select pg_temp.ok(public.app_admin_audit('Publicação fictícia')->'items'->0 @>
  '{"actor_name":"Operação fictícia 1","action_label":"Criação","target_name":"Publicação fictícia","target_label":"Publicação"}','auditoria localiza o nome e a ação');
-select public.app_admin_log_csv_export('profiles','consulta fictícia','staff',pg_temp.id(100)::text,'suspended');
-select public.app_admin_log_csv_export('orders','R$ 1.234,50',null,null,'paid');
+select public.app_admin_log_csv_export('profiles',true,'staff',pg_temp.id(100)::text,'suspended');
+select public.app_admin_log_csv_export('orders',false,null,null,'paid');
 select pg_temp.ok(public.app_admin_audit('Exportação CSV Membros')->'items'->0 @>
  '{"actor_name":"Operação fictícia 1","action_label":"Exportação CSV","target_label":"Membros"}','exportação de membros aparece na auditoria');
 select pg_temp.ok(public.app_admin_audit('Exportação CSV Pedidos')->'items'->0 @>
  '{"actor_name":"Operação fictícia 1","action_label":"Exportação CSV","target_label":"Pedidos"}','exportação de pedidos aparece na auditoria');
-select pg_temp.denied($q$select public.app_admin_log_csv_export('orders','compra','admin')$q$,'exportação rejeita papel como filtro de pedidos');
+select pg_temp.denied($q$select public.app_admin_log_csv_export('orders',true,'admin')$q$,'exportação rejeita papel como filtro de pedidos');
 select pg_temp.denied($q$select public.app_admin_log_csv_export('courses')$q$,'exportação rejeita tipo fora do contrato');
 select pg_temp.ok(public.app_admin_lesson_context(pg_temp.id(300),pg_temp.id(303))->>'lesson_title'='Aula fictícia','editor identifica a aula pelo currículo');
 select pg_temp.denied('select public.app_admin_lesson_context(pg_temp.id(399),pg_temp.id(303))','editor rejeita aula de outro curso');
@@ -146,19 +146,42 @@ select pg_temp.ok(public.app_admin_archive_podcast(pg_temp.id(500),false)->>'sta
 reset role;
 select pg_temp.ok(exists(select 1 from public.audit_events
  where action='export:csv' and target_type='member_csv' and actor_id=pg_temp.id(1) and created_at between now() and clock_timestamp()
- and reason::jsonb=jsonb_build_object('busca','consulta fictícia','papel','staff','plano',pg_temp.id(100)::text,'situacao','suspended')),
- 'exportação de membros grava ator, data, tipo e todos os filtros');
+ and reason::jsonb=jsonb_build_object('busca_preenchida',true,'papel','staff','plano',pg_temp.id(100)::text,'situacao','suspended')),
+ 'exportação de membros grava ator, data, tipo, filtros e apenas o marcador de busca preenchida');
 select pg_temp.ok(exists(select 1 from public.audit_events
  where action='export:csv' and target_type='order_csv' and actor_id=pg_temp.id(1) and created_at between now() and clock_timestamp()
- and reason::jsonb='{"busca":"R$ 1.234,50","situacao":"paid"}'),
- 'exportação de pedidos grava ator, data, tipo e filtros utilizados');
+ and reason::jsonb='{"busca_preenchida":false,"situacao":"paid"}'),
+ 'exportação de pedidos grava ator, data, tipo, filtros e o marcador de busca vazia');
 select pg_temp.ok((select count(*) from public.audit_events where action='export:csv' and actor_id=pg_temp.id(1))=2,
  'cada exportação válida grava um evento e filtros inválidos não gravam');
+select pg_temp.ok(to_regprocedure('public.app_admin_log_csv_export(text,text,text,text,text)') is null,
+ 'assinatura que recebia texto da busca foi removida');
+update public.profiles set role='admin' where id=pg_temp.id(7);
+set local role authenticated;
+select pg_temp.login(1);
+select public.app_admin_log_csv_export('profiles') from generate_series(1,8);
+do $$
+declare limited boolean:=false;
+begin
+ begin
+  perform public.app_admin_log_csv_export('orders');
+ exception when sqlstate 'P0001' then
+  limited:=sqlerrm='Muitas solicitações. Aguarde um minuto.';
+ end;
+ perform pg_temp.ok(limited,'décima primeira exportação na janela é recusada inclusive ao trocar o tipo');
+end $$;
+select pg_temp.login(7);
+select public.app_admin_log_csv_export('orders');
+reset role;
+select pg_temp.ok((select count(*) from public.audit_events where action='export:csv' and actor_id=pg_temp.id(1))=10,
+ 'requisição acima do limite não grava evento');
+select pg_temp.ok((select count(*) from public.audit_events where action='export:csv' and actor_id=pg_temp.id(7))=1,
+ 'outro administrador tem sua própria cota');
 select pg_temp.ok(not exists (
  select 1 from unnest(array['app_admin_commercial(text,text,integer,text,text,text)','app_admin_ticket_queue(text,text,text,integer)',
  'app_admin_lesson_comment_queue(integer)','app_admin_archive_podcast(uuid,boolean)','app_admin_audit(text,integer)',
  'app_admin_lesson_context(uuid,uuid)','app_admin_moderation_queue(text,text,text,integer)',
- 'app_admin_log_csv_export(text,text,text,text,text)']) signature
+ 'app_admin_log_csv_export(text,boolean,text,text,text)']) signature
  where has_function_privilege('anon','public.'||signature,'execute')
 ),'nenhuma RPC nova aceita anon');
 select count(*) as admin_operations_assertions from operations_checks;

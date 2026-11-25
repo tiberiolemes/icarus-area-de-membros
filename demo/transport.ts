@@ -356,7 +356,7 @@ function call(name: string, a: Args, profile: Profile) {
     case "app_admin_log_csv_export": {
       const events = state.records.audit_events ??= [];
       const reason = Object.fromEntries(Object.entries({
-        busca: str(a.p_query), papel: a.p_role, plano: a.p_plan, situacao: a.p_status,
+        busca_preenchida: a.p_search_filled === true, papel: a.p_role, plano: a.p_plan, situacao: a.p_status,
       }).filter(([, value]) => value != null));
       saveRow(events, {
         actor_id: profile.id, actor_name: profile.full_name, action_label: "Exportação CSV",

@@ -8,16 +8,16 @@ Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHA
 
 | Versão instalada | Histórico esperado | Migrations novas até a 2.6.0 |
 | --- | --- | --- |
-| 2.5.1 | `202611230001` a `202611250005` | `202611250006` e `202611250007` |
-| 2.5.0 | `202611230001` a `202611250004` | `202611250005` a `202611250007` |
-| 2.4.0 | `202611230001` a `202611250003` | `202611250004` a `202611250007` |
-| 2.3.0 | `202611230001` a `202611250002` | `202611250003` a `202611250007` |
-| 2.2.2 ou 2.2.3 | `202611230001` a `202611250001` | `202611250002` a `202611250007` |
-| 2.2.1 | `202611230001` a `202611230040` | `202611250001` a `202611250007` |
-| 0.2.0 | `202611230001` a `202611230038` | `202611230039`, `202611230040` e `202611250001` a `202611250007` |
-| 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` e `202611250001` a `202611250007` |
+| 2.5.1 | `202611230001` a `202611250005` | `202611250006` a `202611250008` |
+| 2.5.0 | `202611230001` a `202611250004` | `202611250005` a `202611250008` |
+| 2.4.0 | `202611230001` a `202611250003` | `202611250004` a `202611250008` |
+| 2.3.0 | `202611230001` a `202611250002` | `202611250003` a `202611250008` |
+| 2.2.2 ou 2.2.3 | `202611230001` a `202611250001` | `202611250002` a `202611250008` |
+| 2.2.1 | `202611230001` a `202611230040` | `202611250001` a `202611250008` |
+| 0.2.0 | `202611230001` a `202611230038` | `202611230039`, `202611230040` e `202611250001` a `202611250008` |
+| 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` e `202611250001` a `202611250008` |
 
-A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos. A `202611250005` cria três RPCs de leitura e registro do painel (denúncias e pedidos LGPD) e reserva a identidade de quem denunciou para administradores, inclusive na listagem genérica. A migration não cria tabelas nem altera dados. A `202611250006` adiciona as RPCs do painel e permite arquivar episódios, preservando os registros existentes. A `202611250007` ajusta as permissões da fila de comentários, audita exportações CSV de membros e pedidos e pagina os eventos de auditoria antes de montar os rótulos quando a busca está vazia.
+A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos. A `202611250005` cria três RPCs de leitura e registro do painel (denúncias e pedidos LGPD) e reserva a identidade de quem denunciou para administradores, inclusive na listagem genérica. A migration não cria tabelas nem altera dados. A `202611250006` adiciona as RPCs do painel e permite arquivar episódios, preservando os registros existentes. A `202611250007` ajusta as permissões da fila de comentários, registra as exportações CSV feitas pela tela de Membros ou Pedidos e pagina os eventos de auditoria antes de montar os rótulos quando a busca está vazia. A `202611250008` registra somente se a busca foi preenchida e limita a 10 exportações por minuto por administrador, somando as duas telas. O painel gera o arquivo após a confirmação do registro na auditoria.
 
 Publique também as Edge Functions da tag:
 - na 2.4.0, `upload` passou a receber a logo, o ícone e a assinatura do certificado (`kind=brand-asset`) e a gravá-los no bucket público `icarus-brand`, criado pela `202611250003`;

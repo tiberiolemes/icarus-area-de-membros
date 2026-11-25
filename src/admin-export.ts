@@ -55,7 +55,7 @@ export async function buildAdminCsv(entity: AdminExportEntity, query: string, fi
       rows.push(row);
     }
     if (rows.length === expected) {
-      await rpc("app_admin_log_csv_export", { p_entity: entity, p_query: query, ...filters });
+      await rpc("app_admin_log_csv_export", { p_entity: entity, p_search_filled: query.trim().length > 0, ...filters });
       void cache.invalidateQueries({ queryKey: ["app_admin_audit"] });
       const header =
         entity === "profiles"

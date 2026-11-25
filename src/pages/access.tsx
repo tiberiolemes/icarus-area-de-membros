@@ -904,6 +904,7 @@ export function Onboarding() {
               </Form>
             )}
           </QueryState>
+          <Action run={signOut}>Sair e usar outra conta</Action>
         </div>
       </PublicFrame>
     </div>

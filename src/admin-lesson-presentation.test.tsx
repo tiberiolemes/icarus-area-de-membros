@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { AdminLessonPresentation } from "./pages/admin-lesson-presentation";
 
 vi.hoisted(() => {
@@ -32,10 +33,10 @@ function show(options: {
     throw new Error(`RPC inesperada: ${name}`);
   }));
   client.setQueryData(["bootstrap", undefined], { profile: { role: options.role ?? "admin" } });
-  render(<QueryClientProvider client={client}>
+  render(<QueryClientProvider client={client}><MemoryRouter>
     <AdminLessonPresentation lessonId={options.id ?? lessonId} lessonTitle="Aula de demonstração" onClose={options.close} />
     <a href="/admin/conteudo">Voltar ao conteúdo</a>
-  </QueryClientProvider>);
+  </MemoryRouter></QueryClientProvider>);
   return { requests, writes: () => requests.filter(({ name }) => name === write) };
 }
 

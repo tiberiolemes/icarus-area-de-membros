@@ -5,7 +5,7 @@ import { BrowserRouter, HashRouter, Link, Navigate, Route, Routes } from "react-
 import { QueryClientProvider } from "@tanstack/react-query";
 import { InstallationIcon } from "./brand";
 import { cache } from "./api";
-import { AuthProvider, Gate, RoleGate, useBootstrap } from "./auth";
+import { AuthProvider, Gate, RoleGate, staffHome, useBootstrap } from "./auth";
 import {
   Access,
   Callback,
@@ -143,16 +143,20 @@ class ErrorBoundary extends Component<
     );
   }
 }
-function NotFound() {
+function NotFound({ to = "/app/cursos", label = "Voltar aos cursos" }: { to?: string; label?: string }) {
   return (
     <>
       <Heading title="Página não encontrada" />
       <p>O endereço pode ter mudado ou não estar mais disponível.</p>
-      <Link className="button" to="/app/cursos">
-        Voltar aos cursos
+      <Link className="button" to={to}>
+        {label}
       </Link>
     </>
   );
+}
+function AdminNotFound() {
+  const home = staffHome(useBootstrap().data?.profile.role);
+  return home ? <NotFound to={home} label="Voltar ao painel" /> : <NotFound />;
 }
 const restricted = (roles: string[], children: ReactNode) => (
   <RoleGate roles={roles}>{children}</RoleGate>
@@ -347,7 +351,7 @@ function App() {
                     path="configuracoes"
                     element={restricted(["admin"], <AdminSettings />)}
                   />
-                  <Route path="*" element={<NotFound />} />
+                  <Route path="*" element={<AdminNotFound />} />
                 </Route>
                 <Route
                   path="*"

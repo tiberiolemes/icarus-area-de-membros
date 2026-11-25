@@ -10,7 +10,7 @@ const steps = [
   {
     target: "navigation",
     title: "Encontre seu caminho",
-    body: "O menu reúne cursos, materiais, certificados, comunidade e suporte. No celular, abra o menu pelo topo. Contas administradoras têm o atalho Administração no início do menu da área de membros. Instrutores, moderadores e suporte têm atalhos para suas ferramentas. No catálogo e no fórum, a barra inferior também dá acesso ao Ranking. Materiais fica disponível no menu em ambos os temas.",
+    body: "O menu reúne cursos, materiais, certificados, comunidade e suporte. No celular, abra o menu pelo topo. Contas administradoras têm o atalho Administração logo abaixo de Configurações, no fim do menu da área de membros. Instrutores, moderadores e suporte têm, no mesmo lugar, atalhos para suas ferramentas. No catálogo e no fórum, a barra inferior também dá acesso ao Ranking. Materiais fica disponível no menu em ambos os temas.",
   },
   {
     target: "member-search",

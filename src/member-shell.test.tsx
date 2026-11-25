@@ -205,21 +205,33 @@ it("mostra erro de gravação e mantém a aparência confirmada", async () => {
 
 it.each([
   ["admin", "Administração", "/admin/cursos"],
-  ["member", "Cursos", "/app/cursos"],
+  ["member", undefined, undefined],
   ["instructor", "Painel de conteúdo", "/admin/cursos"],
   ["moderator", "Moderação", "/admin/comunidade"],
   ["support", "Atendimento", "/admin/suporte"],
-])("mostra a entrada adequada ao papel %s na área de membros", (role, label, path) => {
+])("mostra a entrada do papel %s logo abaixo de Configurações", (role, label, path) => {
   profile.role = role;
   mount("/app/cursos");
+  // Link seguinte a Configurações na ordem do documento, que é a do teclado e do leitor de tela.
+  const afterSettings = (region: HTMLElement) => {
+    const links = within(region).getAllByRole("link");
+    return links[links.findIndex((link) => link.getAttribute("href") === "/app/configuracoes") + 1];
+  };
   const sidebar = screen.getByRole("complementary");
   const menu = within(sidebar).getByRole("navigation", { name: "Área de membros" });
-  expect(within(menu).getAllByRole("link")[0]).toHaveAccessibleName(label);
-  expect(within(menu).getAllByRole("link")[0]).toHaveAttribute("href", path);
+  expect(within(menu).getAllByRole("link")[0]).toHaveAccessibleName("Cursos");
+  expect(within(menu).getAllByRole("link")[0]).toHaveAttribute("href", "/app/cursos");
+  const sidebarEntry = afterSettings(sidebar);
 
   fireEvent.click(screen.getByRole("button", { name: "Abrir navegação" }));
   const drawer = screen.getByRole("dialog", { name: "Navegação" });
-  expect(within(drawer).getByRole("link", { name: label })).toHaveAttribute("href", path);
+  for (const entry of [sidebarEntry, afterSettings(drawer)]) {
+    if (!label) expect(entry).toBeUndefined();
+    else {
+      expect(entry).toHaveAccessibleName(label);
+      expect(entry).toHaveAttribute("href", path);
+    }
+  }
 
   if (role !== "admin") {
     expect(within(menu).queryByRole("link", { name: "Administração" })).toBeNull();

@@ -156,12 +156,6 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
         aria-label={admin ? "Administração" : "Área de membros"}
         data-tour="navigation"
       >
-        {!admin && staffEntry && (
-          <Link to={`/admin/${staffEntry[1]}`} onClick={onNavigate}>
-            <ArrowUpRight size={20} aria-hidden="true" />
-            {staffEntryLabels[profile.role] ?? staffEntry[0]}
-          </Link>
-        )}
         {(admin ? staffRoutes : memberNav).map(([title, path, Icon]) => (
           <NavLink key={path} to={(admin ? "/admin/" : "/app/") + path} onClick={onNavigate}>
             <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
@@ -176,6 +170,12 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
             <Settings size={20} aria-hidden="true" />
             Configurações
           </NavLink>
+        )}
+        {!admin && staffEntry && (
+          <Link to={`/admin/${staffEntry[1]}`} onClick={onNavigate}>
+            <ArrowUpRight size={20} aria-hidden="true" />
+            {staffEntryLabels[profile.role] ?? staffEntry[0]}
+          </Link>
         )}
         {!admin && (
           <Action run={onToggleTheme}>

@@ -358,13 +358,15 @@ Deno.test("checkout com Turnstile configurado confere o token no servidor antes 
       if (url.href === siteverify) { verified = init.body as FormData; return response(answer); }
       return reserve(url);
     }, { ...billing, ...turnstile });
-    const result = await checkout(d)(request({ ...purchase, ...(token ? { captcha_token: token } : {}) }, { token: null, headers: { "x-forwarded-for": "203.0.113.7, 10.0.0.1" } }));
+    const result = await checkout(d)(request({ ...purchase, ...(token ? { captcha_token: token } : {}) }, { token: null, headers: { "cf-connecting-ip": "203.0.113.7" } }));
     equal(result.status, status);
     equal(requests.some((r) => r.url.includes("app_checkout_begin")), status === 200);
     equal(requests.some((r) => r.url.includes("api-sandbox.asaas.com")), status === 200);
     if (status !== 200) equal((await result.json()).error.code, "CAPTCHA_FAILED");
-    if (token) equal([verified?.get("secret"), verified?.get("response"), verified?.get("remoteip")], [turnstile.TURNSTILE_SECRET_KEY, token, "10.0.0.1"]);
+    if (token) equal([verified?.get("secret"), verified?.get("response"), verified?.get("remoteip")], [turnstile.TURNSTILE_SECRET_KEY, token, "203.0.113.7"]);
     else equal(verified, undefined);
+    // Desafio recusado não consome o limite: ninguém trava o email de outra pessoa sem resolver o Turnstile.
+    equal(requests.some((r) => r.url.includes("app_checkout_throttle")), status === 200);
   }
 });
 Deno.test("checkout recusa a compra quando o Turnstile não responde", async () => {
@@ -385,9 +387,9 @@ Deno.test("checkout limita tentativas por IP e email antes de reservar o pedido;
     if (url.pathname.endsWith("app_checkout_throttle")) { throttles.push(JSON.parse(String(init.body))); return limited ? response({ code: "P0001", message: "Muitas solicitações. Aguarde um minuto." }, 400) : response(null); }
     return reserve(url);
   }, billing);
-  const headers = { "x-forwarded-for": "203.0.113.7, 10.0.0.1" };
+  const headers = { "cf-connecting-ip": "203.0.113.7", "x-forwarded-for": "6.6.6.6, 203.0.113.7" };
   equal((await checkout(d)(request(purchase, { token: null, headers }))).status, 200);
-  equal(throttles[0], { p_actor_id: null, p_client_ip: "10.0.0.1", p_email: buyer.email });
+  equal(throttles[0], { p_actor_id: null, p_client_ip: "203.0.113.7", p_email: buyer.email });
   limited = true;
   const blocked = await checkout(d)(request({ ...purchase, attempt_key: "outra-tentativa-sintetica" }, { token: null, headers }));
   equal(blocked.status, 429);
@@ -404,23 +406,28 @@ Deno.test("reauth limita as tentativas de senha por usuário antes de conferir a
   equal((await result.json()).error.code, "RATE_LIMITED");
   assert(!requests.some((r) => r.url.includes("/auth/v1/token")));
 });
-Deno.test("produção sem APP_ORIGIN falha claro em vez de usar localhost; modo local mantém o padrão", async () => {
-  const production = deps(undefined, { ICARUS_MODE: "production", APP_ORIGIN: "" });
-  for (const handler of [capabilities, webhook]) {
-    const result = await handler(production.d)(new Request("http://localhost/test", { method: "POST", headers: { "asaas-access-token": billing.ASAAS_WEBHOOK_TOKEN }, body: "{}" }));
-    equal(result.status, 503);
-    equal((await result.json()).error.code, "CONFIGURATION_REQUIRED");
+Deno.test("sem APP_ORIGIN, só o modo local usa o padrão de loopback; produção ou modo ausente falham claro", async () => {
+  for (const mode of ["production", "", "prod"]) {
+    const production = deps(undefined, { ICARUS_MODE: mode, APP_ORIGIN: "" });
+    for (const handler of [capabilities, webhook]) {
+      const result = await handler(production.d)(new Request("http://localhost/test", { method: "POST", headers: { "asaas-access-token": billing.ASAAS_WEBHOOK_TOKEN }, body: "{}" }));
+      equal(result.status, 503);
+      equal((await result.json()).error.code, "CONFIGURATION_REQUIRED");
+    }
+    equal(production.requests.length, 0);
   }
-  equal(production.requests.length, 0);
   const local = deps(undefined, { APP_ORIGIN: "" });
   const allowed = await capabilities(local.d)(new Request("http://localhost/test", { headers: { origin: "http://127.0.0.1:8088" } }));
   equal(allowed.status, 200);
   equal(allowed.headers.get("access-control-allow-origin"), "http://127.0.0.1:8088");
 });
-Deno.test("checkout usa o IP posto pelo proxy, não o primeiro valor que o cliente manda no x-forwarded-for", async () => {
+Deno.test("checkout limita pelo IP do cabeçalho confiável, agrupando IPv6 por /64, e ignora o x-forwarded-for", async () => {
   for (const [headers, ip] of [
     [{ "cf-connecting-ip": "198.51.100.30", "x-forwarded-for": "1.2.3.4, 198.51.100.30" }, "198.51.100.30"],
-    [{ "x-forwarded-for": "1.2.3.4, 198.51.100.31" }, "198.51.100.31"],
+    // Sem cabeçalho confiável não há limite por IP: o último salto pode ser o próprio proxy, igual para todos.
+    [{ "x-forwarded-for": "1.2.3.4, 198.51.100.31" }, null],
+    [{ "cf-connecting-ip": "2001:db8:abcd:12:aaaa::1" }, "2001:db8:abcd:12::/64"],
+    [{ "cf-connecting-ip": "2001:DB8:ABCD:0012:ffff:1:2:3" }, "2001:db8:abcd:12::/64"],
     [{}, null],
   ] as const) {
     let sent: Record<string, unknown> | undefined;

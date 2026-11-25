@@ -11,6 +11,14 @@ async function verifyTurnstile(d: Dependencies, secret: string, token: unknown, 
   if (!response?.ok) throw new HttpError(503, "CAPTCHA_UNAVAILABLE", "Verificação de segurança indisponível. Recarregue a página e tente de novo.");
   if ((await response.json()).success !== true) throw new HttpError(403, "CAPTCHA_FAILED", "Verificação de segurança recusada. Recarregue a página e tente de novo.");
 }
+// IPv6 entra no limite pelo /64: quem tem um bloco inteiro não escapa trocando de endereço a cada pedido.
+export function limitKey(ip: string) {
+  if (!ip.includes(":")) return ip;
+  const [head, tail = ""] = ip.toLowerCase().split("::");
+  const left = head ? head.split(":") : [], right = tail ? tail.split(":") : [];
+  const groups = [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right];
+  return groups.slice(0, 4).map((group) => group.replace(/^0+(?=.)/, "")).join(":") + "::/64";
+}
 export const createHandler = (d: Dependencies = defaults) => endpoint(async (req) => {
   const [key, hook, mode, origin, image] = required(d.env, "ASAAS_API_KEY", "ASAAS_WEBHOOK_TOKEN", "ASAAS_ENV", "APP_ORIGIN", "ASAAS_ITEM_IMAGE_BASE64");
   // Production billing is deliberately unavailable until the external acceptance gate.
@@ -27,11 +35,12 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   const receiptHash = receipt ? await sha256(receipt) : body.receipt_hash;
   if (typeof receiptHash !== "string" || receiptHash.length !== 64 || /[^a-f0-9]/.test(receiptHash)) throw new HttpError(422, "INVALID_INPUT", "Recibo inválido.");
   const admin = a?.admin || clients(d).admin;
-  // O primeiro valor do x-forwarded-for vem do cliente; o IP confiável é o que o proxy põe (Cloudflare no Supabase hospedado, ou o último salto).
-  const ip = req.headers.get("cf-connecting-ip")?.trim() || req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() || null;
-  await throttle(admin, "app_checkout_throttle", { p_actor_id: a?.userInfo.id || null, p_client_ip: ip, p_email: buyerData.email });
+  // Só a Cloudflare (Supabase hospedado) garante o IP: o x-forwarded-for começa pelo que o cliente escreve e termina no proxy.
+  const ip = req.headers.get("cf-connecting-ip")?.trim() || null;
+  // Desafio recusado não consome o limite, para ninguém travar o email de outra pessoa sem resolver o Turnstile.
   const secret = d.env("TURNSTILE_SECRET_KEY");
   if (secret) await verifyTurnstile(d, secret, body.captcha_token, ip);
+  await throttle(admin, "app_checkout_throttle", { p_actor_id: a?.userInfo.id || null, p_client_ip: ip && limitKey(ip), p_email: buyerData.email });
   const order = await rpc(admin, "app_checkout_begin", { p_actor_id: a?.userInfo.id || null, p_plan_id: uuid(body.plan_id), p_attempt_key: text(body.attempt_key, 128), p_method: method, p_installments: installments, p_buyer_data: buyerData, p_legal_version_ids: body.legal_version_ids.map(uuid), p_marketing_opt_in: body.marketing_opt_in, p_receipt_hash: receiptHash });
   if (order.checkout_url) return { order_id: order.order_id, status: order.status, url: order.checkout_url };
   if (order.create_gateway !== true) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Tentativa já recebida. Consulte o pedido antes de tentar novamente.");

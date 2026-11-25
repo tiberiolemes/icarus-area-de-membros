@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 const { widget } = vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:58521");
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
+  vi.stubEnv("VITE_TURNSTILE_SITE_KEY", "0x4AAAAAAA-teste");
   return { widget: { token: "", reset: vi.fn() } };
 });
 vi.mock("./checkout-receipt", () => ({
@@ -14,14 +15,10 @@ vi.mock("./checkout-receipt", () => ({
   saveReceipt: async () => {},
   loadReceipt: async () => "fixture-receipt",
 }));
-// O widget real devolve o token num campo oculto do formulário; o dublê faz o mesmo.
-vi.mock("./captcha", () => ({
+// Só o widget da Cloudflare é substituído: ele devolve o token num campo oculto, e a leitura do token é a real.
+vi.mock("./captcha", async (importOriginal) => ({
+  ...await importOriginal<typeof import("./captcha")>(),
   Captcha: () => <input type="hidden" name="captcha_token" value={widget.token} readOnly />,
-  captchaToken: (data: FormData) => {
-    const token = String(data.get("captcha_token") ?? "");
-    if (!token) throw new Error("Aguarde a verificação de segurança terminar e tente novamente.");
-    return token;
-  },
   resetCaptcha: widget.reset,
 }));
 import { cache } from "./api";
@@ -72,9 +69,11 @@ it("envia o token do Turnstile com a compra e renova o desafio depois da tentati
   expect(widget.reset).toHaveBeenCalledOnce();
 });
 
-it("sem o desafio resolvido, a compra não sai do navegador e a pessoa sabe o motivo", async () => {
+it("sem o desafio resolvido, a compra não sai do navegador, a pessoa sabe o motivo e nada do que digitou se perde", async () => {
   const sent = await buy("");
-  expect(await screen.findByText(/Aguarde a verificação de segurança/)).toBeInTheDocument();
-  await waitFor(() => expect(widget.reset).toHaveBeenCalled());
+  expect(await screen.findByText(/Conclua a verificação de segurança/)).toBeInTheDocument();
   expect(sent).toHaveLength(0);
+  expect(screen.getByLabelText("CPF ou CNPJ")).toHaveValue("00000000000");
+  // O desafio em andamento não é reiniciado por um clique adiantado.
+  expect(widget.reset).not.toHaveBeenCalled();
 });

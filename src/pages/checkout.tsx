@@ -113,8 +113,9 @@ export function Checkout() {
                           attempt = { id: crypto.randomUUID() };
                           attempts.current.set(scope, attempt);
                         }
+                        // Lido antes do try: sem o desafio resolvido, o CPF digitado e o desafio em andamento ficam como estão.
+                        const captcha_token = captchaToken(data);
                         try {
-                          const captcha_token = captchaToken(data);
                           if (!session)
                             attempt.receipt ??= await prepareReceipt(attempt.id);
                           const result = await edge<{

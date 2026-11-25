@@ -16,7 +16,7 @@ Publique também as Edge Functions da tag:
 - na 2.2.2, `checkout` e `reauthenticate` passaram a limitar tentativas, a `checkout` confere o Turnstile e todas exigem `APP_ORIGIN` em produção;
 - na 2.2.1, `upload` passou a recusar foto de perfil fora de JPG ou PNG de até 500 KB, e `reauthenticate` confere a senha com a chave de serviço.
 
-Antes de publicar, confira se `APP_ORIGIN` está nos secrets das Edge Functions. Para ligar o Turnstile no checkout, grave `TURNSTILE_SECRET_KEY` por último (veja [Edge Functions e secrets](#edge-functions-e-secrets)). Revisões não lançadas do `main` que usavam tabelas com prefixo `ica_` não seguem este caminho.
+Antes de publicar, confira se `APP_ORIGIN` e `ICARUS_MODE` estão nos secrets das Edge Functions. Se o frontend já usa `VITE_TURNSTILE_SITE_KEY`, o desafio aparece no checkout da 2.2.2, mas só vale depois que `TURNSTILE_SECRET_KEY` estiver nos secrets. Grave esse segredo por último (veja [Edge Functions e secrets](#edge-functions-e-secrets)). Revisões não lançadas do `main` que usavam tabelas com prefixo `ica_` não seguem este caminho.
 
 Admins veem no painel o aviso "Versão X disponível" quando sai uma Release maior que a instalada. Para isso, o navegador do admin consulta `https://api.github.com/repos/<dono>/<repositório>/releases/latest` no máximo uma vez a cada 24 horas, guardando a resposta no `localStorage`. A consulta não leva dados de membros, cursos ou configuração. Como em qualquer chamada do navegador a outro site, o GitHub recebe o IP, o navegador e o domínio do painel (cabeçalhos `Origin` e `Referer`). Uma resposta de erro do GitHub, como a do limite de requisições, também fica guardada por 24 horas, para o painel não repetir a consulta a cada recarga. Sem rede, com a consulta bloqueada ou interrompida, nada chega ao GitHub e o painel tenta de novo na próxima abertura. O repositório padrão é o oficial, `tiberiolemes/icarus-area-de-membros`. Para acompanhar outro, gere o build com `VITE_ICARUS_UPDATE_REPO=dono/repositório`; com a variável vazia, o aviso fica desligado e nada é consultado. O Icarus não publica uma Content Security Policy própria. Se o seu servidor definir uma, inclua `https://api.github.com` em `connect-src`. Com a consulta bloqueada, sem rede ou no limite de requisições do GitHub, o aviso só não aparece.
 
@@ -137,7 +137,7 @@ Aplique `202611230001` a `202611230040` e depois `202611250001` em ordem antes d
 | `038` | Verificar o retorno do checkout visitante no mesmo navegador, o prazo do recibo e a consulta da conta titular após expirar. |
 | `039` | Conferir no Dashboard e no Ranking o intervalo personalizado, incluindo eventos na data final em Brasília. |
 | `040` | Abrir a vitrine com aluno novo e com aluno em andamento. Iniciar e retomar uma aula pelo cartão e conferir o acesso para cursos e módulos restritos. |
-| `202611250001` | Comprar como visitante e conferir que a sexta tentativa no mesmo minuto, do mesmo IP, recebe 429 mesmo com outra `attempt_key`. Errar a senha da reautenticação seis vezes no minuto e conferir a liberação no minuto seguinte. Publicar a `checkout` e a `reauthenticate` da mesma tag. |
+| `202611250001` | Comprar como visitante, trocando o email e a `attempt_key` a cada tentativa, e conferir que a sexta tentativa no mesmo minuto, do mesmo IP, recebe 429. Repetir o mesmo email e conferir o 429 na quarta. Errar a senha da reautenticação seis vezes no minuto e conferir a liberação no minuto seguinte. Publicar a `checkout` e a `reauthenticate` da mesma tag. |
 
 A validação de navegação também cobre entrada e confirmação de email, primeira senha, perguntas de onboarding, edição parcial do perfil e MFA opcional. A seed fornece perguntas iniciais editáveis. Cadastre os próprios cursos, aulas, materiais, planos, ofertas e documentos legais pelo fluxo administrativo apropriado.
 
@@ -177,22 +177,25 @@ ICARUS_PUBLIC_SUPABASE_URL=http://127.0.0.1:58521
 
 Em runtime hospedado pode ser usado `SUPABASE_PUBLIC_URL=https://dominio-publico`. O alias `ICARUS_PUBLIC_SUPABASE_URL` evita o prefixo reservado pelo CLI local. O cliente server usa `SUPABASE_URL` interno; URLs assinadas devolvidas ao browser têm apenas a origem trocada para a pública configurada, somente quando a origem original é a API interna conhecida e o caminho é Storage privado assinado. Path/query permanecem íntegros. Origem inesperada falha fechada. Nunca imprimir o token/query de uma URL assinada.
 
-Em produção (`ICARUS_MODE=production`), `APP_ORIGIN` é obrigatório: sem ele, todas as funções respondem 503 `CONFIGURATION_REQUIRED` em vez de liberar CORS e montar convites para `http://127.0.0.1:8088`, o padrão que só vale fora de produção.
+Fora do modo local (`ICARUS_MODE=local`), `APP_ORIGIN` é obrigatório. Sem ele, em produção, com `ICARUS_MODE` ausente ou com valor diferente, as funções respondem 503 `CONFIGURATION_REQUIRED` em vez de usar `http://127.0.0.1:8088`, que só vale no modo local. Os convites pós-pagamento usam esse endereço. Como a resposta sai sem CORS, o navegador mostra só um erro de conexão; o código aparece no log da função ou numa chamada por `curl`.
 
 **Checkout e reautenticação têm limite de tentativas** (migration `202611250001`), com o throttle por minuto do banco.
-- O checkout aceita 5 tentativas por IP, 3 por email do comprador e 5 por conta logada. Trocar a `attempt_key` não contorna o limite.
+- O checkout aceita 5 tentativas por IP, 5 por conta logada e 3 por email do comprador. O limite por email vale também para quem está logado, porque usa o email da conta. Trocar a `attempt_key` não contorna o limite.
 - A confirmação de senha da `reauthenticate` aceita 5 tentativas por usuário.
 - Passou do limite, a Edge responde 429 `RATE_LIMITED` e a janela seguinte libera.
-- O IP vem de `cf-connecting-ip`, que a Cloudflare do Supabase hospedado preenche. Sem ele, vale o último valor de `x-forwarded-for`, o que o proxy anexou. O primeiro valor desse cabeçalho é ignorado, porque o cliente consegue escrevê-lo.
-- Numa instalação própria, deixe na frente do Edge um proxy que sobrescreva `cf-connecting-ip` ou anexe o IP real ao `x-forwarded-for`.
-- O banco guarda só um UUID derivado do IP e do email, nunca o texto.
+- O IP vem só de `cf-connecting-ip`, que a Cloudflare deve preencher no Supabase hospedado, e o IPv6 conta pelo bloco /64. Confira na instalação depois de publicar: do mesmo IP, trocando o email a cada tentativa, a sexta no minuto deve receber 429. Se só o limite por email agir, o cabeçalho não chega à função.
+- O `x-forwarded-for` é ignorado: o primeiro valor é o que o cliente escreve, e o último pode ser o próprio proxy, o mesmo para todos.
+- Sem `cf-connecting-ip`, não há limite por IP; valem o limite por email e conta e o Turnstile.
+- Numa instalação própria sem a Cloudflare na frente, deixe um proxy que remova o `cf-connecting-ip` vindo do cliente e o preencha com o IP real. Sem isso, o cliente escolhe o IP do limite.
+- O banco guarda um md5 com prefixo fixo do IP e do email, não o texto. Isso não é anonimização: um IPv4 se recupera testando os endereços, e um email conhecido se confirma pelo hash.
+- O projeto não apaga linhas antigas de `rate_limits`, deste e dos demais limites. Inclua essa tabela na política de retenção da instalação.
 
 **Turnstile no checkout.** Com o segredo `TURNSTILE_SECRET_KEY` nos secrets das Edge Functions, a `checkout` confere o token em `https://challenges.cloudflare.com/turnstile/v0/siteverify` antes de reservar o pedido ou falar com o Asaas.
 - Token ausente ou recusado volta como 403 `CAPTCHA_FAILED`.
 - Se a Cloudflare não responde, volta 503 e a compra fica bloqueada.
 - Gere o frontend com `VITE_TURNSTILE_SITE_KEY` do mesmo widget: com o segredo e sem a chave do site, toda compra é recusada.
 - Se o script da Cloudflare não carrega no navegador, o checkout mostra o aviso para recarregar e não envia a compra, como no login.
-- Sem o segredo, o checkout segue sem desafio, só com o limite de tentativas.
+- Sem o segredo, o servidor não confere nada. Se o frontend tiver `VITE_TURNSTILE_SITE_KEY`, por exemplo para o login, o desafio aparece no checkout, mas é só visual, e um script o ignora. Para valer no checkout, grave o segredo.
 - O segredo fica só no servidor e é gravado por último, depois de ver o token chegar na página publicada.
 
 O config declara `verify_jwt=false` para os handlers que fazem autorização própria: capabilities/checkout guest/recibo/webhook precisam chegar sem JWT; media/upload/reauth/password-setup exigem Auth `getUser/getClaims` e gates de sessão/recurso; process-invites aceita exclusivamente a credencial de serviço. Desativar o gateway não torna a mídia pública. As provas HTTP positivas/negativas ficam no relatório de aceite.

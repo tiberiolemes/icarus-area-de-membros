@@ -50,11 +50,11 @@ export async function json(req: Request): Promise<Record<string, unknown>> {
     return value;
   } catch (e) { if (e instanceof HttpError) throw e; throw new HttpError(400, "INVALID_JSON", "Solicitação inválida."); }
 }
-/** Origem do app. Em produção ela é obrigatória: sem APP_ORIGIN, convites e CORS apontariam para o loopback de desenvolvimento. */
+/** Origem do app. Fora do modo local ela é obrigatória: sem APP_ORIGIN, convites e CORS apontariam para o loopback de desenvolvimento. */
 export function appOrigin(get: Env) {
   const origin = get("APP_ORIGIN");
   if (origin) return origin;
-  if (get("ICARUS_MODE") === "production") throw new HttpError(503, "CONFIGURATION_REQUIRED", "APP_ORIGIN não configurado na instalação.");
+  if (get("ICARUS_MODE") !== "local") throw new HttpError(503, "CONFIGURATION_REQUIRED", "APP_ORIGIN não configurado na instalação.");
   return "http://127.0.0.1:8088";
 }
 export function endpoint(handler: (req: Request) => Promise<unknown>, get: Env = env, allowGet = false) {

@@ -135,6 +135,7 @@ export const articles = [
       "Alterne o tema no rodapé do menu ou escolha Claro ou Escuro em Aparência e salve. A preferência fica vinculada à sua conta.",
       "Em Segurança, solicite troca de email ou senha. A mudança de email exige confirmação. Você pode ativar a verificação em duas etapas quando quiser. Recomendamos ativá-la em contas administrativas.",
       "Assinatura mostra o plano e a validade confirmados. No checkout, Pix é à vista; o cartão permite escolher de 1 a 12 parcelas, com valores e condições finais no ambiente seguro do provedor. Sem provedor configurado, o checkout informa a indisponibilidade e nenhuma cobrança é realizada.",
+      "Quando a instalação usa a verificação de segurança, conclua o desafio antes de continuar para o pagamento. Se ele não carregar, recarregue a página. Várias tentativas seguidas em um minuto são recusadas; aguarde e tente de novo.",
       "Se você comprou como visitante, acompanhe o pedido no mesmo navegador por até duas horas a partir do início do pagamento. Se o recibo expirar ou você mudar de navegador, entre com a conta vinculada à compra ou siga as instruções recebidas por email.",
       "Em Privacidade, use Exportar meus dados ou Solicitar exclusão. A política de privacidade fica no link abaixo dessas ações. O pedido aguarda análise de retenção legal; não significa exclusão imediata.",
     ],

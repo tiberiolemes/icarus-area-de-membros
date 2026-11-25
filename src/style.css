@@ -782,7 +782,8 @@ h2 > a,
   border-radius: 12px;
   background: var(--ic-surface);
 }
-.access .captcha {
+.access .captcha,
+.icarus-checkout-form .captcha {
   min-height: 65px;
 }
 .access .notice,

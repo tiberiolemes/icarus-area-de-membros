@@ -17,6 +17,7 @@ import {
   saveReceipt,
 } from "../checkout-receipt";
 import { Field, Form, Heading, Notice, QueryState, value } from "../ui";
+import { Captcha, captchaToken, resetCaptcha } from "../captcha";
 import { PublicFrame } from "./access";
 import { statusName } from "./community";
 
@@ -113,6 +114,7 @@ export function Checkout() {
                           attempts.current.set(scope, attempt);
                         }
                         try {
+                          const captcha_token = captchaToken(data);
                           if (!session)
                             attempt.receipt ??= await prepareReceipt(attempt.id);
                           const result = await edge<{
@@ -141,6 +143,7 @@ export function Checkout() {
                               (v) => v.id,
                             ),
                             marketing_opt_in: data.has("marketing"),
+                            captcha_token,
                           });
                           if (attempt.receipt)
                             await saveReceipt(
@@ -164,6 +167,8 @@ export function Checkout() {
                           form.querySelector<HTMLInputElement>(
                             "[name=document]",
                           )!.value = "";
+                          // O token do Turnstile vale uma vez: cada tentativa recebe um desafio novo.
+                          resetCaptcha();
                         }
                       }}
                     >
@@ -290,6 +295,7 @@ export function Checkout() {
                         Para uma compra nova, as instruções de acesso chegam ao
                         email informado após a confirmação.
                       </p>
+                      <Captcha />
                     </Form>
                   )}
                 </section>

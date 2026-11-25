@@ -29,6 +29,7 @@ function deps(route: Route = () => undefined, config: Record<string, string> = {
     if (url.pathname === "/auth/v1/user") return response(user);
     if (url.pathname.endsWith("/app_touch_session")) return response({ expires_at: "2026-11-23T01:00:00Z" });
     if (url.pathname.endsWith("/app_bootstrap")) return response({ profile: { role: "member" } });
+    if (url.pathname.endsWith("/app_checkout_throttle") || url.pathname.endsWith("/app_reauth_throttle")) return response(null);
     throw Error(`Unexpected fake transport request: ${url.pathname}`);
   }) as typeof fetch };
   return { d, requests };
@@ -345,4 +346,74 @@ Deno.test("definite invitation failure retries through claim; ambiguous delivery
     equal((requests.find((r) => r.url.endsWith("app_finish_payment_invite"))!.body as Record<string, unknown>).p_success, status === 429 ? false : null);
     assert(!requests.some((r) => r.url.includes("api-sandbox.asaas.com")));
   }
+});
+
+const siteverify = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const turnstile = { TURNSTILE_SECRET_KEY: "synthetic-turnstile-secret" };
+const reserve = (url: URL) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: true }) : url.hostname === "api-sandbox.asaas.com" ? response({ id: other }) : url.pathname.endsWith("app_checkout_gateway") ? response({ id }) : undefined;
+Deno.test("checkout com Turnstile configurado confere o token no servidor antes do pedido e do Asaas", async () => {
+  for (const [token, answer, status] of [[undefined, null, 403], ["token-recusado", { success: false }, 403], ["token-valido", { success: true }, 200]] as const) {
+    let verified: FormData | undefined;
+    const { d, requests } = deps((url, init) => {
+      if (url.href === siteverify) { verified = init.body as FormData; return response(answer); }
+      return reserve(url);
+    }, { ...billing, ...turnstile });
+    const result = await checkout(d)(request({ ...purchase, ...(token ? { captcha_token: token } : {}) }, { token: null, headers: { "x-forwarded-for": "203.0.113.7, 10.0.0.1" } }));
+    equal(result.status, status);
+    equal(requests.some((r) => r.url.includes("app_checkout_begin")), status === 200);
+    equal(requests.some((r) => r.url.includes("api-sandbox.asaas.com")), status === 200);
+    if (status !== 200) equal((await result.json()).error.code, "CAPTCHA_FAILED");
+    if (token) equal([verified?.get("secret"), verified?.get("response"), verified?.get("remoteip")], [turnstile.TURNSTILE_SECRET_KEY, token, "203.0.113.7"]);
+    else equal(verified, undefined);
+  }
+});
+Deno.test("checkout recusa a compra quando o Turnstile não responde", async () => {
+  const { d, requests } = deps((url) => url.href === siteverify ? response({}, 500) : reserve(url), { ...billing, ...turnstile });
+  const result = await checkout(d)(request({ ...purchase, captcha_token: "token-valido" }, { token: null }));
+  equal(result.status, 503);
+  assert(!requests.some((r) => r.url.includes("app_checkout_begin") || r.url.includes("api-sandbox.asaas.com")));
+});
+Deno.test("checkout sem Turnstile configurado segue sem consultar a Cloudflare", async () => {
+  const { d, requests } = deps(reserve, billing);
+  equal((await checkout(d)(request(purchase, { token: null }))).status, 200);
+  assert(!requests.some((r) => r.url === siteverify));
+});
+Deno.test("checkout limita tentativas por IP e email antes de reservar o pedido; trocar a attempt_key não contorna", async () => {
+  let limited = false;
+  const throttles: unknown[] = [];
+  const { d, requests } = deps((url, init) => {
+    if (url.pathname.endsWith("app_checkout_throttle")) { throttles.push(JSON.parse(String(init.body))); return limited ? response({ code: "P0001", message: "Muitas solicitações. Aguarde um minuto." }, 400) : response(null); }
+    return reserve(url);
+  }, billing);
+  const headers = { "x-forwarded-for": "203.0.113.7, 10.0.0.1" };
+  equal((await checkout(d)(request(purchase, { token: null, headers }))).status, 200);
+  equal(throttles[0], { p_actor_id: null, p_client_ip: "203.0.113.7", p_email: buyer.email });
+  limited = true;
+  const blocked = await checkout(d)(request({ ...purchase, attempt_key: "outra-tentativa-sintetica" }, { token: null, headers }));
+  equal(blocked.status, 429);
+  equal((await blocked.json()).error.code, "RATE_LIMITED");
+  equal(requests.filter((r) => r.url.includes("app_checkout_begin")).length, 1);
+  equal(requests.filter((r) => r.url.includes("api-sandbox.asaas.com")).length, 1);
+});
+Deno.test("reauth limita as tentativas de senha por usuário antes de conferir a senha", async () => {
+  const { d, requests } = deps((url, init) => {
+    if (url.pathname.endsWith("app_reauth_throttle")) { equal(JSON.parse(String(init.body)), { p_actor_id: id }); return response({ code: "P0001", message: "Muitas solicitações. Aguarde um minuto." }, 400); }
+  });
+  const result = await reauthenticate(d)(request({ password: "test-only-password" }));
+  equal(result.status, 429);
+  equal((await result.json()).error.code, "RATE_LIMITED");
+  assert(!requests.some((r) => r.url.includes("/auth/v1/token")));
+});
+Deno.test("produção sem APP_ORIGIN falha claro em vez de usar localhost; modo local mantém o padrão", async () => {
+  const production = deps(undefined, { ICARUS_MODE: "production", APP_ORIGIN: "" });
+  for (const handler of [capabilities, webhook]) {
+    const result = await handler(production.d)(new Request("http://localhost/test", { method: "POST", headers: { "asaas-access-token": billing.ASAAS_WEBHOOK_TOKEN }, body: "{}" }));
+    equal(result.status, 503);
+    equal((await result.json()).error.code, "CONFIGURATION_REQUIRED");
+  }
+  equal(production.requests.length, 0);
+  const local = deps(undefined, { APP_ORIGIN: "" });
+  const allowed = await capabilities(local.d)(new Request("http://localhost/test", { headers: { origin: "http://127.0.0.1:8088" } }));
+  equal(allowed.status, 200);
+  equal(allowed.headers.get("access-control-allow-origin"), "http://127.0.0.1:8088");
 });

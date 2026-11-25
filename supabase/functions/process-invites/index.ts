@@ -1,5 +1,5 @@
 import { clients, defaults, rpc, type Dependencies } from "../_shared/client.ts";
-import { constantEqual, endpoint, HttpError, required, uuid } from "../_shared/http.ts";
+import { appOrigin, constantEqual, endpoint, HttpError, required, uuid } from "../_shared/http.ts";
 import { deliverPaidInvite } from "../_shared/payment.ts";
 export const createHandler = (d: Dependencies = defaults) => endpoint(async (req) => {
   const [secret] = required(d.env, "SUPABASE_SERVICE_ROLE_KEY");
@@ -10,7 +10,7 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   if (!Array.isArray(due?.items)) throw new HttpError(503, "SERVICE_UNAVAILABLE", "Fila temporariamente indisponível.");
   let attempted = 0;
   for (const item of due.items.slice(0, 20)) {
-    await deliverPaidInvite(admin, uuid(item.order_id), d.env("APP_ORIGIN") || "http://127.0.0.1:8088"); attempted++;
+    await deliverPaidInvite(admin, uuid(item.order_id), appOrigin(d.env)); attempted++;
   }
   return { attempted };
 }, d.env);

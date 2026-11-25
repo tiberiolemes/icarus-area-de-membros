@@ -27,8 +27,8 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   const receiptHash = receipt ? await sha256(receipt) : body.receipt_hash;
   if (typeof receiptHash !== "string" || receiptHash.length !== 64 || /[^a-f0-9]/.test(receiptHash)) throw new HttpError(422, "INVALID_INPUT", "Recibo inválido.");
   const admin = a?.admin || clients(d).admin;
-  // O IP vem do gateway do Supabase; trocar a attempt_key não contorna o limite por IP, email ou conta.
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || null;
+  // O primeiro valor do x-forwarded-for vem do cliente; o IP confiável é o que o proxy põe (Cloudflare no Supabase hospedado, ou o último salto).
+  const ip = req.headers.get("cf-connecting-ip")?.trim() || req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() || null;
   await throttle(admin, "app_checkout_throttle", { p_actor_id: a?.userInfo.id || null, p_client_ip: ip, p_email: buyerData.email });
   const secret = d.env("TURNSTILE_SECRET_KEY");
   if (secret) await verifyTurnstile(d, secret, body.captcha_token, ip);

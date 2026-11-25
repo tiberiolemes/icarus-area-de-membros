@@ -363,7 +363,7 @@ Deno.test("checkout com Turnstile configurado confere o token no servidor antes 
     equal(requests.some((r) => r.url.includes("app_checkout_begin")), status === 200);
     equal(requests.some((r) => r.url.includes("api-sandbox.asaas.com")), status === 200);
     if (status !== 200) equal((await result.json()).error.code, "CAPTCHA_FAILED");
-    if (token) equal([verified?.get("secret"), verified?.get("response"), verified?.get("remoteip")], [turnstile.TURNSTILE_SECRET_KEY, token, "203.0.113.7"]);
+    if (token) equal([verified?.get("secret"), verified?.get("response"), verified?.get("remoteip")], [turnstile.TURNSTILE_SECRET_KEY, token, "10.0.0.1"]);
     else equal(verified, undefined);
   }
 });
@@ -387,7 +387,7 @@ Deno.test("checkout limita tentativas por IP e email antes de reservar o pedido;
   }, billing);
   const headers = { "x-forwarded-for": "203.0.113.7, 10.0.0.1" };
   equal((await checkout(d)(request(purchase, { token: null, headers }))).status, 200);
-  equal(throttles[0], { p_actor_id: null, p_client_ip: "203.0.113.7", p_email: buyer.email });
+  equal(throttles[0], { p_actor_id: null, p_client_ip: "10.0.0.1", p_email: buyer.email });
   limited = true;
   const blocked = await checkout(d)(request({ ...purchase, attempt_key: "outra-tentativa-sintetica" }, { token: null, headers }));
   equal(blocked.status, 429);
@@ -416,4 +416,19 @@ Deno.test("produção sem APP_ORIGIN falha claro em vez de usar localhost; modo 
   const allowed = await capabilities(local.d)(new Request("http://localhost/test", { headers: { origin: "http://127.0.0.1:8088" } }));
   equal(allowed.status, 200);
   equal(allowed.headers.get("access-control-allow-origin"), "http://127.0.0.1:8088");
+});
+Deno.test("checkout usa o IP posto pelo proxy, não o primeiro valor que o cliente manda no x-forwarded-for", async () => {
+  for (const [headers, ip] of [
+    [{ "cf-connecting-ip": "198.51.100.30", "x-forwarded-for": "1.2.3.4, 198.51.100.30" }, "198.51.100.30"],
+    [{ "x-forwarded-for": "1.2.3.4, 198.51.100.31" }, "198.51.100.31"],
+    [{}, null],
+  ] as const) {
+    let sent: Record<string, unknown> | undefined;
+    const { d } = deps((url, init) => {
+      if (url.pathname.endsWith("app_checkout_throttle")) { sent = JSON.parse(String(init.body)); return response(null); }
+      return reserve(url);
+    }, billing);
+    equal((await checkout(d)(request(purchase, { token: null, headers }))).status, 200);
+    equal(sent?.p_client_ip, ip);
+  }
 });

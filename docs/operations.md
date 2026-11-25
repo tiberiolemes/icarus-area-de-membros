@@ -183,7 +183,9 @@ Em produção (`ICARUS_MODE=production`), `APP_ORIGIN` é obrigatório: sem ele,
 - O checkout aceita 5 tentativas por IP, 3 por email do comprador e 5 por conta logada. Trocar a `attempt_key` não contorna o limite.
 - A confirmação de senha da `reauthenticate` aceita 5 tentativas por usuário.
 - Passou do limite, a Edge responde 429 `RATE_LIMITED` e a janela seguinte libera.
-- O IP vem do primeiro valor de `x-forwarded-for`, que o gateway do Supabase preenche. O banco guarda só um UUID derivado do IP e do email, nunca o texto.
+- O IP vem de `cf-connecting-ip`, que a Cloudflare do Supabase hospedado preenche. Sem ele, vale o último valor de `x-forwarded-for`, o que o proxy anexou. O primeiro valor desse cabeçalho é ignorado, porque o cliente consegue escrevê-lo.
+- Numa instalação própria, deixe na frente do Edge um proxy que sobrescreva `cf-connecting-ip` ou anexe o IP real ao `x-forwarded-for`.
+- O banco guarda só um UUID derivado do IP e do email, nunca o texto.
 
 **Turnstile no checkout.** Com o segredo `TURNSTILE_SECRET_KEY` nos secrets das Edge Functions, a `checkout` confere o token em `https://challenges.cloudflare.com/turnstile/v0/siteverify` antes de reservar o pedido ou falar com o Asaas.
 - Token ausente ou recusado volta como 403 `CAPTCHA_FAILED`.

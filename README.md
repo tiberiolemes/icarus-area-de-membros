@@ -86,7 +86,7 @@ Banco e integrações nativas exigem instalação local e fixtures próprias. Pa
 
 O [modelo do GitHub Actions](docs/ci/README.md) descreve a automação. A execução da trilha nativa em Actions aguarda um runner com Docker dedicado.
 
-Desde a 2.6.0, o painel segue o padrão de Equipe e controle de acesso. Membros, pedidos e chamados têm filtros e indicadores calculados no servidor. Somente administradores recebem o e-mail do membro no diretório e na ficha. A moderação reúne comentários pendentes numa fila e a auditoria mostra nomes e ações em português. Para atualizar da 2.5.1, aplique a migration `202611250006` antes de servir o novo frontend. Veja o [roteiro de atualização](docs/operations.md#atualizar-de-versão).
+Desde a 2.6.0, o painel segue o padrão de Equipe e controle de acesso. Membros, pedidos e chamados têm filtros e indicadores calculados no servidor. Somente administradores recebem o e-mail do membro no diretório e na ficha. A moderação reúne comentários pendentes numa fila e a auditoria mostra nomes e ações em português. Para atualizar da 2.5.1, aplique as migrations `202611250006` e `202611250007` antes de servir o novo frontend. Veja o [roteiro de atualização](docs/operations.md#atualizar-de-versão).
 
 ## Limites
 

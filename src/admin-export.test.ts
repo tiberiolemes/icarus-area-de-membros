@@ -19,13 +19,14 @@ describe("CSV de listas administrativas existentes", () => {
   it.each([21, 25])(
     "exporta os %i resultados filtrados além da primeira página, sem campos extras",
     async (total) => {
-      const requests: { p_entity: string; p_query: string; p_page: number }[] =
-        [];
+      const requests: { name: string; args: Record<string, unknown> }[] = [];
       vi.stubGlobal(
         "fetch",
-        vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+        vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+          const name = String(input).split("/").at(-1)!;
           const args = JSON.parse(String(init?.body));
-          requests.push(args);
+          requests.push({ name, args });
+          if (name === "app_admin_log_csv_export") return json(null);
           return json({
             items: Array.from(
               { length: Math.min(20, total - (args.p_page - 1) * 20) },
@@ -49,8 +50,9 @@ describe("CSV de listas administrativas existentes", () => {
       );
       const csv = await buildAdminCsv("profiles", "selecionados");
       expect(requests).toEqual([
-        { p_entity: "profiles", p_query: "selecionados", p_page: 1 },
-        { p_entity: "profiles", p_query: "selecionados", p_page: 2 },
+        { name: "app_admin_list", args: { p_entity: "profiles", p_query: "selecionados", p_page: 1 } },
+        { name: "app_admin_list", args: { p_entity: "profiles", p_query: "selecionados", p_page: 2 } },
+        { name: "app_admin_log_csv_export", args: { p_entity: "profiles", p_query: "selecionados" } },
       ]);
       expect(csv.charCodeAt(0)).toBe(0xfeff);
       expect(csv.split("\r\n").filter(Boolean)).toHaveLength(total + 1);
@@ -96,6 +98,24 @@ describe("CSV de listas administrativas existentes", () => {
     expect(csvCell('Nome "A"; linha\nseguinte')).toBe(
       '"Nome ""A""; linha\nseguinte"',
     );
+  });
+  it("exige a gravação da auditoria com o mesmo filtro antes de liberar o CSV", async () => {
+    const filters = { p_role: null, p_plan: null, p_status: "paid" };
+    const requests: { name: string; args: Record<string, unknown> }[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const name = String(input).split("/").at(-1)!;
+      const args = JSON.parse(String(init?.body));
+      requests.push({ name, args });
+      if (name === "app_admin_log_csv_export") return json({ message: "Falha de auditoria." }, 503);
+      return json({ items: [{ id: "pedido-1" }], total: 1, page: 1, page_size: 20 });
+    }));
+    const publish = vi.fn();
+    await expect(buildAdminCsv("orders", "R$ 99,00", filters).then(publish)).rejects.toBeDefined();
+    expect(publish).not.toHaveBeenCalled();
+    expect(requests).toEqual([
+      { name: "app_admin_commercial", args: { p_entity: "orders", p_query: "R$ 99,00", p_page: 1, ...filters } },
+      { name: "app_admin_log_csv_export", args: { p_entity: "orders", p_query: "R$ 99,00", ...filters } },
+    ]);
   });
   it("interrompe falha na segunda página sem entregar arquivo parcial", async () => {
     let requests = 0;

@@ -32,7 +32,7 @@ function show(role: string, path: string, reviewDenied = false) {
     requests.push({ name, args });
     switch (name) {
       case "app_admin_lesson_comment_queue":
-        return page(pending ? [{ ...comment, lesson_id: lesson.id, lesson_title: lesson.title, course_title: course.title, course_slug: course.slug }] : []);
+        return page(pending ? [{ ...comment, lesson_id: lesson.id, lesson_title: lesson.title, course_title: course.title, course_slug: course.slug, can_open_lesson: !reviewDenied }] : []);
       case "app_catalog":
         return page([course], args.p_page);
       case "app_course":
@@ -140,4 +140,15 @@ it("aprova da fila unificada sem abrir o curso", async () => {
       p_lesson_id: lesson.id, p_id: comment.id, p_decision: "approve", p_reason: "Aprovação manual.",
     },
   });
+});
+
+
+it("modera um comentário de aula paga sem oferecer um link para a aula bloqueada", async () => {
+  const requests = show("moderator", root, true);
+  expect(await screen.findByText("Curso de teste · Aula de teste")).toBeVisible();
+  expect(screen.queryByRole("link", { name: "Curso de teste · Aula de teste" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Aprovar" }));
+  expect(await screen.findByText("Nenhum comentário pendente nesta página.")).toBeVisible();
+  expect(requests.map(({ name }) => name)).toContain("app_moderate_lesson_comment");
+  expect(requests.map(({ name }) => name)).not.toContain("app_course");
 });

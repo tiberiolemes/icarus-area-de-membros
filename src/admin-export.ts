@@ -55,6 +55,7 @@ export async function buildAdminCsv(entity: AdminExportEntity, query: string, fi
       rows.push(row);
     }
     if (rows.length === expected) {
+      await rpc("app_admin_log_csv_export", { p_entity: entity, p_query: query, ...filters });
       const header =
         entity === "profiles"
           ? ["Nome", "Papel", "Situação"]

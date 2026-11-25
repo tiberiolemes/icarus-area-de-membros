@@ -239,9 +239,9 @@ select pg_temp.ok(public.app_lesson_engagement(pg_temp.id(130))=
  '{"saved":false,"notes_count":0,"comments_count":0}','moderador em leitura comum só vê conteúdo publicado');
 select pg_temp.ok(public.app_lesson_comments(pg_temp.id(130),1,true)->>'total'='1','moderador habilitado vê a fila');
 select pg_temp.denied('select public.app_lesson_comments(pg_temp.id(132),1,true)',
- 'moderador sem acesso a aula paga não vê fila','Aula indisponível para seu acesso.');
+ 'moderador sem plano não abre a revisão no fluxo da aula','Aula indisponível para seu acesso.');
 select pg_temp.denied($q$select public.app_moderate_lesson_comment(pg_temp.id(132),pg_temp.saved('root'),'approve','Motivo humano')$q$,
- 'moderador sem acesso a aula paga não modera','Aula indisponível para seu acesso.');
+ 'moderador não modera comentário associado à aula paga errada','Comentário indisponível.');
 select pg_temp.denied($q$select public.app_moderate_lesson_comment(pg_temp.id(131),pg_temp.saved('root'),'approve','Motivo humano')$q$,
  'moderação rejeita comentário de outra aula','Comentário indisponível.');
 select pg_temp.denied($q$select public.app_moderate_lesson_comment(pg_temp.id(130),pg_temp.saved('root'),'hide','Motivo humano')$q$,

@@ -345,7 +345,7 @@ function call(name: string, a: Args, profile: Profile) {
     case "app_admin_lesson_comment_queue":
       return page(state.lessonComments.filter((row) => row.status === "pending").flatMap((row) => {
         const target = findLesson(row.lesson_id, profile);
-        return target ? [{ ...row, course_title: (target.course as Row).title, course_slug: (target.course as Row).slug, lesson_title: (target.lesson as Row).title }] : [];
+        return target ? [{ ...row, course_title: (target.course as Row).title, course_slug: (target.course as Row).slug, lesson_title: (target.lesson as Row).title, can_open_lesson: target.lesson.can_access }] : [];
       }));
     case "app_admin_lesson_context": {
       const target = findLesson(lessonId, profile);
@@ -353,8 +353,20 @@ function call(name: string, a: Args, profile: Profile) {
         ? { course_title: (target.course as Row).title, module_title: (target.module as Row).title, lesson_title: (target.lesson as Row).title }
         : missing();
     }
+    case "app_admin_log_csv_export": {
+      const events = state.records.audit_events ??= [];
+      const reason = Object.fromEntries(Object.entries({
+        busca: str(a.p_query), papel: a.p_role, plano: a.p_plan, situacao: a.p_status,
+      }).filter(([, value]) => value != null));
+      saveRow(events, {
+        actor_id: profile.id, actor_name: profile.full_name, action_label: "Exportação CSV",
+        target_label: a.p_entity === "profiles" ? "Membros" : "Pedidos",
+        created_at: new Date().toISOString(), reason: JSON.stringify(reason),
+      }, id);
+      return null;
+    }
     case "app_admin_audit": return page(recordsFor("audit_events").filter((row) =>
-      matches(query, row.actor_name, row.action_label, row.target_label, row.target_name)));
+      matches(query, row.actor_name, row.action_label, row.target_label, row.target_name, row.reason)));
     case "app_admin_list": return page(recordsFor(str(a.p_entity)).filter((row) =>
       matches(query, ...Object.values(row)) && (!a.p_status || !("status" in row) || row.status === a.p_status)));
     case "app_admin_save": {

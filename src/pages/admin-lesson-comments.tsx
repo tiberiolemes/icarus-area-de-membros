@@ -53,6 +53,7 @@ type PendingComment = {
   id: string;
   lesson_id: string;
   lesson_title: string;
+  can_open_lesson: boolean;
   course_title: string;
   course_slug: string;
   author_name: string;
@@ -74,7 +75,7 @@ function PendingComments() {
     heading.current?.focus({ preventScroll: true });
   }
   return <AdminSurface section="comentarios" trail={["Administração", { label: "Comunidade", to: "/admin/comunidade" }, "Comentários de aula"]}
-    title="Comentários de aula" description="Revise os comentários pendentes das aulas disponíveis para moderação."
+    title="Comentários de aula" description="Revise os comentários pendentes das aulas."
     action={<Link className="button" to={root + "?aba=cursos"}>Navegar por curso</Link>}>
     <section className="settings-panel" data-tour="lesson-comment-moderation" aria-labelledby="pending-comments">
       <h2 id="pending-comments" ref={heading} tabIndex={-1}>Pendentes{query.data ? ` (${query.data.total})` : ""}</h2>
@@ -85,9 +86,11 @@ function PendingComments() {
               <strong>{comment.author_name || "Membro sem nome"}</strong>
               <time dateTime={comment.created_at}>{date(comment.created_at)}</time>
             </div>
-            <Link className="text-action" to={`${root}/${encodeURIComponent(comment.course_slug)}/${comment.lesson_id}`}>
-              {comment.course_title} · {comment.lesson_title}
-            </Link>
+            {comment.can_open_lesson ? (
+              <Link className="text-action" to={`${root}/${encodeURIComponent(comment.course_slug)}/${comment.lesson_id}`}>
+                {comment.course_title} · {comment.lesson_title}
+              </Link>
+            ) : <p>{comment.course_title} · {comment.lesson_title}</p>}
             <p className="lesson-engagement-body">{comment.body}</p>
             <div className="actions">
               <Action run={() => moderate(comment, "approve", "Aprovação manual.")}>Aprovar</Action>

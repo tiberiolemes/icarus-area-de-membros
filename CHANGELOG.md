@@ -5,11 +5,11 @@
 - Dashboard, Analytics, Membros, Planos, Pedidos, Encontros, Podcasts, Suporte, Feedbacks e os editores passam a usar o padrão de Equipe, com trilha, título, descrição e ações no cabeçalho. A navegação agrupa as áreas por tarefa e a marca leva à primeira tela disponível do painel.
 - Dashboard e Analytics exibem apenas indicadores com fonte de dados. Planos apresenta as contagens de ativos e inativos do resultado completo, com edição de preço em reais.
 - Membros permite filtrar por papel, plano vigente e situação. O atalho da tela Equipe aplica o filtro de equipe. Apenas o admin recebe e-mail no diretório e na ficha, com autorização na RPC.
-- Pedidos aceita busca por identificador ou valor em reais. Suporte filtra todos os chamados por assunto, prioridade e situação. Indicadores e exportação usam o resultado completo do filtro.
-- Na Comunidade, publicações e respostas abrem nos pendentes, com aprovação direta e motivo nas demais ações aplicáveis. Comentários de aula ganham fila única e paginada para os cursos disponíveis à moderação.
-- A auditoria apresenta nomes, ações em português e links para os registros disponíveis. Materiais mostra tipos de arquivo e tamanhos legíveis.
+- Pedidos aceita busca por identificador ou valor em reais. Suporte filtra todos os chamados por assunto, prioridade e situação. Indicadores e exportação usam o resultado completo do filtro. Antes de gerar o CSV de membros ou pedidos, o painel registra o admin, a data, o tipo e os filtros. Uma falha nesse registro bloqueia a geração.
+- Na Comunidade, publicações e respostas abrem nos pendentes, com aprovação direta e motivo nas demais ações aplicáveis. A fila única de comentários permite a admins e moderadores revisar também aulas pagas, independentemente do plano. A leitura do conteúdo da aula continua sujeita às permissões do curso.
+- A auditoria apresenta nomes, ações em português e links para os registros disponíveis. Sem busca, o servidor pagina os eventos antes de montar os rótulos. Materiais mostra tipos de arquivo e tamanhos legíveis.
 - Podcasts e masterclasses podem ser arquivados e restaurados como rascunho. Feedbacks mostra contagens por situação, abas e detalhe lateral.
-- Atualização da 2.5.1: aplique `202611250006` e gere o frontend. As Edge Functions da 2.5.1 continuam compatíveis. Veja [Atualizar de versão](docs/operations.md#atualizar-de-versão).
+- Atualização da 2.5.1: aplique `202611250006` e `202611250007` e gere o frontend. As Edge Functions da 2.5.1 continuam compatíveis. Veja [Atualizar de versão](docs/operations.md#atualizar-de-versão).
 
 ## 2.5.1 · 2026-11-25
 

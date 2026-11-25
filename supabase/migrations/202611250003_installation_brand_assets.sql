@@ -109,6 +109,16 @@ end $$;
 revoke execute on function public.app_bootstrap() from public, anon, authenticated;
 grant execute on function public.app_bootstrap() to authenticated;
 
+-- A assinatura passa a ser só o PNG enviado pela Edge: a URL livre deixa de ser gravável, por qualquer caminho,
+-- e sai dos cursos. Os certificados já emitidos mantêm a URL da emissão.
+create or replace function app_private.validate_course() returns trigger language plpgsql set search_path='' as $$ begin
+ if new.status='published' and new.certificate_enabled and (length(trim(new.signer_name))<3 or length(trim(new.signer_title))<2) then perform app_private.fail('Configure o responsável pelo certificado antes de publicar.');end if;
+ if new.cover_url is not null and (new.cover_url !~ '^course-cover/[a-f0-9-]{36}/[a-f0-9-]{36}\.(jpg|jpeg|png|webp)$' and new.cover_url !~ '^demo/') then perform app_private.fail('Use o upload privado para a capa.');end if;
+ if new.signature_url is not null then perform app_private.fail('Envie a assinatura em PNG na aba Certificado do curso.');end if;
+ return new;
+end $$;
+update public.courses set signature_url = null where signature_url is not null;
+
 -- A emissão copia a assinatura do curso, como já fazia com nome, cargo e URL.
 create or replace function app_private.issue_certificate(p_actor uuid,p_course uuid) returns text language plpgsql security definer set search_path='' as $$
 declare c public.courses;eligibility jsonb;code_out text;begin

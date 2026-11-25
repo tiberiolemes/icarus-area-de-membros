@@ -39,8 +39,8 @@ create temporary table fixture as select gen_random_uuid() course, gen_random_uu
 grant select on fixture to service_role, authenticated, anon;
 insert into public.plans(id, name, slug, price_cents, access_months, active) select plan, 'DEMONSTRAÇÃO assinatura', 'demo-assinatura', 10000, 12, true from fixture;
 insert into public.subscriptions(user_id, plan_id, starts_at, ends_at, source) select pg_temp.id('member'), plan, now() - interval '1 day', now() + interval '1 month', 'courtesy' from fixture;
-insert into public.courses(id, slug, title, status, access_mode, certificate_enabled, signer_name, signer_title, signature_url)
-select course, 'assinatura-curso', 'DEMONSTRAÇÃO assinatura', 'published', 'subscribers', true, 'DEMONSTRAÇÃO responsável', 'Coordenação', 'https://exemplo.test/assinatura-antiga.png' from fixture;
+insert into public.courses(id, slug, title, status, access_mode, certificate_enabled, signer_name, signer_title)
+select course, 'assinatura-curso', 'DEMONSTRAÇÃO assinatura', 'published', 'subscribers', true, 'DEMONSTRAÇÃO responsável', 'Coordenação' from fixture;
 insert into public.courses(id, slug, title) select other, 'assinatura-outro', 'DEMONSTRAÇÃO outro' from fixture;
 insert into public.modules(id, course_id, slug, title, status) select gen_random_uuid(), course, 'modulo', 'Módulo', 'published' from fixture;
 insert into public.sections(id, module_id, title, status) select gen_random_uuid(), m.id, 'Seção', 'published' from public.modules m join fixture f on m.course_id = f.course;
@@ -57,7 +57,7 @@ select pg_temp.denied(format('select public.app_brand_asset_commit(%L, %L, %L, %
 select pg_temp.denied(format('select public.app_brand_asset_commit(%L, %L, %L, %L)', pg_temp.id('admin'), 'signature', 'signature/' || gen_random_uuid() || '.png', (select course from fixture)), 'P0001', 'Objeto inexistente');
 select pg_temp.denied(format('select public.app_brand_asset_commit(%L, %L, %L, %L)', pg_temp.id('admin'), 'light', 'logo/light-' || gen_random_uuid() || '.png', (select course from fixture)), 'P0001', 'Curso só vale para a assinatura');
 select pg_temp.ok(public.app_brand_asset_commit(pg_temp.id('admin'), 'signature', (select sig1 from fixture), (select course from fixture)) = jsonb_build_object('signature_path', (select sig1 from fixture), 'previous', null), 'Primeira assinatura');
-select pg_temp.ok((select signature_path = f.sig1 and signature_url is null from public.courses c, fixture f where c.id = f.course), 'Assinatura enviada substitui a URL antiga');
+select pg_temp.ok((select signature_path = f.sig1 and signature_url is null from public.courses c, fixture f where c.id = f.course), 'Curso guarda só o caminho da assinatura');
 reset role;
 do $$
 declare actor_role text;
@@ -69,10 +69,30 @@ begin
   end loop;
 end $$;
 
+-- A URL livre da assinatura deixou de ser gravável, pela RPC de admin ou direto na tabela.
+create function pg_temp.login(actor_role text) returns void language sql as $$
+  select set_config('request.jwt.claims', jsonb_build_object('sub', actor_id, 'session_id', session_id, 'aal', 'aal2', 'role', 'authenticated')::text, true) from actors where role = actor_role
+$$;
+set local role authenticated;
+do $$
+declare actor_role text;
+begin
+  foreach actor_role in array array['admin', 'instructor'] loop
+    perform pg_temp.login(actor_role);
+    perform pg_temp.denied(format('select public.app_admin_save(%L, %L, %L)', 'courses', (select course from fixture), '{"signature_url":"https://atacante.example/rubrica.png"}'), 'P0001', actor_role || ' não grava URL de assinatura pela RPC');
+  end loop;
+end $$;
+select pg_temp.login('instructor');
+select pg_temp.ok(public.app_admin_save('courses', (select course from fixture), '{"signer_title":"Coordenação pedagógica"}') ? 'id', 'Instrutor continua editando o curso');
+select pg_temp.ok(public.app_admin_save('courses', (select course from fixture), '{"signature_url":null}') ? 'id', 'URL nula continua aceita pela RPC');
+reset role;
+select pg_temp.denied(format('update public.courses set signature_url = %L where id = %L', 'https://atacante.example/rubrica.png', (select course from fixture)), 'P0001', 'Tabela recusa URL de assinatura');
+select pg_temp.denied(format('insert into public.courses(slug, title, signature_url) values (%L, %L, %L)', 'assinatura-url', 'URL', 'https://atacante.example/rubrica.png'), 'P0001', 'Curso novo não nasce com URL de assinatura');
+
 -- O certificado guarda a assinatura da emissão.
 select pg_temp.ok(app_private.issue_certificate(pg_temp.id('member'), (select course from fixture)) is not null, 'Certificado emitido');
 select code from public.certificates where user_id = pg_temp.id('member') \gset
-select pg_temp.ok((select signature_path from public.certificates where code = :'code') = (select sig1 from fixture), 'Certificado guarda o caminho da assinatura');
+select pg_temp.ok((select signature_path = f.sig1 and signature_url is null from public.certificates c, fixture f where c.code = :'code'), 'Certificado guarda o caminho e nenhuma URL');
 set local role anon;
 select pg_temp.ok(public.app_certificate(:'code')->>'signature_path' = (select sig1 from fixture), 'Verificação pública expõe a assinatura da emissão');
 reset role;

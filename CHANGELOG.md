@@ -1,8 +1,13 @@
 # Changelog
 
-## Não lançado
+## 2.2.2 · 2026-11-25
 
-- Aviso de versão nova: uma consulta que não chegou ao GitHub (sem rede, bloqueada ou interrompida por recarga) não fica mais guardada como falha por 24 horas. Só a resposta de erro do GitHub, como a do limite de requisições, fica guardada.
+- Checkout com limite de tentativas: 5 por minuto por IP, 3 por email do comprador e 5 por conta logada. Trocar a `attempt_key` não abre mais pedidos e sessões no Asaas sem parar. Acima do limite, a resposta é 429.
+- Turnstile no checkout quando o segredo `TURNSTILE_SECRET_KEY` estiver nos secrets das Edge Functions. O token é conferido no servidor antes do pedido e do Asaas. Sem resposta da Cloudflare, ou sem o script no navegador, a compra fica bloqueada com aviso para recarregar.
+- A confirmação de senha da `reauthenticate` aceita 5 tentativas por minuto por usuário.
+- Em produção, a falta de `APP_ORIGIN` faz as Edge Functions responderem 503 `CONFIGURATION_REQUIRED`, em vez de levar convites e CORS para `http://127.0.0.1:8088`.
+- Aviso de versão nova: uma consulta que não chegou ao GitHub (sem rede, bloqueada ou interrompida por recarga) não fica mais guardada como falha por 24 horas.
+- Atualização da 2.2.1: aplique a migration `202611250001`, publique as Edge Functions e gere o frontend da tag. Faça backup e siga [Atualizar de versão](docs/operations.md#atualizar-de-versão).
 
 ## 2.2.1 · 2026-11-25
 

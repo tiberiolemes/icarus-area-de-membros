@@ -75,7 +75,7 @@ from unnest(array['anon', 'authenticated', 'service_role']) r,
 
 -- Padrão: tudo ligado, exposto só como booleanos.
 set local role anon;
-select pg_temp.ok(public.app_public_context()->'modules' = '{"community":true,"materials":true,"podcasts":true,"certificates":true,"ranking":true,"live_events":true,"support":true,"help":true,"feedback":true}', 'Contexto público com os nove módulos ligados');
+select pg_temp.ok(public.app_public_context()->'modules' = '{"community":true,"materials":true,"podcasts":true,"ranking":true,"live_events":true,"support":true,"help":true,"feedback":true}', 'Contexto público com os oito módulos ligados');
 select pg_temp.denied($q$select public.app_admin_set_module('ranking', false)$q$, '42501', 'Anônimo não troca módulo');
 reset role;
 
@@ -95,6 +95,7 @@ select pg_temp.login('admin', 'aal1');
 select pg_temp.denied($q$select public.app_admin_set_module('ranking', false)$q$, 'P0001', 'Admin com 2FA precisa de AAL2');
 select pg_temp.login('admin');
 select pg_temp.denied($q$select public.app_admin_set_module('courses', false)$q$, 'P0001', 'Cursos não é desligável', 'Módulo indisponível.');
+select pg_temp.denied($q$select public.app_admin_set_module('certificates', false)$q$, 'P0001', 'Certificados é núcleo e não é desligável', 'Módulo indisponível.');
 select pg_temp.denied($q$select public.app_admin_set_module('ranking', null)$q$, 'P0001', 'Estado obrigatório');
 
 -- O aluno usa todos os módulos antes de desligar.
@@ -114,14 +115,14 @@ select pg_temp.ok(app_private.material_access(pg_temp.id('member'), (select libr
 select pg_temp.ok(exists(select 1 from app_private.notification_preference_items(pg_temp.id('member')) i where i->>'event_key' = 'certificate_issued'), 'Preferência de certificado listada');
 select count(*) as audit_before from public.audit_events \gset
 
--- Admin desliga os nove; a auditoria registra cada troca e repetir não duplica.
+-- Admin desliga os oito; a auditoria registra cada troca e repetir não duplica.
 set local role authenticated;
 select pg_temp.login('admin');
 select pg_temp.ok(public.app_admin_set_module(k, false) ->> k = 'false', 'Admin desliga ' || k)
-from unnest(array['community', 'materials', 'podcasts', 'certificates', 'ranking', 'live_events', 'support', 'help', 'feedback']) k;
+from unnest(array['community', 'materials', 'podcasts', 'ranking', 'live_events', 'support', 'help', 'feedback']) k;
 select pg_temp.ok(public.app_admin_set_module('ranking', false) ->> 'ranking' = 'false', 'Desligar de novo é idempotente');
 reset role;
-select pg_temp.ok((select count(*) from public.audit_events) = :audit_before + 9, 'Nove trocas auditadas');
+select pg_temp.ok((select count(*) from public.audit_events) = :audit_before + 8, 'Oito trocas auditadas');
 select pg_temp.ok(exists(select 1 from public.audit_events where actor_id = pg_temp.id('admin') and action = 'disable' and target_type = 'module_community'), 'Auditoria com ação e módulo');
 set local role anon;
 select pg_temp.ok((select bool_and(not value::boolean) from jsonb_each_text(public.app_public_context()->'modules')), 'Contexto público com tudo desligado');
@@ -140,8 +141,8 @@ select pg_temp.off($q$select public.app_materials(null, '', 1)$q$, 'Materiais: b
 select pg_temp.off($q$select public.app_podcasts()$q$, 'Podcasts: acervo');
 select pg_temp.off(format('select public.app_podcast(%L)', (select episode from fixture)), 'Podcasts: episódio');
 select pg_temp.off(format('select public.app_podcast_watch(%L, true)', (select episode from fixture)), 'Podcasts: marcar assistido');
-select pg_temp.off($q$select public.app_certificates()$q$, 'Certificados: lista');
-select pg_temp.off(format('select public.app_issue_certificate(%L)', (select course from fixture)), 'Certificados: emitir');
+-- Certificados é núcleo: lista e emissão seguem com todos os módulos desligados.
+select pg_temp.ok(jsonb_array_length(public.app_certificates()->'courses') = 1, 'Certificados seguem com tudo desligado');
 select pg_temp.off($q$select public.app_ranking()$q$, 'Ranking: classificação');
 select pg_temp.off($q$select public.app_ranking('custom', 1, current_date - 7, current_date)$q$, 'Ranking: período personalizado');
 select pg_temp.off($q$select public.app_live_events()$q$, 'Encontros: agenda');
@@ -158,7 +159,7 @@ select pg_temp.ok((select jsonb_array_length(e->'posts') = 1 and jsonb_array_len
 reset role;
 select pg_temp.ok(not app_private.material_access(pg_temp.id('member'), (select library_material from fixture)), 'Materiais: download da biblioteca bloqueado');
 select pg_temp.ok(app_private.material_access(pg_temp.id('member'), (select lesson_material from fixture)), 'Anexo da aula continua com Cursos');
-select pg_temp.ok(not exists(select 1 from app_private.notification_preference_items(pg_temp.id('member')) i where i->>'event_key' = 'certificate_issued'), 'Preferência de certificado some');
+select pg_temp.ok(exists(select 1 from app_private.notification_preference_items(pg_temp.id('member')) i where i->>'event_key' = 'certificate_issued'), 'Preferência de certificado continua');
 
 -- Edges: as RPCs de serviço recusam pelo mesmo bloqueio.
 set local role service_role;
@@ -169,9 +170,12 @@ select pg_temp.denied(format('select public.app_media_access(%L, %L, %L)', pg_te
 select pg_temp.off(format('select public.app_feedback_screenshot_reserve(%L, %L, %L, 1024)', pg_temp.id('member'), gen_random_uuid(), 'image/png'), 'Edge upload: print do feedback');
 reset role;
 
--- A emissão pausa para todos, e o certificado já emitido continua verificável.
-select pg_temp.ok(app_private.issue_certificate(pg_temp.id('member'), (select course from fixture)) is null, 'Emissão automática pausada');
-select pg_temp.ok(not exists(select 1 from public.certificates where user_id = pg_temp.id('member')), 'Nenhum certificado novo');
+-- A emissão não depende dos módulos, e o certificado emitido continua verificável.
+select pg_temp.ok(app_private.issue_certificate(pg_temp.id('member'), (select course from fixture)) is not null, 'Emissão segue com tudo desligado');
+select code from public.certificates where user_id = pg_temp.id('member') \gset
+set local role anon;
+select pg_temp.ok(public.app_certificate(:'code')->>'code' = :'code', 'Verificação pública com tudo desligado');
+reset role;
 
 -- A equipe do módulo segue usando o painel.
 set local role authenticated;
@@ -199,7 +203,7 @@ select pg_temp.ok((select count(*) from app_private.ranking_events where recipie
 set local role authenticated;
 select pg_temp.login('admin');
 select pg_temp.ok(public.app_admin_set_module(k, true) ->> k = 'true', 'Admin religa ' || k)
-from unnest(array['community', 'materials', 'podcasts', 'certificates', 'ranking', 'live_events', 'support', 'help', 'feedback']) k;
+from unnest(array['community', 'materials', 'podcasts', 'ranking', 'live_events', 'support', 'help', 'feedback']) k;
 select pg_temp.login('member');
 select pg_temp.ok((public.app_feed()->>'total')::int = 1, 'Feed volta com a publicação');
 select pg_temp.ok((public.app_tickets()->>'total')::int = 1, 'Ticket volta');
@@ -208,20 +212,10 @@ select pg_temp.ok((public.app_podcasts()->>'total')::int = 1, 'Acervo volta');
 select pg_temp.ok(public.app_materials(null, '', 1)->'folders' <> '[]', 'Biblioteca volta');
 select pg_temp.ok(jsonb_array_length(public.app_live_events()->'items') = 1, 'Agenda volta');
 select pg_temp.ok(public.app_ranking() ? 'items', 'Ranking volta');
-select public.app_issue_certificate((select course from fixture))->>'certificate_code' as code \gset
-select pg_temp.ok(:'code' is not null, 'Quem concluiu emite ao religar');
+select pg_temp.ok(public.app_issue_certificate((select course from fixture))->>'certificate_code' = :'code', 'Certificado emitido continua na conta');
 reset role;
 select pg_temp.ok(exists(select 1 from public.audit_events where action = 'enable' and target_type = 'module_support'), 'Religar auditado');
 select pg_temp.ok(app_private.material_access(pg_temp.id('member'), (select library_material from fixture)), 'Material volta');
-
--- Desligar de novo não invalida o certificado emitido.
-set local role authenticated;
-select pg_temp.login('admin');
-select public.app_admin_set_module('certificates', false);
-reset role;
-set local role anon;
-select pg_temp.ok(public.app_certificate(:'code')->>'code' = :'code', 'Verificação pública segue válida com Certificados desligado');
-reset role;
 
 select count(*) from results;
 rollback;

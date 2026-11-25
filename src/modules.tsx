@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { Award, CalendarDays, FolderOpen, HelpCircle, LifeBuoy, MessageSquare, MessageSquareText, Podcast, Trophy } from "lucide-react";
+import { CalendarDays, FolderOpen, HelpCircle, LifeBuoy, MessageSquare, MessageSquareText, Podcast, Trophy } from "lucide-react";
 import { useBootstrap } from "./auth";
 import { Heading } from "./ui";
 
-/** Módulos que o admin liga e desliga em Configurações. Cursos é o núcleo e fica sempre ligado. */
+/** Módulos que o admin liga e desliga em Configurações. Cursos e Certificados são o núcleo e ficam sempre ligados. */
 export const modules = [
   { key: "community", label: "Comunidade", Icon: MessageSquare,
     description: "Some o fórum, o menu e o atalho do celular. Publicações, respostas e curtidas ficam guardadas, e a moderação continua no painel." },
@@ -11,8 +11,6 @@ export const modules = [
     description: "Some a biblioteca de materiais e o download das pastas. Os anexos de cada aula continuam com Cursos." },
   { key: "podcasts", label: "Podcasts e masterclasses", Icon: Podcast,
     description: "Some o acervo de episódios. Os episódios ficam guardados e podem ser preparados no painel." },
-  { key: "certificates", label: "Certificados", Icon: Award,
-    description: "Some a tela de certificados. Desligar pausa a emissão de novos certificados; os já emitidos continuam válidos na verificação pública. Ao religar, quem concluiu emite pela tela Certificados." },
   { key: "ranking", label: "Ranking", Icon: Trophy,
     description: "Some a classificação e os atalhos para ela. Os pontos continuam registrados e voltam completos ao religar." },
   { key: "live_events", label: "Encontros ao vivo", Icon: CalendarDays,
@@ -38,7 +36,7 @@ export function useModules() {
 }
 
 const sections: Readonly<Record<string, ModuleKey | undefined>> = {
-  comunidade: "community", materiais: "materials", podcasts: "podcasts", certificados: "certificates", ranking: "ranking",
+  comunidade: "community", materiais: "materials", podcasts: "podcasts", ranking: "ranking",
   "encontros-ao-vivo": "live_events", encontros: "live_events", suporte: "support", feedbacks: "feedback",
 };
 

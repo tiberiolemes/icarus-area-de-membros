@@ -12,7 +12,7 @@ const actions: Record<"post" | "reply" | "like" | "lesson" | "certificate", { la
   reply: { label: "Resposta aprovada", Icon: Reply, module: "community" },
   like: { label: "Curtida recebida em post", Icon: Heart, module: "community" },
   lesson: { label: "Aula concluída", Icon: BookOpenCheck },
-  certificate: { label: "Certificado emitido", Icon: Award, module: "certificates" },
+  certificate: { label: "Certificado emitido", Icon: Award },
 };
 type Placement = { position: number; points: number; tied: boolean };
 type Entry = Placement & { is_self: boolean };

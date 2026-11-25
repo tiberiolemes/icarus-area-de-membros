@@ -316,8 +316,8 @@ export function CertificatePage({ verify = false }: { verify?: boolean }) {
               if (verify && code === nextCode) await query.refetch();
               else navigate(verificationPath(nextCode));
             }} />
-            {modules.help && modules.certificates && <Link className="text-action" to="/ajuda/certificados">Ajuda sobre certificados</Link>}
-            {modules.certificates && <Link className="text-action" to="/app/certificados">Meus certificados</Link>}
+            {modules.help && <Link className="text-action" to="/ajuda/certificados">Ajuda sobre certificados</Link>}
+            <Link className="text-action" to="/app/certificados">Meus certificados</Link>
           </div>
         </div>
       </div>

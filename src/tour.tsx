@@ -191,7 +191,7 @@ const steps = [
 ];
 // O passo do menu cita só os módulos ligados nesta plataforma.
 function navigationBody(state: Modules) {
-  const sections = ["cursos", state.materials && "materiais", state.certificates && "certificados",
+  const sections = ["cursos", state.materials && "materiais", "certificados",
     state.community && "comunidade", state.support && "suporte"].filter(Boolean) as string[];
   const listed = sections.length > 1 ? `${sections.slice(0, -1).join(", ")} e ${sections.at(-1)}` : sections[0];
   return [

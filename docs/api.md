@@ -26,7 +26,7 @@ Contrato de `docs/CONTRACT.md`, sem escrita direta do browser. Todas as RPCs ret
 
 ## Módulos da plataforma
 
-`app_admin_set_module(p_key text,p_enabled boolean)` → objeto com os nove módulos (`community`, `materials`, `podcasts`, `certificates`, `ranking`, `live_events`, `support`, `help`, `feedback`) como booleanos. Exige admin e AAL2 quando o admin tem 2FA; audita `enable`/`disable` com alvo `module_<chave>` só quando o estado muda. `app_public_context().modules` e `app_bootstrap().settings.modules` devolvem o mesmo objeto. Com um módulo desligado, as RPCs do aluno recusam com `P0001` "Este recurso está desativado nesta plataforma." ou com a recusa de acesso da própria RPC, e a equipe do módulo continua passando. O [contrato](CONTRACT.md) lista as RPCs e as regras de cada módulo.
+`app_admin_set_module(p_key text,p_enabled boolean)` → objeto com os oito módulos (`community`, `materials`, `podcasts`, `ranking`, `live_events`, `support`, `help`, `feedback`) como booleanos. Cursos e Certificados são núcleo e não aparecem. Exige admin e AAL2 quando o admin tem 2FA; audita `enable`/`disable` com alvo `module_<chave>` só quando o estado muda. `app_public_context().modules` e `app_bootstrap().settings.modules` devolvem o mesmo objeto. Com um módulo desligado, as RPCs do aluno recusam com `P0001` "Este recurso está desativado nesta plataforma." ou com a recusa de acesso da própria RPC, e a equipe do módulo continua passando. O [contrato](CONTRACT.md) lista as RPCs e as regras de cada módulo.
 
 ## Arquivamento próprio na comunidade
 

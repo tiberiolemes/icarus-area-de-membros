@@ -72,8 +72,10 @@ it("com os módulos desligados, o aluno não vê menu, atalhos nem feedback, e a
   settings.modules = allOff;
   mount("/app/comunidade");
   const menu = screen.getByRole("navigation", { name: "Área de membros" });
+  // Cursos e Certificados são o núcleo e não desligam.
   expect(within(menu).getByRole("link", { name: "Cursos" })).toBeInTheDocument();
-  for (const name of ["Comunidade", "Materiais", "Podcasts", "Certificados", "Ranking", "Encontros ao vivo", "Suporte", "Central de ajuda"])
+  expect(within(menu).getByRole("link", { name: "Certificados" })).toBeInTheDocument();
+  for (const name of ["Comunidade", "Materiais", "Podcasts", "Ranking", "Encontros ao vivo", "Suporte", "Central de ajuda"])
     expect(within(menu).queryByRole("link", { name })).not.toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "Recurso indisponível" })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Voltar aos cursos" })).toHaveAttribute("href", "/app/cursos");
@@ -111,11 +113,14 @@ it("a aba Módulos liga e desliga por AJAX e avisa a falha", async () => {
   rpc.mockResolvedValueOnce({ ranking: true });
   mount("/admin/configuracoes?aba=modulos", <AdminSettings />);
   expect(screen.getByRole("heading", { level: 1, name: "Módulos da plataforma" })).toBeInTheDocument();
-  expect(screen.getByText("Sempre ativo")).toBeInTheDocument();
+  expect(screen.getAllByText("Sempre ativo")).toHaveLength(2);
+  expect(screen.getByRole("heading", { level: 3, name: "Certificados" })).toBeInTheDocument();
+  expect(screen.queryByRole("switch", { name: "Certificados" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("switch", { name: "Cursos" })).not.toBeInTheDocument();
+  expect(screen.getAllByRole("switch")).toHaveLength(8);
   const ranking = screen.getByRole("switch", { name: "Ranking" });
   expect(ranking).toHaveAttribute("aria-checked", "false");
   expect(ranking).toHaveAccessibleDescription(/Os pontos continuam registrados/);
-  expect(screen.getByRole("switch", { name: "Certificados" })).toHaveAccessibleDescription(/os já emitidos continuam válidos/);
   fireEvent.click(ranking);
   await waitFor(() => expect(rpc).toHaveBeenCalledWith("app_admin_set_module", { p_key: "ranking", p_enabled: true }));
   await waitFor(() => expect(refetch).toHaveBeenCalled());
@@ -141,26 +146,27 @@ it("a Central de ajuda desligada fica indisponível para o aluno e esconde artig
   expect(screen.queryByRole("link", { name: "Assista e publique podcasts e masterclasses" })).not.toBeInTheDocument();
 });
 
-it("o Ranking esconde as regras de comunidade e certificado quando esses módulos estão desligados", async () => {
-  settings.modules = { community: false, certificates: false };
+it("o Ranking esconde as regras de comunidade com ela desligada e mantém as de aula e certificado", async () => {
+  settings.modules = { community: false };
   rpc.mockResolvedValue({ starts_at: null, ends_at: null, time_zone: "America/Sao_Paulo", prizes: null,
     rules: { post: 10, reply: 5, like: 1, lesson: 3, certificate: 20 }, podium: [], own: { status: "unranked" }, items: [], page: 1, total: 0 });
   mount("/app/ranking", <><Ranking memberId={profile.id} /></>);
   const rules = await screen.findByRole("heading", { name: "Regras de pontuação" });
   const list = rules.parentElement!;
   expect(within(list).getByText("Aula concluída")).toBeInTheDocument();
-  for (const name of ["Post aprovado", "Resposta aprovada", "Curtida recebida em post", "Certificado emitido"])
+  expect(within(list).getByText("Certificado emitido")).toBeInTheDocument();
+  for (const name of ["Post aprovado", "Resposta aprovada", "Curtida recebida em post"])
     expect(within(list).queryByText(name)).not.toBeInTheDocument();
 });
 
 it("aviso antigo de um módulo desligado continua no histórico, sem o botão para a tela indisponível", async () => {
-  settings.modules = { certificates: false };
+  settings.modules = { materials: false };
   rpc.mockResolvedValue({ items: [
-    { id: "n1", event_key: "certificate_issued", title: "Certificado emitido", subtitle: "Curso", created_at: "2026-11-20T12:00:00Z", read_at: null, action_path: "/app/certificados" },
+    { id: "n1", event_key: "material_published", title: "Material novo", subtitle: "Pasta", created_at: "2026-11-20T12:00:00Z", read_at: null, action_path: "/app/materiais" },
     { id: "n2", event_key: "lesson_comment_approved", title: "Comentário aprovado", subtitle: "Aula", created_at: "2026-11-20T12:00:00Z", read_at: null, action_path: "/app/cursos/curso" },
   ], page: 1, page_size: 20, total: 2, unread_count: 2 });
   mount("/app/notificacoes", <NotificationHistory memberId={profile.id} />);
-  expect(await screen.findByText("Certificado emitido")).toBeInTheDocument();
-  expect(screen.queryByRole("link", { name: /Ver certificados/ })).not.toBeInTheDocument();
+  expect(await screen.findByText("Material novo")).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /Ver materiais/ })).not.toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Ver curso/ })).toHaveAttribute("href", "/app/cursos/curso");
 });

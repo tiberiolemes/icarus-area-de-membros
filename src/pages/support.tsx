@@ -38,9 +38,9 @@ const priorities = ["low", "normal", "high", "urgent"];
 const helpLinks = [
   ["/ajuda/acesso", "Recuperar acesso à conta"],
   ["/ajuda/cursos", "Acessar cursos e aulas"],
-  ["/ajuda/certificados", "Consultar certificados", "certificates"],
+  ["/ajuda/certificados", "Consultar certificados"],
   ["/ajuda/suporte", "Acompanhar chamados e anexos"],
-] as const;
+];
 
 export function Tickets({ admin = false }: { admin?: boolean }) {
   const modules = useModules();
@@ -92,7 +92,7 @@ export function Tickets({ admin = false }: { admin?: boolean }) {
             }
           />
           <div className="support-faq">
-            {helpLinks.filter(([, , key]) => !key || modules[key]).map(([to, label]) => (
+            {helpLinks.map(([to, label]) => (
               <Link to={to} key={to}>
                 {label}
                 <ChevronRight size={16} aria-hidden="true" />

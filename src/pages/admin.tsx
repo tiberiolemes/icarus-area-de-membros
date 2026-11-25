@@ -9,6 +9,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ArrowDown,
+  Award,
   ArrowRight,
   ArrowUp,
   BookOpen,
@@ -2492,6 +2493,12 @@ function AdminTeam() {
   );
 }
 
+// Núcleo da plataforma: aparece na lista para ficar claro que não desliga.
+const coreModules = [
+  { label: "Cursos", Icon: BookOpen, description: "Catálogo, aulas, progresso e comentários de aula." },
+  { label: "Certificados", Icon: Award, description: "Emissão, consulta e verificação pública dos certificados." },
+];
+
 function AdminModules() {
   const boot = useBootstrap();
   const state = readModules(boot.data?.settings?.modules);
@@ -2515,18 +2522,20 @@ function AdminModules() {
           <h2 id="settings-modules"><ToggleRight size={20} aria-hidden="true" /> Recursos da área de membros</h2>
           <p>
             Um módulo desligado sai do menu, dos atalhos, do guia e das outras telas, e o servidor recusa o acesso dos alunos.
-            Nada é apagado, e religar traz tudo de volta. A equipe continua usando o painel de cada recurso, e a exportação de dados do membro segue completa.
+            Nada é apagado, e religar traz tudo de volta. A equipe continua usando o painel de cada recurso. Nenhuma exportação muda: a de dados do membro e as do painel seguem completas.
           </p>
         </header>
         <ul className="settings-modules">
-          <li>
-            <BookOpen size={20} aria-hidden="true" />
-            <div>
-              <h3>Cursos</h3>
-              <p>O núcleo da plataforma: catálogo, aulas, progresso e comentários de aula. Fica sempre ativo.</p>
-            </div>
-            <span className="settings-module-state" data-on="true">Sempre ativo</span>
-          </li>
+          {coreModules.map(({ label, Icon, description }) => (
+            <li key={label}>
+              <Icon size={20} aria-hidden="true" />
+              <div>
+                <h3>{label}</h3>
+                <p>{description}</p>
+              </div>
+              <span className="settings-module-state" data-on="true">Sempre ativo</span>
+            </li>
+          ))}
           {modules.map(({ key, label, Icon, description }) => (
             <li key={key}>
               <Icon size={20} aria-hidden="true" />

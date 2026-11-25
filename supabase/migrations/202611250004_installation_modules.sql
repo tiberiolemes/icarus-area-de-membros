@@ -1,15 +1,16 @@
 begin;
 
--- Módulos opcionais da instalação. Cursos é o núcleo e não entra aqui. Desligar esconde e bloqueia
+-- Módulos opcionais da instalação. Cursos e Certificados são o núcleo e não entram aqui. Desligar esconde e bloqueia
 -- para o aluno; nenhum dado é apagado, e religar devolve tudo. Instalações novas e atualizadas começam com tudo ligado.
+-- Nenhuma exportação depende dos módulos: a do membro (LGPD) e as do painel continuam completas.
 create table app_private.installation_modules (
-  key text primary key check (key in ('community', 'materials', 'podcasts', 'certificates', 'ranking', 'live_events', 'support', 'help', 'feedback')),
+  key text primary key check (key in ('community', 'materials', 'podcasts', 'ranking', 'live_events', 'support', 'help', 'feedback')),
   enabled boolean not null default true
 );
 alter table app_private.installation_modules enable row level security;
 revoke all on table app_private.installation_modules from public, anon, authenticated, service_role;
 insert into app_private.installation_modules(key)
-values ('community'), ('materials'), ('podcasts'), ('certificates'), ('ranking'), ('live_events'), ('support'), ('help'), ('feedback');
+values ('community'), ('materials'), ('podcasts'), ('ranking'), ('live_events'), ('support'), ('help'), ('feedback');
 
 -- Chave desconhecida conta como desligada, para um erro de digitação nunca liberar acesso.
 create function app_private.module_enabled(p_key text) returns boolean language sql stable security definer set search_path = '' as $$
@@ -230,46 +231,6 @@ begin
  return p_confirmed;
 end $$;
 
--- Certificados. A verificação pública (app_certificate) não muda: o certificado já emitido continua válido.
-create or replace function public.app_certificates() returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=app_private.actor();begin perform app_private.require_module(u,'certificates'); return jsonb_build_object('items',coalesce((select jsonb_agg(to_jsonb(c)-'user_id'-'lesson_ids' order by issued_at desc) from public.certificates c where user_id=u),'[]'::jsonb),'courses',coalesce((select jsonb_agg(app_private.course_json(u,c.id) order by c.title,c.id) from public.courses c where status='published' and certificate_enabled),'[]'::jsonb));end $$;
-
-create or replace function public.app_issue_certificate(p_course_id uuid) returns jsonb language plpgsql security definer set search_path='' as $$
-declare u uuid:=app_private.actor();code_out text;eligibility jsonb;begin
- perform app_private.require_module(u,'certificates');
- code_out:=app_private.issue_certificate(u,p_course_id);
- eligibility:=app_private.certificate_eligibility(u,p_course_id);
- return jsonb_build_object('certificate_code',code_out,'reason',case when code_out is null then eligibility->>'certificate_reason' end);
-end $$;
-
-create or replace function app_private.issue_certificate(p_actor uuid,p_course uuid) returns text language plpgsql security definer set search_path='' as $$
-declare c public.courses;eligibility jsonb;code_out text;begin
- -- Com Certificados desligado, a emissão pausa; ao religar, quem concluiu emite pela tela Certificados.
- if not app_private.module_enabled('certificates') then return null;end if;
- -- Adquira o perfil antes do curso, na mesma ordem da emissão por progresso.
- perform app_private.lock_lesson_engagement_actor(p_actor);
- select * into c from public.courses where id=p_course for update;
- if not found then return null;end if;
- eligibility:=app_private.certificate_eligibility(p_actor,p_course);
- if eligibility->>'certificate_code' is not null then return eligibility->>'certificate_code';end if;
- if not (eligibility->>'can_issue')::boolean then return null;end if;
- insert into public.certificates(user_id,course_id,curriculum_version,student_name,course_title,duration_minutes,lesson_ids,demo,signer_name,signer_title,signature_url,signature_path)
- values(p_actor,c.id,c.curriculum_version,(select full_name from public.profiles where id=p_actor),c.title,(select ceil(sum(duration_seconds)/60.0) from public.lessons where id=any(c.required_lesson_ids)),c.required_lesson_ids,(select demo from public.profiles where id=p_actor),c.signer_name,c.signer_title,c.signature_url,c.signature_path)
- on conflict(user_id,course_id,curriculum_version) do nothing;
- select code into code_out from public.certificates where user_id=p_actor and course_id=c.id and curriculum_version=c.curriculum_version and revoked_at is null;
- return code_out;
-end $$;
-
-create or replace function app_private.notification_preference_items(p_user uuid)
-returns setof jsonb language sql stable set search_path='' as $$
- select * from app_private.notification_preference_items_v026(p_user)
-  where notification_preference_items_v026->>'event_key'<>'certificate_issued' or app_private.module_enabled('certificates')
- union all
- select jsonb_build_object('event_key','catalog_launch','group','Conteúdo','label','Lançamentos inscritos',
-  'in_app',coalesce((select p.in_app from public.notification_preferences p
-    where p.user_id=p_user and p.event_key='catalog_launch'),true),'email',false,'email_available',false)
-$$;
-
 -- Ranking. Os pontos continuam registrados com o módulo desligado.
 create or replace function public.app_ranking(p_period text, p_page integer, p_from date, p_through date)
 returns jsonb language plpgsql security definer set search_path = '' as $$
@@ -449,8 +410,8 @@ declare u uuid:=app_private.actor(true);oid uuid;begin
  'orders',coalesce((select jsonb_agg(jsonb_build_object('id',id,'plan_id',plan_id,'status',status,'amount_cents',amount_cents,'created_at',created_at,'checkout_url',checkout_url) order by created_at desc) from public.orders where user_id=u),'[]'::jsonb));
 end $$;
 
-revoke execute on function app_private.space_access(uuid, uuid), app_private.material_access(uuid, uuid), app_private.ticket_access(uuid, uuid),
-  app_private.issue_certificate(uuid, uuid), app_private.notification_preference_items(uuid) from public, anon, authenticated, service_role;
+revoke execute on function app_private.space_access(uuid, uuid), app_private.material_access(uuid, uuid), app_private.ticket_access(uuid, uuid)
+  from public, anon, authenticated, service_role;
 
 notify pgrst, 'reload schema';
 commit;

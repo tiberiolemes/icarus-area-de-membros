@@ -87,7 +87,7 @@ RLS ativada.
 **Chaves e restrições**
 
 - `installation_modules_pkey` — `PRIMARY KEY (key)`
-- `installation_modules_key_check` — `CHECK ((key = ANY (ARRAY['community'::text, 'materials'::text, 'podcasts'::text, 'certificates'::text, 'ranking'::text, 'live_events'::text, 'support'::text, 'help'::text, 'feedback'::text])))`
+- `installation_modules_key_check` — `CHECK ((key = ANY (ARRAY['community'::text, 'materials'::text, 'podcasts'::text, 'ranking'::text, 'live_events'::text, 'support'::text, 'help'::text, 'feedback'::text])))`
 
 ## `app_private.local_demo_guard`
 

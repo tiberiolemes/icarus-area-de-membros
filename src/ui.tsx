@@ -264,22 +264,24 @@ export function CheckField({
   const id = useId(),
     error = useContext(FormErrors)[name];
   return (
-    <label className="check">
-      <input
-        type="checkbox"
-        name={name}
-        required={required}
-        disabled={disabled}
-        aria-invalid={!!error}
-        aria-describedby={error ? id + "-error" : undefined}
-      />
-      {children}
+    <>
+      <label className="check">
+        <input
+          type="checkbox"
+          name={name}
+          required={required}
+          disabled={disabled}
+          aria-invalid={!!error}
+          aria-describedby={error ? id + "-error" : undefined}
+        />
+        {children}
+      </label>
       {error && (
-        <small className="field-error" id={id + "-error"}>
+        <small className="field-error check-error" id={id + "-error"}>
           {error}
         </small>
       )}
-    </label>
+    </>
   );
 }
 export function Form({
@@ -549,6 +551,13 @@ const scrollPositions = new Map<string, number>();
 export function RouteFocus({ name = "Icarus" }: { name?: string }) {
   const { pathname, search, key, state } = useLocation(),
     navigation = useNavigationType();
+  // O nome da instalação pode chegar depois da primeira tela; o título acompanha sem mover o foco.
+  const installation = useRef(name);
+  installation.current = name;
+  useEffect(() => {
+    const heading = document.getElementById("main")?.querySelector("h1");
+    if (heading?.textContent) document.title = `${heading.textContent.trim()} · ${name}`;
+  }, [name]);
   const previousPath = useRef(pathname);
   useEffect(() => {
     const searching = previousPath.current === pathname && navigation !== "POP" &&
@@ -560,7 +569,7 @@ export function RouteFocus({ name = "Icarus" }: { name?: string }) {
       function focusHeading() {
         const heading = content.querySelector<HTMLElement>("h1");
         // Cada tela ganha título próprio (WCAG 2.4.2): o H1 que recebe o foco e o nome da instalação.
-        if (heading?.textContent) document.title = `${heading.textContent.trim()} · ${name}`;
+        if (heading?.textContent) document.title = `${heading.textContent.trim()} · ${installation.current}`;
         heading?.focus({ preventScroll: true });
         return heading === document.activeElement;
       }

@@ -31,7 +31,10 @@ declare u uuid:=app_private.require_role(array['admin']);result jsonb;begin
  with base as (
   select q.id,q.user_id,q.kind,q.status,q.created_at,titular.full_name
   from public.privacy_requests q left join public.profiles titular on titular.id=q.user_id
-  where p_query='' or concat_ws(' ',q.kind,q.status,titular.full_name) ilike '%'||p_query||'%'
+  where p_query='' or concat_ws(' ',q.kind,q.status,titular.full_name,
+   case q.kind when 'export' then 'Exportação de dados' when 'deletion' then 'Exclusão de conta' end,
+   case q.status when 'pending' then 'Recebido' when 'processing' then 'Em análise' when 'completed' then 'Concluído' when 'rejected' then 'Recusado' end
+  ) ilike '%'||p_query||'%'
  )
  select jsonb_build_object('items',coalesce((select jsonb_agg(to_jsonb(x)-'seq' order by x.seq) from(
    select b.*,row_number() over(order by b.status in ('pending','processing') desc,b.created_at desc,b.id) seq from base b

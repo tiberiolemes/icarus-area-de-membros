@@ -85,6 +85,8 @@ export function errorMessage(error: unknown): string {
   };
   if (!navigator.onLine || /fetch|network/i.test(e?.message ?? ""))
     return "Sem conexão com o servidor. Seu texto continua nesta tela. Reconecte e tente novamente.";
+  // Códigos do Auth antes dos ramos por status: otp_expired, por exemplo, chega com 403.
+  if (e?.code && authMessages[e.code]) return authMessages[e.code];
   if (e?.status === 401 || ["PGRST301", "PGRST303"].includes(e?.code ?? ""))
     return "Sua sessão expirou. Entre novamente para continuar.";
   if (
@@ -102,7 +104,6 @@ export function errorMessage(error: unknown): string {
     return "Email ou senha inválidos.";
   if (/rate limit|too many/i.test(e?.message ?? ""))
     return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
-  if (e?.code && authMessages[e.code]) return authMessages[e.code];
   if (e?.name === "AuthSessionMissingError")
     return "Sua sessão não foi encontrada. Abra o link mais recente enviado por email ou entre novamente.";
   // PGRST000 a PGRST003: o PostgREST não alcançou o banco; é queda passageira, não recurso ausente.

@@ -59,6 +59,7 @@ create temporary table p as select public.app_admin_privacy_requests('Revisão',
 select pg_temp.assert((select (v->>'total')::int from p)=2,'admin lista os pedidos');
 select pg_temp.assert((select x->>'full_name' from p,jsonb_array_elements(v->'items') x where x->>'id'=pg_temp.id(50)::text)='DEMONSTRAÇÃO Revisão 4','titular do pedido');
 select pg_temp.assert((select x->>'user_id' from p,jsonb_array_elements(v->'items') x where x->>'id'=pg_temp.id(50)::text)=pg_temp.id(4)::text,'id do titular para a ficha');
+select pg_temp.assert(exists(select 1 from jsonb_array_elements(public.app_admin_privacy_requests('Exportação de dados',1)->'items') x where x->>'id'=pg_temp.id(50)::text),'busca pelo rótulo da tela');
 select pg_temp.assert(public.app_admin_set_privacy_request(pg_temp.id(50),'processing','Análise iniciada.')->>'status'='processing','pendente para em análise');
 select pg_temp.assert(public.app_admin_set_privacy_request(pg_temp.id(50),'completed','Exportação enviada ao titular.')->>'status'='completed','em análise para concluído');
 select pg_temp.denied($q$select public.app_admin_set_privacy_request(pg_temp.id(50),'rejected','Tentativa após encerrar.')$q$,'pedido encerrado não muda');

@@ -13,6 +13,7 @@ it.each([
   [{ name: "AuthApiError", code: "same_password", message: "New password should be different" }, "A nova senha precisa ser diferente da atual."],
   [{ name: "AuthApiError", code: "mfa_verification_failed", message: "Invalid TOTP code entered" }, "Código inválido. Confira o aplicativo autenticador e tente de novo."],
   [{ name: "AuthApiError", code: "otp_expired", message: "Token has expired or is invalid" }, "O link ou código expirou. Peça um novo."],
+  [{ name: "AuthApiError", status: 403, code: "otp_expired", message: "Email link is invalid or has expired" }, "O link ou código expirou. Peça um novo."],
   [{ name: "AuthApiError", code: "captcha_failed", message: "captcha protection: request disallowed" }, "Não foi possível confirmar a verificação anti-spam. Recarregue a página e tente de novo."],
   [{ name: "AuthApiError", code: "email_address_invalid", message: "Email address is invalid" }, "Confira o endereço de email."],
   [{ name: "AuthApiError", message: "Something unexpected in English" }, "Não foi possível concluir o acesso. Tente novamente."],

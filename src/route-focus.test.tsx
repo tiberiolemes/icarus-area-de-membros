@@ -68,3 +68,19 @@ it("dá a cada tela o título do H1 com o nome da instalação", async () => {
   await waitFor(() => expect(document.title).toBe("Crie sua conta · Escola Demo"));
   expect(screen.getByRole("heading", { name: "Crie sua conta" })).toHaveFocus();
 });
+
+it("atualiza o título quando o nome da instalação chega depois da primeira tela", async () => {
+  vi.stubGlobal("scrollTo", vi.fn());
+  const page = (name?: string) => (
+    <MemoryRouter>
+      <main id="main">
+        <RouteFocus name={name} />
+        <h1 tabIndex={-1}>Entre na sua área</h1>
+      </main>
+    </MemoryRouter>
+  );
+  const { rerender } = render(page());
+  await waitFor(() => expect(document.title).toBe("Entre na sua área · Icarus"));
+  rerender(page("Escola X"));
+  await waitFor(() => expect(document.title).toBe("Entre na sua área · Escola X"));
+});

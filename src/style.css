@@ -569,6 +569,10 @@ h2 > a,
 .check a {
   display: inline;
 }
+.check-error {
+  display: block;
+  margin: -8px 0 12px 28px;
+}
 .plan-options {
   margin: 24px 0;
 }

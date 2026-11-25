@@ -172,7 +172,7 @@ export function internalPath(value: string | null, fallback = "/app/cursos") {
   }
 }
 export function safeUrl(value: unknown): string | undefined {
-  if (typeof value !== "string") return;
+  if (typeof value !== "string" || !value.trim()) return;
   try {
     const url = new URL(value, location.origin);
     if (

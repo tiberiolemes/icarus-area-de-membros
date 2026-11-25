@@ -261,6 +261,9 @@ describe("Confiança na fronteira do browser", () => {
     );
     expect(safeUrl("javascript:alert(1)")).toBeUndefined();
     expect(safeUrl("data:text/html,test")).toBeUndefined();
+    // Vazia resolveria para a própria página e passaria por uma URL cadastrada.
+    expect(safeUrl("")).toBeUndefined();
+    expect(safeUrl("   ")).toBeUndefined();
   });
   it("renderiza texto rico sem script, handlers, SVG ou links executáveis", () => {
     const content =

@@ -560,7 +560,7 @@ export function CourseEditor() {
                 </Form>
                 {admin ? (
                   <AssetCard key={course.id} variant="signature" courseId={course.id}
-                    saved={brandAssetUrl(course.signature_path) ?? safeUrl(text(course, "signature_url")) ?? null}
+                    saved={brandAssetUrl(course.signature_path) ?? safeUrl(course.signature_url) ?? null}
                     onChanged={() => courses.refetch()} />
                 ) : (
                   <Notice>A assinatura do certificado é enviada por um administrador.</Notice>

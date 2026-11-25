@@ -77,6 +77,7 @@ const server = await createServer({
   define: {
     "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(origin),
     "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify("fixture-public"),
+    "import.meta.env.VITE_ICARUS_UPDATE_REPO": JSON.stringify(""),
   },
 });
 mkdirSync(out);

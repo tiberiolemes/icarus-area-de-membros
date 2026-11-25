@@ -23,18 +23,30 @@ function write(key: string, value: string) {
   try { localStorage.setItem(key, value); } catch { /* segue sem guardar */ }
 }
 
-async function latest(repo: string): Promise<Release> {
+const valid = (release: Partial<Release> | null): release is Release =>
+  typeof release?.tag === "string" && typeof release.url === "string" && release.url.startsWith("https://github.com/");
+
+async function latest(repo: string): Promise<Release | null> {
   const key = `icarus:release:${repo}`;
+  let cached: (Partial<Release> & { at?: number }) | null = null;
+  try { cached = JSON.parse(read(key) ?? "null"); } catch { /* cache corrompido: consulta de novo */ }
+  const age = Date.now() - Number(cached?.at);
+  if (age >= 0 && age < day) {
+    if (valid(cached)) return { tag: cached.tag, url: cached.url };
+    // Falha guardada: sem rede ou no limite do GitHub, o painel não repete a consulta a cada recarga.
+    if (cached?.tag === undefined) return null;
+  }
   try {
-    const cached = JSON.parse(read(key) ?? "null");
-    if (Date.now() - cached.at < day && typeof cached.tag === "string" && typeof cached.url === "string") return cached;
-  } catch { /* cache ausente ou corrompido: consulta de novo */ }
-  const response = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, { headers: { accept: "application/vnd.github+json" } });
-  if (!response.ok) throw Error(`GitHub respondeu ${response.status}`);
-  const { tag_name: tag, html_url: url } = await response.json();
-  if (typeof tag !== "string" || typeof url !== "string" || !url.startsWith("https://github.com/")) throw Error("Release inesperada");
-  write(key, JSON.stringify({ tag, url, at: Date.now() }));
-  return { tag, url };
+    const response = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, { headers: { accept: "application/vnd.github+json" } });
+    if (!response.ok) throw Error(`GitHub respondeu ${response.status}`);
+    const { tag_name: tag, html_url: url } = await response.json();
+    if (!valid({ tag, url })) throw Error("Release inesperada");
+    write(key, JSON.stringify({ tag, url, at: Date.now() }));
+    return { tag, url };
+  } catch {
+    write(key, JSON.stringify({ at: Date.now() }));
+    return null;
+  }
 }
 
 /** Aviso de versão nova para admins: o navegador consulta as Releases públicas do GitHub, no máximo uma vez por dia. */
@@ -51,7 +63,12 @@ export function UpdateNotice() {
       <p className="update-notice-actions">
         <a className="button primary" href={release.url} target="_blank" rel="noreferrer">Notas da versão</a>
         <a className="button" href={`https://github.com/${repo}/blob/${release.tag}/docs/operations.md#atualizar-de-versão`} target="_blank" rel="noreferrer">Como atualizar</a>
-        <button type="button" onClick={() => { write(dismissKey, release.tag); setDismissed(release.tag); }}>Dispensar esta versão</button>
+        <button type="button" onClick={() => {
+          write(dismissKey, release.tag);
+          setDismissed(release.tag);
+          // O botão some com o aviso: devolve o foco ao conteúdo em vez de deixá-lo cair no body.
+          document.getElementById("main")?.focus();
+        }}>Dispensar esta versão</button>
       </p>
     </Notice>
   );

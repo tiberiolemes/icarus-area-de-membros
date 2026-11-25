@@ -212,6 +212,7 @@ async function exercise(browser, settings, commit, target, theme, mobile) {
 mkdirSync(out, { mode: 0o700 });
 process.env.VITE_SUPABASE_URL = origin;
 process.env.VITE_SUPABASE_ANON_KEY = 'fixture-only';
+process.env.VITE_ICARUS_UPDATE_REPO = ""; // fixtures recusam hosts externos: sem consulta às Releases do GitHub
 const vite = await createServer({
   cacheDir: join(out, 'vite-cache'), clearScreen: false,
   server: { host: '127.0.0.1', port, strictPort: true, hmr: false, watch: null },

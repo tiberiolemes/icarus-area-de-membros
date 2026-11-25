@@ -11,8 +11,9 @@ const release = (tag: string) => Response.json({ tag_name: tag, html_url: `https
 
 function mount() {
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(<QueryClientProvider client={cache}><UpdateNotice /></QueryClientProvider>);
+  return render(<QueryClientProvider client={cache}><main id="main" tabIndex={-1}><UpdateNotice /></main></QueryClientProvider>);
 }
+const empty = () => expect(document.querySelector("main")).toBeEmptyDOMElement();
 
 beforeEach(() => {
   localStorage.clear();
@@ -53,10 +54,10 @@ it("consulta o repositório configurado e não consulta nada quando a variável 
   unmount();
   fetchMock.mockClear();
   vi.stubEnv("VITE_ICARUS_UPDATE_REPO", "");
-  const { container } = mount();
+  mount();
   await new Promise((resolve) => setTimeout(resolve, 0));
   expect(fetchMock).not.toHaveBeenCalled();
-  expect(container).toBeEmptyDOMElement();
+  empty();
 });
 
 it.each([
@@ -67,10 +68,10 @@ it.each([
   ["resposta inesperada", () => Promise.resolve(Response.json({ tag_name: "v99.0.0", html_url: "javascript:alert(1)" }))],
 ])("não mostra nada com %s", async (_, answer) => {
   fetchMock.mockImplementation(answer);
-  const { container } = mount();
+  mount();
   await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
   await new Promise((resolve) => setTimeout(resolve, 0));
-  expect(container).toBeEmptyDOMElement();
+  empty();
 });
 
 it("guarda a consulta por 24 horas no navegador", async () => {
@@ -97,10 +98,11 @@ it("dispensa o aviso daquela versão e volta a avisar na seguinte", async () => 
   const first = mount();
   fireEvent.click(await screen.findByRole("button", { name: "Dispensar esta versão" }));
   expect(screen.queryByText("Versão 99.0.0 disponível.")).not.toBeInTheDocument();
+  expect(document.activeElement).toBe(document.querySelector("main"));
   first.unmount();
   const again = mount();
   await new Promise((resolve) => setTimeout(resolve, 0));
-  expect(again.container).toBeEmptyDOMElement();
+  empty();
   again.unmount();
   localStorage.removeItem(`icarus:release:${official}`);
   fetchMock.mockResolvedValue(release("v99.1.0"));
@@ -115,4 +117,36 @@ it("continua funcionando quando o navegador bloqueia o armazenamento", async () 
   mount();
   fireEvent.click(await screen.findByRole("button", { name: "Dispensar esta versão" }));
   expect(screen.queryByText("Versão 99.0.0 disponível.")).not.toBeInTheDocument();
+});
+
+it("guarda também a falha por 24 horas para não repetir a consulta a cada recarga", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-11-25T12:00:00Z"));
+  fetchMock.mockResolvedValue(Response.json({ message: "API rate limit exceeded" }, { status: 403 }));
+  const first = mount();
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+  first.unmount();
+  vi.setSystemTime(Date.now() + day - 60_000);
+  const second = mount();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(fetchMock).toHaveBeenCalledOnce();
+  empty();
+  second.unmount();
+  vi.setSystemTime(Date.now() + 120_000);
+  fetchMock.mockResolvedValue(release("v99.0.0"));
+  mount();
+  expect(await screen.findByText("Versão 99.0.0 disponível.")).toBeInTheDocument();
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+});
+
+it.each([
+  ["endereço fora do GitHub", { tag: "v99.0.0", url: "javascript:alert(1)", at: Date.now() }],
+  ["data no futuro", { tag: "v99.0.0", url: `https://github.com/${official}/releases/tag/v99.0.0`, at: Date.now() + 10 * day }],
+])("não confia em cache com %s", async (_, cached) => {
+  localStorage.setItem(`icarus:release:${official}`, JSON.stringify(cached));
+  fetchMock.mockResolvedValue(release("v0.2.0"));
+  mount();
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  empty();
 });

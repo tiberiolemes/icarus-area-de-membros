@@ -35,10 +35,6 @@
   text-overflow: ellipsis;
 }
 
-.member-search-field input::-webkit-search-cancel-button {
-  filter: grayscale(1);
-}
-
 .member-search-field kbd {
   flex-shrink: 0;
   margin-inline-end: var(--ic-space-3);

@@ -46,7 +46,8 @@ function Location() {
     </output>
   );
 }
-function setup(hasFactor: boolean, failCode = false, loginError?: string) {
+let touchReply: { seconds: number; remembered?: boolean } = { seconds: 1800 };
+function setup(hasFactor: boolean, failCode = false, loginError?: string, rememberFails = false) {
   const user = {
     id,
     aud: "authenticated",
@@ -82,9 +83,15 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string) {
       }
       if (url.includes("app_touch_session")) {
         return json({
-          expires_at: new Date(Date.now() + 1800000).toISOString(),
+          expires_at: new Date(Date.now() + touchReply.seconds * 1000).toISOString(),
           warning_seconds: 60,
+          remembered: touchReply.remembered ?? false,
         });
+      }
+      if (url.includes("app_remember_session")) {
+        return rememberFails
+          ? json({ message: "Confirme o código do autenticador para manter este navegador conectado.", code: "P0001" }, 400)
+          : json({ expires_at: new Date(Date.now() + 15 * 86400000).toISOString() });
       }
       if (url.includes("app_public_context")) {
         return json({ registration_enabled: false, legal_ready: false });
@@ -142,6 +149,7 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string) {
   return { ...result, requests };
 }
 beforeEach(() => {
+  touchReply = { seconds: 1800 };
   localStorage.clear();
   sessionStorage.clear();
   cache.clear();
@@ -254,4 +262,60 @@ it("descarta o contexto de confirmação quando o email é alterado", async () =
   await screen.findByRole("link",{name:"Reenviar confirmação de email"});
   fireEvent.change(screen.getByLabelText("Email"),{target:{value:"outra@example.test"}});
   expect(screen.queryByRole("link",{name:"Reenviar confirmação de email"})).not.toBeInTheDocument();
+});
+
+async function code(remember: boolean) {
+  const input = await screen.findByLabelText("Código de seis dígitos");
+  const box = screen.getByRole("checkbox", { name: "Lembrar por 15 dias" });
+  expect(box).not.toBeChecked();
+  if (remember) fireEvent.click(box);
+  fireEvent.change(input, { target: { value: "123456" } });
+  fireEvent.submit(input.closest("form")!);
+}
+it("oferece lembrar por 15 dias só no código e marca a sessão no servidor depois da verificação", async () => {
+  const { requests } = setup(true);
+  await waitFor(() => expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled());
+  expect(screen.queryByRole("checkbox", { name: "Lembrar por 15 dias" })).not.toBeInTheDocument();
+  await password();
+  await code(true);
+  await screen.findByText("Destino autorizado");
+  const verify = requests.findIndex((url) => url.endsWith("/verify")),
+    remember = requests.findIndex((url) => url.includes("app_remember_session"));
+  expect(remember).toBeGreaterThan(verify);
+  expect(requests.filter((url) => url.includes("app_remember_session"))).toHaveLength(1);
+});
+it("sem a caixa marcada entra como antes, sem lembrar a sessão", async () => {
+  const { requests } = setup(true);
+  await password();
+  await code(false);
+  await screen.findByText("Destino autorizado");
+  expect(requests.some((url) => url.includes("app_remember_session"))).toBe(false);
+});
+it("entra com a sessão comum e avisa quando o lembrar falha depois do código", async () => {
+  const { requests } = setup(true, false, undefined, true);
+  await password();
+  await code(true);
+  await screen.findByText("Destino autorizado");
+  expect(screen.getByTestId("location")).toHaveTextContent("/admin/cursos");
+  expect(await screen.findByText(/Você entrou, mas este navegador não ficou lembrado por 15 dias/)).toBeInTheDocument();
+  expect(requests.filter((url) => url.includes("app_remember_session"))).toHaveLength(1);
+});
+it("não mostra o aviso de lembrar quando a marcação dá certo", async () => {
+  setup(true);
+  await password();
+  await code(true);
+  await screen.findByText("Destino autorizado");
+  expect(screen.queryByText(/não ficou lembrado/)).not.toBeInTheDocument();
+});
+
+it.each([
+  [false, "Sua sessão termina em", true],
+  [true, "Os 15 dias desta sessão terminam em", false],
+])("no último minuto avisa a sessão lembrada (%s) sem oferecer prolongar o que não prolonga", async (remembered, text, extend) => {
+  touchReply = { seconds: 30, remembered };
+  setup(false);
+  await password();
+  await screen.findByText("Destino autorizado");
+  expect(await screen.findByRole("alert")).toHaveTextContent(text);
+  expect(screen.queryByRole("button", { name: "Continuar conectado" }) !== null).toBe(extend);
 });

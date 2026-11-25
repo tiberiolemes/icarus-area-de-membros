@@ -204,8 +204,10 @@ export function AccountAssurance({ children }: { children: ReactNode }) {
 }
 
 function SessionGate({ children }: { children: ReactNode }) {
+  const notRemembered = (useLocation().state as { notRemembered?: boolean } | null)?.notRemembered;
   const [expiry, setExpiry] = useState<number | null>(null),
     [seconds, setSeconds] = useState<number | null>(null),
+    [remembered, setRemembered] = useState(false),
     [failure, setFailure] = useState("");
   const last = useRef(0),
     inFlight = useRef(false);
@@ -215,12 +217,13 @@ function SessionGate({ children }: { children: ReactNode }) {
       if (inFlight.current) return;
       inFlight.current = true;
       try {
-        const data = await rpc<{ expires_at: string; warning_seconds: number }>(
+        const data = await rpc<{ expires_at: string; warning_seconds: number; remembered?: boolean }>(
           "app_touch_session",
           { p_activity: active },
         );
         if (alive) {
           setExpiry(new Date(data.expires_at).getTime());
+          setRemembered(!!data.remembered);
           setFailure("");
         }
       } catch (err) {
@@ -276,20 +279,31 @@ function SessionGate({ children }: { children: ReactNode }) {
     );
   return (
     <>
+      {notRemembered && (
+        <Notice>
+          Você entrou, mas este navegador não ficou lembrado por 15 dias. No próximo acesso, o código será pedido normalmente.
+        </Notice>
+      )}
       {seconds !== null && seconds > 0 && seconds <= 60 && (
         <div className="session-warning" role="alert">
-          Sua sessão termina em {seconds}s por inatividade.{" "}
-          <Action
-            run={async () => {
-              const data = await rpc<{ expires_at: string }>(
-                "app_touch_session",
-                { p_activity: true },
-              );
-              setExpiry(new Date(data.expires_at).getTime());
-            }}
-          >
-            Continuar conectado
-          </Action>
+          {remembered
+            ? <>Os 15 dias desta sessão terminam em {seconds}s. Depois, entre novamente.</>
+            : (
+              <>
+                Sua sessão termina em {seconds}s por inatividade.{" "}
+                <Action
+                  run={async () => {
+                    const data = await rpc<{ expires_at: string }>(
+                      "app_touch_session",
+                      { p_activity: true },
+                    );
+                    setExpiry(new Date(data.expires_at).getTime());
+                  }}
+                >
+                  Continuar conectado
+                </Action>
+              </>
+            )}
         </div>
       )}
       {children}

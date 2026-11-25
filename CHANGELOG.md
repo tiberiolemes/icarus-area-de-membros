@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.3.0 · 2026-11-25
+
+- Lembrar por 15 dias na tela do código de dois fatores. Com a caixa marcada, o navegador continua conectado, mesmo parado, até 15 dias depois do login, sem senha nem código. Sem a caixa, nada muda: a sessão termina após 2 horas sem uso (30 minutos para a equipe). Vale para todos os papéis, inclusive admin e equipe, com a caixa desmarcada por padrão. Não marque em computador compartilhado: até o fim dos 15 dias, quem abrir aquele navegador entra sem senha nem código. O limite fica no banco: a RPC `app_remember_session` só marca a sessão quando ela está em AAL2 e o Auth registrou o código dela há menos de 5 minutos, conta os 15 dias da criação da sessão e não os prolonga. O AAL2 continua exigido no SQL e nas Edge Functions, e Sair encerra a sessão em todos os aparelhos.
+- Badge Admin dourada com coroa no cartão da conta, no menu do celular e nas publicações da comunidade. No cartão, ela ocupa o lugar do plano, porque o admin acessa todo o conteúdo sem plano. Membros com plano e sem plano continuam como antes.
+- Seletores com a seta do design system. O `select` usava a seta nativa do navegador, colada à borda direita. Agora todos os seletores mostram o mesmo chevron nos dois temas, com o respiro igual ao do lado esquerdo e sem mudar de tamanho. Continuam nativos para teclado e leitor de tela. No Analytics, o seletor de curso usa a mesma seta e passa a ter 44 px, como os demais.
+- Controles nativos no padrão: o botão de escolher arquivo segue os botões do design system, o controle de recorte da foto usa a cor de ação e o "x" das buscas fica cinza.
+- Administração no fim do menu da área de membros, logo abaixo de Configurações, também no celular. Vale igualmente para os atalhos de instrutor, moderação e suporte.
+- Atualização da 2.2.3: aplique a migration `202611250002` e gere o frontend da tag. Não há Edge Function nova. Faça backup e siga [Atualizar de versão](docs/operations.md#atualizar-de-versão).
+
 ## 2.2.3 · 2026-11-25
 
 - Fundo contínuo na área de conteúdo. O catálogo pintava o cinza só num bloco de 1280 px com a altura do conteúdo, e sobravam faixas brancas ao lado e abaixo dele em telas largas ou com poucos cursos. No tema escuro, as faixas ficavam pretas, também em Materiais, Certificados e Encontros. Agora o `main` cobre toda a área até o fim da tela, e o conteúdo continua na mesma largura e posição. O roteiro `tests/visual/demo-app.mjs` confere o fundo em 1920, 1280 e 360 px nos dois temas.

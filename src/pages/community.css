@@ -412,7 +412,7 @@
   line-height: var(--stitch-type-body-sm-line);
 }
 
-:is(.community-feed, .community-member-thread) .badge {
+:is(.community-feed, .community-member-thread) .badge:not(.admin-badge) {
   color: var(--stitch-text-heading);
   background: var(--stitch-surface-hover);
   border-color: var(--community-card-border);

@@ -11,7 +11,7 @@ import {
 import type { FormEvent, InputHTMLAttributes, ReactNode } from "react";
 import { Link, useLocation, useNavigationType } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
-import { AlertCircle, ArrowLeft, Check, Eye, EyeOff, Search as SearchIcon, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, Check, Crown, Eye, EyeOff, Search as SearchIcon, X } from "lucide-react";
 import { errorMessage } from "./api";
 import "./stitch-primitives.css";
 
@@ -118,6 +118,10 @@ export function Notice({
       <div>{children}</div>
     </div>
   );
+}
+/** Papel vindo do servidor (profiles.role); o perfil não aceita editar o papel. */
+export function AdminBadge() {
+  return <span className="badge admin-badge"><Crown size={12} aria-hidden="true" />Admin</span>;
 }
 export function Loading() {
   return (

@@ -45,6 +45,7 @@ beforeEach(() => {
   settings.name = "Icarus";
   profile.full_name = "Pessoa Teste";
   profile.role = "member";
+  profile.plan_name = "Plano ativo";
   profile.theme = undefined;
   profile.avatar_id = undefined;
   rpc.mockReset();
@@ -204,21 +205,33 @@ it("mostra erro de gravação e mantém a aparência confirmada", async () => {
 
 it.each([
   ["admin", "Administração", "/admin/cursos"],
-  ["member", "Cursos", "/app/cursos"],
+  ["member", undefined, undefined],
   ["instructor", "Painel de conteúdo", "/admin/cursos"],
   ["moderator", "Moderação", "/admin/comunidade"],
   ["support", "Atendimento", "/admin/suporte"],
-])("mostra a entrada adequada ao papel %s na área de membros", (role, label, path) => {
+])("mostra a entrada do papel %s logo abaixo de Configurações", (role, label, path) => {
   profile.role = role;
   mount("/app/cursos");
+  // Link seguinte a Configurações na ordem do documento, que é a do teclado e do leitor de tela.
+  const afterSettings = (region: HTMLElement) => {
+    const links = within(region).getAllByRole("link");
+    return links[links.findIndex((link) => link.getAttribute("href") === "/app/configuracoes") + 1];
+  };
   const sidebar = screen.getByRole("complementary");
   const menu = within(sidebar).getByRole("navigation", { name: "Área de membros" });
-  expect(within(menu).getAllByRole("link")[0]).toHaveAccessibleName(label);
-  expect(within(menu).getAllByRole("link")[0]).toHaveAttribute("href", path);
+  expect(within(menu).getAllByRole("link")[0]).toHaveAccessibleName("Cursos");
+  expect(within(menu).getAllByRole("link")[0]).toHaveAttribute("href", "/app/cursos");
+  const sidebarEntry = afterSettings(sidebar);
 
   fireEvent.click(screen.getByRole("button", { name: "Abrir navegação" }));
   const drawer = screen.getByRole("dialog", { name: "Navegação" });
-  expect(within(drawer).getByRole("link", { name: label })).toHaveAttribute("href", path);
+  for (const entry of [sidebarEntry, afterSettings(drawer)]) {
+    if (!label) expect(entry).toBeUndefined();
+    else {
+      expect(entry).toHaveAccessibleName(label);
+      expect(entry).toHaveAttribute("href", path);
+    }
+  }
 
   if (role !== "admin") {
     expect(within(menu).queryByRole("link", { name: "Administração" })).toBeNull();
@@ -283,4 +296,51 @@ it.each([
   profile.role = role;
   mount(path);
   expect(screen.queryByText("Aviso de versão nova") !== null).toBe(shown);
+});
+
+function adminBadge(scope: HTMLElement) {
+  const badge = within(scope).getByText("Admin").closest(".admin-badge");
+  expect(badge).not.toBeNull();
+  expect(badge!.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+  return badge;
+}
+
+it.each(["", "Membro Pro"])("mostra só a badge Admin no cartão do admin com plano \"%s\"", (plan) => {
+  profile.role = "admin";
+  profile.plan_name = plan;
+  const { container } = mount("/app/cursos");
+  const account = screen.getByRole("link", { name: "Sua conta: Pessoa Teste" });
+  adminBadge(account);
+  expect(within(account).queryByText("Sem plano ativo")).not.toBeInTheDocument();
+  if (plan) expect(within(account).queryByText(plan)).not.toBeInTheDocument();
+  adminBadge(container.querySelector<HTMLElement>(".mobile-frame-label")!);
+  fireEvent.click(screen.getByRole("button", { name: "Abrir navegação" }));
+  adminBadge(screen.getByRole("dialog", { name: "Navegação" }));
+  expect(within(screen.getByRole("dialog", { name: "Navegação" })).queryByText("Sem plano ativo")).not.toBeInTheDocument();
+});
+
+it("troca o papel por extenso pela badge Admin no painel e mantém os outros papéis", () => {
+  profile.role = "admin";
+  mount("/admin/cursos");
+  const account = screen.getByRole("link", { name: "Sua conta: Pessoa Teste" });
+  adminBadge(account);
+  expect(within(account).queryByText("Administrador")).not.toBeInTheDocument();
+});
+
+it("mantém o texto do papel para instrutor no painel, sem badge Admin", () => {
+  profile.role = "instructor";
+  const { container } = mount("/admin/cursos");
+  expect(within(screen.getByRole("link", { name: "Sua conta: Pessoa Teste" })).getByText("Instrutor")).toBeInTheDocument();
+  expect(container.querySelector(".admin-badge")).toBeNull();
+});
+
+it.each([
+  ["Membro Pro", "Membro Pro"],
+  ["", "Sem plano ativo"],
+])("mantém o plano \"%s\" do membro sem badge Admin", (plan, shown) => {
+  profile.plan_name = plan;
+  const { container } = mount("/app/cursos");
+  expect(within(screen.getByRole("link", { name: "Sua conta: Pessoa Teste" })).getByText(shown)).toBeInTheDocument();
+  expect(container.querySelector(".admin-badge")).toBeNull();
+  expect(screen.queryByText("Admin")).not.toBeInTheDocument();
 });

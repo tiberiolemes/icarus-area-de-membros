@@ -124,7 +124,8 @@ function Login({ target }: { target: string }) {
   const [checking, setChecking] = useState(false),
     [failure, setFailure] = useState(""),
     [needsConfirmation, setNeedsConfirmation] = useState(false);
-  const codeInput = useRef<HTMLInputElement>(null);
+  const codeInput = useRef<HTMLInputElement>(null),
+    remembering = useRef(false);
   useEffect(() => {
     let active = true;
     setFactors([]);
@@ -144,7 +145,8 @@ function Login({ target }: { target: string }) {
           data.currentLevel === "aal2" ||
           (data.currentLevel === "aal1" && data.nextLevel === "aal1")
         ) {
-          navigate(destination, { replace: true });
+          // Com a caixa marcada, quem navega é o envio, depois de tentar lembrar, para levar o aviso de falha.
+          if (!remembering.current) navigate(destination, { replace: true });
           return;
         }
         const result = await client().auth.mfa.listFactors();
@@ -206,12 +208,22 @@ function Login({ target }: { target: string }) {
                 const factorId = factors.length === 1
                   ? factors[0].id
                   : value(data, "factor");
-                const { error } = await client().auth.mfa.challengeAndVerify({
-                  factorId,
-                  code: value(data, "code"),
-                });
-                if (error) throw error;
-                navigate(destination, { replace: true });
+                const remember = data.get("remember") === "on";
+                let notRemembered = false;
+                remembering.current = remember;
+                try {
+                  const { error } = await client().auth.mfa.challengeAndVerify({
+                    factorId,
+                    code: value(data, "code"),
+                  });
+                  if (error) throw error;
+                } catch (error) {
+                  remembering.current = false;
+                  throw error;
+                }
+                // O código já passou: se lembrar falhar, a pessoa entra com a sessão comum e recebe o aviso.
+                if (remember) notRemembered = await rpc("app_remember_session").then(() => false, () => true);
+                navigate(destination, { replace: true, state: notRemembered ? { notRemembered } : undefined });
               } else {
                 setNeedsConfirmation(false);
                 const { error } = await client().auth.signInWithPassword({
@@ -267,6 +279,10 @@ function Login({ target }: { target: string }) {
                       required
                     />
                   </Field>
+                  <label className="check">
+                    <input type="checkbox" name="remember" />
+                    Lembrar por 15 dias
+                  </label>
                 </>
               )
               : (

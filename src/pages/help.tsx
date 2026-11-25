@@ -14,6 +14,7 @@ export const articles = [
       "Esqueceu a senha? Abra Recuperar acesso e solicite as instruções. O sistema não confirma a existência de uma conta pelo endereço informado.",
       "Complete o perfil e as perguntas de empresa. Responda os campos marcados como obrigatórios. Você pode editar essas respostas em Configurações.",
       "O segundo fator é opcional. Para ativá-lo, abra Sua conta → Segurança e valide o aplicativo autenticador. Nos próximos acessos, o código é solicitado no mesmo formulário de login, sem mudar de página. O servidor mantém essa exigência enquanto houver fator ativo.",
+      "Na tela do código, marque Lembrar por 15 dias para continuar conectado neste navegador sem novo login nem código, mesmo parado, até 15 dias depois do login. Use só em aparelho pessoal. Sem a caixa, a sessão termina após 2 horas sem uso, ou 30 minutos para a equipe. Sair encerra a sessão em todos os aparelhos.",
     ],
   },
   {
@@ -74,6 +75,7 @@ export const articles = [
       "Abra a publicação para responder ou votar. Respostas também passam por revisão. Em telas maiores, o painel lateral mostra o espaço quando disponível e permite voltar às publicações dele.",
       "No detalhe da sua publicação, use Arquivar publicação para preservar o histórico sem exibi-lo aos demais membros. Restaurar publicação recupera o estado anterior, sem aprovar conteúdo pendente ou rejeitado. Arquivamentos da equipe não podem ser desfeitos por esse controle.",
       "Para denunciar, descreva o motivo. A denúncia entra na fila da equipe; a contagem não remove o conteúdo automaticamente.",
+      "A badge dourada Admin, com coroa, identifica quem administra a plataforma. Ela aparece ao lado do nome nas publicações e no lugar do plano no cartão da conta. O papel vem do servidor e não pode ser alterado no perfil.",
     ],
   },
   {
@@ -152,7 +154,7 @@ export const articles = [
       "Configure o responsável pelo certificado antes de habilitar a emissão. Use dados reais ou identifique uma demonstração.",
       "Em Materiais, crie pasta e registro do arquivo, depois envie o arquivo privado. Confira a confirmação do servidor.",
       "Quando sai uma versão nova do Icarus, administradores veem Versão disponível no topo do painel. Abra Notas da versão e Como atualizar antes de atualizar, ou use Dispensar esta versão para ocultar o aviso até a próxima.",
-      "Com uma conta administradora, use Administração no topo do menu da área de membros. Instrutores usam Painel de conteúdo, moderadores usam Moderação e a equipe de suporte usa Atendimento. No celular, abra o menu primeiro.",
+      "Com uma conta administradora, use Administração, logo abaixo de Configurações no fim do menu da área de membros. Instrutores usam Painel de conteúdo, moderadores usam Moderação e a equipe de suporte usa Atendimento. No celular, abra o menu primeiro.",
       "Em Membros, use Abrir ficha na linha da pessoa. Cadastros sem nome mostram Membro sem nome e um identificador curto. Gerencie cortesia, validade, suspensão e papel na ficha. Informe motivo e reautentique. Cortesia não é pagamento.",
       "Na fila da comunidade, revise o conteúdo e confirme uma decisão com motivo. Na fila de suporte, responda a conversa e ajuste o estado.",
       "Em Comunidade, abra Comentários de aula, escolha um curso publicado e uma aula disponível para seu acesso. Revise os itens pendentes e informe o motivo ao aprovar ou rejeitar.",

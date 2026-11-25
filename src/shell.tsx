@@ -37,7 +37,7 @@ import { useBootstrap } from "./auth";
 import { usePrivateImageQuery } from "./media";
 import { NotificationBell } from "./pages/notifications";
 import { FeedbackButton } from "./pages/feedback";
-import { Action, RouteFocus } from "./ui";
+import { Action, AdminBadge, RouteFocus } from "./ui";
 import { Tour } from "./tour";
 import { UpdateNotice } from "./update-notice";
 import { MemberSearch } from "./pages/member-search";
@@ -147,7 +147,7 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
           <AccountAvatar profile={profile} initials={drawerInitials} />
           <div>
             <strong>{profile.full_name || "Membro"}</strong>
-            <small>{profile.plan_name || "Sem plano ativo"}</small>
+            <small>{profile.role === "admin" ? <AdminBadge /> : profile.plan_name || "Sem plano ativo"}</small>
           </div>
         </div>
       )}
@@ -156,12 +156,6 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
         aria-label={admin ? "Administração" : "Área de membros"}
         data-tour="navigation"
       >
-        {!admin && staffEntry && (
-          <Link to={`/admin/${staffEntry[1]}`} onClick={onNavigate}>
-            <ArrowUpRight size={20} aria-hidden="true" />
-            {staffEntryLabels[profile.role] ?? staffEntry[0]}
-          </Link>
-        )}
         {(admin ? staffRoutes : memberNav).map(([title, path, Icon]) => (
           <NavLink key={path} to={(admin ? "/admin/" : "/app/") + path} onClick={onNavigate}>
             <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
@@ -176,6 +170,12 @@ function ShellNavigation({ admin, profile, installationName, onToggleTheme, onNa
             <Settings size={20} aria-hidden="true" />
             Configurações
           </NavLink>
+        )}
+        {!admin && staffEntry && (
+          <Link to={`/admin/${staffEntry[1]}`} onClick={onNavigate}>
+            <ArrowUpRight size={20} aria-hidden="true" />
+            {staffEntryLabels[profile.role] ?? staffEntry[0]}
+          </Link>
         )}
         {!admin && (
           <Action run={onToggleTheme}>
@@ -241,9 +241,10 @@ export function Shell() {
   const CourseIcon = dark ? GraduationCap : CirclePlay;
   const ForumIcon = dark ? MessagesSquare : Users;
   const RankingIcon = dark ? ChartColumn : Trophy;
-  const planBadge = profile.plan_name && (
-    <small className="mobile-frame-plan" title={profile.plan_name}>{profile.plan_name}</small>
-  );
+  // Admin acessa todo o conteúdo sem plano, então a badge Admin ocupa o lugar do plano.
+  const planBadge = profile.role === "admin"
+    ? <small className="mobile-frame-plan" data-role="admin"><AdminBadge /></small>
+    : profile.plan_name && <small className="mobile-frame-plan" title={profile.plan_name}>{profile.plan_name}</small>;
 
   function mobileIcon(name: ComponentProps<typeof StitchIcon>["name"], fallback: ComponentProps<typeof StitchIcon>["fallback"]) {
     return stitchFrameIcons ? <StitchIcon name={name} fallback={fallback} /> : fallback;
@@ -346,7 +347,7 @@ export function Shell() {
               <AccountAvatar profile={profile} initials={accountInitials} admin={admin} />
               <span className="account-details">
                 {profile.full_name}
-                <small>{admin ? roleLabel(profile.role) : profile.plan_name || "Sem plano ativo"}</small>
+                <small>{profile.role === "admin" ? <AdminBadge /> : admin ? roleLabel(profile.role) : profile.plan_name || "Sem plano ativo"}</small>
               </span>
             </Link>
           </div>

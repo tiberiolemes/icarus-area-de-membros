@@ -133,7 +133,7 @@ export function Certificates() {
   };
   return (
     <div className="student-certificates">
-      <Heading title="Certificados & Habilitações" action={counts && (
+      <Heading title="Certificados e habilitações" action={counts && (
         <div className="certificate-summary">
           <span><strong>{counts.issued}</strong> {counts.issued === 1 ? "certificado emitido" : "certificados emitidos"}</span>
           <span><strong>{counts.inProgress}</strong> em andamento</span>

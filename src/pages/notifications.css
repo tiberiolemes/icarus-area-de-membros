@@ -8,27 +8,18 @@
 
 .notification-badge {
   position: absolute;
-  inset: 5px 5px auto auto;
-  min-width: 8px;
-  min-height: 8px;
-  border-radius: 999px;
-  background: var(--ic-action);
-  color: var(--ic-on-action);
-}
-
-.notification-badge > span { display: none; }
-
-[data-theme="dark"] .notification-badge {
   inset: 8px 1px auto auto;
   min-width: 16px;
   padding-inline: 3px;
+  border-radius: 999px;
+  background: var(--ic-action);
+  color: var(--ic-on-action);
   text-align: center;
-  font-size: 0.625rem;
+  font-size: var(--stitch-type-label-uppercase-size);
   font-weight: 700;
   line-height: 16px;
 }
 
-[data-theme="dark"] .notification-badge > span { display: inline; }
 
 .notification-overlay {
   position: fixed;

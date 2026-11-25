@@ -1,8 +1,10 @@
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { ChevronRight } from "lucide-react";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { useAuth, useBootstrap } from "../auth";
 import { rpc, useRpc } from "../api";
 import { ModuleUnavailable, moduleOfPath, pathOpen, readModules } from "../modules";
-import { Action, Back, Heading, Notice, Search } from "../ui";
+import { Action, Back, Empty, Heading, Loading, Notice, QueryState, Search } from "../ui";
 import { PublicFrame } from "./access";
 
 export const articles = [
@@ -22,7 +24,7 @@ export const articles = [
     slug: "cursos",
     title: "Abra uma aula e continue de onde parou",
     steps: [
-      "Em Cursos, escolha um curso na vitrine. Use a ação de iniciar ou continuar para abrir uma aula diretamente. Se preferir escolher a aula, abra a ementa do curso.",
+      "Em Cursos, escolha um curso na vitrine. Use Começar ou Continuar para abrir uma aula diretamente. Se preferir escolher a aula, abra a ementa do curso.",
       "Na busca rápida do cabeçalho, digite pelo menos dois caracteres para encontrar cursos, módulos e aulas disponíveis para sua conta. Use Ctrl+K ou ⌘K para focar o campo, as setas para percorrer os resultados, Enter para abrir o item em foco e Escape para fechar a busca.",
       "Use a busca, os filtros e a ordenação para encontrar cursos na vitrine.",
       "Consulte os próximos lançamentos na vitrine. Na página de cada curso, você também encontra os anúncios de módulos quando estiverem disponíveis. Use Quero ser avisado. O sino recebe o aviso quando o conteúdo for publicado, se a opção Lançamentos inscritos estiver ativa nas preferências e você ainda tiver o acesso exigido para o módulo.",
@@ -37,8 +39,8 @@ export const articles = [
     slug: "materiais",
     title: "Encontre e baixe seus materiais",
     steps: [
-      "Abra Materiais no menu e escolha uma pasta. A busca consulta os arquivos da pasta atual.",
-      "Use os botões de visualização para alternar entre pastas e arquivos ou exibir apenas os arquivos da seção.",
+      "Abra Materiais no menu e escolha uma pasta. O título identifica a pasta atual e a busca consulta os arquivos dela.",
+      "Na raiz de Materiais, use os botões de visualização para alternar entre pastas e arquivos ou exibir apenas os arquivos da seção.",
       "Confira nome, tipo e tamanho. Materiais restritos mostram a opção de consultar o acesso.",
       "Clique em Baixar. O sistema valida seu acesso e solicita um endereço temporário do arquivo.",
       "Se o endereço expirar, solicite o download novamente. Nunca compartilhe um endereço temporário de conteúdo privado.",
@@ -46,13 +48,11 @@ export const articles = [
   },
   {
     slug: "podcasts",
-    title: "Assista e publique podcasts e masterclasses",
+    title: "Assista a podcasts e masterclasses",
     steps: [
       "Abra Podcasts no menu. Selecione o episódio em destaque ou use a busca por título para localizar outro no acervo.",
       "Abra o episódio para assistir. Use os capítulos disponíveis para avançar no vídeo. Se o player não estiver disponível, use Abrir no YouTube. Quando houver um link cadastrado, use Ouvir no Spotify.",
       "Use Marcar como assistido para salvar a indicação na sua conta. Você pode desfazer a marcação no mesmo episódio.",
-      "Na administração, abra Podcasts e escolha Novo episódio. Cole a URL do vídeo do YouTube e preencha os metadados. A miniatura é derivada do vídeo. Para trocar o vídeo de um episódio já salvo, cadastre outro.",
-      "Cadastre um capítulo por linha, em ordem crescente, com o horário e o título. Escolha Publicado para exibir no acervo ou Rascunho para ocultar. A opção de destaque substitui o destaque atual ao salvar.",
     ],
   },
   {
@@ -83,7 +83,7 @@ export const articles = [
     slug: "ranking",
     title: "Consulte a classificação preliminar",
     steps: [
-      "Abra Ranking pelo menu ou pela barra inferior do Catálogo e do Fórum no celular. Abra o filtro de período. Escolha um atalho, consulte o ranking geral ou selecione Personalizado para informar a data inicial e a final e aplicar o intervalo. Sua colocação aparece mesmo fora da página que está aberta.",
+      "Abra Ranking pelo menu ou pela barra inferior no celular. Abra o filtro de período. Escolha um atalho, consulte o ranking geral ou selecione Personalizado para informar a data inicial e a final e aplicar o intervalo. Sua colocação aparece mesmo fora da página que está aberta.",
       "A pontuação usa ações reconhecidas pelo servidor, como posts e respostas aprovados, curtidas recebidas, aulas concluídas e certificados emitidos.",
       "As demais colocações aparecem como Membro. O painel indica a disponibilidade de premiação do mês.",
     ],
@@ -92,31 +92,29 @@ export const articles = [
     slug: "encontros",
     title: "Participe de encontros ao vivo e acesse o acervo",
     steps: [
-      "Abra Encontros ao vivo no menu. O próximo encontro em destaque mostra data, horário de Brasília e duração quando seu plano tem acesso.",
+      "Abra Encontros ao vivo no menu. O destaque mostra título, convidado, data e horário de Brasília. A duração aparece quando seu plano libera o encontro.",
       "Use Confirmar presença antes do início. Para mudar de ideia, use Cancelar presença. Baixe o evento em ICS ou abra o Google Agenda para adicionar a data.",
       "Use Entrar na sala para acessar o link quando seu plano inclui o encontro. Gravações anteriores leva ao acervo, onde você pode abrir as gravações publicadas.",
       "Se o conteúdo estiver restrito, use Ver planos disponíveis. A disponibilidade depende das regras de acesso de cada evento.",
-      "Na administração, cadastre a data e os links, escolha quem pode acessar, publique o evento e use Ver RSVPs para consultar as confirmações.",
     ],
   },
   {
     slug: "suporte",
-    title: "Abra um ticket e acompanhe a conversa",
+    title: "Abra um chamado e acompanhe a conversa",
     steps: [
-      "Em Suporte, use Abrir ticket. Escreva assunto, prioridade e mensagem sem senhas ou dados de cartão.",
-      "Após o envio, abra a conversa para ler as respostas. Seu texto permanece na tela se uma chamada falhar.",
-      "Use Enviar arquivo para anexar um documento permitido. O servidor valida tamanho, tipo e sua permissão.",
-      "Um ticket resolvido pode ser reaberto com uma resposta. Arquivos da conversa só abrem para pessoas autorizadas.",
+      "Em Suporte, use Abrir chamado. Escreva assunto, prioridade e mensagem sem senhas ou dados de cartão.",
+      "Após o envio, abra a conversa para ler as respostas identificadas com o selo Equipe. Seu texto permanece na tela se uma chamada falhar.",
+      "Use Escolher arquivo, depois Enviar arquivo, para anexar um documento permitido. O servidor valida tamanho, tipo e sua permissão.",
+      "Um chamado resolvido pode ser reaberto com uma resposta. Arquivos da conversa só abrem para pessoas autorizadas.",
     ],
   },
   {
     slug: "feedback",
-    title: "Envie feedback e acompanhe a triagem na administração",
+    title: "Envie feedback sobre a plataforma",
     steps: [
       "No cabeçalho da área do aluno, abra Enviar feedback. Escolha Sugestão, Bug/Problema ou Outro e descreva a situação.",
       "Se precisar, anexe um print PNG, JPG ou WebP de até 5 MiB. Confira se a imagem revela dados pessoais, senhas ou informações de pagamento.",
       "O servidor registra o envio com sua conta. O contexto inclui a seção da plataforma e a família do navegador. Em Configurações → Privacidade, o export de dados inclui os seus envios.",
-      "Na administração, use Feedbacks dos alunos. Filtre por tipo ou situação, abra um cartão para consultar o relato e o print, e salve Novo, Em análise, Planejado ou Feito. Administradores com um autenticador ativo confirmam o segundo fator no login.",
     ],
   },
   {
@@ -137,10 +135,32 @@ export const articles = [
       "Abra Guia desta tela no cabeçalho, também no celular. O elemento de cada passo fica iluminado e o restante da tela escurece. Use Pausar para fechar e voltar ao botão.",
       "Alterne o tema no rodapé do menu ou escolha Claro ou Escuro em Aparência e salve. A preferência fica vinculada à sua conta.",
       "Em Segurança, solicite troca de email ou senha. A mudança de email exige confirmação. Você pode ativar a verificação em duas etapas quando quiser. Recomendamos ativá-la em contas administrativas.",
-      "Assinatura mostra o plano e a validade confirmados. No checkout, Pix é à vista; o cartão permite escolher de 1 a 12 parcelas, com valores e condições finais no ambiente seguro do provedor. Sem provedor configurado, o checkout informa a indisponibilidade e nenhuma cobrança é realizada.",
+      "Em Assinatura, confira o plano atual e a validade, ou use Assinar em um dos planos disponíveis. No checkout, Pix é à vista; o cartão permite escolher de 1 a 12 parcelas, com valores e condições finais no ambiente seguro do provedor. Sem provedor configurado, o checkout informa a indisponibilidade e nenhuma cobrança é realizada.",
       "Quando a instalação usa a verificação de segurança, conclua o desafio antes de continuar para o pagamento. Se ele não carregar, recarregue a página. Várias tentativas seguidas em um minuto são recusadas; aguarde e tente de novo.",
-      "Se você comprou como visitante, acompanhe o pedido no mesmo navegador por até duas horas a partir do início do pagamento. Se o recibo expirar ou você mudar de navegador, entre com a conta vinculada à compra ou siga as instruções recebidas por email.",
+      "Se você comprou como visitante, acompanhe o pedido no mesmo navegador por até duas horas a partir do início do pagamento. Se o recibo expirar ou você mudar de navegador, use Entrar na página do pedido para voltar à mesma consulta depois do login. Use a conta vinculada à compra ou siga as instruções recebidas por email.",
       "Em Privacidade, use Exportar meus dados ou Solicitar exclusão. A política de privacidade fica no link abaixo dessas ações. O pedido aguarda análise de retenção legal; não significa exclusão imediata.",
+    ],
+  },
+  {
+    slug: "administracao-podcasts",
+    title: "Publique podcasts e masterclasses",
+    steps: [
+      "Na administração, abra Podcasts e escolha Novo episódio. Cole a URL do vídeo do YouTube e preencha os metadados. A miniatura é derivada do vídeo. Para trocar o vídeo de um episódio já salvo, cadastre outro.",
+      "Cadastre um capítulo por linha, em ordem crescente, com o horário e o título. Escolha Publicado para exibir no acervo ou Rascunho para ocultar. A opção de destaque substitui o destaque atual ao salvar.",
+    ],
+  },
+  {
+    slug: "administracao-encontros",
+    title: "Publique encontros e confira presenças",
+    steps: [
+      "Na administração, cadastre a data e os links, escolha quem pode acessar, publique o evento e use Ver presenças para consultar as confirmações.",
+    ],
+  },
+  {
+    slug: "administracao-feedback",
+    title: "Faça a triagem dos feedbacks",
+    steps: [
+      "Na administração, use Feedbacks dos alunos. Filtre por tipo ou situação, abra um cartão para consultar o relato e o print, e salve Novo, Em análise, Planejado ou Feito. Administradores com um autenticador ativo confirmam o segundo fator no login.",
     ],
   },
   {
@@ -175,113 +195,135 @@ export const articles = [
   },
 ];
 // Artigo de um módulo desligado sai da lista, como o próprio módulo.
-const articleModule = (slug: string) => moduleOfPath("/app/" + ({ encontros: "encontros-ao-vivo", feedback: "feedbacks" }[slug] ?? slug));
+const articleModule = (slug: string) => moduleOfPath("/app/" + ({
+  encontros: "encontros-ao-vivo", feedback: "feedbacks", "administracao-podcasts": "podcasts",
+  "administracao-encontros": "encontros-ao-vivo", "administracao-feedback": "feedbacks",
+}[slug] ?? slug));
+const teamArticle = (slug: string) => slug.startsWith("administracao");
+const searchable = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR");
 
-export function Help() {
-  const { artigo } = useParams(),
-    [params, setParams] = useSearchParams(),
-    { session } = useAuth(),
-    profile = useBootstrap().data?.profile,
-    modules = readModules(useRpc<{ modules?: unknown }>("app_public_context").data?.modules),
-    staff = !!profile && profile.role !== "member",
-    visible = articles.filter((a) => {
-      const key = articleModule(a.slug);
-      return !key || modules[key];
-    }),
-    q = params.get("q") ?? "",
-    article = visible.find((a) => a.slug === artigo);
-  if (!modules.help && !staff) {
-    return (
-      <PublicFrame>
-        <div className="reading">
-          <ModuleUnavailable home={session ? "/app/cursos" : "/entrar"} />
-        </div>
-      </PublicFrame>
-    );
+function HelpVote({ slug }: { slug: string }) {
+  const [pending, setPending] = useState(false);
+  const [voted, setVoted] = useState(false);
+  const confirmation = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (voted) confirmation.current?.focus();
+  }, [voted]);
+
+  async function rate(p_rating: boolean) {
+    setPending(true);
+    try {
+      await rpc("app_help_feedback", { p_page: "/ajuda/" + slug, p_action: "rate", p_rating });
+      setVoted(true);
+    } finally {
+      setPending(false);
+    }
   }
+
   return (
-    <PublicFrame>
-      <div className="reading">
-        {!modules.help && (
-          <Notice>A Central de ajuda está desativada para os alunos. A equipe continua vendo os artigos.</Notice>
-        )}
-        {artigo ? (
-          <>
-            <Back to="/ajuda" label="Central de ajuda" />
-            <Heading title={article?.title ?? "Artigo não encontrado"} />
-            {article ? (
-              <>
-                <ol className="help-steps">
-                  {article.steps.map((step) => (
-                    <li key={step}>{step}</li>
-                  ))}
-                </ol>
-                {session && (
-                  <section className="help-feedback" aria-labelledby="help-feedback-title">
-                    <h2 id="help-feedback-title">Este artigo ajudou?</h2>
-                    <div className="actions">
-                      <Action
-                        run={() =>
-                          rpc("app_help_feedback", {
-                            p_page: "/ajuda/" + article.slug,
-                            p_action: "rate",
-                            p_rating: true,
-                          })
-                        }
-                      >
-                        Sim
-                      </Action>
-                      <Action
-                        run={() =>
-                          rpc("app_help_feedback", {
-                            p_page: "/ajuda/" + article.slug,
-                            p_action: "rate",
-                            p_rating: false,
-                          })
-                        }
-                      >
-                        Não
-                      </Action>
-                    </div>
-                  </section>
-                )}
-                {pathOpen(modules, "/app/suporte") && (
-                  <section className="help-support" aria-labelledby="help-support-title">
-                    <h2 id="help-support-title">Ainda precisa de ajuda?</h2>
-                    <p>Abra uma solicitação para conversar com a equipe.</p>
-                    <Link className="button" to="/app/suporte/novo">
-                      Preciso de suporte
-                    </Link>
-                  </section>
-                )}
-              </>
-            ) : (
-              <Link className="text-action" to="/ajuda">Ver todos os artigos</Link>
-            )}
-          </>
-        ) : (
-          <>
-            <Heading title="Como podemos ajudar?">
-              Passos para usar sua área de membros.
-            </Heading>
-            <Search initial={q} onSearch={(q) => setParams({ q })} />
-            <div className="help-list">
-              {visible
-                .filter((a) =>
-                  (a.title + " " + a.steps.join(" "))
-                    .toLocaleLowerCase("pt-BR")
-                    .includes(q.toLocaleLowerCase("pt-BR")),
-                )
-                .map((article) => (
-                  <Link key={article.slug} to={"/ajuda/" + article.slug}>
-                    {article.title}
-                  </Link>
-                ))}
-            </div>
-            <Link className="text-action" to="/app/cursos">Voltar à área de membros</Link>
-          </>
-        )}
-      </div>
-    </PublicFrame>
+    <section className="help-feedback" aria-labelledby="help-feedback-title">
+      <h2 id="help-feedback-title">Este artigo ajudou?</h2>
+      {voted ? <p role="status" tabIndex={-1} ref={confirmation}>Obrigado pelo retorno.</p> : (
+        <div className="actions">
+          <Action disabled={pending} run={() => rate(true)}>Sim</Action>
+          <Action disabled={pending} run={() => rate(false)}>Não</Action>
+        </div>
+      )}
+    </section>
   );
+}
+
+export function Help({ member = false }: { member?: boolean }) {
+  const { artigo } = useParams();
+  const [params, setParams] = useSearchParams();
+  const { session, loading } = useAuth();
+  const profile = useBootstrap().data;
+  const context = useRpc<{ modules?: unknown }>("app_public_context", {}, !member);
+  const base = member ? "/app/ajuda" : "/ajuda";
+  const modules = readModules(member ? profile?.settings?.modules : context.data?.modules);
+  const staff = member && !!profile && profile.profile.role !== "member";
+  const q = params.get("q") ?? "";
+  const visible = articles.filter(({ slug }) => {
+    const key = articleModule(slug);
+    return (staff || !teamArticle(slug)) && (!key || modules[key]);
+  });
+  const article = visible.find(({ slug }) => slug === artigo);
+  const terms = searchable(q).trim().split(/\s+/);
+  const results = visible.filter(({ title, steps }) => {
+    const text = searchable(title + " " + steps.join(" "));
+    return terms.every((term) => text.includes(term));
+  });
+  const related = article ? visible.filter(({ slug }) => slug !== article.slug && teamArticle(slug) === teamArticle(article.slug)).slice(0, 3) : [];
+  const groups = [
+    { title: "Para alunos", items: results.filter(({ slug }) => !teamArticle(slug)) },
+    { title: "Para a equipe", items: results.filter(({ slug }) => teamArticle(slug)) },
+  ];
+
+  if (!member && loading) return <PublicFrame><Loading /></PublicFrame>;
+  if (!member && session)
+    return <Navigate replace to={"/app/ajuda" + (artigo ? "/" + encodeURIComponent(artigo) : "") + (params.size ? "?" + params : "")} />;
+
+  const articleList = (items: typeof articles) => (
+    <ul className="help-list">
+      {items.map(({ slug, title }) => (
+        <li key={slug}><Link to={base + "/" + slug}>{title}<ChevronRight size={18} aria-hidden="true" /></Link></li>
+      ))}
+    </ul>
+  );
+  const content = (
+    <div className="reading" data-tour={member ? "help": undefined}>
+      {!modules.help && !staff ? <ModuleUnavailable home={member ? "/app/cursos" : "/entrar"} /> : (
+        <>
+          {(member || artigo) && (
+            <nav className="help-back" aria-label="Navegação da ajuda">
+              {member && <Back to="/app/cursos" label="Voltar à área de membros" />}
+              {artigo && <Back to={base} label="Central de ajuda" />}
+            </nav>
+          )}
+          {!modules.help && <Notice>A Central de ajuda está desativada para os alunos. A equipe continua vendo os artigos.</Notice>}
+          {artigo ? (
+            <>
+              <Heading title={article?.title ?? "Artigo não encontrado"} />
+              {article && (
+                <>
+                  <ol className="help-steps">{article.steps.map((step) => <li key={step}>{step}</li>)}</ol>
+                  {member && <HelpVote key={article.slug} slug={article.slug} />}
+                  {related.length > 0 && (
+                    <section className="help-support">
+                      <h2>Artigos relacionados</h2>
+                      {articleList(related)}
+                    </section>
+                  )}
+                  {modules.support && (
+                    <section className="help-support">
+                      <h2>Ainda precisa de ajuda?</h2>
+                      <p>Abra uma solicitação para conversar com a equipe.</p>
+                      <Link className="button" to="/app/suporte/novo">Preciso de suporte</Link>
+                    </section>
+                  )}
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <Heading title="Como podemos ajudar?">Passos para usar sua área de membros.</Heading>
+              <Search initial={q} onSearch={(query) => setParams(query ? { q: query } : {})} />
+              {results.length ? groups.filter(({ items }) => items.length).map(({ title, items }) => (
+                <section className="help-group" key={title}>
+                  <h2>{title}</h2>
+                  {articleList(items)}
+                </section>
+              )) : (
+                <Empty>
+                  <p>Nenhum artigo encontrado.</p>
+                  {modules.support && <Link className="text-action" to="/app/suporte">Abrir suporte</Link>}
+                </Empty>
+              )}
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+  return member ? content : <PublicFrame><QueryState query={context}>{content}</QueryState></PublicFrame>;
 }

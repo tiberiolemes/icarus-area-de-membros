@@ -94,7 +94,7 @@ afterEach(() => { cleanup(); cache.clear(); vi.unstubAllGlobals(); vi.restoreAll
 it("mantém o link antigo na primeira seção e navega à aula exata pelo currículo e entre aulas", async () => {
   const requests = mount({ collision: true });
   await screen.findByText("Leitura autorizada de teste");
-  const aside = screen.getByRole("complementary", { name: "Conteúdo do Curso" });
+  const aside = screen.getByRole("complementary", { name: "Conteúdo do curso" });
   expect(within(aside).getByRole("link", { current: "page" })).toHaveAttribute("href", lessonRoot + "/~" + textLesson.id);
   fireEvent.change(within(aside).getByRole("searchbox"), { target: { value: "Próximo" } });
   const following = within(aside).getByRole("link", { name: /Próximo tópico/ });
@@ -130,18 +130,18 @@ it("preserva a descrição, foco das abas e lista filtrável ao alternar o modo 
   mount();
   await screen.findByText("Leitura autorizada de teste");
   expect(screen.getByRole("navigation", { name: "Navegação entre aulas" })).toContainElement(screen.getByRole("link", { name: "Próxima aula" }));
-  const description = screen.getByRole("tab", { name: "Descrição da Aula" });
+  const description = screen.getByRole("tab", { name: "Descrição da aula" });
   description.focus();
   fireEvent.keyDown(description, { key: "ArrowRight" });
-  expect(screen.getByRole("tab", { name: "Materiais & Downloads 1" })).toHaveFocus();
+  expect(screen.getByRole("tab", { name: "Materiais e downloads 1" })).toHaveFocus();
   expect(screen.getByText("Material de teste")).toBeVisible();
-  fireEvent.keyDown(screen.getByRole("tab", { name: "Materiais & Downloads 1" }), { key: "End" });
-  expect(screen.getByRole("tab", { name: "Anotações Pessoais" })).toHaveFocus();
+  fireEvent.keyDown(screen.getByRole("tab", { name: "Materiais e downloads 1" }), { key: "End" });
+  expect(screen.getByRole("tab", { name: "Anotações pessoais" })).toHaveFocus();
   fireEvent.click(screen.getByRole("button", { name: "Fazer anotação" }));
   await waitFor(() => expect(screen.getByRole("textbox", { name: "Suas anotações pessoais" })).toHaveFocus());
-  fireEvent.keyDown(screen.getByRole("tab", { name: "Anotações Pessoais" }), { key: "Home" });
+  fireEvent.keyDown(screen.getByRole("tab", { name: "Anotações pessoais" }), { key: "Home" });
   expect(description).toHaveFocus();
-  const sidebar = screen.getByRole("complementary", { name: "Conteúdo do Curso" });
+  const sidebar = screen.getByRole("complementary", { name: "Conteúdo do curso" });
   expect(within(sidebar).getByRole("link", { current: "page" })).toHaveTextContent(textLesson.title);
   const input = within(sidebar).getByRole("searchbox");
   fireEvent.change(input, { target: { value: "Próximo" } });

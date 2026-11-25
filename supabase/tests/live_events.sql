@@ -78,10 +78,10 @@ select pg_temp.denied($q$select pg_temp.save(20,0,'published',now())$q$,
 
 select pg_temp.login(3);
 select pg_temp.assert(public.app_live_events()->'items' = jsonb_build_array(
- jsonb_build_object('id',pg_temp.id(20),'starts_at',now()+interval '1 day','can_access',false)),
- 'DTO bloqueado só informa agenda e acesso');
+ jsonb_build_object('id',pg_temp.id(20),'starts_at',now()+interval '1 day','can_access',false,'title','Título privado','guest','Convidado privado')),
+ 'DTO bloqueado informa somente agenda, acesso, título e convidado');
 select pg_temp.assert(public.app_live_events(true)->'items' = jsonb_build_array(
- jsonb_build_object('id',pg_temp.id(21),'starts_at',now()-interval '1 day','can_access',false)),
+ jsonb_build_object('id',pg_temp.id(21),'starts_at',now()-interval '1 day','can_access',false,'title','Título privado','guest','Convidado privado')),
  'DTO de gravação bloqueada não expõe conteúdo');
 select pg_temp.denied('select public.app_live_event_link(pg_temp.id(20),false)','link direto bloqueado','Link indisponível para este encontro.');
 select pg_temp.denied('select public.app_live_event_link(pg_temp.id(21),true)','gravação direta bloqueada','Link indisponível para este encontro.');

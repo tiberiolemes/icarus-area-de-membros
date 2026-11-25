@@ -64,7 +64,8 @@ function courseDetail(course: Row, profile: Profile) {
     sections: state.records.sections.filter((section) => section.module_id === module.id).map((section) => ({
       ...section,
       lessons: state.records.lessons.filter((lesson) => lesson.section_id === section.id && lesson.status === "published")
-        .map((lesson) => ({ ...lesson, can_access: canAccess || !!lesson.is_preview, completed: !!progress[lesson.id]?.completed })),
+        .map((lesson) => ({ ...lesson, can_access: canAccess || !!lesson.is_preview, completed: !!progress[lesson.id]?.completed,
+          position_seconds: progress[lesson.id]?.position_seconds ?? 0 })),
     })),
   }));
   const lessons = modules.flatMap((module) => module.sections.flatMap((section) => section.lessons));
@@ -233,7 +234,15 @@ function call(name: string, a: Args, profile: Profile) {
       state.checklists[lessonKey] = [...new Set([...(state.checklists[lessonKey] ?? []).filter((id) => id !== item), ...(checked ? [item] : [])])];
       return { checked };
     }
-    case "app_materials": return { ...page(state.records.materials.filter((row) => (!a.p_folder_id || row.folder_id === a.p_folder_id) && matches(query, row.name))), folders: state.records.material_folders };
+    case "app_materials": {
+      const folder = state.records.material_folders.find((row) => row.id === a.p_folder_id);
+      if (a.p_folder_id && !folder) return missing();
+      return {
+        ...page(state.records.materials.filter((row) => (row.folder_id ?? null) === (a.p_folder_id ?? null) && matches(query, row.name))),
+        folders: state.records.material_folders.filter((row) => (row.parent_id ?? null) === (a.p_folder_id ?? null)),
+        current_folder: folder ?? null,
+      };
+    }
     case "app_certificates": return { items: earned(profile), courses: publishedCourses().map((row) => courseDetail(row, profile).course).filter((course) => course.certificate_enabled) };
     case "app_issue_certificate": return { certificate_code: earned(profile).find((item) => item.id === a.p_course_id)?.code, reason: "Conclua todas as aulas obrigatórias." };
     case "app_member_search": return page(publishedCourses().flatMap((record) => {
@@ -295,14 +304,14 @@ function call(name: string, a: Args, profile: Profile) {
     case "app_ticket": return state.tickets.find((ticket) => ticket.id === id) ?? missing();
     case "app_create_ticket": {
       const ticket: Ticket = { id, subject: str(a.p_subject), priority: str(a.p_priority), status: "open", created_at: new Date().toISOString(),
-        messages: [{ id: crypto.randomUUID(), author_name: profile.full_name, body: str(a.p_body), created_at: new Date().toISOString(), attachments: [] }] };
+        messages: [{ id: crypto.randomUUID(), author_id: profile.id, author_name: profile.full_name, body: str(a.p_body), created_at: new Date().toISOString(), attachments: [] }] };
       state.tickets.unshift(ticket);
       return { id };
     }
     case "app_ticket_reply": {
       const ticket = state.tickets.find((item) => item.id === id);
       if (!ticket) return missing();
-      if (a.p_body) ticket.messages.push({ id: crypto.randomUUID(), author_name: profile.full_name, body: str(a.p_body), created_at: new Date().toISOString(), attachments: [] });
+      if (a.p_body) ticket.messages.push({ id: crypto.randomUUID(), author_id: profile.id, author_name: profile.full_name, body: str(a.p_body), created_at: new Date().toISOString(), attachments: [] });
       if (a.p_status) ticket.status = str(a.p_status);
       return { id, status: ticket.status };
     }
@@ -415,9 +424,16 @@ function call(name: string, a: Args, profile: Profile) {
       if (!state.alertsRead.includes(profile.id)) state.alertsRead.push(profile.id);
       return { unread_count: 0 };
     case "app_notification_preferences": return { items: [] };
-    case "app_live_events":
-      return { items: a.p_recordings ? [] : state.records.events.filter((item) => item.status === "published")
-        .map((item) => ({ ...item, can_access: true, can_rsvp: true, confirmed: state.eventRsvps.includes(`${profile.id}:${item.id}`) })), has_more: false };
+    case "app_live_events": {
+      const items = a.p_recordings ? [] : state.records.events.filter((item) => item.status === "published")
+        .map(({ id, title, guest, starts_at, access_mode, plan_ids, description, duration_minutes }) => {
+          const preview = { id, title, guest, starts_at };
+          const allowed = admin || access_mode !== "plans" || (Array.isArray(plan_ids) && plan_ids.includes(profile.current_plan_id));
+          return allowed ? { ...preview, can_access: true, description, duration_minutes, can_rsvp: true,
+            confirmed: state.eventRsvps.includes(`${profile.id}:${id}`) } : { ...preview, can_access: false };
+        });
+      return { items, has_more: false };
+    }
     case "app_live_event_rsvp": {
       const signup = `${profile.id}:${id}`;
       state.eventRsvps = state.eventRsvps.filter((actor) => actor !== signup);

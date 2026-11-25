@@ -197,19 +197,19 @@ function PlayerCurriculum({ course, modules, current, hidden, playing, filterRef
       <div className="stitch-curriculum-head">
         <div className="stitch-curriculum-heading">
           <div>
-            <h2 id="lesson-curriculum-title">Conteúdo do Curso</h2>
+            <h2 id="lesson-curriculum-title">Conteúdo do curso</h2>
             <small className="stitch-lesson-wide">
               {course.total_lessons} {course.total_lessons === 1 ? "aula" : "aulas"}
               {" • "}{modules.length} {modules.length === 1 ? "módulo" : "módulos"}
             </small>
-            <span className="stitch-lesson-mobile stitch-lesson-light-label stitch-curriculum-caption">
+            <span className="stitch-lesson-mobile stitch-curriculum-caption">
               {percent}% Concluído • {course.total_lessons} {course.total_lessons === 1 ? "aula" : "aulas"}
               {" • "}{modules.length} {modules.length === 1 ? "módulo" : "módulos"}
             </span>
           </div>
           <strong className="stitch-course-progress" aria-label={`${percent}% do curso concluído`}>
             <span>
-              {percent}% <span className="stitch-light-only">Concluído</span><span className="stitch-dark-only stitch-lesson-wide-label">Total</span><span className="stitch-lesson-mobile stitch-lesson-dark-label">concluído</span>
+              {percent}% concluído
             </span>
           </strong>
         </div>
@@ -238,10 +238,6 @@ function PlayerCurriculum({ course, modules, current, hidden, playing, filterRef
           const active = activeLesson > 0;
           const complete = lessons.length > 0 && done === lessons.length;
           const bonus = module.sections.some((section) => section.is_bonus);
-          const duration = lessons.reduce((total, lesson) => total + lesson.duration_seconds, 0);
-          const moduleDuration = duration >= 3600
-            ? `${Math.floor(duration / 3600)}h ${Math.floor(duration % 3600 / 60)}m`
-            : `${Math.floor(duration / 60)}m`;
           const modulePath = `/app/cursos/${course.slug}/${module.slug}`;
           const rows = (items: Lesson[]) => (
             <ol className="stitch-lesson-list">
@@ -258,10 +254,10 @@ function PlayerCurriculum({ course, modules, current, hidden, playing, filterRef
                         ? <CheckCircle2 className="stitch-lesson-watched" size={20} aria-label="Concluída" />
                         : <Circle className="stitch-lesson-unwatched" size={20} aria-hidden="true" />}
                       <span className="stitch-lesson-wide">
-                        <strong title={lesson.title}>{number}. {rowTitle}</strong>
+                        <strong title={lesson.title}>{index + 1}.{number} {rowTitle}</strong>
                         <small>
                           {mediaTime(lesson.duration_seconds)} min
-                          {status && <span className={!selected ? "stitch-light-only" : undefined}>{` • ${status}`}</span>}
+                          {status && <span>{` • ${status}`}</span>}
                         </small>
                       </span>
                       <span className="stitch-lesson-mobile">
@@ -294,25 +290,18 @@ function PlayerCurriculum({ course, modules, current, hidden, playing, filterRef
                   <small className="stitch-lesson-wide">
                     {active && !complete ? <>
                       Módulo em andamento
-                      <span className="stitch-light-only">({Math.floor(done / lessons.length * 100)}%)</span>
+                      <span>({Math.floor(done / lessons.length * 100)}%)</span>
                     </> : `Módulo ${index + 1}`}
-                    {complete && <span className="stitch-light-only">· Concluído</span>}
+                    {complete && <span>· Concluído</span>}
                     {bonus && <span className="stitch-module-bonus">Bônus</span>}
                   </small>
                   <strong className="stitch-lesson-wide" title={module.title}>{module.title}</strong>
                   <span className="stitch-lesson-mobile">
-                    <strong className="stitch-lesson-light-label" title={module.title}>Módulo {index + 1}: {module.title}</strong>
-                    <strong className="stitch-lesson-dark-label" title={module.title}>Módulo {String(index + 1).padStart(2, "0")}: {module.title}</strong>
+                    <strong title={module.title}>Módulo {index + 1}: {module.title}</strong>
                     <small>
-                      <span className="stitch-lesson-light-label">
-                        {complete ? `${done} de ${lessons.length} aulas concluídas`
-                          : active ? `${done} de ${lessons.length} aulas • ${Math.floor(done * 100 / lessons.length)}%`
-                            : `${lessons.length} ${lessons.length === 1 ? "aula" : "aulas"}`}
-                      </span>
-                      <span className="stitch-lesson-dark-label">
-                        {active && !complete ? `Aula ${activeLesson} de ${lessons.length} • Em andamento`
-                          : `${done}/${lessons.length} aulas • ${moduleDuration}`}
-                      </span>
+                      {complete ? `${done} de ${lessons.length} aulas concluídas`
+                        : active ? `${done} de ${lessons.length} aulas • ${Math.floor(done * 100 / lessons.length)}%`
+                          : `${lessons.length} ${lessons.length === 1 ? "aula" : "aulas"}`}
                     </small>
                   </span>
                 </span>
@@ -526,19 +515,19 @@ export function LessonPage() {
     setStartedLesson(null);
     setPlaybackChapter(undefined);
   }, [found?.id]);
+  const storePosition = useCallback(async (id: string, seconds: number) => {
+    await rpc("app_progress", { p_lesson_id: id, p_position_seconds: seconds, p_complete: false });
+    await queryClient.invalidateQueries({ queryKey: ["app_course", { p_slug: curso }], refetchType: "none" });
+  }, [curso, queryClient]);
   useEffect(() => {
     if (!found) return;
     const persist = () => {
       if (data?.can_access && position.current > 0)
-        void rpc("app_progress", {
-          p_lesson_id: found.id,
-          p_position_seconds: position.current,
-          p_complete: false,
-        }).catch((error) => setProgressError(errorMessage(error)));
+        void storePosition(found.id, position.current).catch((error) => setProgressError(errorMessage(error)));
     };
     window.addEventListener("pagehide", persist);
     return () => window.removeEventListener("pagehide", persist);
-  }, [found?.id, data?.can_access]);
+  }, [found?.id, data?.can_access, storePosition]);
   const lessonPath = (id: string | null) => {
     if (!id || !course.data) return null;
     for (const m of course.data.modules) {
@@ -586,11 +575,7 @@ export function LessonPage() {
   const playbackPosition = () => notePosition?.() ?? position.current;
 
   const savePosition = (lessonId: string, seconds: number) =>
-    void rpc("app_progress", {
-      p_lesson_id: lessonId,
-      p_position_seconds: seconds,
-      p_complete: false,
-    }).catch((error) => setProgressError(errorMessage(error)));
+    void storePosition(lessonId, seconds).catch((error) => setProgressError(errorMessage(error)));
   const trackPosition = (seconds: number) => {
     if (!found) return;
     position.current = seconds;
@@ -650,13 +635,11 @@ export function LessonPage() {
                           <Link to={`/app/cursos/${curso}`} title={data.course.title}>{data.course.title}</Link>
                           <ChevronRight size={12} aria-hidden="true" />
                           <Link to={`/app/cursos/${curso}/${modulo}`} title={data.module.title}>
-                            Módulo <span className="stitch-light-only">{String(moduleNumber).padStart(2, "0")}</span>
-                            <span className="stitch-dark-only">{moduleNumber}</span>: {data.module.title}
+                            Módulo {moduleNumber}: {data.module.title}
                           </Link>
                         </nav>
                         <p>
-                          <span className="stitch-light-only">Módulo {moduleNumber}: {moduleProgress}% concluído · {moduleDone} de {moduleLessons.length} aulas</span>
-                          <span className="stitch-dark-only">Aula {lessonNumber} de {moduleLessons.length} do módulo ({moduleProgress}% concluído)</span>
+                          Módulo {moduleNumber}: {moduleProgress}% concluído · {moduleDone} de {moduleLessons.length} aulas
                         </p>
                       </div>
                     </div>
@@ -664,10 +647,9 @@ export function LessonPage() {
                       <div className="stitch-lesson-mobile-crumbs">
                         <span>Cursos</span><ChevronRight size={12} aria-hidden="true" />
                         <span title={data.course.title}>{data.course.title}</span><ChevronRight size={12} aria-hidden="true" />
-                        <span>Módulo {String(moduleNumber).padStart(2, "0")}</span>
-                        <span className="stitch-lesson-dark-label">{Math.floor(moduleDone * 100 / moduleLessons.length)}%</span>
+                        <span>Módulo {moduleNumber}</span>
                       </div>
-                      <div className="stitch-lesson-light-label">
+                      <div className="stitch-lesson-mobile-summary">
                         <span>Módulo {moduleNumber}: {Math.floor(moduleDone * 100 / moduleLessons.length)}% concluído • {moduleDone} de {moduleLessons.length} aulas</span>
                         {moduleLessons.length <= 8 && <span className="stitch-lesson-progress-dots" aria-hidden="true">
                           {moduleLessons.map(({ id, completed }) => <i key={id} data-completed={completed} />)}
@@ -688,7 +670,7 @@ export function LessonPage() {
                         <span className="stitch-lesson-wide">Aula anterior</span><span className="stitch-lesson-mobile">Anterior</span>
                       </Link>}
                       {next && <Link className="button primary" to={next} aria-label="Próxima aula">
-                        <span className="stitch-lesson-wide">Próxima aula</span><span className="stitch-lesson-mobile">Próxima Aula</span>
+                        <span className="stitch-lesson-wide">Próxima aula</span><span className="stitch-lesson-mobile">Próxima aula</span>
                         <ArrowRight size={18} aria-hidden="true" />
                       </Link>}
                     </nav>
@@ -766,21 +748,16 @@ export function LessonPage() {
                       <div>
                         <div className="stitch-lesson-facts">
                           <span className="stitch-lesson-number">
-                            <span className="stitch-light-only">Aula {moduleNumber}.{lessonNumber}</span>
-                            <span className="stitch-dark-only stitch-lesson-wide-label">Aula {String(lessonNumber).padStart(2, "0")}</span>
-                            <span className="stitch-lesson-mobile stitch-lesson-dark-label">Aula {moduleNumber}.{lessonNumber}</span>
+                            Aula {moduleNumber}.{lessonNumber}
                           </span>
                           <span>
                             <Clock size={16} aria-hidden="true" />
-                            <span className="stitch-light-only">{Math.floor(data.lesson.duration_seconds / 60)}m {data.lesson.duration_seconds % 60}s</span>
-                            <span className="stitch-dark-only stitch-lesson-wide-label">{mediaTime(data.lesson.duration_seconds)} min</span>
-                            <span className="stitch-lesson-mobile stitch-lesson-dark-label">{Math.floor(data.lesson.duration_seconds / 60)}m {data.lesson.duration_seconds % 60}s</span>
+                            {Math.floor(data.lesson.duration_seconds / 60)}m {data.lesson.duration_seconds % 60}s
                           </span>
                           {!hasMedia && <span><FileText size={15} aria-hidden="true" />Leitura</span>}
                           {currentVideo && hdVideo === currentVideo && (
                             <div className="stitch-lesson-mobile stitch-lesson-hd">
-                              <span className="stitch-lesson-light-label">HD</span>
-                              <span className="stitch-lesson-dark-label">Disponível em HD</span>
+                              HD
                             </div>
                           )}
                         </div>
@@ -791,10 +768,6 @@ export function LessonPage() {
                       </div>
                       {data.can_access && (
                         <div className="stitch-lesson-actions" key={found.id}>
-                          {lessonId && <LessonEngagementActions lessonId={lessonId} onOpenNotes={() => {
-                            setTab("notes");
-                            setNotesFocus((request) => request + 1);
-                          }} />}
                           <LessonProgressAction
                             complete={data.completed}
                             run={async () => {
@@ -829,16 +802,15 @@ export function LessonPage() {
                             }}
                           >
                             <CheckCircle2 size={20} aria-hidden="true" />
-                            <span className="stitch-lesson-wide-label">Marcar como concluída</span>
-                            <span className="stitch-lesson-mobile stitch-lesson-light-label">Concluir Aula</span>
+                            <span>Marcar como concluída</span>
                           </LessonProgressAction>
+                          {lessonId && <LessonEngagementActions lessonId={lessonId} onOpenNotes={() => {
+                            setTab("notes");
+                            setNotesFocus((request) => request + 1);
+                          }} />}
                           <LessonProgressAction resume
                             run={async () => {
-                              await rpc("app_progress", {
-                                p_lesson_id: found.id,
-                                p_position_seconds: playbackPosition(),
-                                p_complete: false,
-                              });
+                              await storePosition(found.id, playbackPosition());
                               await query.refetch();
                               setProgressError("");
                               setProgressFeedback(
@@ -878,22 +850,18 @@ export function LessonPage() {
                               event.currentTarget.querySelector<HTMLButtonElement>(`#${nextTab}-tab`)?.focus();
                             }}
                           >
-                            <button type="button" id="description-tab" role="tab" aria-label="Descrição da Aula" aria-selected={tab === "description"}
+                            <button type="button" id="description-tab" role="tab" aria-label="Descrição da aula" aria-selected={tab === "description"}
                               aria-controls="lesson-description" tabIndex={tab === "description" ? 0 : -1}
                               onClick={() => setTab("description")}>
                               <TextAlignStart size={18} aria-hidden="true" />
-                              <span className="stitch-light-only">Descrição da Aula</span>
-                              <span className="stitch-dark-only stitch-lesson-wide-label">Descrição</span>
-                              <span className="stitch-lesson-mobile stitch-lesson-dark-label">Descrição da Aula</span>
+                              <span>Descrição</span>
                             </button>
                             <button type="button" id="materials-tab" role="tab"
-                              aria-label={`Materiais & Downloads ${data.materials.length}`} aria-selected={tab === "materials"}
+                              aria-label={`Materiais e downloads ${data.materials.length}`} aria-selected={tab === "materials"}
                               aria-controls="lesson-materials" tabIndex={tab === "materials" ? 0 : -1}
                               onClick={() => setTab("materials")}>
                               <Folder size={18} aria-hidden="true" />
-                              <span className="stitch-light-only stitch-lesson-wide-label">Materiais &amp; Downloads</span>
-                              <span className="stitch-lesson-mobile stitch-lesson-light-label">Materiais</span>
-                              <span className="stitch-dark-only">Materiais</span>
+                              <span>Materiais</span>
                               <span className="stitch-lesson-tab-count">{data.materials.length}</span>
                             </button>
                             <LessonEngagementTab tab="comments" active={tab === "comments"} id="comments-tab"

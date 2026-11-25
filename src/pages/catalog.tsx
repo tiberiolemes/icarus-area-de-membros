@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowUpRight, CirclePlay, Clock, Layers2, Lock, Play } from "lucide-react";
+import { CirclePlay, Clock, Layers2, Lock, Play } from "lucide-react";
 import { rpc } from "../api";
 import type { Course, Module, Page } from "../api";
 import { courseLessonPath } from "../course-paths";
@@ -34,13 +34,21 @@ function CourseCover({ course, hasCover, featured = false }: { course: Pick<Cour
     <div className={`catalog-cover-type${featured ? " catalog-cover-featured" : ""}`} aria-hidden="true">
       <span className="catalog-cover-brand">Icarus</span>
       <span className="catalog-cover-title">{course.title}</span>
-      <span className="catalog-cover-foot">{course.total_lessons} aulas <ArrowUpRight size={20} /></span>
+      <span className="catalog-cover-foot">{lessonCount(course.total_lessons)}</span>
     </div>
   );
 }
 
 export function CourseFeature({ course, modules }: {course: Course; modules: Module[]}) {
   const titleId = useId();
+  const lessons = modules.flatMap((module) => module.sections.flatMap((section) =>
+    section.lessons.filter((lesson) => lesson.can_access).map((lesson) => ({ lesson, moduleSlug: module.slug })),
+  ));
+  const unfinished = lessons.filter(({ lesson }) => !lesson.completed);
+  const resumed = unfinished.filter(({ lesson }) => (lesson.position_seconds ?? 0) > 0)
+    .sort((a, b) => (b.lesson.last_activity_at ?? "").localeCompare(a.lesson.last_activity_at ?? ""))[0];
+  const target = resumed ?? unfinished[0] ?? lessons[0];
+  const started = course.completed_lessons > 0 || lessons.some(({ lesson }) => (lesson.position_seconds ?? 0) > 0);
   return (
     <section className="catalog-feature" aria-labelledby={titleId}>
       <svg className="catalog-feature-motif" width="620" height="620" viewBox="0 0 400 400" fill="none" aria-hidden="true">
@@ -60,6 +68,11 @@ export function CourseFeature({ course, modules }: {course: Course; modules: Mod
           <span>Progresso da trilha</span>
           <Progress value={curriculumPercent(course)} done={course.completed_lessons} total={course.total_lessons} />
         </div>
+        {course.can_access && target && (
+          <Link className="button primary" to={courseLessonPath(course.slug, target.moduleSlug, target.lesson.id)}>
+            <Play size={18} aria-hidden="true" /> {started ? "Continuar" : "Começar"}
+          </Link>
+        )}
       </div>
       <div className="catalog-feature-visual"><CourseCover course={course} hasCover={Boolean(course.cover_url)} featured /></div>
     </section>

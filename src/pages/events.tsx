@@ -6,7 +6,7 @@ import { Action, Empty, Heading, NavigationTabs, QueryState } from "../ui";
 import { useModules } from "../modules";
 import "./events.css";
 
-type EventPreview = { id: string; starts_at: string };
+type EventPreview = { id: string; starts_at: string; title?: string; guest?: string };
 type AvailableEvent = EventPreview & {
   can_access: true;
   title: string;
@@ -81,7 +81,7 @@ function EventCard({ event, recording, featured, refresh }: {
   refresh: () => Promise<unknown>;
 }) {
   return (
-    <article className={`event-card${featured ? " event-feature" : ""}`}>
+    <article className={`event-card${featured ? " event-feature" : ""}${event.can_access ? "" : " event-restricted"}`}>
       {recording && <div className="event-cover" aria-hidden="true">
         {event.can_access ? <Play size={32} /> : <LockKeyhole size={28} />}
         {event.can_access && <span><Clock size={14} /> {event.duration_minutes} min</span>}
@@ -91,14 +91,13 @@ function EventCard({ event, recording, featured, refresh }: {
           {featured && <span className="event-badge">{event.can_access && !event.can_rsvp ? "Em andamento" : "Próximo encontro"}</span>}
           <time dateTime={event.starts_at}>{date(event.starts_at)} · horário de Brasília</time>
         </div>
-        <h3>{event.can_access ? event.title : recording ? "Gravação restrita" : "Encontro restrito"}</h3>
-        {event.can_access ? <>
-          {event.description && <p className="event-description">{event.description}</p>}
-          <div className="event-facts">
-            <span><UserRound size={18} aria-hidden="true" /> {event.guest}</span>
-            {!recording && <span><Clock size={18} aria-hidden="true" /> {event.duration_minutes} min</span>}
-          </div>
-        </> : <p>Disponível para membros com um plano que inclui este conteúdo.</p>}
+        <h3>{event.title || (recording ? "Gravação restrita" : "Encontro restrito")}</h3>
+        {event.can_access && event.description && <p className="event-description">{event.description}</p>}
+        {(event.guest || (event.can_access && !recording)) && <div className="event-facts">
+          {event.guest && <span><UserRound size={18} aria-hidden="true" /> {event.guest}</span>}
+          {event.can_access && !recording && <span><Clock size={18} aria-hidden="true" /> {event.duration_minutes} min</span>}
+        </div>}
+        {!event.can_access && <p>Disponível para membros com um plano que inclui este conteúdo.</p>}
       </div>
       {!event.can_access ? (
         <div className="event-actions">
@@ -196,7 +195,7 @@ export function Events() {
 
   return (
     <div className="live-events live-events-page" data-tour="live-events">
-      <Heading title="Encontros ao Vivo & Masterminds">
+      <Heading title="Encontros ao vivo e masterminds">
         Acompanhe os encontros mensais com convidados e acesse as gravações disponíveis no seu plano.
       </Heading>
       <NavigationTabs label="Nesta página" selected={selected} items={[
@@ -211,7 +210,7 @@ export function Events() {
           <p>Consulte sua assinatura para conferir o plano e a validade do acesso.</p>
         </div>
         <div className="event-actions">
-          <Link className="button primary" to="/app/configuracoes?aba=assinatura">Consultar assinatura</Link>
+          <Link className="button primary" to="/app/configuracoes?aba=assinatura">Minha assinatura</Link>
           {modules.help && <Link className="button" to="/ajuda/encontros">Ajuda sobre encontros</Link>}
         </div>
       </section>

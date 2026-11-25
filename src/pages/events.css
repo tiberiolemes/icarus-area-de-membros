@@ -143,7 +143,6 @@
 }
 
 .live-events-page .event-upcoming .event-feature {
-  min-height: 34rem;
   padding: var(--stitch-space-xl);
   gap: var(--stitch-space-xl);
   grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
@@ -226,7 +225,6 @@
 }
 
 .live-events-page .event-feature .event-facts {
-  margin-block-start: auto;
   padding: var(--stitch-space-md);
   border-radius: var(--stitch-radius-md);
   background: color-mix(in srgb, var(--stitch-surface-control) 50%, var(--event-plate));
@@ -247,6 +245,8 @@
   border-radius: var(--stitch-radius-md);
   background: var(--stitch-surface-control);
 }
+
+.event-upcoming .event-restricted .event-actions { align-self: center; }
 
 .event-actions :is(button, .button) {
   width: 100%;

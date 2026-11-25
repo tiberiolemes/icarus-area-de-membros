@@ -37,7 +37,7 @@ function AccountOverview({ profile }: { profile: Profile }) {
       <section className="student-account-panel">
         <CreditCard size={20} aria-hidden="true" />
         <h2>{profile.plan_name || "Sem plano ativo"}</h2>
-        <p>Validade: {date(profile.access_ends_at)}</p>
+        {profile.access_ends_at && <p>Validade: {date(profile.access_ends_at)}</p>}
         <Link className="text-action" to="?aba=assinatura">
           Consultar assinatura
         </Link>
@@ -369,13 +369,14 @@ export function Settings() {
           )}
           {tab === "assinatura" && (
             <section className="student-account-panel">
-              <h2>{p.plan_name || "Sem plano ativo"}</h2>
-              <p>Validade: {date(p.access_ends_at)}</p>
+              <h2>Plano atual</h2>
+              <p>{p.plan_name || "Sem plano ativo"}</p>
+              {p.access_ends_at && <p>Validade: {date(p.access_ends_at)}</p>}
               <p>
                 Pagamentos, confirmação de acesso e documentos fiscais dependem
                 do provedor configurado.
               </p>
-              <h2>Planos disponíveis</h2>
+              <h2 className="student-account-plans">Planos disponíveis</h2>
               {boot
                 .data!.plans.filter((plan) => plan.active)
                 .map((plan) => (
@@ -390,9 +391,11 @@ export function Settings() {
                         <li key={b}>{b}</li>
                       ))}
                     </ul>
-                    <Link className="button" to={"/checkout?plano=" + plan.id}>
-                      Consultar assinatura
-                    </Link>
+                    {p.current_plan_id === plan.id ? <span className="badge">Seu plano atual</span> : (
+                      <Link className="button primary" to={"/checkout?plano=" + encodeURIComponent(plan.slug)}>
+                        Assinar
+                      </Link>
+                    )}
                   </article>
                 ))}
               {!boot.data!.plans.some((plan) => plan.active) && (

@@ -222,6 +222,7 @@ function App() {
                 >
                   <Route index element={<Navigate to="cursos" replace />} />
                   <Route path="cursos" element={<Catalog />} />
+                  <Route path="ajuda/:artigo?" element={<Help member />} />
                   <Route path="cursos/:curso" element={<CoursePage />} />
                   <Route
                     path="cursos/:curso/:modulo"

@@ -3,7 +3,7 @@
 ![Icarus · Área de membros e cursos online · Código aberto sob licença MIT](docs/assets/icarus-banner-github.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-2.6.0-black)
+![Version](https://img.shields.io/badge/version-2.7.0-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)
@@ -85,6 +85,8 @@ node scripts/test-integrations.mjs --local
 Banco e integrações nativas exigem instalação local e fixtures próprias. Para esta árvore, aplique todas as migrations em ordem e valide o stack nativo antes de liberar o uso. O ensaio de banco isolado e os requisitos por migration estão no [guia de operação](docs/operations.md). O [aceite técnico 0.1.0](docs/acceptance/release-0.1.0.md) e a [revisão visual 0.1.2](docs/audit/06-ux-accessibility.md) registram evidências de seus respectivos recortes.
 
 O [modelo do GitHub Actions](docs/ci/README.md) descreve a automação. A execução da trilha nativa em Actions aguarda um runner com Docker dedicado.
+
+Na 2.7.0, a área do aluno tem navegação consistente, atalho de Materiais no celular, retomada na página do curso e Central de ajuda integrada à sessão. A aba Assinatura destaca o plano atual e o acesso ao pagamento preserva o pedido ao voltar do login. Para atualizar da 2.6.0, aplique `202611250009_student_experience.sql` antes de servir o frontend.
 
 Desde a 2.6.0, o painel segue o padrão de Equipe e controle de acesso. Membros, pedidos e chamados têm filtros e indicadores calculados no servidor. Somente administradores recebem o e-mail do membro no diretório e na ficha. A moderação reúne comentários pendentes numa fila e a auditoria mostra nomes e ações em português. As exportações CSV feitas pela tela de Membros ou Pedidos são registradas na auditoria. Para atualizar da 2.5.1, aplique as migrations `202611250006` a `202611250008` antes de servir o novo frontend. Veja o [roteiro de atualização](docs/operations.md#atualizar-de-versão).
 

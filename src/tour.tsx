@@ -14,6 +14,11 @@ const steps = [
     body: "",
   },
   {
+    target: "help",
+    title: "Consulte a Central de ajuda",
+    body: "Busque por palavras ou escolha um artigo. Você pode dizer se o artigo ajudou e usar Voltar à área de membros para retornar aos cursos.",
+  },
+  {
     target: "member-search",
     title: "Encontre cursos, módulos e aulas",
     body: "Abra a busca pelo ícone do cabeçalho e digite pelo menos dois caracteres. Use Ctrl+K ou ⌘K para focar, as setas para percorrer os resultados, Enter para abrir e Escape para fechar. Buscar no catálogo leva o termo até Cursos.",
@@ -21,7 +26,7 @@ const steps = [
   {
     target: "courses",
     title: "Escolha um curso ou retome sua aula",
-    body: "Abra a aula pelo botão de iniciar ou continuar. Use a busca e os filtros para encontrar outro curso, ou abra a ementa para escolher entre as aulas.",
+    body: "Na página do curso, use Começar ou Continuar para abrir a aula. Use a busca e os filtros para encontrar outro curso, ou abra a ementa para escolher entre as aulas.",
   },
   {
     target: "course-catalog",
@@ -41,12 +46,12 @@ const steps = [
   {
     target: "player",
     title: "Assista e registre sua conclusão",
-    body: "A retomada usa a posição salva. No celular, a lista de aulas vem depois da descrição e a seta no topo volta ao módulo. Em telas maiores, use Conteúdos para abrir ou fechar a lista. Ao finalizar, marque a aula como concluída.",
+    body: "A retomada usa a posição salva. No celular, a lista de aulas vem depois da descrição e a seta acima do conteúdo volta ao módulo. Em telas maiores, use Conteúdos para abrir ou fechar a lista. Ao finalizar, marque a aula como concluída.",
   },
   {
     target: "materials",
     title: "Baixe seus materiais",
-    body: "Escolha uma pasta. O botão Baixar solicita uma URL privada temporária, autorizada para sua conta.",
+    body: "Escolha uma pasta e confira o nome dela no título. O botão Baixar solicita uma URL privada temporária, autorizada para sua conta.",
   },
   {
     target: "podcasts",
@@ -86,7 +91,7 @@ const steps = [
   {
     target: "support",
     title: "Converse com o suporte",
-    body: "Abra um ticket com assunto e mensagem. Acompanhe respostas, arquivos e reabertura dentro da mesma conversa.",
+    body: "Abra um chamado com assunto e mensagem. Acompanhe respostas, arquivos e reabertura dentro da mesma conversa. O selo Equipe identifica as respostas do atendimento.",
   },
   {
     target: "send-feedback",
@@ -202,8 +207,8 @@ function navigationBody(state: Modules) {
   return [
     `O menu reúne ${listed}. No celular, abra o menu pelo topo.`,
     "Contas administradoras têm o atalho Administração logo abaixo de Configurações, no fim do menu da área de membros. Instrutores, moderadores e suporte têm, no mesmo lugar, atalhos para suas ferramentas.",
-    state.ranking && `${state.community ? "No catálogo e no fórum" : "No catálogo"}, a barra inferior também dá acesso ao Ranking.`,
-    state.materials && "Materiais fica disponível no menu em ambos os temas.",
+    state.ranking && "A barra inferior do celular também dá acesso ao Ranking.",
+    state.materials && "Materiais tem um atalho na barra inferior do celular.",
   ].filter(Boolean).join(" ");
 }
 function visibleTarget(target: string) {
@@ -408,7 +413,7 @@ export function Tour() {
         </>
       )}
       {helpOpen && (
-        <Link className="text-action" to={adminSettingsScreen || adminReport || adminOrders ? "/ajuda/administracao" : rankingScreen ? "/ajuda/ranking" : podcastScreen ? "/ajuda/podcasts" : "/ajuda"}>
+        <Link className="text-action" to={adminSettingsScreen || adminReport || adminOrders ? "/ajuda/administracao" : rankingScreen ? "/ajuda/ranking" : podcastScreen ? pathname.startsWith("/admin") ? "/ajuda/administracao-podcasts" : "/ajuda/podcasts" : "/ajuda"}>
           Ajuda completa
         </Link>
       )}

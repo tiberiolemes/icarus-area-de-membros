@@ -182,6 +182,7 @@ it("navega por pasta, pesquisa no servidor e só solicita mídia do arquivo libe
     requests.push(args);
     if (String(url).endsWith("/media")) return json({ message: "Acesso expirado." }, 403);
     return json({
+      current_folder: args.p_folder_id ? { id: "pasta", name: "Planilhas" } : null,
       folders: args.p_folder_id ? [] : [{ id: "pasta", name: "Planilhas" }],
       total: args.p_folder_id ? 2 : 0, page: 1, page_size: 20,
       items: args.p_folder_id ? [
@@ -196,6 +197,7 @@ it("navega por pasta, pesquisa no servidor e só solicita mídia do arquivo libe
   fireEvent.click(screen.getByRole("button", { name: "Pastas e arquivos" }));
   fireEvent.click(screen.getByRole("link", { name: /Planilhas/ }));
   await screen.findByText("Planilha aberta");
+  expect(screen.getByRole("heading", { name: "Planilhas", level: 1 })).toBeVisible();
   const toolbarSearch = screen.getByRole("search", { name: "Buscar arquivos" });
   const search = screen.getByRole("searchbox", { name: "Buscar arquivos" });
   expect(toolbarSearch).toContainElement(search);

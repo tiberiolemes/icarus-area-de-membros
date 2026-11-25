@@ -145,6 +145,7 @@ describe("Vitrine de cursos", () => {
       <Routes><Route path="/app/cursos/:curso" element={<CoursePage />} /></Routes>
     </MemoryRouter></QueryClientProvider>);
     await screen.findByRole("heading", {name:"Curso ementa"});
+    expect(screen.getByRole("link", {name:"Continuar"})).toHaveAttribute("href", "/app/cursos/ementa/primeiro/~l0");
     expect(screen.getByRole("progressbar", {name:"50% concluído"})).toHaveValue(50);
     expect(screen.getByText("primeiro").closest("details")).not.toHaveAttribute("open");
     const expanded = screen.getByText("segundo").closest("details")!;

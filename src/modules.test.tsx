@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Shell } from "./shell";
 import { AdminSettings } from "./pages/admin";
+import { Settings } from "./pages/settings";
 import { Help } from "./pages/help";
 import { Ranking } from "./pages/ranking";
 import { NotificationHistory } from "./pages/notifications";
@@ -14,16 +15,17 @@ vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
 
-const { profile, settings, refetch, rpc } = vi.hoisted(() => ({
-  profile: { id: "member-1", full_name: "Pessoa Teste", plan_name: "Plano ativo", role: "member", theme: undefined as string | undefined },
+const { profile, settings, plans, refetch, rpc } = vi.hoisted(() => ({
+  profile: { id: "member-1", full_name: "Pessoa Teste", plan_name: "Plano ativo", current_plan_id: null as string | null, role: "member", theme: undefined as string | undefined },
   settings: { name: "Icarus", modules: {} as Record<string, boolean> },
+  plans: [] as { id: string; slug: string; name: string; active: boolean; price_cents: number; access_months: number; benefits: string[] }[],
   refetch: vi.fn(),
   rpc: vi.fn(),
 }));
 vi.mock("./api", async (importOriginal) => ({ ...await importOriginal<typeof import("./api")>(), rpc, edge: vi.fn(), signOut: vi.fn() }));
 vi.mock("./auth", () => ({
   useAuth: () => ({ session: null, loading: false }),
-  useBootstrap: () => ({ data: { profile, settings }, refetch, isFetching: false }),
+  useBootstrap: () => ({ data: { profile, settings, plans }, refetch, isFetching: false }),
 }));
 vi.mock("./tour", () => ({ Tour: () => <button>Guia desta tela</button> }));
 vi.mock("./update-notice", () => ({ UpdateNotice: () => null }));
@@ -47,6 +49,8 @@ function mount(path: string, node = <Shell />, cache = new QueryClient({ default
 beforeEach(() => {
   settings.modules = {};
   profile.role = "member";
+  profile.current_plan_id = null;
+  plans.length = 0;
   profile.theme = undefined;
   rpc.mockReset();
   rpc.mockResolvedValue({ items: [], page: 1, page_size: 20, total: 0, unread_count: 0 });
@@ -140,10 +144,48 @@ it("a Central de ajuda desligada fica indisponível para o aluno e esconde artig
   view.unmount();
 
   profile.role = "support";
-  mount("/ajuda", <Help />, cache);
+  settings.modules = { help: false, podcasts: false };
+  mount("/app/ajuda", <Help member />, cache);
   expect(screen.getByText(/A Central de ajuda está desativada para os alunos/)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Cadastre conteúdo e opere as filas" })).toBeInTheDocument();
-  expect(screen.queryByRole("link", { name: "Assista e publique podcasts e masterclasses" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Assista a podcasts e masterclasses" })).not.toBeInTheDocument();
+});
+
+it("busca artigos sem acentos e confirma o voto só quando o servidor salva", async () => {
+  const search = mount("/app/ajuda?q=notificacoes+sino", <Help member />);
+  expect(screen.getByRole("heading", { name: "Para alunos" })).toBeVisible();
+  expect(screen.getByRole("link", { name: /notificações/i })).toBeVisible();
+  expect(screen.queryByRole("heading", { name: "Para a equipe" })).not.toBeInTheDocument();
+  search.unmount();
+  const empty = mount("/app/ajuda?q=naoexiste", <Help member />);
+  expect(screen.getByText("Nenhum artigo encontrado.")).toBeVisible();
+  empty.unmount();
+
+  rpc.mockRejectedValueOnce(new Error("Falha temporária de QA."));
+  const article = render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={["/app/ajuda/notificacoes"]}>
+        <Routes><Route path="/app/ajuda/:artigo" element={<Help member />} /></Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  const vote = within(article.container).getByRole("button", { name: "Sim" });
+  fireEvent.click(vote);
+  expect(await within(article.container).findByRole("alert")).toHaveTextContent("Falha temporária");
+  expect(within(article.container).queryByText("Obrigado pelo retorno.")).not.toBeInTheDocument();
+  fireEvent.click(vote);
+  expect(await within(article.container).findByText("Obrigado pelo retorno.")).toHaveFocus();
+  expect(vote).not.toBeInTheDocument();
+  expect(rpc).toHaveBeenLastCalledWith("app_help_feedback", { p_page: "/ajuda/notificacoes", p_action: "rate", p_rating: true });
+});
+
+it("identifica a assinatura vigente pelo id mesmo com ofertas de mesmo nome", () => {
+  const plan = { name: "Plano ativo", active: true, price_cents: 1000, access_months: 1, benefits: [] };
+  plans.push({ ...plan, id: "vigente", slug: "vigente" }, { ...plan, id: "novo", slug: "novo" });
+  profile.current_plan_id = "vigente";
+  mount("/app/configuracoes?aba=assinatura", <Settings />);
+  expect(screen.getByText("Seu plano atual")).toBeVisible();
+  expect(screen.getByRole("link", { name: "Assinar" })).toHaveAttribute("href", "/checkout?plano=novo");
 });
 
 it("o Ranking esconde as regras de comunidade com ela desligada e mantém as de aula e certificado", async () => {

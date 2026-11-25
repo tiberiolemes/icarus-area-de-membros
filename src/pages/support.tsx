@@ -16,6 +16,7 @@ import {
 } from "react-router-dom";
 import { cache, date, edge, safeUrl, useRpc, rpc } from "../api";
 import type { Page, Ticket } from "../api";
+import { useAuth } from "../auth";
 import {
   Action,
   Back,
@@ -49,7 +50,7 @@ export function Tickets({ admin = false }: { admin?: boolean }) {
     <AdminTickets />
   ) : (
     <div className="support-page">
-      <Heading title="Central de Suporte & Atendimento">
+      <Heading title="Central de suporte">
         Envie sua solicitação à equipe e acompanhe as respostas na conversa.
       </Heading>
       <nav className="support-shortcuts" aria-label="Atalhos de suporte">
@@ -67,7 +68,7 @@ export function Tickets({ admin = false }: { admin?: boolean }) {
         </>}
         <Link className="support-panel" to="/app/suporte/novo">
           <MessageSquare size={22} aria-hidden="true" />
-          <strong>Abrir ticket</strong>
+          <strong>Abrir chamado</strong>
           <span>Fale com a equipe de suporte.</span>
         </Link>
       </nav>
@@ -385,6 +386,7 @@ function TicketConversation({
   ticket: string;
   admin?: boolean;
 }) {
+  const { session } = useAuth();
   const query = useRpc<Ticket>("app_ticket", { p_id: ticket }),
     messageAttachmentIds = new Set(
       query.data?.messages.flatMap(
@@ -408,10 +410,12 @@ function TicketConversation({
               {statusName(query.data.status)} · {date(query.data.created_at)}
             </Heading>
             <div className="thread">
-              {query.data.messages.map((message) => (
-                <article key={message.id}>
+              {query.data.messages.map((message) => {
+                const team = !admin && session && message.author_id && message.author_id !== session.user.id;
+                return <article key={message.id} className={team ? "support-team-message" : undefined}>
                   <p className="meta">
-                    <strong>{message.author_name}</strong> ·{" "}
+                    <strong>{admin ? message.author_name : message.author_name || (team ? "Atendimento" : "Membro")}</strong>
+                    {team && <> <span className="badge">Equipe</span></>} ·{" "}
                     {date(message.created_at)}
                   </p>
                   <div className="prose">{message.body}</div>
@@ -422,8 +426,8 @@ function TicketConversation({
                       ))}
                     </div>
                   )}
-                </article>
-              ))}
+                </article>;
+              })}
             </div>
             {!!conversationFiles.length && (
               <section>
@@ -491,6 +495,7 @@ function TicketConversation({
             </Form>
             <Upload
               kind="ticket-attachment"
+              customPicker={!admin}
               resourceId={ticket}
               onUploaded={() => void query.refetch()}
             />

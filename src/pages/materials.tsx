@@ -2,7 +2,7 @@ import { ArrowRight, Folder, FolderOpen, LayoutGrid, List, LockKeyhole } from "l
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useRpc } from "../api";
 import type { Material, Page } from "../api";
-import { Heading, Pager, QueryState, Search } from "../ui";
+import { Back, Empty, Heading, Pager, QueryState, Search } from "../ui";
 import { MaterialList } from "./learning";
 import "./student-resources.css";
 
@@ -13,6 +13,7 @@ export function Materials() {
   const page = Number(params.get("page") || 1);
   const filesOnly = params.get("vista") === "arquivos";
   const query = useRpc<Page<Material> & {
+    current_folder?: { name: string; parent_id: string | null } | null;
     folders: { id: string; name: string; count?: number }[];
   }>("app_materials", {
     p_folder_id: pasta ?? null,
@@ -32,8 +33,11 @@ export function Materials() {
 
   return (
     <div className="student-materials">
+      {pasta && <Back to={query.data?.current_folder?.parent_id
+        ? "/app/materiais/" + encodeURIComponent(query.data.current_folder.parent_id)
+        : "/app/materiais"} label="Voltar aos materiais" />}
       <Heading
-        title="Materiais & Acervo"
+        title={query.data?.current_folder?.name || "Materiais e acervo"}
         action={
           <div className="materials-toolbar">
             <Search
@@ -43,14 +47,14 @@ export function Materials() {
               placeholder="Buscar arquivos…"
               variant="stitch"
             />
-            <div className="materials-view" role="group" aria-label="Visualização do acervo">
+            {!pasta && <div className="materials-view" role="group" aria-label="Visualização do acervo">
               <button type="button" aria-pressed={!filesOnly} aria-label="Pastas e arquivos" onClick={() => updateParams({ vista: "" })}>
                 <LayoutGrid size={18} aria-hidden="true" />
               </button>
               <button type="button" aria-pressed={filesOnly} aria-label="Apenas arquivos da seção" onClick={() => updateParams({ vista: "arquivos" })}>
                 <List size={18} aria-hidden="true" />
               </button>
-            </div>
+            </div>}
           </div>
         }
       >
@@ -83,14 +87,7 @@ export function Materials() {
             )}
             <section aria-labelledby="materials-files">
               <div className="materials-files-bar">
-                <div>
-                  {pasta && (
-                    <nav aria-label="Navegação de materiais">
-                      <Link className="text-action" to="/app/materiais">Todas as pastas</Link>
-                    </nav>
-                  )}
-                  <h2 id="materials-files"><Folder size={18} aria-hidden="true" />{pasta ? "Arquivos da pasta" : "Arquivos"}</h2>
-                </div>
+                <h2 id="materials-files"><Folder size={18} aria-hidden="true" />Arquivos</h2>
                 <span>{query.data.total} {query.data.total === 1 ? "arquivo" : "arquivos"}</span>
               </div>
               <div className="materials-files">
@@ -99,7 +96,16 @@ export function Materials() {
                     <span>Material</span><span>Ação</span>
                   </div>
                 )}
-                <MaterialList materials={query.data.items} />
+                {query.data.items.length ? <MaterialList materials={query.data.items} /> : (
+                  <Empty>
+                    {q ? "Nenhum arquivo corresponde à busca." : query.data.folders.length
+                      ? "Abra uma pasta para consultar os arquivos dela."
+                      : <>
+                        <p>Ainda não há materiais disponíveis nesta seção para sua conta.</p>
+                        <Link className="text-action" to="/app/configuracoes?aba=assinatura">Ver minha assinatura</Link>
+                      </>}
+                  </Empty>
+                )}
               </div>
             </section>
             {query.data.total > query.data.page_size || page > 1 ? (

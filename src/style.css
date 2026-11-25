@@ -1415,18 +1415,30 @@ img.brand-custom {
 .checkout-layout ul {
   padding-left: 24px;
 }
-.help-list {
+.member-shell-stitch > .workspace:has(.reading[data-tour="help"]) { background-color: var(--stitch-canvas); }
+.help-back {
   display: flex;
-  flex-direction: column;
-  margin: 32px 0;
+  flex-wrap: wrap;
+  column-gap: var(--stitch-space-md);
+}
+.help-group { margin-block-start: var(--stitch-space-xl); }
+.help-list {
+  list-style: none;
+  padding: 0;
+  margin-block: var(--stitch-space-sm);
 }
 .help-list a {
-  display: block;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--ic-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stitch-space-sm);
+  min-height: var(--stitch-control-min-size);
+  padding-block: var(--stitch-space-sm);
+  border-bottom: 1px solid var(--stitch-border-subtle);
   font-weight: 500;
   text-decoration: none;
 }
+.help-list a svg { flex-shrink: 0; }
 .help-list a:hover {
   text-decoration: underline;
 }
@@ -1596,11 +1608,11 @@ img.brand-custom {
   }
   .public-top {
     padding: 24px 0;
-    flex-wrap: wrap;
     gap: 12px;
   }
+  .public-top > a:first-child { min-width: 0; }
   .public-top img {
-    width: 200px;
+    width: min(136px, 100%);
     height: auto;
   }
   .public-top { --brand-logo-height: 48px; }

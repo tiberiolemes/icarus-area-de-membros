@@ -34,6 +34,8 @@
   color: var(--stitch-text-muted);
 }
 
+.student-account-plans { margin-block-start: var(--stitch-space-lg); }
+
 .student-account .plan-row li {
   text-wrap: balance;
 }
@@ -89,7 +91,7 @@
   background: var(--stitch-surface-hover);
 }
 
-.student-account :is(button.primary, button.primary:hover:disabled) {
+.student-account :is(.button.primary, button.primary, button.primary:hover:disabled) {
   background: var(--stitch-action);
   border-color: var(--stitch-action);
   color: var(--stitch-on-action);

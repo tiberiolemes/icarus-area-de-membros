@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.7.0 · 2026-11-25
+
+- Área do aluno com navegação consistente no desktop e no celular. A barra inferior prioriza Materiais no quinto atalho e usa o próximo módulo disponível quando necessário.
+- Página do curso com Começar ou Continuar, materiais com o nome da pasta, assinatura com destaque para o plano atual e botão Assinar, e chamados com identificação das respostas da equipe.
+- Central de ajuda integrada à área de membros para quem está com sessão. A consulta pública continua disponível, com grupos de artigos e busca que tolera acentos. O voto confirma o envio.
+- Encontros restritos mostram título e convidado. Os links da sala e da gravação continuam sujeitos à autorização do servidor.
+- Checkout sem plano oferece as opções publicadas. O link para entrar preserva o pedido depois do login.
+- Para atualizar da 2.6.0, aplique a migration `202611250009_student_experience.sql` e gere o frontend. Veja [Atualizar de versão](docs/operations.md#atualizar-de-versão).
+
 ## 2.6.0 · 2026-11-25
 
 - Dashboard, Analytics, Membros, Planos, Pedidos, Encontros, Podcasts, Suporte, Feedbacks e os editores passam a usar o padrão de Equipe, com trilha, título, descrição e ações no cabeçalho. A navegação agrupa as áreas por tarefa e a marca leva à primeira tela disponível do painel.

@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { edge, money, safeUrl, useRpc } from "../api";
 import type { Plan } from "../api";
 import { useAuth } from "../auth";
+import { readModules } from "../modules";
 import {
   loadReceipt,
   prepareReceipt,
@@ -35,13 +36,18 @@ export function Checkout() {
     { session } = useAuth(),
     context = useRpc<{
       plans: Plan[];
+      modules?: unknown;
       legal_ready: boolean;
       legal_versions: { id: string; kind: string }[];
     }>("app_public_context"),
+    offers = context.data?.plans.filter((offer) => offer.active !== false) ?? [],
+    plan = offers.find((offer) => offer.id === params.get("plano") || offer.slug === params.get("plano")),
     capabilities = useQuery({
       queryKey: ["capabilities"],
       queryFn: () => edge<Capabilities>("capabilities"),
+      enabled: !!plan,
     }),
+    help = readModules(context.data?.modules).help,
     navigate = useNavigate(),
     attempts = useRef(
       new Map<string, {
@@ -49,16 +55,13 @@ export function Checkout() {
         receipt?: Awaited<ReturnType<typeof prepareReceipt>>;
       }>(),
     ),
-    [method, setMethod] = useState("PIX"),
-    plan = context.data?.plans.find(
-      (p) => p.id === params.get("plano") || p.slug === params.get("plano"),
-    );
+    [method, setMethod] = useState("PIX");
   return (
     <PublicFrame>
       <div className="icarus-checkout">
         <QueryState query={context}>
-          <QueryState query={capabilities}>
-            {plan ? (
+          {plan ? (
+            <QueryState query={capabilities}>
               <div className="icarus-checkout-layout" key={plan.id}>
                 <section className="icarus-checkout-offer">
                   <Heading title={plan.name}>
@@ -300,16 +303,30 @@ export function Checkout() {
                   )}
                 </section>
               </div>
-            ) : (
-              <>
-                <Heading title="Sua assinatura" />
+            </QueryState>
+          ) : (
+            <>
+              <Heading title="Sua assinatura">Escolha um plano para assinar.</Heading>
+              {offers.length ? (
+                <div className="icarus-checkout-panel">
+                  {offers.map((offer) => (
+                    <article className="plan-row" key={offer.id}>
+                      <h2>{offer.name}</h2>
+                      <p>{money(offer.price_cents)} · {offer.access_months} {offer.access_months === 1 ? "mês" : "meses"} de acesso</p>
+                      <Link className="button primary" to={"/checkout?plano=" + encodeURIComponent(offer.slug)}>Assinar {offer.name}</Link>
+                    </article>
+                  ))}
+                </div>
+              ) : (
                 <Notice>
-                  Nenhum plano ativo foi encontrado para este link.{" "}
-                  <Link className="text-action" to="/entrar">Voltar ao início</Link>
+                  Nenhum plano ativo foi publicado.{" "}
+                  <Link className="text-action" to={help ? "/ajuda" : "/entrar"}>
+                    {help ? "Central de ajuda" : "Voltar ao início"}
+                  </Link>
                 </Notice>
-              </>
-            )}
-          </QueryState>
+              )}
+            </>
+          )}
         </QueryState>
       </div>
     </PublicFrame>
@@ -345,7 +362,7 @@ export function OrderStatus() {
               Para proteger seus dados, entre com a conta vinculada à compra ou
               use as instruções recebidas por email. O recibo desta tentativa não
               está disponível neste navegador ou expirou.{" "}
-              <Link to="/entrar">Entrar</Link>
+              <Link to={"/entrar?returnTo=" + encodeURIComponent("/pedido/" + pedido)}>Entrar</Link>
             </Notice>
           ) : (
             <QueryState query={query}>

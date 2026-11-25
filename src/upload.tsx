@@ -13,6 +13,7 @@ export function Upload({
   resourceId,
   onUploaded,
   onBusyChange,
+  customPicker = false,
 }: {
   kind:
     | "course-cover"
@@ -23,10 +24,12 @@ export function Upload({
     | "avatar";
   resourceId: string;
   onUploaded?: () => void;
+  customPicker?: boolean;
   onBusyChange?: (busy: boolean) => void;
 }) {
   const [state, setState] = useState(""),
     [error, setError] = useState(""),
+    [fileName, setFileName] = useState(""),
     [busy, setBusy] = useState(false),
     controller = useRef<AbortController | null>(null),
     file = useRef<HTMLInputElement>(null),
@@ -146,6 +149,7 @@ export function Upload({
         kind === "avatar" ? "Foto salva." : "Arquivo enviado e associado ao registro.",
       );
       if (file.current) file.current.value = "";
+      setFileName("");
       setPreview("");
       onUploaded?.();
     } catch (err) {
@@ -162,6 +166,51 @@ export function Upload({
       controller.current = null;
     }
   }
+  const input = (
+    <input
+      ref={file}
+      type="file"
+      disabled={busy}
+      aria-label={customPicker ? "Anexar arquivo à conversa" : undefined}
+      accept={
+        kind === "avatar"
+          ? "image/jpeg,image/png"
+          : kind.includes("image") || kind === "course-cover"
+          ? "image/png,image/jpeg,image/webp"
+          : kind === "lesson"
+            ? "video/mp4"
+            : undefined
+      }
+      onChange={async (e) => {
+        const input = e.currentTarget,
+          selected = input.files?.[0];
+        if (customPicker) setFileName(selected?.name ?? "");
+        setError("");
+        setState("");
+        if (kind !== "avatar") return;
+        setPreview("");
+        if (!selected) return;
+        const head = new Uint8Array(
+          await selected.slice(0, 8).arrayBuffer().catch(() => new ArrayBuffer(0)),
+        );
+        // Outra escolha chegou durante a leitura: ela decide a prévia.
+        if (input.files?.[0] !== selected) return;
+        const tooBig = selected.size > 500 * 1024;
+        if (tooBig || !avatarSignatures[selected.type]?.every((byte, i) => head[i] === byte)) {
+          setError(
+            tooBig
+              ? "Esta foto passa de 500 KB. Escolha uma menor, em JPG ou PNG."
+              : "Escolha uma foto JPG ou PNG de até 500 KB.",
+          );
+          input.value = "";
+          return;
+        }
+        setPreview(URL.createObjectURL(selected));
+        setCrop(50);
+        setState("Foto escolhida, ainda não salva. Ajuste o recorte e clique em Salvar foto.");
+      }}
+    />
+  );
   return (
     <section className="upload" aria-busy={busy}>
       <Unsaved dirty={!!preview} />
@@ -185,47 +234,13 @@ export function Upload({
             : "Imagem raster até 5 MiB; anexos até 20 MiB, conforme o tipo permitido."
         }
       >
-        <input
-          ref={file}
-          type="file"
-          disabled={busy}
-          accept={
-            kind === "avatar"
-              ? "image/jpeg,image/png"
-              : kind.includes("image") || kind === "course-cover"
-              ? "image/png,image/jpeg,image/webp"
-              : kind === "lesson"
-                ? "video/mp4"
-                : undefined
-          }
-          onChange={async (e) => {
-            const input = e.currentTarget,
-              selected = input.files?.[0];
-            setError("");
-            setState("");
-            if (kind !== "avatar") return;
-            setPreview("");
-            if (!selected) return;
-            const head = new Uint8Array(
-              await selected.slice(0, 8).arrayBuffer().catch(() => new ArrayBuffer(0)),
-            );
-            // Outra escolha chegou durante a leitura: ela decide a prévia.
-            if (input.files?.[0] !== selected) return;
-            const tooBig = selected.size > 500 * 1024;
-            if (tooBig || !avatarSignatures[selected.type]?.every((byte, i) => head[i] === byte)) {
-              setError(
-                tooBig
-                  ? "Esta foto passa de 500 KB. Escolha uma menor, em JPG ou PNG."
-                  : "Escolha uma foto JPG ou PNG de até 500 KB.",
-              );
-              input.value = "";
-              return;
-            }
-            setPreview(URL.createObjectURL(selected));
-            setCrop(50);
-            setState("Foto escolhida, ainda não salva. Ajuste o recorte e clique em Salvar foto.");
-          }}
-        />
+        {customPicker ? (
+          <span className="support-upload-picker">
+            <span className="button" aria-hidden="true">Escolher arquivo</span>
+            <span>{fileName || "Nenhum arquivo selecionado"}</span>
+            {input}
+          </span>
+        ) : input}
       </Field>
       {kind === "avatar" && preview && (
         <div>
@@ -251,7 +266,7 @@ export function Upload({
         <button
           type="button"
           className={kind === "avatar" ? "primary" : undefined}
-          disabled={busy || (kind === "avatar" && !preview)}
+          disabled={busy || (kind === "avatar" && !preview) || (customPicker && !fileName)}
           onClick={upload}
         >
           {kind === "avatar" ? "Salvar foto" : "Enviar arquivo"}

@@ -58,16 +58,22 @@ function LogoCard({ variant, saved, draft, onDraft }: { variant: Variant; saved:
   const [removed, setRemoved] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
   const input = useRef<HTMLInputElement>(null);
+  const latest = useRef(0);
   useEffect(() => () => { if (draft) URL.revokeObjectURL(draft); }, [draft]);
 
   async function choose(file?: File) {
+    // Só a última escolha vale: a validação de um arquivo já trocado é descartada.
+    const pick = ++latest.current;
     setError("");
     setRemoved(false);
     onDraft(undefined);
     if (!file) return;
     try {
-      onDraft(await checkLogoFile(file));
+      const url = await checkLogoFile(file);
+      if (pick === latest.current) onDraft(url);
+      else URL.revokeObjectURL(url);
     } catch (failure) {
+      if (pick !== latest.current) return;
       if (input.current) input.current.value = "";
       setError(failure instanceof Error ? failure.message : "Não foi possível ler esta imagem.");
     }
@@ -88,7 +94,7 @@ function LogoCard({ variant, saved, draft, onDraft }: { variant: Variant; saved:
         successMessage={`${copy.title} salva.`}
         submitDisabled={!draft}
         secondaryAction={draft && (
-          <button type="button" onClick={() => { onDraft(undefined); setFormVersion(formVersion + 1); }}>Cancelar</button>
+          <button type="button" onClick={() => { latest.current++; onDraft(undefined); setFormVersion(formVersion + 1); }}>Cancelar</button>
         )}
         onSave={async (data, form) => {
           const body = new FormData();

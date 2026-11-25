@@ -119,3 +119,18 @@ it("avisa quando só a logo branca está cadastrada", () => {
   mount();
   expect(screen.getByText("Envie também a logo colorida. Sem ela, o tema claro, as telas de entrada e o certificado não mostram a sua logo.")).toBeInTheDocument();
 });
+
+it("uma validação atrasada não reabre a prévia de um arquivo trocado", async () => {
+  let finish!: (bitmap: { width: number; height: number; close: () => void }) => void;
+  vi.mocked(createImageBitmap).mockImplementationOnce(() => new Promise((resolve) => { finish = resolve as typeof finish; }) as never);
+  mount();
+  choose("Escolher logo colorida", new File([pngBytes()], "lenta.png", { type: "image/png" }));
+  await waitFor(() => expect(createImageBitmap).toHaveBeenCalledTimes(1));
+  choose("Escolher logo colorida", new File(["<svg/>"], "logo.svg", { type: "image/svg+xml" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("A logo precisa ser PNG ou WebP.");
+  finish({ width: 960, height: 240, close: vi.fn() });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(screen.queryByRole("img", { name: "Prévia da logo colorida" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Salvar logo colorida" })).toBeDisabled();
+  expect(screen.getByRole("alert")).toHaveTextContent("A logo precisa ser PNG ou WebP.");
+});

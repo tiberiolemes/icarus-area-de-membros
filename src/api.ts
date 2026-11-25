@@ -122,11 +122,12 @@ export async function edge<T>(name: string, body?: unknown): Promise<T> {
     body: body ?? {},
   });
   if (error) {
-    let message = "";
+    let message = "", code: string | undefined;
     try {
       const parsed = await error.context?.json();
       message =
         parsed?.message ?? parsed?.error?.message ?? parsed?.error ?? "";
+      code = parsed?.code ?? parsed?.error?.code;
     } catch {
       /* Response may not be JSON. */
     }
@@ -134,6 +135,7 @@ export async function edge<T>(name: string, body?: unknown): Promise<T> {
       typeof message === "string" && message && !/^[A-Z0-9_]+$/.test(message)
         ? message
         : errorMessage(error),
+      typeof code === "string" ? code : undefined,
     );
   }
   return data as T;

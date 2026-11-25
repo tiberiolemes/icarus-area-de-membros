@@ -462,6 +462,23 @@
   padding: 16px;
 }
 
+/* O palco do player é preto nos dois temas: aviso e botão levam superfície própria. */
+.stitch-lesson-media .stitch-media-error .notice {
+  border-color: transparent;
+  background: var(--stitch-error-surface);
+  color: var(--stitch-on-error-surface);
+}
+
+.stitch-lesson-media .stitch-media-error button {
+  border-color: var(--stitch-text-inverse);
+  background: var(--stitch-text-inverse);
+  color: #09090b;
+}
+
+.stitch-lesson-media .stitch-media-error button:hover {
+  background: #e4e4e7;
+}
+
 .stitch-lesson-meta {
   display: flex;
   flex-direction: column;

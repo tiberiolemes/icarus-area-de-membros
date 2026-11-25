@@ -17,7 +17,7 @@ const material = { id: "material", name: "Material de teste", description: "", f
 
 function mount({ type = "text", allowed = true, cover = false, coverResponse = true, provider = "supabase",
   path = lessonRoot + "/atual", collision = false, nextAllowed = true, otherModule = false,
-  progressFailure = Promise.resolve(false) } = {}) {
+  progressFailure = Promise.resolve(false), mediaError = false } = {}) {
   if (type === "video" && provider === "supabase") {
     const tracks = Object.assign(new EventTarget(), { length: 0 }) as TextTrackList;
     vi.spyOn(HTMLMediaElement.prototype, "textTracks", "get").mockReturnValue(tracks);
@@ -60,6 +60,8 @@ function mount({ type = "text", allowed = true, cover = false, coverResponse = t
         if (args.kind === "course-cover") {
           if (!coverResponse) return new Response(JSON.stringify({ error: "Indisponível" }), { status: 404 });
           body = { url: "https://example.test/private/authorized-cover.jpg" };
+        } else if (mediaError) {
+          return new Response(JSON.stringify({ error: { code: "CONFIGURATION_REQUIRED", message: "Endereço público do arquivo não configurado." } }), { status: 503 });
         } else {
           body = {
             url: provider === "bunny" ? "https://player.mediadelivery.net/embed/1/video" : "https://example.test/private/test.mp3",
@@ -279,4 +281,11 @@ it("mantém o foco na retomada enquanto envia e após o erro, sem duplicar o RPC
   expect(resume).toHaveFocus();
   expect(resume).not.toHaveAttribute("aria-disabled");
   expect(requests.filter(({ name }) => name === "app_progress")).toHaveLength(1);
+});
+
+it("mostra ao aluno uma mensagem simples e a nova tentativa quando a mídia não está configurada", async () => {
+  mount({ type: "video", mediaError: true });
+  expect(await screen.findByText("Não foi possível carregar o vídeo agora. Tente de novo; se continuar, avise o suporte.")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Tentar carregar vídeo" })).toBeVisible();
+  expect(screen.queryByText("Endereço público do arquivo não configurado.")).not.toBeInTheDocument();
 });

@@ -26,7 +26,7 @@ import {
   Circle,
   Check,
 } from "lucide-react";
-import { cache, edge, errorMessage, rpc, safeUrl, useRpc } from "../api";
+import { AppError, cache, edge, errorMessage, rpc, safeUrl, useRpc } from "../api";
 import type { Course, Lesson, Material, Module } from "../api";
 import { courseLessonPath } from "../course-paths";
 import { useAuth, useBootstrap } from "../auth";
@@ -693,7 +693,11 @@ export function LessonPage() {
                       <div className={`stitch-lesson-media${isAudio ? " is-audio" : ""}`} data-tour="player">
                         {media.isPending ? <p role="status">Preparando {mediaLabel} autorizado…</p> : media.error ? (
                           <div className="stitch-media-error">
-                            <Notice error>{errorMessage(media.error)}</Notice>
+                            <Notice error>
+                              {media.error instanceof AppError && media.error.code === "CONFIGURATION_REQUIRED"
+                                ? `Não foi possível carregar o ${mediaLabel} agora. Tente de novo; se continuar, avise o suporte.`
+                                : errorMessage(media.error)}
+                            </Notice>
                             <button type="button" onClick={() => media.refetch()}>Tentar carregar {mediaLabel}</button>
                           </div>
                         ) : mediaUrl ? (

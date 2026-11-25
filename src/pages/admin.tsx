@@ -26,6 +26,7 @@ import {
   Presentation,
   RefreshCw,
   Shield,
+  ListChecks,
   ToggleRight,
   Users,
   Video,
@@ -141,18 +142,21 @@ function useAll(entity: string) {
     },
   });
 }
+/** Com `icon`, a lista vira o cartão padrão das Configurações, com a busca na barra do cartão. */
 function AdminList({
   entity,
   title,
   action,
   children,
   section = false,
+  icon,
 }: {
   entity: string;
   title: string;
   action?: ReactNode;
   children: (item: Row) => ReactNode;
   section?: boolean;
+  icon?: ReactNode;
 }) {
   const [params, setParams] = useSearchParams(),
     q = params.get("q") ?? "",
@@ -163,10 +167,27 @@ function AdminList({
       p_page: page,
     }),
     exportEntity = entity === "profiles" || entity === "orders" ? entity : null;
+  // Preserva a aba e os demais filtros da URL ao buscar e paginar.
+  const go = (nextQuery: string, nextPage: number) => setParams((current) => {
+    const next = new URLSearchParams(current);
+    next.set("q", nextQuery);
+    next.set("page", String(nextPage));
+    return next;
+  });
+  const Wrapper = icon ? "section" : "div";
   return (
-    <>
-      <Heading title={title} action={action} level={section ? 2 : 1} />
-      <Search initial={q} onSearch={(q) => setParams({ q, page: "1" })} />
+    <Wrapper className={icon ? "settings-panel" : "admin-list"}>
+      {icon ? (
+        <header className="settings-toolbar">
+          <h2>{icon} {title}</h2>
+          <Search variant="stitch" initial={q} label={`Buscar em ${title.toLocaleLowerCase("pt-BR")}`} onSearch={(next) => go(next, 1)} />
+        </header>
+      ) : (
+        <>
+          <Heading title={title} action={action} level={section ? 2 : 1} />
+          <Search initial={q} onSearch={(next) => go(next, 1)} />
+        </>
+      )}
       {exportEntity && (
         <section className="actions" data-tour="admin-export">
           <Action
@@ -212,12 +233,12 @@ function AdminList({
             <Pager
               page={page}
               total={query.data.total}
-              onChange={(page) => setParams({ q, page: String(page) })}
+              onChange={(next) => go(q, next)}
             />
           </>
         )}
       </QueryState>
-    </>
+    </Wrapper>
   );
 }
 function IdentityFields({ row }: { row?: Row }) {
@@ -2404,8 +2425,9 @@ function PlatformSettingsTabs({ tab }: { tab: string }) {
   );
 }
 
+/** Página única das Configurações: trilha, título, descrição, ação principal, abas e cartões. */
 function SettingsSurface({ tab, sectionLabel, title, description, action, children }: {
-  tab: "equipe" | "auditoria" | "integracoes" | "marca" | "modulos";
+  tab: (typeof settingsTabs)[number][0];
   sectionLabel?: string;
   title: string;
   description: string;
@@ -2695,7 +2717,6 @@ function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
 export function AdminSettings() {
   const [params] = useSearchParams();
   const tab = params.get("aba") ?? "onboarding";
-  const [legal, setLegal] = useState<Row | null | undefined>(undefined);
   if (tab === "marca") return (
     <SettingsSurface
       tab="marca"
@@ -2709,250 +2730,262 @@ export function AdminSettings() {
   if (tab === "equipe") return <AdminTeam />;
   if (tab === "auditoria") return <AdminAudit />;
   if (tab === "integracoes") return <AdminIntegrations provider={params.get("provedor") === "bunny" ? "bunny" : "asaas"} />;
+  if (tab === "legal") return <LegalSettings />;
+  if (tab === "privacidade") return <PrivacySettings />;
+  return <OnboardingAdmin />;
+}
+function LegalSettings() {
+  const [legal, setLegal] = useState<Row | null | undefined>(undefined);
   return (
-    <>
-      <Heading title="Configurações da plataforma" />
-      <PlatformSettingsTabs tab={tab} />
-      {tab === "onboarding" && <OnboardingAdmin />}
-      {tab === "legal" && (
-        <>
-          <AdminList
-            entity="legal_versions"
-            title="Documentos versionados"
-            section
-            action={<button onClick={() => setLegal(null)}>Nova versão</button>}
-          >
-            {(doc) => (
-              <>
-                <div>
-                  <h3>
-                    {text(doc, "title")} · {text(doc, "version")}
-                  </h3>
-                  <p>
-                    {doc.published ? "Publicado" : "Não publicado"}
-                    {doc.demo ? " · Demonstração" : ""}
-                  </p>
-                </div>
-                <button onClick={() => setLegal(doc)}>Editar versão</button>
-              </>
-            )}
-          </AdminList>
-          {legal !== undefined && (
-            <div className="reading inline-editor" key={legal?.id ?? "new"} ref={focusEditor}>
-              <h2>{legal ? "Editar documento" : "Criar documento"}</h2>
-              <Form
-                label="Salvar documento"
-                secondaryAction={<button type="button" onClick={() => setLegal(undefined)}>Fechar editor</button>}
-                onSave={async (data) => {
-                  await save("legal_versions", legal?.id ?? null, {
-                    kind: value(data, "kind"),
-                    version: value(data, "version"),
-                    title: value(data, "title"),
-                    body: value(data, "body"),
-                    published: check(data, "published"),
-                    demo: check(data, "demo"),
-                  });
-                  void cache.invalidateQueries({ queryKey: ["app_public_context"] });
-                  setLegal(undefined);
-                }}
-              >
-                <Field label="Tipo">
-                  <select
-                    name="kind"
-                    defaultValue={text(legal ?? undefined, "kind", "terms")}
-                  >
-                    <option value="terms">Termos de uso</option>
-                    <option value="privacy">Privacidade</option>
-                  </select>
-                </Field>
-                <Field label="Versão">
-                  <input
-                    name="version"
-                    required
-                    defaultValue={text(legal ?? undefined, "version")}
-                  />
-                </Field>
-                <Field label="Título">
-                  <input
-                    name="title"
-                    required
-                    defaultValue={text(legal ?? undefined, "title")}
-                  />
-                </Field>
-                <Field label="Texto integral">
-                  <textarea
-                    name="body"
-                    rows={16}
-                    required
-                    defaultValue={text(legal ?? undefined, "body")}
-                  />
-                </Field>
-                <label className="check">
-                  <input
-                    name="published"
-                    type="checkbox"
-                    defaultChecked={!!legal?.published}
-                  />
-                  Publicado
-                </label>
-                <label className="check">
-                  <input
-                    name="demo"
-                    type="checkbox"
-                    defaultChecked={legal?.demo !== false}
-                  />
-                  Demonstração, sem validade jurídica
-                </label>
-                <Notice>
-                  Documentos de demonstração não liberam cadastro ou cobrança.
-                  Publique somente documentos aprovados para esta operação.
-                </Notice>
-              </Form>
-            </div>
-          )}
-        </>
-      )}
-      {tab === "privacidade" && (
-        <AdminList
-          entity="privacy_requests"
-          title="Solicitações de privacidade"
-          section
-        >
-          {(request) => (
+    <SettingsSurface
+      tab="legal"
+      title="Documentos legais"
+      description="Publique as versões dos termos de uso e da política de privacidade."
+      action={<button className="primary" onClick={() => setLegal(null)}><Plus size={18} aria-hidden="true" /> Nova versão</button>}
+    >
+      <AdminList entity="legal_versions" title="Documentos versionados" icon={<FileText size={20} aria-hidden="true" />}>
+        {(doc) => (
+          <>
             <div>
-              <h3>{text(request, "kind")}</h3>
+              <h3>
+                {text(doc, "title")} · {text(doc, "version")}
+              </h3>
               <p>
-                {statusName(text(request, "status"))} ·{" "}
-                {date(text(request, "created_at"))}
-              </p>
-              <p>
-                O processamento exige análise e retenção legal no servidor.
-                Nenhuma exclusão automática é simulada nesta tela.
+                {doc.published ? "Publicado" : "Não publicado"}
+                {doc.demo ? " · Demonstração" : ""}
               </p>
             </div>
-          )}
-        </AdminList>
+            <button onClick={() => setLegal(doc)}>Editar versão</button>
+          </>
+        )}
+      </AdminList>
+      {legal !== undefined && (
+        <section className="settings-panel">
+          <div className="reading inline-editor" key={legal?.id ?? "new"} ref={focusEditor}>
+            <h2>{legal ? "Editar documento" : "Criar documento"}</h2>
+            <Form
+              label="Salvar documento"
+              secondaryAction={<button type="button" onClick={() => setLegal(undefined)}>Fechar editor</button>}
+              onSave={async (data) => {
+                await save("legal_versions", legal?.id ?? null, {
+                  kind: value(data, "kind"),
+                  version: value(data, "version"),
+                  title: value(data, "title"),
+                  body: value(data, "body"),
+                  published: check(data, "published"),
+                  demo: check(data, "demo"),
+                });
+                void cache.invalidateQueries({ queryKey: ["app_public_context"] });
+                setLegal(undefined);
+              }}
+            >
+              <Field label="Tipo">
+                <select
+                  name="kind"
+                  defaultValue={text(legal ?? undefined, "kind", "terms")}
+                >
+                  <option value="terms">Termos de uso</option>
+                  <option value="privacy">Privacidade</option>
+                </select>
+              </Field>
+              <Field label="Versão">
+                <input
+                  name="version"
+                  required
+                  defaultValue={text(legal ?? undefined, "version")}
+                />
+              </Field>
+              <Field label="Título">
+                <input
+                  name="title"
+                  required
+                  defaultValue={text(legal ?? undefined, "title")}
+                />
+              </Field>
+              <Field label="Texto integral">
+                <textarea
+                  name="body"
+                  rows={16}
+                  required
+                  defaultValue={text(legal ?? undefined, "body")}
+                />
+              </Field>
+              <label className="check">
+                <input
+                  name="published"
+                  type="checkbox"
+                  defaultChecked={!!legal?.published}
+                />
+                Publicado
+              </label>
+              <label className="check">
+                <input
+                  name="demo"
+                  type="checkbox"
+                  defaultChecked={legal?.demo !== false}
+                />
+                Demonstração, sem validade jurídica
+              </label>
+              <Notice>
+                Documentos de demonstração não liberam cadastro ou cobrança.
+                Publique somente documentos aprovados para esta operação.
+              </Notice>
+            </Form>
+          </div>
+        </section>
       )}
-    </>
+    </SettingsSurface>
+  );
+}
+function PrivacySettings() {
+  return (
+    <SettingsSurface
+      tab="privacidade"
+      title="Solicitações de privacidade"
+      description="Acompanhe os pedidos de exportação e exclusão de dados dos membros."
+    >
+      <AdminList entity="privacy_requests" title="Solicitações registradas" icon={<Shield size={20} aria-hidden="true" />}>
+        {(request) => (
+          <div>
+            <h3>{text(request, "kind")}</h3>
+            <p>
+              {statusName(text(request, "status"))} ·{" "}
+              {date(text(request, "created_at"))}
+            </p>
+            <p>
+              O processamento exige análise e retenção legal no servidor.
+              Nenhuma exclusão automática é simulada nesta tela.
+            </p>
+          </div>
+        )}
+      </AdminList>
+    </SettingsSurface>
   );
 }
 function OnboardingAdmin() {
   const questions = useAll("onboarding_questions"),
     [selected, setSelected] = useState<Row | null | undefined>(undefined);
   return (
-    <>
-      <h2>Perguntas do onboarding</h2>
-      <p>
-        Configure as perguntas permitidas do perfil. A ordem e a obrigatoriedade
-        serão aplicadas no cadastro de perfil.
-      </p>
-      <button onClick={() => setSelected(null)}>Adicionar pergunta</button>
-      <QueryState query={questions}>
-        {questions.data?.map((question) => (
-          <div className="resource-row" key={question.id}>
-            <div>
-              <h3>{text(question, "label")}</h3>
-              <p>
-                {question.active ? "Ativa" : "Inativa"} ·{" "}
-                {question.required ? "Obrigatória" : "Opcional"}
-              </p>
+    <SettingsSurface
+      tab="onboarding"
+      title="Onboarding dos membros"
+      description="Configure as perguntas do perfil feitas no primeiro acesso."
+      action={<button className="primary" onClick={() => setSelected(null)}><Plus size={18} aria-hidden="true" /> Adicionar pergunta</button>}
+    >
+      <section className="settings-panel" aria-labelledby="settings-onboarding">
+        <header>
+          <h2 id="settings-onboarding"><ListChecks size={20} aria-hidden="true" /> Perguntas do onboarding</h2>
+          <p>A ordem e a obrigatoriedade valem no cadastro de perfil.</p>
+        </header>
+        <QueryState query={questions}>
+          {questions.data?.length ? questions.data.map((question) => (
+            <div className="resource-row" key={question.id}>
+              <div>
+                <h3>{text(question, "label")}</h3>
+                <p>
+                  {question.active ? "Ativa" : "Inativa"} ·{" "}
+                  {question.required ? "Obrigatória" : "Opcional"}
+                </p>
+              </div>
+              <button onClick={() => setSelected(question)}>
+                Editar pergunta
+              </button>
             </div>
-            <button onClick={() => setSelected(question)}>
-              Editar pergunta
-            </button>
-          </div>
-        ))}
-      </QueryState>
+          )) : <Empty>Nenhuma pergunta cadastrada.</Empty>}
+        </QueryState>
+      </section>
       {selected !== undefined && (
-        <div className="reading inline-editor" key={selected?.id ?? "new"} ref={focusEditor}>
-          <h2>{selected ? "Editar pergunta" : "Criar pergunta"}</h2>
-          <Form
-            label="Salvar pergunta"
-            secondaryAction={<button type="button" onClick={() => setSelected(undefined)}>Fechar editor</button>}
-            onSave={async (data) => {
-              await save("onboarding_questions", selected?.id ?? null, {
-                key: value(data, "key"),
-                label: value(data, "label"),
-                type: value(data, "type"),
-                options: value(data, "options").split("\n").filter(Boolean),
-                required: check(data, "required"),
-                active: check(data, "active"),
-                order_index: num(data, "order_index"),
-              });
-              setSelected(undefined);
-            }}
-          >
-            <Field label="Campo do perfil">
-              <select
-                name="key"
-                defaultValue={text(selected ?? undefined, "key", "name")}
-              >
-                {[
-                  "name",
-                  "segment",
-                  "role",
-                  "size",
-                  "stage",
-                  "revenue_range",
-                  "acquisition",
-                  "product_description",
-                ].map((key) => (
-                  <option key={key}>{key}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Pergunta">
-              <input
-                name="label"
-                required
-                defaultValue={text(selected ?? undefined, "label")}
-              />
-            </Field>
-            <Field label="Tipo de resposta">
-              <select
-                name="type"
-                defaultValue={text(selected ?? undefined, "type", "text")}
-              >
-                <option value="text">Texto curto</option>
-                <option value="textarea">Texto longo</option>
-                <option value="select">Lista de opções</option>
-              </select>
-            </Field>
-            <Field label="Opções, uma por linha">
-              <textarea
-                name="options"
-                defaultValue={((selected?.options as string[]) ?? []).join(
-                  "\n",
-                )}
-              />
-            </Field>
-            <Field label="Ordem">
-              <input
-                name="order_index"
-                type="number"
-                min="0"
-                defaultValue={Number(selected?.order_index ?? 0)}
-              />
-            </Field>
-            <label className="check">
-              <input
-                name="required"
-                type="checkbox"
-                defaultChecked={!!selected?.required}
-              />
-              Obrigatória
-            </label>
-            <label className="check">
-              <input
-                name="active"
-                type="checkbox"
-                defaultChecked={selected?.active !== false}
-              />
-              Ativa
-            </label>
-          </Form>
-        </div>
+        <section className="settings-panel">
+          <div className="reading inline-editor" key={selected?.id ?? "new"} ref={focusEditor}>
+            <h2>{selected ? "Editar pergunta" : "Criar pergunta"}</h2>
+            <Form
+              label="Salvar pergunta"
+              secondaryAction={<button type="button" onClick={() => setSelected(undefined)}>Fechar editor</button>}
+              onSave={async (data) => {
+                await save("onboarding_questions", selected?.id ?? null, {
+                  key: value(data, "key"),
+                  label: value(data, "label"),
+                  type: value(data, "type"),
+                  options: value(data, "options").split("\n").filter(Boolean),
+                  required: check(data, "required"),
+                  active: check(data, "active"),
+                  order_index: num(data, "order_index"),
+                });
+                setSelected(undefined);
+              }}
+            >
+              <Field label="Campo do perfil">
+                <select
+                  name="key"
+                  defaultValue={text(selected ?? undefined, "key", "name")}
+                >
+                  {[
+                    "name",
+                    "segment",
+                    "role",
+                    "size",
+                    "stage",
+                    "revenue_range",
+                    "acquisition",
+                    "product_description",
+                  ].map((key) => (
+                    <option key={key}>{key}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Pergunta">
+                <input
+                  name="label"
+                  required
+                  defaultValue={text(selected ?? undefined, "label")}
+                />
+              </Field>
+              <Field label="Tipo de resposta">
+                <select
+                  name="type"
+                  defaultValue={text(selected ?? undefined, "type", "text")}
+                >
+                  <option value="text">Texto curto</option>
+                  <option value="textarea">Texto longo</option>
+                  <option value="select">Lista de opções</option>
+                </select>
+              </Field>
+              <Field label="Opções, uma por linha">
+                <textarea
+                  name="options"
+                  defaultValue={((selected?.options as string[]) ?? []).join(
+                    "\n",
+                  )}
+                />
+              </Field>
+              <Field label="Ordem">
+                <input
+                  name="order_index"
+                  type="number"
+                  min="0"
+                  defaultValue={Number(selected?.order_index ?? 0)}
+                />
+              </Field>
+              <label className="check">
+                <input
+                  name="required"
+                  type="checkbox"
+                  defaultChecked={!!selected?.required}
+                />
+                Obrigatória
+              </label>
+              <label className="check">
+                <input
+                  name="active"
+                  type="checkbox"
+                  defaultChecked={selected?.active !== false}
+                />
+                Ativa
+              </label>
+            </Form>
+          </div>
+        </section>
       )}
-    </>
+    </SettingsSurface>
   );
 }

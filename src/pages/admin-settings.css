@@ -93,6 +93,7 @@
 .admin-settings :where(button, .button):not(:where(.primary, .search button)):hover { background: var(--stitch-surface-hover); }
 .admin-settings .tabs .button {
   border-color: transparent;
+  padding-inline: calc(var(--stitch-space-sm) + var(--stitch-space-xs));
   color: var(--stitch-text-heading);
 }
 .admin-settings .tabs .button:not([aria-current], :hover) { background: transparent; }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.4.0 · 2026-11-25
+
+- Logo da instalação em Configurações → Plataforma e marca. O admin envia a logo colorida, para fundo claro, e a branca, para fundo escuro, em PNG ou WebP de até 500 KB, com mínimo de 240 × 60 px e recomendação de 960 × 240 px com fundo transparente. Cada versão tem prévia nos dois temas antes de salvar, salvar, trocar e remover, tudo em AJAX. O navegador e a Edge `upload` conferem o conteúdo real do arquivo, o tamanho e as dimensões; SVG, arquivo renomeado e imagem fora do limite são recusados com 422.
+- A logo substitui a do Icarus e o nome em texto no menu do aluno e do admin, no topo do celular, nas telas de entrar, cadastrar, recuperar senha, checkout, ajuda e onboarding, na verificação e no documento do certificado e no PNG e PDF exportados. O tema escuro usa a branca; sem ela, a colorida vale nos dois temas. Sem nenhuma, nada muda.
+- A logo fica no bucket público `icarus-brand`, só para a marca e sem listagem. Só a Edge grava, depois de o banco conferir admin e o segundo fator quando ativo, com limite de 10 envios por minuto e auditoria. Cada envio ganha endereço novo, então a troca aparece sem cache velho, e o arquivo anterior só é apagado depois de o banco apontar para o novo.
+- Atualização da 2.3.0: aplique a migration `202611250003`, publique a Edge `upload` e gere o frontend da tag. Se o seu servidor define uma Content Security Policy, inclua a origem do Supabase em `img-src`. Faça backup e siga [Atualizar de versão](docs/operations.md#atualizar-de-versão).
+
 ## 2.3.0 · 2026-11-25
 
 - Lembrar por 15 dias na tela do código de dois fatores. Com a caixa marcada, o navegador continua conectado, mesmo parado, até 15 dias depois do login, sem senha nem código. Sem a caixa, nada muda: a sessão termina após 2 horas sem uso (30 minutos para a equipe). Vale para todos os papéis, inclusive admin e equipe, com a caixa desmarcada por padrão. Não marque em computador compartilhado: até o fim dos 15 dias, quem abrir aquele navegador entra sem senha nem código. O limite fica no banco: a RPC `app_remember_session` só marca a sessão quando ela está em AAL2 e o Auth registrou o código dela há menos de 5 minutos, conta os 15 dias da criação da sessão e não os prolonga. O AAL2 continua exigido no SQL e nas Edge Functions, e Sair encerra a sessão em todos os aparelhos.

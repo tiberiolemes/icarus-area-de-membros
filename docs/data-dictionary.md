@@ -1,6 +1,6 @@
 # Dicionário de dados do Icarus
 
-**51 tabelas e 368 colunas** nos esquemas `public` e `app_private`.
+**51 tabelas e 371 colunas** nos esquemas `public` e `app_private`.
 
 Veja o [mapa técnico](architecture.md) para localizar os fluxos e visualizar os relacionamentos. Este inventário descreve a estrutura das tabelas da aplicação. Os esquemas gerenciados pelo Supabase, `auth` e `storage`, aparecem quando são destino de uma chave estrangeira.
 
@@ -61,10 +61,14 @@ RLS ativada.
 | `singleton` | `boolean` | Não | `true` |
 | `name` | `text` | Não | `'Icarus'::text` |
 | `revision` | `integer` | Não | `0` |
+| `logo_light` | `text` | Sim | — |
+| `logo_dark` | `text` | Sim | — |
 
 **Chaves e restrições**
 
 - `installation_brand_pkey` — `PRIMARY KEY (singleton)`
+- `installation_brand_logo_dark_check` — `CHECK ((logo_dark ~ '^logo/dark-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|webp)$'::text))`
+- `installation_brand_logo_light_check` — `CHECK ((logo_light ~ '^logo/light-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|webp)$'::text))`
 - `installation_brand_name_check` — `CHECK (((char_length(name) >= 1) AND (char_length(name) <= 80)))`
 - `installation_brand_revision_check` — `CHECK ((revision >= 0))`
 - `installation_brand_singleton_check` — `CHECK (singleton)`

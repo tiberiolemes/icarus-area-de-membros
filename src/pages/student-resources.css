@@ -349,6 +349,21 @@
 .certificate-signer,
 .certificate-status { margin: var(--stitch-space-lg) 0 0; }
 .certificate-signer span { display: block; }
+.certificate-signature {
+  display: block;
+  inline-size: auto;
+  max-inline-size: min(100%, 15rem);
+  block-size: 4rem;
+  margin-block-end: var(--stitch-space-xs);
+  object-fit: contain;
+  object-position: left bottom;
+}
+/* A assinatura costuma ter traço escuro e fundo transparente: no tema escuro, fica sobre papel claro. */
+[data-theme="dark"] .certificate-signature {
+  padding: var(--stitch-space-xs) var(--stitch-space-sm);
+  border-radius: var(--stitch-radius-base);
+  background: #fff;
+}
 
 .certificate-actions,
 .certificate-feature-side,

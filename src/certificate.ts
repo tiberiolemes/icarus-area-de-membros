@@ -1,9 +1,11 @@
 import { safeUrl, downloadBlob } from "./api";
 import type { Certificate } from "./api";
+import { brandAssetUrl, defaultLogo, logoBox } from "./brand";
 
 export async function certificateCanvas(
   certificate: Certificate,
   verificationUrl = `${location.origin}/verificar/${encodeURIComponent(certificate.code)}`,
+  { logoUrl, issuer }: { logoUrl: string | null; issuer: string } = { logoUrl: null, issuer: "Icarus" },
 ) {
   if (certificate.revoked_at)
     throw new Error(
@@ -24,9 +26,16 @@ export async function certificateCanvas(
   ctx.lineWidth = 2;
   ctx.strokeRect(56, 56, 1488, 1008);
   const logo = new Image();
-  logo.src = import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg";
-  await logo.decode();
-  ctx.drawImage(logo, 100, 96, 305, 80);
+  // O Storage responde com CORS aberto; sem crossOrigin o canvas ficaria bloqueado para exportar.
+  if (logoUrl) logo.crossOrigin = "anonymous";
+  logo.src = logoUrl ?? defaultLogo;
+  try {
+    await logo.decode();
+  } catch {
+    throw new Error("Não foi possível carregar a logo para exportar o certificado. Tente novamente.");
+  }
+  const box = logoUrl ? logoBox(logo.naturalWidth, logo.naturalHeight) : { x: 100, y: 96, width: 305, height: 80 };
+  ctx.drawImage(logo, box.x, box.y, box.width, box.height);
   ctx.fillStyle = "#000000";
   ctx.font = "500 24px Inter";
   ctx.fillText(
@@ -49,12 +58,12 @@ export async function certificateCanvas(
     760,
   );
   ctx.fillText(
-    `Emitido em ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "America/Sao_Paulo" }).format(new Date(certificate.issued_at))}`,
+    fit(ctx, `Emitido em ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "America/Sao_Paulo" }).format(new Date(certificate.issued_at))} por ${issuer}`, 1370),
     100,
     804,
   );
-  if (certificate.signature_url) {
-    const url = safeUrl(certificate.signature_url);
+  if (certificate.signature_path || certificate.signature_url) {
+    const url = brandAssetUrl(certificate.signature_path) ?? safeUrl(certificate.signature_url);
     if (!url)
       throw new Error(
         "A assinatura do certificado tem um endereço inválido. Consulte o responsável pela emissão.",
@@ -92,6 +101,12 @@ export async function certificateCanvas(
     1036,
   );
   return canvas;
+}
+function fit(ctx: CanvasRenderingContext2D, text: string, width: number) {
+  const chars = Array.from(text);
+  if (ctx.measureText(text).width <= width) return text;
+  while (chars.length > 1 && ctx.measureText(chars.join("") + "…").width > width) chars.pop();
+  return chars.join("") + "…";
 }
 function wrap(
   ctx: CanvasRenderingContext2D,
@@ -159,8 +174,9 @@ export async function exportCertificate(
   certificate: Certificate,
   format: "png" | "pdf",
   verificationUrl?: string,
+  brand?: { logoUrl: string | null; issuer: string },
 ) {
-  const canvas = await certificateCanvas(certificate, verificationUrl);
+  const canvas = await certificateCanvas(certificate, verificationUrl, brand);
   if (format === "png") {
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob(

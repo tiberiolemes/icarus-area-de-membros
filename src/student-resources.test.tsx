@@ -98,6 +98,37 @@ it("lida com código malformado no endereço sem consultar o certificado", async
   expect(request).not.toHaveBeenCalled();
 });
 
+it("o documento do certificado usa a logo da instalação nos dois temas", async () => {
+  const light = "logo/light-11111111-1111-4111-8111-111111111111.png", dark = "logo/dark-22222222-2222-4222-8222-222222222222.png";
+  vi.stubGlobal("fetch", async (url: RequestInfo | URL) =>
+    String(url).endsWith("/app_public_context") ? json({ name: "Academia de teste", logo_light: light, logo_dark: dark }) : json(certificate));
+  mount("/verificar/" + validCode);
+  await waitFor(() => expect(document.querySelectorAll('[data-tour="certificate"] img.brand-custom')).toHaveLength(2));
+  const paper = document.querySelector('[data-tour="certificate"]')!;
+  const [first, second] = paper.querySelectorAll("img.brand-custom");
+  expect(first).toHaveAttribute("src", expect.stringMatching(new RegExp(`/icarus-brand/${light}$`)));
+  expect(second).toHaveAttribute("data-brand-tone", "dark");
+  expect(paper.querySelector('img[alt="Icarus"]')).toBeNull();
+});
+
+it("o certificado mostra a assinatura da emissão e o nome da instalação como emissor", async () => {
+  const signature = "signature/55555555-5555-4555-8555-555555555555.png";
+  vi.stubGlobal("fetch", async (url: RequestInfo | URL) =>
+    String(url).endsWith("/app_public_context") ? json({ name: "Academia de teste" }) : json({ ...certificate, signer_name: "Pessoa Responsável", signature_path: signature }));
+  mount("/verificar/" + validCode);
+  const image = await screen.findByRole("img", { name: "Assinatura de Pessoa Responsável" });
+  expect(image).toHaveAttribute("src", `http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${signature}`);
+  await waitFor(() => expect(screen.getByText("Emitido por").nextElementSibling).toHaveTextContent("Academia de teste"));
+});
+
+it("a verificação pública não carrega a URL externa de assinatura de certificados antigos", async () => {
+  vi.stubGlobal("fetch", async (url: RequestInfo | URL) =>
+    String(url).endsWith("/app_public_context") ? json({ name: "Icarus" }) : json({ ...certificate, signer_name: "Pessoa Responsável", signature_url: "https://externo.example/rubrica.png" }));
+  mount("/verificar/" + validCode);
+  expect(await screen.findByText("Pessoa Responsável")).toBeInTheDocument();
+  expect(screen.queryByRole("img", { name: "Assinatura de Pessoa Responsável" })).not.toBeInTheDocument();
+});
+
 it("revalida o código atual e distingue falha de consulta de revogação", async () => {
   const request = vi.fn()
     .mockImplementationOnce(async () => json(certificate))

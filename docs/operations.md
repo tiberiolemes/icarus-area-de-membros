@@ -6,14 +6,16 @@ O Icarus é uma plataforma de área de membros e cursos online em React/Vite e S
 
 Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes. Numa instalação hospedada, siga [Aplicar migrações no Supabase hospedado](#aplicar-migrações-no-supabase-hospedado), que vale para a 0.1.6 e para a 0.2.0. O roteiro do [stack Docker completo](#atualizar-uma-instalação-docker-completa) foi escrito e ensaiado para a v0.1.6. A partir da 0.2.0, o banco foi ensaiado pelo [ensaio isolado](#ensaio-de-banco-isolado) (`install` da tag v0.2.0, `upgrade` e `verify` no mesmo Postgres), mas o stack Docker completo da 0.2.0 ainda não tem roteiro próprio ensaiado para as Edge Functions.
 
-| Versão instalada | Histórico esperado | Migrations novas até a 2.3.0 |
+| Versão instalada | Histórico esperado | Migrations novas até a 2.4.0 |
 | --- | --- | --- |
-| 2.2.2 ou 2.2.3 | `202611230001` a `202611250001` | `202611250002` |
-| 2.2.1 | `202611230001` a `202611230040` | `202611250001` e `202611250002` |
-| 0.2.0 | `202611230001` a `202611230038` | `202611230039`, `202611230040`, `202611250001` e `202611250002` |
-| 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040`, `202611250001` e `202611250002` |
+| 2.3.0 | `202611230001` a `202611250002` | `202611250003` |
+| 2.2.2 ou 2.2.3 | `202611230001` a `202611250001` | `202611250002` e `202611250003` |
+| 2.2.1 | `202611230001` a `202611230040` | `202611250001` a `202611250003` |
+| 0.2.0 | `202611230001` a `202611230038` | `202611230039`, `202611230040` e `202611250001` a `202611250003` |
+| 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` e `202611250001` a `202611250003` |
 
 Publique também as Edge Functions da tag:
+- na 2.4.0, `upload` passou a receber a logo, o ícone e a assinatura do certificado (`kind=brand-asset`) e a gravá-los no bucket público `icarus-brand`, criado pela `202611250003`;
 - na 2.2.2, `checkout` e `reauthenticate` passaram a limitar tentativas, a `checkout` confere o Turnstile e todas exigem `APP_ORIGIN` em produção;
 - na 2.2.1, `upload` passou a recusar foto de perfil fora de JPG ou PNG de até 500 KB, e `reauthenticate` confere a senha com a chave de serviço.
 
@@ -114,7 +116,7 @@ Use este roteiro para o stack completo da v0.1.6 criado pelo Supabase CLI, com A
 
 ### Migrations e fluxos da árvore atual
 
-Aplique `202611230001` a `202611230040` e depois `202611250001` e `202611250002` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
+Aplique `202611230001` a `202611230040` e depois `202611250001` a `202611250003` em ordem antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, o bucket público de marca `icarus-brand`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
 
 | Migration | O que configurar ou validar |
 | --- | --- |
@@ -140,6 +142,9 @@ Aplique `202611230001` a `202611230040` e depois `202611250001` e `202611250002`
 | `040` | Abrir a vitrine com aluno novo e com aluno em andamento. Iniciar e retomar uma aula pelo cartão e conferir o acesso para cursos e módulos restritos. |
 | `202611250001` | Comprar como visitante, trocando o email e a `attempt_key` a cada tentativa, e conferir que a sexta tentativa no mesmo minuto, do mesmo IP, recebe 429. Repetir o mesmo email e conferir o 429 na quarta. Errar a senha da reautenticação seis vezes no minuto e conferir a liberação no minuto seguinte. Publicar a `checkout` e a `reauthenticate` da mesma tag. |
 | `202611250002` | Entrar com o código marcando Lembrar por 15 dias, ficar parado além de 2 h (membro) ou 30 min (equipe) e conferir que o acesso continua. Sem a caixa, conferir que a sessão expira como antes. Conferir que Sair encerra a sessão e que uma sessão só com senha continua recusada quando há fator verificado. |
+| `202611250003` | Em Configurações → Plataforma e marca, enviar a logo colorida e a branca em PNG ou WebP de até 500 KB e o ícone em PNG quadrado; trocar e remover cada um. Conferir a logo nas telas de entrada antes do login, no menu do aluno e do admin, no checkout e no certificado, nos dois temas, e o ícone na aba. Na aba Certificado de um curso, enviar a assinatura em PNG, emitir um certificado e conferir a assinatura e o "Emitido por" com o nome da instalação na tela, em `/verificar` e no PNG e PDF. Conferir que um arquivo renomeado, maior que 500 KB ou fora das dimensões é recusado e que um membro recebe 403. Publicar a `upload` da mesma tag. |
+
+**Logo, ícone e assinatura** ficam no bucket público `icarus-brand`, criado pela `202611250003` só para a marca: PNG (a logo também WebP) de até 500 KB, leitura pela URL pública e nenhuma policy em `storage.objects`, então anon e authenticated não listam nem gravam. Só a Edge `upload` grava, com a service role, depois de o banco conferir o papel de admin e, como nas demais ações de admin, a sessão AAL2 quando o admin tem 2FA ativo. Cada envio ganha um caminho novo, servido com cache de um ano, e o arquivo anterior é apagado só depois de o banco apontar para o novo. Uma logo trocada ou removida sai do Storage, mas a URL antiga pode continuar respondendo do cache da CDN e dos navegadores até expirar; por isso, não envie imagem que não possa ser pública. Se já existir um bucket `icarus-brand` com outra configuração, por exemplo de outro sistema no mesmo projeto, a migration para com uma mensagem clara em vez de alterá-lo. O certificado guarda o caminho da assinatura da emissão, e o arquivo de uma assinatura usada por certificado não é apagado na troca. A `202611250003` também limpa a antiga URL de assinatura dos cursos e passa a recusar uma nova: antes de aplicar, confira quais cursos têm `signature_url` preenchido, porque os próximos certificados deles sairão sem imagem até um admin enviar o PNG. Certificados já emitidos mantêm a URL no PNG e no PDF. O Icarus não publica uma Content Security Policy. Se o seu servidor definir uma, inclua a origem pública do Supabase em `img-src`, além de `connect-src`, para a logo aparecer; o certificado desenha a logo num canvas com `crossOrigin="anonymous"`, e o Storage responde com `Access-Control-Allow-Origin: *`.
 
 **Lembrar por 15 dias** vale para todos os papéis, inclusive admin e equipe, e a caixa vem desmarcada. Oriente a equipe e os alunos a não marcá-la em computador compartilhado ou público: até o fim dos 15 dias, quem abrir aquele navegador entra sem senha nem código. Para encerrar antes, use Sair, que encerra a sessão da conta em todos os aparelhos. O limite é conferido no banco pela `202611250002`, e nenhuma configuração do Supabase Auth precisa mudar.
 

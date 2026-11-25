@@ -21,6 +21,8 @@ body:has(.icarus-checkout) {
   height: auto;
 }
 
+.public-layout:has(.icarus-checkout) .public-top { --brand-logo-height: 40px; }
+
 .public-layout:has(.icarus-checkout) :is(.public-top, footer) a {
   display: inline-flex;
   align-items: center;

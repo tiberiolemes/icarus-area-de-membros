@@ -11,6 +11,7 @@ import { deliverPaidInvite, finishPaidOrder, normalizeEvent } from "../../supaba
 import { publicStorageUrl } from "../../supabase/functions/_shared/storage.ts";
 import { clients, type Dependencies } from "../../supabase/functions/_shared/client.ts";
 import { constantEqual, sha256 } from "../../supabase/functions/_shared/http.ts";
+import { imageSize } from "../../supabase/functions/_shared/files.ts";
 
 const id = "11111111-1111-4111-8111-111111111111", other = "22222222-2222-4222-8222-222222222222";
 function assert(value: unknown, label = "assertion") { if (!value) throw Error(label); }
@@ -438,4 +439,139 @@ Deno.test("checkout limita pelo IP do cabeçalho confiável, agrupando IPv6 por 
     equal((await checkout(d)(request(purchase, { token: null, headers }))).status, 200);
     equal(sent?.p_client_ip, ip);
   }
+});
+
+function pngLogo(width: number, height: number, size = 64) {
+  const bytes = new Uint8Array(size), view = new DataView(bytes.buffer);
+  bytes.set([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82]);
+  view.setUint32(16, width); view.setUint32(20, height);
+  return bytes;
+}
+function webpLogo(chunk: "VP8 " | "VP8L" | "VP8X", width: number, height: number) {
+  const bytes = new Uint8Array(64), view = new DataView(bytes.buffer);
+  bytes.set(new TextEncoder().encode(`RIFF\0\0\0\0WEBP${chunk}`));
+  if (chunk === "VP8 ") { bytes.set([0x9d, 0x01, 0x2a], 23); view.setUint16(26, width, true); view.setUint16(28, height, true); }
+  if (chunk === "VP8L") { bytes[20] = 0x2f; view.setUint32(21, ((width - 1) | ((height - 1) << 14)) >>> 0, true); }
+  if (chunk === "VP8X") { view.setUint32(24, width - 1, true); view.setUint32(27, height - 1, true); }
+  return bytes;
+}
+const logoPath = (variant: string, n: number) => `logo/${variant}-${n}${id.slice(1)}.png`;
+function brandDeps(route: Route = () => undefined, role = "admin") {
+  return deps((url, init) => url.pathname.endsWith("app_bootstrap") ? response({ profile: { role } }) : route(url, init));
+}
+function sendLogo(d: Dependencies, file: File, variant = "light", courseId?: string) {
+  const form = new FormData(); form.set("kind", "brand-asset"); form.set("variant", variant); form.set("file", file);
+  if (courseId) form.set("course_id", courseId);
+  return upload(d)(new Request("http://localhost/upload", { method: "POST", headers: { authorization: `Bearer ${jwt()}` }, body: form }));
+}
+const touchedBrand = (requests: { url: string }[]) => requests.some((r) => r.url.includes("app_brand_logo") || r.url.includes("/storage/"));
+
+Deno.test("imageSize lê as dimensões do cabeçalho PNG e WebP", () => {
+  equal(imageSize("image/png", pngLogo(960, 240)), { width: 960, height: 240 });
+  equal(imageSize("image/webp", webpLogo("VP8 ", 961, 241)), { width: 961, height: 241 });
+  equal(imageSize("image/webp", webpLogo("VP8L", 962, 242)), { width: 962, height: 242 });
+  equal(imageSize("image/webp", webpLogo("VP8X", 4096, 1024)), { width: 4096, height: 1024 });
+  equal(imageSize("image/png", pngLogo(960, 240).slice(0, 20)), null);
+  equal(imageSize("image/webp", webpLogo("VP8X", 960, 240).slice(0, 30)), null);
+  equal(imageSize("image/jpeg", new Uint8Array(64)), null);
+});
+Deno.test("logo recusa tipo, tamanho, dimensões e variante antes do banco e do Storage", async () => {
+  const jpeg = new Uint8Array(64); jpeg.set([255, 216, 255, 224]);
+  for (const [file, variant] of [
+    [new File([jpeg], "logo.png", { type: "image/png" }), "light"],
+    [new File(["<svg xmlns='http://www.w3.org/2000/svg'><script>alert(1)</script></svg>"], "logo.svg", { type: "image/svg+xml" }), "light"],
+    [new File([pngLogo(960, 240)], "logo.webp", { type: "image/webp" }), "light"],
+    [new File([pngLogo(960, 240, 512001)], "logo.png", { type: "image/png" }), "light"],
+    [new File([pngLogo(239, 60)], "logo.png", { type: "image/png" }), "light"],
+    [new File([pngLogo(240, 59)], "logo.png", { type: "image/png" }), "light"],
+    [new File([pngLogo(4097, 100)], "logo.png", { type: "image/png" }), "light"],
+    [new File([pngLogo(960, 240)], "logo.png", { type: "image/png" }), "sepia"],
+    [new File([webpLogo("VP8X", 960, 240).slice(0, 30)], "curta.webp", { type: "image/webp" }), "light"],
+    [new File([webpLogo("VP8X", 512, 512)], "icone.webp", { type: "image/webp" }), "icon"],
+    [new File([pngLogo(512, 500)], "icone.png", { type: "image/png" }), "icon"],
+    [new File([pngLogo(179, 179)], "icone.png", { type: "image/png" }), "icon"],
+    [new File([webpLogo("VP8X", 600, 200)], "assinatura.webp", { type: "image/webp" }), "signature"],
+    [new File([pngLogo(2001, 300)], "assinatura.png", { type: "image/png" }), "signature"],
+    [new File([pngLogo(199, 60)], "assinatura.png", { type: "image/png" }), "signature"],
+  ] as const) {
+    const { d, requests } = brandDeps();
+    equal((await sendLogo(d, file, variant, variant === "signature" ? other : undefined)).status, 422);
+    assert(!touchedBrand(requests), `${file.name} ${file.size} ${variant}`);
+  }
+});
+Deno.test("logo de quem não é admin para antes do banco e do Storage", async () => {
+  for (const role of ["member", "support", "moderator", "instructor"]) {
+    const { d, requests } = brandDeps(undefined, role);
+    equal((await sendLogo(d, new File([pngLogo(960, 240, 512000)], "logo.png", { type: "image/png" }))).status, 403);
+    equal((await upload(d)(request({ action: "brand-asset-remove", variant: "light" }))).status, 403);
+    assert(!touchedBrand(requests), role);
+  }
+  const { d, requests } = brandDeps((url) => url.pathname.endsWith("app_brand_asset_begin") ? response({ code: "P0001", message: "Sessão inválida, segundo fator ou configuração de senha pendente." }, 400) : undefined);
+  equal((await sendLogo(d, new File([pngLogo(960, 240)], "logo.png", { type: "image/png" }))).status, 422);
+  assert(!requests.some((r) => r.url.includes("/storage/")), "banco recusou e nada foi gravado");
+});
+Deno.test("logo grava, troca e só depois apaga a anterior", async () => {
+  const path = logoPath("light", 3), old = logoPath("light", 4);
+  const { d, requests } = brandDeps((url, init) =>
+    url.pathname.endsWith("app_brand_asset_begin") ? response(path)
+    : url.pathname === `/storage/v1/object/icarus-brand/${path}` ? response({ Key: `icarus-brand/${path}` })
+    : url.pathname.endsWith("app_brand_asset_commit") ? response({ logo_light: path, logo_dark: null, icon: null, previous: old })
+    : url.pathname === "/storage/v1/object/icarus-brand" && init.method === "DELETE" ? response([{ name: old }])
+    : undefined);
+  const result = await sendLogo(d, new File([webpLogo("VP8X", 960, 240)], "Logo.WEBP", { type: "image/webp" }));
+  equal(result.status, 200); equal(await result.json(), { logo_light: path, logo_dark: null, icon: null });
+  const at = (part: string) => requests.findIndex((r) => r.url.includes(part));
+  equal(requests.find((r) => r.url.includes("app_brand_asset_begin"))?.body, { p_actor_id: id, p_variant: "light", p_content_type: "image/webp" });
+  equal(requests.find((r) => r.url.includes("app_brand_asset_commit"))?.body, { p_actor_id: id, p_variant: "light", p_path: path, p_course_id: null });
+  equal(requests.find((r) => r.method === "DELETE")?.body, { prefixes: [old] });
+  assert(at("app_brand_asset_begin") < at(`/icarus-brand/${path}`) && at(`/icarus-brand/${path}`) < at("app_brand_asset_commit") && at("app_brand_asset_commit") < requests.findIndex((r) => r.method === "DELETE"), "ordem begin, upload, commit, delete");
+});
+Deno.test("falha no commit apaga só o arquivo novo", async () => {
+  const path = logoPath("dark", 5);
+  const { d, requests } = brandDeps((url, init) =>
+    url.pathname.endsWith("app_brand_asset_begin") ? response(path)
+    : url.pathname === `/storage/v1/object/icarus-brand/${path}` ? response({ Key: `icarus-brand/${path}` })
+    : url.pathname.endsWith("app_brand_asset_commit") ? response({ message: "indisponível" }, 503)
+    : url.pathname === "/storage/v1/object/icarus-brand" && init.method === "DELETE" ? response([{ name: path }])
+    : undefined);
+  equal((await sendLogo(d, new File([pngLogo(960, 240)], "logo.png", { type: "image/png" }), "dark")).status, 503);
+  equal(requests.filter((r) => r.method === "DELETE").map((r) => r.body), [{ prefixes: [path] }]);
+});
+Deno.test("remover grava nulo e depois apaga a anterior, mesmo se o Storage falhar", async () => {
+  const old = logoPath("dark", 6);
+  const { d, requests } = brandDeps((url, init) =>
+    url.pathname.endsWith("app_brand_asset_commit") ? response({ logo_light: null, logo_dark: null, icon: null, previous: old })
+    : url.pathname === "/storage/v1/object/icarus-brand" && init.method === "DELETE" ? response({ message: "falha" }, 500)
+    : undefined);
+  const result = await upload(d)(request({ action: "brand-asset-remove", variant: "dark" }));
+  equal(result.status, 200); equal(await result.json(), { logo_light: null, logo_dark: null, icon: null });
+  equal(requests.find((r) => r.url.includes("app_brand_asset_commit"))?.body, { p_actor_id: id, p_variant: "dark", p_path: null, p_course_id: null });
+  equal(requests.find((r) => r.method === "DELETE")?.body, { prefixes: [old] });
+  assert(!requests.some((r) => r.url.includes("app_brand_asset_begin")));
+});
+
+Deno.test("favicon e assinatura seguem o mesmo caminho, com curso só na assinatura", async () => {
+  const icon = `icon/${other}.png`, signature = `signature/${other}.png`;
+  const { d, requests } = brandDeps((url, init) =>
+    url.pathname.endsWith("app_brand_asset_begin") ? response(JSON.parse(String(init.body)).p_variant === "icon" ? icon : signature)
+    : url.pathname.startsWith("/storage/v1/object/icarus-brand/") ? response({ Key: url.pathname })
+    : url.pathname.endsWith("app_brand_asset_commit") ? response(JSON.parse(String(init.body)).p_variant === "icon" ? { logo_light: null, logo_dark: null, icon, previous: null } : { signature_path: signature, previous: null })
+    : undefined);
+  const saved = await sendLogo(d, new File([pngLogo(512, 512)], "icone.png", { type: "image/png" }), "icon");
+  equal(saved.status, 200); equal(await saved.json(), { logo_light: null, logo_dark: null, icon });
+  equal((await sendLogo(d, new File([pngLogo(600, 200)], "assinatura.png", { type: "image/png" }), "signature")).status, 422);
+  for (const [file, variant, message] of [
+    [new File([pngLogo(239, 60)], "logo.png", { type: "image/png" }), "light", "A logo precisa ter pelo menos 240 × 60 px e no máximo 4096 px de cada lado."],
+    [new File([pngLogo(512, 500)], "icone.png", { type: "image/png" }), "icon", "O ícone precisa ser quadrado, com pelo menos 180 × 180 px e no máximo 4096 px."],
+    [new File([pngLogo(2001, 300)], "assinatura.png", { type: "image/png" }), "signature", "A assinatura precisa ter pelo menos 200 × 60 px e no máximo 2000 px de cada lado."],
+  ] as const) equal((await (await sendLogo(d, file, variant, other)).json()).error.message, message);
+  const signed = await sendLogo(d, new File([pngLogo(600, 200)], "assinatura.png", { type: "image/png" }), "signature", other);
+  equal(signed.status, 200); equal(await signed.json(), { signature_path: signature });
+  equal(requests.filter((r) => r.url.includes("app_brand_asset_commit")).map((r) => r.body), [
+    { p_actor_id: id, p_variant: "icon", p_path: icon, p_course_id: null },
+    { p_actor_id: id, p_variant: "signature", p_path: signature, p_course_id: other },
+  ]);
+  const removed = await upload(d)(request({ action: "brand-asset-remove", variant: "signature", course_id: other }));
+  equal(removed.status, 200);
+  equal(requests.filter((r) => r.url.includes("app_brand_asset_commit")).at(-1)?.body, { p_actor_id: id, p_variant: "signature", p_path: null, p_course_id: other });
 });

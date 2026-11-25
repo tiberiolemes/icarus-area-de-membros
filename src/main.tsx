@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, HashRouter, Link, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { InstallationIcon } from "./brand";
 import { cache } from "./api";
 import { AuthProvider, Gate, RoleGate, useBootstrap } from "./auth";
 import {
@@ -165,6 +166,7 @@ function App() {
       <Router>
         <ErrorBoundary>
           <AuthProvider>
+            <InstallationIcon />
             <Suspense fallback={<Loading />}>
               <Routes>
                 <Route

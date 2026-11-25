@@ -818,6 +818,26 @@ h2 > a,
 .public-top img {
   display: block;
 }
+/* Logo da instalação: cada versão aparece só no data-theme mais próximo que combina com ela. */
+[data-theme="light"] { --brand-tone-light: block; --brand-tone-dark: none; }
+[data-theme="dark"] { --brand-tone-light: none; --brand-tone-dark: block; }
+[data-brand-tone="light"] { display: var(--brand-tone-light, block) !important; }
+[data-brand-tone="dark"] { display: var(--brand-tone-dark, none) !important; }
+/* Logo própria: altura de cada lugar e largura pela proporção do arquivo. Vence a largura fixa e o invert da logo do Icarus. */
+img.brand-custom {
+  width: auto !important;
+  height: var(--brand-logo-height, 40px) !important;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
+  filter: none !important;
+}
+.public-top { --brand-logo-height: 56px; }
+.rail-brand,
+.admin-topbar-brand,
+.mobile-frame-label,
+.student-onboarding .public-top { --brand-logo-height: 32px; }
+.certificate-brand { --brand-logo-height: 36px; }
 .public-top > a:last-child {
   font-size: 14px;
 }
@@ -1542,6 +1562,7 @@ h2 > a,
     width: 200px;
     height: auto;
   }
+  .public-top { --brand-logo-height: 48px; }
   .public-main {
     padding: 32px 0 64px;
   }

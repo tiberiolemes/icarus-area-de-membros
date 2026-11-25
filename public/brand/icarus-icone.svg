@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Icarus">
+  <style>path{fill:#000}@media (prefers-color-scheme:dark){path{fill:#fff}}</style>
+  <g transform="translate(8 51.5)">
+    <path d="M 0,0 111,68 111,105 10,46 Z"/>
+    <path d="M 23,70 108,115 108,153 34,108 Z"/>
+    <path d="M 240,0 129,68 129,105 230,46 Z"/>
+    <path d="M 217,70 132,115 132,153 206,108 Z"/>
+  </g>
+</svg>

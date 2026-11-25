@@ -1,6 +1,6 @@
 # Dicionário de dados do Icarus
 
-**51 tabelas e 368 colunas** nos esquemas `public` e `app_private`.
+**51 tabelas e 374 colunas** nos esquemas `public` e `app_private`.
 
 Veja o [mapa técnico](architecture.md) para localizar os fluxos e visualizar os relacionamentos. Este inventário descreve a estrutura das tabelas da aplicação. Os esquemas gerenciados pelo Supabase, `auth` e `storage`, aparecem quando são destino de uma chave estrangeira.
 
@@ -61,10 +61,16 @@ RLS ativada.
 | `singleton` | `boolean` | Não | `true` |
 | `name` | `text` | Não | `'Icarus'::text` |
 | `revision` | `integer` | Não | `0` |
+| `logo_light` | `text` | Sim | — |
+| `logo_dark` | `text` | Sim | — |
+| `icon` | `text` | Sim | — |
 
 **Chaves e restrições**
 
 - `installation_brand_pkey` — `PRIMARY KEY (singleton)`
+- `installation_brand_icon_check` — `CHECK ((icon ~ '^icon/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png$'::text))`
+- `installation_brand_logo_dark_check` — `CHECK ((logo_dark ~ '^logo/dark-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|webp)$'::text))`
+- `installation_brand_logo_light_check` — `CHECK ((logo_light ~ '^logo/light-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|webp)$'::text))`
 - `installation_brand_name_check` — `CHECK (((char_length(name) >= 1) AND (char_length(name) <= 80)))`
 - `installation_brand_revision_check` — `CHECK ((revision >= 0))`
 - `installation_brand_singleton_check` — `CHECK (singleton)`
@@ -187,6 +193,7 @@ RLS ativada.
 | `signer_name` | `text` | Não | `''::text` |
 | `signer_title` | `text` | Não | `''::text` |
 | `signature_url` | `text` | Sim | — |
+| `signature_path` | `text` | Sim | — |
 
 **Chaves e restrições**
 
@@ -197,6 +204,7 @@ RLS ativada.
 - `certificates_user_id_fkey` — `FOREIGN KEY (user_id) REFERENCES public.profiles(id)`
 - `certificates_duration_minutes_check` — `CHECK ((duration_minutes >= 0))`
 - `certificates_lesson_ids_check` — `CHECK ((cardinality(lesson_ids) > 0))`
+- `certificates_signature_path_check` — `CHECK ((signature_path ~ '^signature/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png$'::text))`
 
 ## `public.courses`
 
@@ -221,6 +229,7 @@ RLS ativada.
 | `signer_name` | `text` | Não | `''::text` |
 | `signer_title` | `text` | Não | `''::text` |
 | `signature_url` | `text` | Sim | — |
+| `signature_path` | `text` | Sim | — |
 
 **Chaves e restrições**
 
@@ -228,6 +237,7 @@ RLS ativada.
 - `courses_slug_key` — `UNIQUE (slug)`
 - `courses_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
 - `courses_description_check` — `CHECK ((length(description) <= 20000))`
+- `courses_signature_path_check` — `CHECK ((signature_path ~ '^signature/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png$'::text))`
 - `courses_signer_name_check` — `CHECK ((length(signer_name) <= 160))`
 - `courses_signer_title_check` — `CHECK ((length(signer_title) <= 160))`
 - `courses_slug_check` — `CHECK ((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text))`

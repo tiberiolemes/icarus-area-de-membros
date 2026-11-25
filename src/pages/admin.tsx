@@ -39,6 +39,7 @@ import {
   roleLabel,
   roleLabels,
   rpc,
+  safeUrl,
   useRpc,
 } from "../api";
 import { buildAdminCsv, exportLimit } from "../admin-export";
@@ -63,7 +64,8 @@ import {
   value,
 } from "../ui";
 import { RichEditor } from "../rich";
-import { AdminBrand } from "./admin-brand";
+import { AdminBrand, AssetCard } from "./admin-brand";
+import { brandAssetUrl } from "../brand";
 import { AdminCatalogLaunch } from "./admin-catalog-launch";
 import { Reauth } from "./settings";
 import { Moderate, statusName } from "./community";
@@ -410,6 +412,7 @@ export function AdminCourses() {
   );
 }
 export function CourseEditor() {
+  const admin = useBootstrap().data?.profile.role === "admin";
   const { id } = useParams(),
     isNew = id === "novo",
     courses = useAll("courses"),
@@ -523,7 +526,6 @@ export function CourseEditor() {
                       certificate_enabled: check(data, "certificate_enabled"),
                       signer_name: value(data, "signer_name"),
                       signer_title: value(data, "signer_title"),
-                      signature_url: nullable(data, "signature_url"),
                     })
                   }
                 >
@@ -549,14 +551,6 @@ export function CourseEditor() {
                       maxLength={160}
                     />
                   </Field>
-                  <Field label="URL da assinatura (opcional)">
-                    <input
-                      name="signature_url"
-                      type="url"
-                      defaultValue={text(course, "signature_url")}
-                      placeholder="https://"
-                    />
-                  </Field>
                   <Notice>
                     O certificado usa o nome do aluno, o curso e a carga horária
                     do currículo obrigatório. Alterações não reescrevem
@@ -564,6 +558,13 @@ export function CourseEditor() {
                     expressamente uma demonstração.
                   </Notice>
                 </Form>
+                {admin ? (
+                  <AssetCard key={course.id} variant="signature" courseId={course.id}
+                    saved={brandAssetUrl(course.signature_path) ?? safeUrl(course.signature_url) ?? null}
+                    onChanged={() => courses.refetch()} />
+                ) : (
+                  <Notice>A assinatura do certificado é enviada por um administrador.</Notice>
+                )}
               </div>
             )}
           </>
@@ -2629,7 +2630,7 @@ export function AdminSettings() {
     <SettingsSurface
       tab="marca"
       title="Plataforma, marca e white label"
-      description="Gerencie o nome da plataforma e seus documentos legais."
+      description="Gerencie o nome e a logo da plataforma e os documentos legais."
     >
       <AdminBrand />
     </SettingsSurface>

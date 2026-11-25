@@ -55,6 +55,17 @@ it("a moldura pública usa o nome publicado pela instalação", async () => {
   expect(brand).toHaveAttribute("href", "/entrar");
 });
 
+it("a moldura pública troca o nome pela logo da instalação antes do login", async () => {
+  const light = "logo/light-11111111-1111-4111-8111-111111111111.png";
+  vi.stubGlobal("fetch", vi.fn(async () => json({ name: "Academia de teste", logo_light: light, logo_dark: null })));
+  wrap(<PublicFrame><p>Área pública</p></PublicFrame>);
+  const brand = await screen.findByRole("link", { name: "Academia de teste, início" });
+  const logo = await screen.findByRole("img", { name: "Academia de teste" });
+  expect(brand).toContainElement(logo);
+  expect(logo).toHaveAttribute("src", `http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${light}`);
+  expect(logo).toHaveClass("brand-custom");
+});
+
 describe("Formulários reais", () => {
   it("permite mostrar a senha, bloqueia o toggle no envio e limpa inclusive senha visível na falha", async () => {
     let resolve!: (response: Response) => void;
@@ -250,6 +261,9 @@ describe("Confiança na fronteira do browser", () => {
     );
     expect(safeUrl("javascript:alert(1)")).toBeUndefined();
     expect(safeUrl("data:text/html,test")).toBeUndefined();
+    // Vazia resolveria para a própria página e passaria por uma URL cadastrada.
+    expect(safeUrl("")).toBeUndefined();
+    expect(safeUrl("   ")).toBeUndefined();
   });
   it("renderiza texto rico sem script, handlers, SVG ou links executáveis", () => {
     const content =

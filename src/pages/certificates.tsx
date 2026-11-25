@@ -9,6 +9,7 @@ import { Action, Empty, Field, Form, Heading, Notice, Progress, QueryState, valu
 import { PublicFrame } from "./access";
 import { RichContent } from "../rich";
 import { exportCertificate } from "../certificate";
+import { BrandLogo, brandAssetUrl, defaultLogo } from "../brand";
 import { notificationListKey, reconcileNotificationQueries } from "./notifications";
 import "./student-resources.css";
 
@@ -21,12 +22,18 @@ function certificateStatus(certificate: Certificate) {
   return certificate.demo ? "Demonstração sem validade" : "Certificado válido";
 }
 
+type PublicBrand = { name?: string; logo_light?: string | null; logo_dark?: string | null };
+
 function CertificateDocument({ certificate }: { certificate: Certificate }) {
+  const brand = useRpc<PublicBrand>("app_public_context").data;
+  // Só a assinatura enviada ao bucket de marca: a URL externa de certificados antigos não é carregada na página pública.
+  const signature = brandAssetUrl(certificate.signature_path);
   return (
     <article className="certificate-document" data-tour="certificate">
       <header className="certificate-document-header">
         <span className="certificate-brand">
-          <img src={import.meta.env.BASE_URL + "brand/icarus-horizontal-preto.svg"} alt="Icarus" width="244" height="64" />
+          <BrandLogo light={brandAssetUrl(brand?.logo_light)} dark={brandAssetUrl(brand?.logo_dark)} name={brand?.name || "Icarus"}
+            fallback={<img src={defaultLogo} alt="Icarus" width="244" height="64" />} />
         </span>
         <span className="certificate-code">Código de verificação <code>{certificate.code}</code></span>
       </header>
@@ -45,6 +52,7 @@ function CertificateDocument({ certificate }: { certificate: Certificate }) {
       </dl>
       {certificate.signer_name && (
         <div className="certificate-signer">
+          {signature && <img className="certificate-signature" src={signature} alt={`Assinatura de ${certificate.signer_name}`} referrerPolicy="no-referrer" />}
           <strong>{certificate.signer_name}</strong>
           {certificate.signer_title && <span>{certificate.signer_title}</span>}
         </div>
@@ -60,14 +68,17 @@ function CertificateActions({ certificate }: { certificate: Certificate }) {
   const [copied, setCopied] = useState(false);
   const verifyHref = useHref(verificationPath(certificate.code));
   const verificationUrl = new URL(verifyHref, window.location.href).href;
+  // O arquivo exportado tem fundo branco: usa a logo colorida ou, sem ela, a do Icarus.
+  const brand = useRpc<PublicBrand>("app_public_context").data;
+  const exported = { logoUrl: brandAssetUrl(brand?.logo_light), issuer: brand?.name || "Icarus" };
   return (
     <div className="certificate-actions">
       {!certificate.revoked_at && (
         <>
-          <Action primary run={() => exportCertificate(certificate, "pdf", verificationUrl)}>
+          <Action primary run={() => exportCertificate(certificate, "pdf", verificationUrl, exported)}>
             <Download size={18} aria-hidden="true" /> Baixar PDF
           </Action>
-          <Action run={() => exportCertificate(certificate, "png", verificationUrl)}>
+          <Action run={() => exportCertificate(certificate, "png", verificationUrl, exported)}>
             <Image size={18} aria-hidden="true" /> Baixar PNG
           </Action>
         </>
@@ -84,6 +95,7 @@ function CertificateActions({ certificate }: { certificate: Certificate }) {
 }
 
 function CertificateRecord({ certificate, publicResult = false }: { certificate: Certificate; publicResult?: boolean }) {
+  const issuer = useRpc<PublicBrand>("app_public_context").data?.name || "Icarus";
   return (
     <section className="certificate-panel certificate-record" aria-label="Registro de emissão">
       {publicResult && (
@@ -96,7 +108,7 @@ function CertificateRecord({ certificate, publicResult = false }: { certificate:
         </div>
       )}
       <dl>
-        <div><dt>Emitido por</dt><dd>Icarus</dd></div>
+        <div><dt>Emitido por</dt><dd dir="auto">{issuer}</dd></div>
         <div><dt>Data de emissão</dt><dd>{date(certificate.issued_at)}</dd></div>
         <div><dt>Carga horária</dt><dd>{certificate.duration_minutes} minutos</dd></div>
       </dl>

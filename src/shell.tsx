@@ -42,7 +42,7 @@ import { Tour } from "./tour";
 import { UpdateNotice } from "./update-notice";
 import { MemberSearch } from "./pages/member-search";
 import { StitchIcon } from "./stitch-icon";
-import { BrandLogo, brandLogoUrl, defaultLogo } from "./brand";
+import { BrandLogo, brandAssetUrl, defaultLogo } from "./brand";
 import "./member-shell-stitch.css";
 
 const memberNav = [
@@ -208,7 +208,7 @@ export function Shell() {
   const profile = boot.data!.profile;
   const name = boot.data?.settings?.name;
   const installationName = typeof name === "string" && name ? name : "Icarus";
-  const logos = { light: brandLogoUrl(boot.data?.settings?.logo_light), dark: brandLogoUrl(boot.data?.settings?.logo_dark) };
+  const logos = { light: brandAssetUrl(boot.data?.settings?.logo_light), dark: brandAssetUrl(boot.data?.settings?.logo_dark) };
   // Sem logo própria, nada muda: logo do Icarus ou o nome personalizado em texto.
   const brandMark = (Text: "strong" | "span") => (
     <BrandLogo {...logos} name={installationName} fallback={installationName === "Icarus" ? <img src={defaultLogo} alt="Icarus" />

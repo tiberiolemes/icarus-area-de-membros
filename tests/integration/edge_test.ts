@@ -560,6 +560,11 @@ Deno.test("favicon e assinatura seguem o mesmo caminho, com curso só na assinat
   const saved = await sendLogo(d, new File([pngLogo(512, 512)], "icone.png", { type: "image/png" }), "icon");
   equal(saved.status, 200); equal(await saved.json(), { logo_light: null, logo_dark: null, icon });
   equal((await sendLogo(d, new File([pngLogo(600, 200)], "assinatura.png", { type: "image/png" }), "signature")).status, 422);
+  for (const [file, variant, message] of [
+    [new File([pngLogo(239, 60)], "logo.png", { type: "image/png" }), "light", "A logo precisa ter pelo menos 240 × 60 px e no máximo 4096 px de cada lado."],
+    [new File([pngLogo(512, 500)], "icone.png", { type: "image/png" }), "icon", "O ícone precisa ser quadrado, com pelo menos 180 × 180 px e no máximo 4096 px."],
+    [new File([pngLogo(2001, 300)], "assinatura.png", { type: "image/png" }), "signature", "A assinatura precisa ter pelo menos 200 × 60 px e no máximo 2000 px de cada lado."],
+  ] as const) equal((await (await sendLogo(d, file, variant, other)).json()).error.message, message);
   const signed = await sendLogo(d, new File([pngLogo(600, 200)], "assinatura.png", { type: "image/png" }), "signature", other);
   equal(signed.status, 200); equal(await signed.json(), { signature_path: signature });
   equal(requests.filter((r) => r.url.includes("app_brand_asset_commit")).map((r) => r.body), [

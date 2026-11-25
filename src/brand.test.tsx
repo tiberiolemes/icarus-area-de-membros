@@ -4,17 +4,25 @@ vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:58521");
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
-import { BrandLogo, brandLogoUrl, logoBox } from "./brand";
+import { render as renderNode, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrandLogo, brandAssetUrl, defaultIcon, defaultTouchIcon, InstallationIcon, logoBox } from "./brand";
 
 const light = "logo/light-11111111-1111-4111-8111-111111111111.png";
 const dark = "logo/dark-22222222-2222-4222-8222-222222222222.webp";
 const fallback = <strong className="installation-name">Academia</strong>;
 
-it("monta a URL pública só para caminhos de logo gerados pelo servidor", () => {
-  expect(brandLogoUrl(light)).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${light}`);
-  expect(brandLogoUrl(dark)).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${dark}`);
+it("monta a URL pública só para caminhos de marca gerados pelo servidor", () => {
+  for (const path of ["icon/33333333-3333-4333-8333-333333333333.png", "signature/44444444-4444-4444-8444-444444444444.png"]) {
+    expect(brandAssetUrl(path)).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${path}`);
+  }
+  for (const path of ["icon/33333333-3333-4333-8333-333333333333.webp", "signature/x.png", "avatar/33333333-3333-4333-8333-333333333333.png"]) {
+    expect(brandAssetUrl(path)).toBeNull();
+  }
+  expect(brandAssetUrl(light)).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${light}`);
+  expect(brandAssetUrl(dark)).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${dark}`);
   for (const path of [null, undefined, "", "../icarus-private/x.png", "https://exemplo.test/logo.png", "logo/light-x.png", "logo/light-11111111-1111-4111-8111-111111111111.svg"]) {
-    expect(brandLogoUrl(path)).toBeNull();
+    expect(brandAssetUrl(path)).toBeNull();
   }
 });
 
@@ -52,4 +60,24 @@ it("encaixa a logo na área do certificado sem distorcer", () => {
   expect(logoBox(960, 240)).toEqual({ x: 100, y: 96, width: 305, height: 76.25 });
   expect(logoBox(240, 240)).toEqual({ x: 100, y: 96, width: 80, height: 80 });
   expect(logoBox(4096, 60)).toEqual({ x: 100, y: 96, width: 305, height: 305 * 60 / 4096 });
+});
+
+it("aplica o favicon da instalação nas abas e volta ao padrão do Icarus sem ele", async () => {
+  document.head.innerHTML = `<link rel="icon" href="${defaultIcon}" type="image/svg+xml"><link rel="apple-touch-icon" href="${defaultTouchIcon}">`;
+  const icon = "icon/33333333-3333-4333-8333-333333333333.png";
+  let context: Record<string, unknown> = { name: "Academia", icon };
+  vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(context), { headers: { "content-type": "application/json" } })));
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = renderNode(<QueryClientProvider client={cache}><InstallationIcon /></QueryClientProvider>);
+  const link = (rel: string) => document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`)!;
+  await waitFor(() => expect(link("icon").getAttribute("href")).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${icon}`));
+  expect(link("icon").type).toBe("image/png");
+  expect(link("apple-touch-icon").getAttribute("href")).toBe(link("icon").getAttribute("href"));
+  context = { name: "Academia", icon: null };
+  await cache.invalidateQueries();
+  await waitFor(() => expect(link("icon").getAttribute("href")).toBe(defaultIcon));
+  expect(link("icon").type).toBe("image/svg+xml");
+  expect(link("apple-touch-icon").getAttribute("href")).toBe(defaultTouchIcon);
+  view.unmount();
+  vi.unstubAllGlobals();
 });

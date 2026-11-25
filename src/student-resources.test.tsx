@@ -111,6 +111,16 @@ it("o documento do certificado usa a logo da instalação nos dois temas", async
   expect(paper.querySelector('img[alt="Icarus"]')).toBeNull();
 });
 
+it("o certificado mostra a assinatura da emissão e o nome da instalação como emissor", async () => {
+  const signature = "signature/55555555-5555-4555-8555-555555555555.png";
+  vi.stubGlobal("fetch", async (url: RequestInfo | URL) =>
+    String(url).endsWith("/app_public_context") ? json({ name: "Academia de teste" }) : json({ ...certificate, signer_name: "Pessoa Responsável", signature_path: signature }));
+  mount("/verificar/" + validCode);
+  const image = await screen.findByRole("img", { name: "Assinatura de Pessoa Responsável" });
+  expect(image).toHaveAttribute("src", `http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${signature}`);
+  await waitFor(() => expect(screen.getByText("Emitido por").nextElementSibling).toHaveTextContent("Academia de teste"));
+});
+
 it("revalida o código atual e distingue falha de consulta de revogação", async () => {
   const request = vi.fn()
     .mockImplementationOnce(async () => json(certificate))

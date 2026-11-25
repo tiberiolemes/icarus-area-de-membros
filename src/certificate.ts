@@ -1,11 +1,11 @@
 import { safeUrl, downloadBlob } from "./api";
 import type { Certificate } from "./api";
-import { defaultLogo, logoBox } from "./brand";
+import { brandAssetUrl, defaultLogo, logoBox } from "./brand";
 
 export async function certificateCanvas(
   certificate: Certificate,
   verificationUrl = `${location.origin}/verificar/${encodeURIComponent(certificate.code)}`,
-  logoUrl: string | null = null,
+  { logoUrl, issuer }: { logoUrl: string | null; issuer: string } = { logoUrl: null, issuer: "Icarus" },
 ) {
   if (certificate.revoked_at)
     throw new Error(
@@ -58,12 +58,12 @@ export async function certificateCanvas(
     760,
   );
   ctx.fillText(
-    `Emitido em ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "America/Sao_Paulo" }).format(new Date(certificate.issued_at))}`,
+    fit(ctx, `Emitido em ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "America/Sao_Paulo" }).format(new Date(certificate.issued_at))} por ${issuer}`, 1370),
     100,
     804,
   );
-  if (certificate.signature_url) {
-    const url = safeUrl(certificate.signature_url);
+  if (certificate.signature_path || certificate.signature_url) {
+    const url = brandAssetUrl(certificate.signature_path) ?? safeUrl(certificate.signature_url);
     if (!url)
       throw new Error(
         "A assinatura do certificado tem um endereço inválido. Consulte o responsável pela emissão.",
@@ -101,6 +101,12 @@ export async function certificateCanvas(
     1036,
   );
   return canvas;
+}
+function fit(ctx: CanvasRenderingContext2D, text: string, width: number) {
+  const chars = Array.from(text);
+  if (ctx.measureText(text).width <= width) return text;
+  while (chars.length > 1 && ctx.measureText(chars.join("") + "…").width > width) chars.pop();
+  return chars.join("") + "…";
 }
 function wrap(
   ctx: CanvasRenderingContext2D,
@@ -168,9 +174,9 @@ export async function exportCertificate(
   certificate: Certificate,
   format: "png" | "pdf",
   verificationUrl?: string,
-  logoUrl: string | null = null,
+  brand?: { logoUrl: string | null; issuer: string },
 ) {
-  const canvas = await certificateCanvas(certificate, verificationUrl, logoUrl);
+  const canvas = await certificateCanvas(certificate, verificationUrl, brand);
   if (format === "png") {
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob(

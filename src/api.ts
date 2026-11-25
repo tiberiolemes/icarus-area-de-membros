@@ -359,4 +359,5 @@ export type Certificate = {
   signer_name?: string;
   signer_title?: string;
   signature_url?: string;
+  signature_path?: string | null;
 };

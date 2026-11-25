@@ -7,7 +7,7 @@ vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
 const { settings, edge } = vi.hoisted(() => ({
-  settings: { name: "Icarus", name_revision: 0, logo_light: null as string | null, logo_dark: null as string | null },
+  settings: { name: "Icarus", name_revision: 0, logo_light: null as string | null, logo_dark: null as string | null, icon: null as string | null },
   edge: vi.fn(),
 }));
 vi.mock("./api", async (importOriginal) => ({ ...await importOriginal<typeof import("./api")>(), edge }));
@@ -16,7 +16,7 @@ vi.mock("./auth", () => ({
   useAuth: () => ({ session: { access_token: "token", user: { id: "admin-1" } } }),
 }));
 import { cache } from "./api";
-import { AdminBrand } from "./pages/admin-brand";
+import { AdminBrand, AssetCard } from "./pages/admin-brand";
 
 const dark = "logo/dark-22222222-2222-4222-8222-222222222222.png";
 const pngBytes = (size = 64) => {
@@ -29,6 +29,7 @@ let size = { width: 960, height: 240 };
 beforeEach(() => {
   settings.logo_light = null;
   settings.logo_dark = null;
+  settings.icon = null;
   size = { width: 960, height: 240 };
   edge.mockReset();
   edge.mockResolvedValue({ logo_light: null, logo_dark: null });
@@ -87,7 +88,7 @@ it("mostra a prévia nos dois temas antes de salvar e salva a colorida por AJAX"
   expect(await screen.findByText("Logo colorida salva.")).toBeInTheDocument();
   const [name, body] = edge.mock.calls[0] as [string, FormData];
   expect(name).toBe("upload");
-  expect([body.get("kind"), body.get("variant"), body.get("file")]).toEqual(["brand-logo", "light", file]);
+  expect([body.get("kind"), body.get("variant"), body.get("file"), body.get("course_id")]).toEqual(["brand-asset", "light", file, null]);
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ["bootstrap"] });
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ["app_public_context"] });
 });
@@ -111,7 +112,7 @@ it("remove a logo branca só depois da confirmação", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Remover logo branca" }));
   expect(await screen.findByText("Logo branca removida.")).toBeInTheDocument();
   expect(confirm).toHaveBeenLastCalledWith("Remover a logo branca? O tema escuro passa a usar a logo colorida, se houver.");
-  expect(edge).toHaveBeenCalledWith("upload", { action: "brand-logo-remove", variant: "dark" });
+  expect(edge).toHaveBeenCalledWith("upload", { action: "brand-asset-remove", variant: "dark" });
 });
 
 it("avisa quando só a logo branca está cadastrada", () => {
@@ -133,4 +134,47 @@ it("uma validação atrasada não reabre a prévia de um arquivo trocado", async
   expect(screen.queryByRole("img", { name: "Prévia da logo colorida" })).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Salvar logo colorida" })).toBeDisabled();
   expect(screen.getByRole("alert")).toHaveTextContent("A logo precisa ser PNG ou WebP.");
+});
+
+it("o ícone aceita só PNG quadrado e salva pela mesma Edge", async () => {
+  mount();
+  const input = screen.getByLabelText("Escolher ícone");
+  expect(input).toHaveAttribute("accept", "image/png");
+  expect(screen.getByText("PNG quadrado, até 500 KB. Mínimo de 180 × 180 px; recomendado 512 × 512 px.")).toBeInTheDocument();
+  choose("Escolher ícone", new File([new Uint8Array(64)], "icone.webp", { type: "image/webp" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("O ícone precisa ser PNG.");
+  size = { width: 512, height: 500 };
+  choose("Escolher ícone", new File([pngBytes()], "icone.png", { type: "image/png" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("O ícone precisa ser quadrado, com pelo menos 180 × 180 px e no máximo 4096 px.");
+  size = { width: 512, height: 512 };
+  const file = new File([pngBytes()], "icone.png", { type: "image/png" });
+  choose("Escolher ícone", file);
+  await screen.findByRole("img", { name: "Prévia do ícone" });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar ícone" }));
+  expect(await screen.findByText("Ícone salvo.")).toBeInTheDocument();
+  const [, body] = edge.mock.calls[0] as [string, FormData];
+  expect([body.get("kind"), body.get("variant"), body.get("file")]).toEqual(["brand-asset", "icon", file]);
+});
+
+it("a assinatura do certificado vai com o curso e remove pela mesma Edge", async () => {
+  const onChanged = vi.fn();
+  const view = render(<QueryClientProvider client={cache}><AssetCard variant="signature" courseId="curso-1" saved={null} onChanged={onChanged} /></QueryClientProvider>);
+  expect(screen.getByText("PNG com fundo transparente, até 500 KB. Mínimo de 200 × 60 px e máximo de 2000 px de cada lado; recomendado 600 × 200 px.")).toBeInTheDocument();
+  size = { width: 2400, height: 300 };
+  choose("Escolher assinatura", new File([pngBytes()], "assinatura.png", { type: "image/png" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("A assinatura precisa ter pelo menos 200 × 60 px e no máximo 2000 px de cada lado.");
+  size = { width: 600, height: 200 };
+  const file = new File([pngBytes()], "assinatura.png", { type: "image/png" });
+  choose("Escolher assinatura", file);
+  await screen.findByRole("img", { name: "Prévia da assinatura" });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar assinatura" }));
+  expect(await screen.findByText("Assinatura salva.")).toBeInTheDocument();
+  const [, body] = edge.mock.calls[0] as [string, FormData];
+  expect([body.get("kind"), body.get("variant"), body.get("course_id"), body.get("file")]).toEqual(["brand-asset", "signature", "curso-1", file]);
+  expect(onChanged).toHaveBeenCalled();
+  view.rerender(<QueryClientProvider client={cache}><AssetCard variant="signature" courseId="curso-1" saved="https://exemplo.test/a.png" onChanged={onChanged} /></QueryClientProvider>);
+  vi.spyOn(window, "confirm").mockReturnValueOnce(true);
+  fireEvent.click(screen.getByRole("button", { name: "Remover assinatura" }));
+  expect(await screen.findByText("Assinatura removida.")).toBeInTheDocument();
+  expect(edge).toHaveBeenLastCalledWith("upload", { action: "brand-asset-remove", variant: "signature", course_id: "curso-1" });
 });

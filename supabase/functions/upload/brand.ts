@@ -8,10 +8,10 @@ const bucket = "icarus-brand";
 const types: Record<string, string | undefined> = { png: "image/png", webp: "image/webp" };
 // Logo horizontal, favicon quadrado e assinatura do certificado; o banco confere de novo tipo e caminho.
 const rules = {
-  light: { webp: true, square: false, min: [240, 60], max: 4096, size: "pelo menos 240 × 60 px e no máximo 4096 px de cada lado" },
-  dark: { webp: true, square: false, min: [240, 60], max: 4096, size: "pelo menos 240 × 60 px e no máximo 4096 px de cada lado" },
+  light: { webp: true, square: false, min: [240, 60], max: 4096, size: "ter pelo menos 240 × 60 px e no máximo 4096 px de cada lado" },
+  dark: { webp: true, square: false, min: [240, 60], max: 4096, size: "ter pelo menos 240 × 60 px e no máximo 4096 px de cada lado" },
   icon: { webp: false, square: true, min: [180, 180], max: 4096, size: "ser quadrado, com pelo menos 180 × 180 px e no máximo 4096 px" },
-  signature: { webp: false, square: false, min: [200, 60], max: 2000, size: "pelo menos 200 × 60 px e no máximo 2000 px de cada lado" },
+  signature: { webp: false, square: false, min: [200, 60], max: 2000, size: "ter pelo menos 200 × 60 px e no máximo 2000 px de cada lado" },
 } as const;
 type Variant = keyof typeof rules;
 const label: Record<Variant, string> = { light: "A logo", dark: "A logo", icon: "O ícone", signature: "A assinatura" };

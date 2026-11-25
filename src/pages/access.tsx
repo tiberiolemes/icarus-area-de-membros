@@ -16,7 +16,7 @@ import {
 import type { Profile } from "../api";
 import { useAuth, useBootstrap } from "../auth";
 import { Captcha, captchaToken, resetCaptcha } from "../captcha";
-import { BrandLogo, brandLogoUrl, defaultLogo } from "../brand";
+import { BrandLogo, brandAssetUrl, defaultLogo } from "../brand";
 import {
   Action,
   Field,
@@ -51,7 +51,7 @@ export function PublicFrame({ children }: { children: React.ReactNode }) {
     <div className="public-layout">
       <header className="public-top">
         <Link to="/entrar" aria-label={`${name}, início`} className={name === "Icarus" ? undefined : "public-installation-name"}>
-          <BrandLogo light={brandLogoUrl(context.data?.logo_light)} dark={brandLogoUrl(context.data?.logo_dark)} name={name}
+          <BrandLogo light={brandAssetUrl(context.data?.logo_light)} dark={brandAssetUrl(context.data?.logo_dark)} name={name}
             fallback={name === "Icarus" ? <img src={defaultLogo} alt="Icarus" width="244" height="64" />
               : <strong className="installation-name" title={name}>{name}</strong>} />
         </Link>

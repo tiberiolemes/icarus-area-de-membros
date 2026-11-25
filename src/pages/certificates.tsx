@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BadgeCheck, CircleAlert, Copy, Download, Hourglass, Image, ShieldCheck, UserRound } from "lucide-react";
 import { Link, useHref, useNavigate, useParams } from "react-router-dom";
-import { useRpc, date, rpc } from "../api";
+import { useRpc, date, rpc, safeUrl } from "../api";
 import type { Certificate, Course } from "../api";
 import { useAuth } from "../auth";
 import { Action, Empty, Field, Form, Heading, Notice, Progress, QueryState, value } from "../ui";
 import { PublicFrame } from "./access";
 import { RichContent } from "../rich";
 import { exportCertificate } from "../certificate";
-import { BrandLogo, brandLogoUrl, defaultLogo } from "../brand";
+import { BrandLogo, brandAssetUrl, defaultLogo } from "../brand";
 import { notificationListKey, reconcileNotificationQueries } from "./notifications";
 import "./student-resources.css";
 
@@ -26,11 +26,13 @@ type PublicBrand = { name?: string; logo_light?: string | null; logo_dark?: stri
 
 function CertificateDocument({ certificate }: { certificate: Certificate }) {
   const brand = useRpc<PublicBrand>("app_public_context").data;
+  // A assinatura é a da emissão: o caminho enviado ou, em certificados antigos, a URL cadastrada no curso.
+  const signature = brandAssetUrl(certificate.signature_path) ?? safeUrl(certificate.signature_url);
   return (
     <article className="certificate-document" data-tour="certificate">
       <header className="certificate-document-header">
         <span className="certificate-brand">
-          <BrandLogo light={brandLogoUrl(brand?.logo_light)} dark={brandLogoUrl(brand?.logo_dark)} name={brand?.name || "Icarus"}
+          <BrandLogo light={brandAssetUrl(brand?.logo_light)} dark={brandAssetUrl(brand?.logo_dark)} name={brand?.name || "Icarus"}
             fallback={<img src={defaultLogo} alt="Icarus" width="244" height="64" />} />
         </span>
         <span className="certificate-code">Código de verificação <code>{certificate.code}</code></span>
@@ -50,6 +52,7 @@ function CertificateDocument({ certificate }: { certificate: Certificate }) {
       </dl>
       {certificate.signer_name && (
         <div className="certificate-signer">
+          {signature && <img className="certificate-signature" src={signature} alt={`Assinatura de ${certificate.signer_name}`} referrerPolicy="no-referrer" />}
           <strong>{certificate.signer_name}</strong>
           {certificate.signer_title && <span>{certificate.signer_title}</span>}
         </div>
@@ -66,15 +69,16 @@ function CertificateActions({ certificate }: { certificate: Certificate }) {
   const verifyHref = useHref(verificationPath(certificate.code));
   const verificationUrl = new URL(verifyHref, window.location.href).href;
   // O arquivo exportado tem fundo branco: usa a logo colorida ou, sem ela, a do Icarus.
-  const logoUrl = brandLogoUrl(useRpc<PublicBrand>("app_public_context").data?.logo_light);
+  const brand = useRpc<PublicBrand>("app_public_context").data;
+  const exported = { logoUrl: brandAssetUrl(brand?.logo_light), issuer: brand?.name || "Icarus" };
   return (
     <div className="certificate-actions">
       {!certificate.revoked_at && (
         <>
-          <Action primary run={() => exportCertificate(certificate, "pdf", verificationUrl, logoUrl)}>
+          <Action primary run={() => exportCertificate(certificate, "pdf", verificationUrl, exported)}>
             <Download size={18} aria-hidden="true" /> Baixar PDF
           </Action>
-          <Action run={() => exportCertificate(certificate, "png", verificationUrl, logoUrl)}>
+          <Action run={() => exportCertificate(certificate, "png", verificationUrl, exported)}>
             <Image size={18} aria-hidden="true" /> Baixar PNG
           </Action>
         </>
@@ -91,6 +95,7 @@ function CertificateActions({ certificate }: { certificate: Certificate }) {
 }
 
 function CertificateRecord({ certificate, publicResult = false }: { certificate: Certificate; publicResult?: boolean }) {
+  const issuer = useRpc<PublicBrand>("app_public_context").data?.name || "Icarus";
   return (
     <section className="certificate-panel certificate-record" aria-label="Registro de emissão">
       {publicResult && (
@@ -103,7 +108,7 @@ function CertificateRecord({ certificate, publicResult = false }: { certificate:
         </div>
       )}
       <dl>
-        <div><dt>Emitido por</dt><dd>Icarus</dd></div>
+        <div><dt>Emitido por</dt><dd dir="auto">{issuer}</dd></div>
         <div><dt>Data de emissão</dt><dd>{date(certificate.issued_at)}</dd></div>
         <div><dt>Carga horária</dt><dd>{certificate.duration_minutes} minutos</dd></div>
       </dl>

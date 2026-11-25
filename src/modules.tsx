@@ -6,7 +6,7 @@ import { Heading } from "./ui";
 /** Módulos que o admin liga e desliga em Configurações. Cursos e Certificados são o núcleo e ficam sempre ligados. */
 export const modules = [
   { key: "community", label: "Comunidade", Icon: MessageSquare,
-    description: "Some o fórum, o menu e o atalho do celular. Publicações, respostas e curtidas ficam guardadas, e a moderação continua no painel." },
+    description: "Some o fórum, o menu e o atalho do celular. Publicações, respostas e curtidas ficam guardadas, e a moderação continua no painel. Os comentários das aulas continuam, porque fazem parte de Cursos." },
   { key: "materials", label: "Materiais", Icon: FolderOpen,
     description: "Some a biblioteca de materiais e o download das pastas. Os anexos de cada aula continuam com Cursos." },
   { key: "podcasts", label: "Podcasts e masterclasses", Icon: Podcast,
@@ -14,7 +14,7 @@ export const modules = [
   { key: "ranking", label: "Ranking", Icon: Trophy,
     description: "Some a classificação e os atalhos para ela. Os pontos continuam registrados e voltam completos ao religar." },
   { key: "live_events", label: "Encontros ao vivo", Icon: CalendarDays,
-    description: "Some a agenda, a confirmação de presença e as gravações. Os encontros ficam guardados no painel." },
+    description: "Some a agenda, a confirmação de presença e as gravações. Os encontros ficam guardados no painel. Links de sala já entregues continuam abrindo fora da plataforma; para encerrar de fato, troque o link na sala." },
   { key: "support", label: "Suporte", Icon: LifeBuoy,
     description: "Some a abertura e o acompanhamento de chamados. Os tickets ficam guardados, e a equipe de suporte continua atendendo pelo painel." },
   { key: "help", label: "Central de ajuda", Icon: HelpCircle,

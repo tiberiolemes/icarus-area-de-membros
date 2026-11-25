@@ -258,6 +258,10 @@
 
 
 .admin-settings .settings-breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--stitch-control-min-size);
+  min-inline-size: var(--stitch-control-min-size);
   color: var(--stitch-text-secondary);
 }
 

@@ -123,7 +123,7 @@ async function exercise(browser, view, theme, width) {
       };
     });
     assert.equal(geometry.document[0], width);
-    assert.equal(geometry.kpiColumns, width < 640 ? 2 : 5);
+    assert.equal(geometry.kpiColumns, width < 640 ? 2 : 3);
     assert.equal(geometry.theme, theme);
     assert.match(geometry.font, /^Inter/);
     assert(geometry.controls.every((control) => control.width >= 44 && control.height >= 44), JSON.stringify(geometry.controls));

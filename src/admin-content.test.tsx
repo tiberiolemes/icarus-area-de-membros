@@ -183,7 +183,7 @@ it("foca o editor, preserva entradas após erro e restaura o foco ao fechar", as
   ).toHaveAttribute("href", "/admin/cursos/c/aulas/a/apresentacao");
   const media = within(panel.getByRole("group", { name: "Mídia da aula" }));
   expect(media.getByLabelText("Tipo de aula")).toHaveValue("video");
-  expect(media.getByLabelText("Identificador do vídeo no Bunny")).toBeInTheDocument();
+  expect(media.getByLabelText("Vídeo do Bunny ou link do YouTube")).toBeInTheDocument();
   expect(media.getByRole("button", { name: "Enviar arquivo" })).toHaveAttribute("type", "button");
   const title = panel.getByLabelText("Título");
   fireEvent.change(title, { target: { value: "Exercício revisado" } });
@@ -213,4 +213,33 @@ it("devolve o foco ao último disparador quando a seleção muda", async () => {
   expect(screen.getByRole("textbox", { name: "Título" })).toHaveValue("Revisão");
   fireEvent.click(screen.getByRole("button", { name: "Fechar editor" }));
   expect(second).toHaveFocus();
+});
+
+it("aceita o link do YouTube no vídeo da aula e grava só o ID", async () => {
+  show("/admin/cursos/c?aba=estrutura");
+  const [trigger] = await screen.findAllByRole("button", { name: /^Editar aula / });
+  fireEvent.click(trigger);
+  const field = screen.getByLabelText("Vídeo do Bunny ou link do YouTube");
+  fireEvent.change(field, { target: { value: "https://youtu.be/dQw4w9WgXcQ?si=compartilhado" } });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar conteúdo" }));
+  await waitFor(() => expect(calls.some(({ url }) => url.endsWith("/app_admin_save"))).toBe(true));
+  expect(calls.find(({ url }) => url.endsWith("/app_admin_save"))?.body.p_data).toMatchObject({ video_id: "dQw4w9WgXcQ" });
+});
+
+it("mostra como link a aula que já usa vídeo do YouTube", async () => {
+  records.lessons[0] = { ...records.lessons[0], video_id: "dQw4w9WgXcQ" } as (typeof records.lessons)[number];
+  show("/admin/cursos/c?aba=estrutura");
+  const [trigger] = await screen.findAllByRole("button", { name: /^Editar aula / });
+  fireEvent.click(trigger);
+  expect(screen.getByLabelText("Vídeo do Bunny ou link do YouTube")).toHaveValue("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+});
+
+it("recusa antes de salvar o que não é link do YouTube nem ID do Bunny", async () => {
+  show("/admin/cursos/c?aba=estrutura");
+  const [trigger] = await screen.findAllByRole("button", { name: /^Editar aula / });
+  fireEvent.click(trigger);
+  fireEvent.change(screen.getByLabelText("Vídeo do Bunny ou link do YouTube"), { target: { value: "https://vimeo.com/123" } });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar conteúdo" }));
+  expect(await screen.findByText("Cole um link do YouTube ou o ID do vídeo no Bunny.")).toBeInTheDocument();
+  expect(calls.some(({ url }) => url.endsWith("/app_admin_save"))).toBe(false);
 });

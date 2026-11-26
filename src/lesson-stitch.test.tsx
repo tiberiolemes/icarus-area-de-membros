@@ -17,8 +17,8 @@ const material = { id: "material", name: "Material de teste", description: "", f
 
 function mount({ type = "text", allowed = true, cover = false, coverResponse = true, provider = "supabase",
   path = lessonRoot + "/atual", collision = false, nextAllowed = true, otherModule = false, loose = false,
-  progressFailure = Promise.resolve(false), mediaError = false } = {}) {
-  if (type === "video" && provider === "supabase") {
+  progressFailure = Promise.resolve(false), mediaError = false, mediaUrl = "" } = {}) {
+  if (type === "video" && (provider === "supabase" || mediaUrl)) {
     const tracks = Object.assign(new EventTarget(), { length: 0 }) as TextTrackList;
     vi.spyOn(HTMLMediaElement.prototype, "textTracks", "get").mockReturnValue(tracks);
   }
@@ -64,7 +64,8 @@ function mount({ type = "text", allowed = true, cover = false, coverResponse = t
           return new Response(JSON.stringify({ error: { code: "CONFIGURATION_REQUIRED", message: "Endereço público do arquivo não configurado." } }), { status: 503 });
         } else {
           body = {
-            url: provider === "bunny" ? "https://player.mediadelivery.net/embed/1/video" : "https://example.test/private/test.mp3",
+            url: mediaUrl || (provider === "bunny" ? "https://player.mediadelivery.net/embed/1/video"
+              : provider === "youtube" ? "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0" : "https://example.test/private/test.mp3"),
             provider, expires_at: "2099-01-01",
           };
         }
@@ -148,6 +149,8 @@ it("preserva a descrição, foco das abas e lista filtrável ao alternar o modo 
   expect(screen.getByText("Material de teste")).toBeVisible();
   fireEvent.keyDown(screen.getByRole("tab", { name: "Materiais e downloads 1" }), { key: "End" });
   expect(screen.getByRole("tab", { name: "Anotações pessoais" })).toHaveFocus();
+  // Um rótulo longo para telas largas e um curto para o celular, nunca o longo duas vezes.
+  expect(screen.getByRole("tab", { name: "Anotações pessoais" }).textContent?.match(/Anotações pessoais/g)).toHaveLength(1);
   fireEvent.click(screen.getByRole("button", { name: "Fazer anotação" }));
   await waitFor(() => expect(screen.getByRole("textbox", { name: "Suas anotações pessoais" })).toHaveFocus());
   fireEvent.keyDown(screen.getByRole("tab", { name: "Anotações pessoais" }), { key: "Home" });
@@ -300,4 +303,22 @@ it("mostra ao aluno uma mensagem simples e a nova tentativa quando a mídia não
   expect(await screen.findByText("Não foi possível carregar o vídeo agora. Tente de novo; se continuar, avise o suporte.")).toBeVisible();
   expect(screen.getByRole("button", { name: "Tentar carregar vídeo" })).toBeVisible();
   expect(screen.queryByText("Endereço público do arquivo não configurado.")).not.toBeInTheDocument();
+});
+
+it("aula com vídeo do YouTube mostra o player do YouTube, sem o player nativo", async () => {
+  mount({ type: "video", provider: "youtube" });
+  const frame = await waitFor(() => {
+    const element = document.querySelector(".stitch-lesson-media iframe");
+    expect(element).not.toBeNull();
+    return element!;
+  });
+  expect(frame).toHaveAttribute("title", textLesson.title);
+  expect(frame).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0");
+  expect(document.querySelector(".stitch-lesson-media video")).toBeNull();
+});
+
+it("endereço de YouTube fora do domínio sem cookies não vira player", async () => {
+  mount({ type: "video", provider: "youtube", mediaUrl: "https://example.test/embed/dQw4w9WgXcQ" });
+  await screen.findByLabelText(textLesson.title);
+  expect(document.querySelector(".stitch-lesson-media iframe")).toBeNull();
 });

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.11.0 · 2026-11-26
+
+- A aula aceita vídeo do YouTube. No editor da aula, o campo **Vídeo do Bunny ou link do YouTube** recebe o link colado do YouTube, e a plataforma guarda só o código do vídeo. O vídeo toca dentro da aula pelo player do YouTube sem cookies e só aparece para quem tem acesso à aula. O banco passa a recusar valores fora dos formatos do Bunny e do YouTube.
+- Na vitrine de cursos, a capa do cartão leva ao curso, como o título.
+- Na aba selecionada do editor de curso, o hover deixava texto escuro sobre fundo escuro. Agora ela mantém o tom claro.
+- As telas do painel seguem um padrão só: trilha, título e conteúdo na mesma margem e na largura toda, um estilo de indicador e um painel de filtros com espaço entre os campos. Membros, Pedidos, Planos, Feedbacks, Suporte, Encontros, Dashboard e Analytics foram alinhados.
+- A aba de anotações da aula mostrava o rótulo duas vezes.
+- Para atualizar da 2.10.1, aplique a migration `202611260018_lesson_youtube.sql`, publique a Edge Function `media` e então publique o frontend.
+
 ## 2.10.1 · 2026-11-26
 
 - A aba Certificado de Configurações abria com o erro "cannot execute SELECT FOR UPDATE in a read-only transaction". A leitura do modelo estava marcada como função só de leitura, mas ela confere a sessão do admin, que precisa gravar. A migration `202611260017_certificate_defaults_volatile.sql` corrige a marcação, e um teste novo recusa qualquer RPC que confira sessão marcada assim.

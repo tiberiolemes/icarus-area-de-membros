@@ -343,7 +343,7 @@ export const integrationArticles: HelpArticle[] = [
           },
           "Escolha o arquivo e aguarde o processamento.",
           "Abra o vídeo enviado e copie o **Video ID**, um código de 36 caracteres. O menu de três pontos do vídeo também traz **Copy Video ID**.",
-          "Na plataforma, edite a aula e cole o código em **Identificador do vídeo no Bunny**.",
+          "Na plataforma, edite a aula e cole o código em **Vídeo do Bunny ou link do YouTube**.",
           "Clique em **Salvar conteúdo**. Sem salvar, a prévia mostra a aula como estava antes.",
           "Reabra a aula pelo lápis, clique em **Prévia autorizada da aula** e confira se o vídeo toca.",
         ],

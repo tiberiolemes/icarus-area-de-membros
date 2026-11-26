@@ -1,42 +1,7 @@
-.admin-shell-stitch[data-admin-view="feedback"] > .workspace > .content {
-  max-width: none;
-  min-height: calc(100dvh - var(--stitch-topbar-height));
-  padding: 0 0 var(--stitch-space-xl);
-  background: var(--stitch-canvas-admin-deep);
-}
-
-.admin-feedbacks {
-  --feedback-gutter: var(--stitch-gutter);
-  color: var(--stitch-text-primary);
-}
-
-.admin-feedbacks .page-heading {
-  margin: 0;
-  padding: var(--stitch-margin) var(--feedback-gutter) var(--stitch-space-lg);
-  background: var(--stitch-surface-admin-rail-deep);
-}
-
-.admin-feedbacks h1 {
-  color: var(--stitch-text-heading);
-  font-size: var(--stitch-type-headline-lg-size);
-  line-height: var(--stitch-type-headline-lg-line);
-}
-
-.feedback-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--stitch-space-md);
-  padding: var(--stitch-space-md) var(--feedback-gutter);
-  background: var(--stitch-surface-admin-rail-deep);
-}
-
-.feedback-filters .field { flex: 0 1 210px; }
-
 .feedback-board {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--stitch-space-md);
-  margin: var(--stitch-space-lg) var(--feedback-gutter);
 }
 
 .feedback-board[data-filtered="true"] { grid-template-columns: minmax(0, 22rem); }
@@ -44,6 +9,7 @@
 .feedback-column {
   padding: 14px;
   min-height: 20rem;
+  border: var(--stitch-border-width) solid var(--stitch-border-subtle);
   border-radius: var(--stitch-radius-md);
   background: var(--stitch-surface-admin-rail-deep);
 }
@@ -121,8 +87,6 @@ button.feedback-card:hover { background: var(--stitch-surface-hover); }
   -webkit-box-orient: vertical;
 }
 
-.admin-feedbacks > :is(.notice, .loading, .empty, .pagination, button, .query-error) { margin-inline: var(--feedback-gutter); }
-
 .feedback-description { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .feedback-context {
@@ -151,10 +115,7 @@ button.feedback-card:hover { background: var(--stitch-surface-hover); }
 }
 
 @media (max-width: 639px) {
-  .admin-feedbacks { --feedback-gutter: var(--stitch-margin-mobile); }
-  .admin-feedbacks h1 { font-size: 24px; line-height: 32px; }
   .feedback-board { grid-template-columns: minmax(0, 1fr); }
-  .feedback-filters .field { flex-basis: 100%; }
   .feedback-column { min-height: 0; }
 }
 

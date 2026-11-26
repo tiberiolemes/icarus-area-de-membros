@@ -136,7 +136,7 @@ export function AdminEvents() {
   }
 
   return (
-    <AdminSurface className="live-events event-admin" section="encontros" trail={["Administração", "Encontros ao vivo"]}
+    <AdminSurface className="event-admin" section="encontros" trail={["Administração", "Encontros ao vivo"]}
       title="Encontros ao vivo" description="Agende sessões, gerencie confirmações e publique gravações."
       action={query.data && <EventEditor plans={query.data.plans} refresh={refresh} />}>
       <div data-tour="admin-live-events" className="settings-panel">

@@ -48,10 +48,10 @@ function CourseReport({ courseId }: { courseId: string }) {
   return (
     <QueryState query={query}>
       {data && <>
-        <dl className="reports-kpis" id="analytics-indicadores">
-          <div><dt>Iniciaram o curso <PlayCircle aria-hidden="true" /></dt><dd className="reports-number">{count.format(data.started)}</dd><dd className="reports-note">Com progresso registrado</dd></div>
-          {data.module_completed !== null && <div><dt>Concluíram módulo 1 <Route aria-hidden="true" /></dt><dd className="reports-number">{count.format(data.module_completed)}</dd><dd className="reports-note">{shareOfStarted(data.module_completed, data.started)}</dd></div>}
-          {data.course_completed !== null && <div><dt>Concluíram o curso <BookOpenCheck aria-hidden="true" /></dt><dd className="reports-number">{count.format(data.course_completed)}</dd><dd className="reports-note">{shareOfStarted(data.course_completed, data.started)}</dd></div>}
+        <dl className="admin-metrics reports-kpis" id="analytics-indicadores">
+          <div><dt>Iniciaram o curso <PlayCircle aria-hidden="true" /></dt><dd><strong>{count.format(data.started)}</strong><small>Com progresso registrado</small></dd></div>
+          {data.module_completed !== null && <div><dt>Concluíram módulo 1 <Route aria-hidden="true" /></dt><dd><strong>{count.format(data.module_completed)}</strong><small>{shareOfStarted(data.module_completed, data.started)}</small></dd></div>}
+          {data.course_completed !== null && <div><dt>Concluíram o curso <BookOpenCheck aria-hidden="true" /></dt><dd><strong>{count.format(data.course_completed)}</strong><small>{shareOfStarted(data.course_completed, data.started)}</small></dd></div>}
         </dl>
         <section className="reports-panel" id="analytics-funil">
           <h2>Jornada curricular</h2>

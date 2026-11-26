@@ -41,6 +41,7 @@ import {
   errorMessage,
   downloadBlob,
   edge,
+  AppError,
   money,
   roleLabel,
   roleLabels,
@@ -50,6 +51,18 @@ import {
 import { buildAdminCsv, exportLimit } from "../admin-export";
 import { courseLessonPath } from "../course-paths";
 import { slugify } from "../slug";
+import { parseYouTube } from "./admin-podcasts";
+import { youtubeIdPattern } from "./podcasts";
+
+const bunnyVideoId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** O vídeo da aula fica num campo só: ID do Bunny (GUID) ou ID do YouTube, que vem do link colado. */
+function lessonVideo(input: string | null) {
+  if (!input) return null;
+  const youtube = parseYouTube(input) ?? (youtubeIdPattern.test(input) ? input : null);
+  if (youtube) return youtube;
+  if (bunnyVideoId.test(input)) return input;
+  throw new AppError("Cole um link do YouTube ou o ID do vídeo no Bunny.");
+}
 import { IntegrationCards, IntegrationTestMessage, integrationKey, useIntegrationTest, type IntegrationStatus } from "./admin-integrations";
 import type { Page, Plan, Course } from "../api";
 import {
@@ -1016,7 +1029,7 @@ function StructureForm({
               body: value(data, "body"),
               type: value(data, "type"),
               duration_seconds: num(data, "duration_seconds"),
-              video_id: nullable(data, "video_id"),
+              video_id: lessonVideo(nullable(data, "video_id")),
               is_preview: check(data, "is_preview"),
               is_required: check(data, "is_required"),
               ...(!row
@@ -1067,12 +1080,12 @@ function StructureForm({
                 </Field>
               </div>
               <Field
-                label="Identificador do vídeo no Bunny"
-                hint="Use o ID cadastrado na biblioteca do Bunny Stream."
+                label="Vídeo do Bunny ou link do YouTube"
+                hint="Cole o link do vídeo no YouTube ou o ID do vídeo na biblioteca do Bunny Stream."
               >
                 <input
                   name="video_id"
-                  defaultValue={text(row, "video_id")}
+                  defaultValue={youtubeIdPattern.test(text(row, "video_id")) ? `https://www.youtube.com/watch?v=${text(row, "video_id")}` : text(row, "video_id")}
                   maxLength={100}
                 />
               </Field>
@@ -1442,7 +1455,7 @@ function CommercialList({
         }
       >
       {query.isSuccess && (
-        <dl className="commercial-metrics" aria-label="Resumo dos resultados">
+        <dl className="admin-metrics" aria-label="Resumo dos resultados">
           <div>
             <dt>Total encontrado</dt>
             <dd>
@@ -1462,7 +1475,7 @@ function CommercialList({
         </dl>
       )}
       {entity !== "plans" && (
-        <div className="commercial-toolbar">
+        <div className="admin-filters">
           {search}
           {entity === "profiles" && <div className="admin-list-filters" data-tour="member-filters">
             <Field label="Papel">

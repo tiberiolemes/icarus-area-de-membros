@@ -124,13 +124,13 @@ export function AdminFeedbacks() {
     });
   }
   return (
-    <AdminSurface className="admin-feedbacks" section="feedbacks" trail={["Administração", "Feedbacks"]}
+    <AdminSurface section="feedbacks" trail={["Administração", "Feedbacks"]}
       title="Feedbacks dos alunos" description="Acompanhe sugestões e problemas enviados pela área do aluno.">
-      <section className="settings-panel" data-tour="admin-feedbacks">
-        {result && <dl className="admin-list-metrics" aria-label="Feedbacks por situação">
-          {statusKeys.map((key) => <div key={key}><dt>{statuses[key]}</dt><dd>{result.counts[key] ?? 0}</dd></div>)}
-        </dl>}
-        <div className="feedback-filters" ref={filters}>
+      {result && <dl className="admin-metrics" aria-label="Feedbacks por situação">
+        {statusKeys.map((key) => <div key={key}><dt>{statuses[key]}</dt><dd><strong>{result.counts[key] ?? 0}</strong></dd></div>)}
+      </dl>}
+      <div className="admin-filters" ref={filters} data-tour="admin-feedbacks">
+        <div className="admin-list-filters">
           <Field label="Tipo">
             <select value={kind} onChange={(event) => { setKind(event.target.value); setPage(1); }}>
               <option value="">Todos os tipos</option>
@@ -143,22 +143,22 @@ export function AdminFeedbacks() {
             id: key, label: key ? `${statuses[key as Status]} (${result?.counts[key as Status] ?? 0})` : "Todos",
             onClick: () => { setStatus(key); setPage(1); },
           }))} />
-        <QueryState query={query}>
-          {result && <>
-            {result.total === 0 ? <Empty>Nenhum feedback para os filtros escolhidos.</Empty> : (
-              <div className="feedback-board" data-filtered={!!status}>
-                {statusKeys.filter((key) => !status || key === status).map((key) => (
-                  <section className="feedback-column" key={key} aria-labelledby={`feedback-column-${key}`}>
-                    <header><h2 id={`feedback-column-${key}`}>{statuses[key]}</h2><span>{result.counts[key] ?? 0}</span></header>
-                    {result.items.filter((item) => item.status === key).map((item) => <FeedbackCard key={item.id} item={item} refresh={refresh} />)}
-                  </section>
-                ))}
-              </div>
-            )}
-            {(page > 1 || result.total > 20) && <Pager page={page} total={result.total} onChange={setPage} />}
-          </>}
-        </QueryState>
-      </section>
+      </div>
+      <QueryState query={query}>
+        {result && <>
+          {result.total === 0 ? <Empty>Nenhum feedback para os filtros escolhidos.</Empty> : (
+            <div className="feedback-board" data-filtered={!!status}>
+              {statusKeys.filter((key) => !status || key === status).map((key) => (
+                <section className="feedback-column" key={key} aria-labelledby={`feedback-column-${key}`}>
+                  <header><h2 id={`feedback-column-${key}`}>{statuses[key]}</h2><span>{result.counts[key] ?? 0}</span></header>
+                  {result.items.filter((item) => item.status === key).map((item) => <FeedbackCard key={item.id} item={item} refresh={refresh} />)}
+                </section>
+              ))}
+            </div>
+          )}
+          {(page > 1 || result.total > 20) && <Pager page={page} total={result.total} onChange={setPage} />}
+        </>}
+      </QueryState>
     </AdminSurface>
   );
 }

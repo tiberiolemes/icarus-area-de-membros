@@ -352,6 +352,7 @@
 .showcase-resume, .showcase-card { border: 1px solid var(--stitch-border-subtle); background: var(--stitch-surface-card); border-radius: var(--stitch-radius-lg); overflow: hidden; min-width: 0; }
 .showcase-resume { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); align-items: center; padding: clamp(16px,2vw,28px); gap: var(--stitch-space-lg); }
 .showcase-art { min-width: 0; position:relative; }
+.showcase-art > a { display: block; color: inherit; text-decoration: none; }
 .showcase-art :is(.catalog-cover-media, .catalog-cover-type, .catalog-cover-image) { width: 100%; aspect-ratio: 16/9; }
 .showcase-art .catalog-cover-type { padding: var(--stitch-space-md); background: linear-gradient(125deg,#131313 45%,#404040); }
 .showcase-art .catalog-cover-title { font-size:clamp(20px,2.2vw,32px); }

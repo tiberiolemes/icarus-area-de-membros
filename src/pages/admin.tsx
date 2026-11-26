@@ -45,7 +45,6 @@ import {
   roleLabel,
   roleLabels,
   rpc,
-  safeUrl,
   useRpc,
 } from "../api";
 import { buildAdminCsv, exportLimit } from "../admin-export";
@@ -308,6 +307,12 @@ function StatusField({ row }: { row?: Row }) {
     </Field>
   );
 }
+const courseAccessLabel: Record<string, string> = {
+  members: "Todos os membros",
+  plans: "Planos selecionados",
+  subscribers: "Assinatura ativa",
+};
+
 function AccessFields({
   row,
   inherit = false,
@@ -329,9 +334,7 @@ function AccessFields({
           )}
         >
           {inherit && <option value="inherit">Herdar do curso</option>}
-          <option value="members">Todos os membros</option>
-          <option value="plans">Planos selecionados</option>
-          <option value="subscribers">Assinatura ativa</option>
+          {Object.entries(courseAccessLabel).map(([mode, label]) => <option key={mode} value={mode}>{label}</option>)}
         </select>
       </Field>
       <fieldset className="plan-options">
@@ -489,9 +492,12 @@ export function CourseEditor() {
                   <span className="content-icon">
                     <BookOpen size={20} aria-hidden="true" />
                   </span>
-                  <div>
-                    <strong>{statusName(text(course, "status"))}</strong>
-                    <p>/{text(course, "slug")}</p>
+                  <div className="actions" role="group" aria-label="Situação do curso">
+                    <span className="badge">{statusName(text(course, "status"))}</span>
+                    {courseAccessLabel[text(course, "access_mode")] && (
+                      <span className="badge">{courseAccessLabel[text(course, "access_mode")]}</span>
+                    )}
+                    <span className="badge">{course.certificate_enabled ? "Certificado disponível" : "Sem certificado"}</span>
                   </div>
                 </div>
               )}
@@ -520,33 +526,35 @@ export function CourseEditor() {
               </NavigationTabs>
             </div>
             {tab === "course" && (
-              <div className="reading content-panel">
-                <Form
-                  key={id}
-                  submitInHeading
-                  label={isNew ? "Criar curso" : "Salvar curso"}
-                  onSave={async (data) => {
-                    const saved = await save("courses", isNew ? null : id!, {
-                      title: value(data, "title"),
-                      slug: value(data, "slug"),
-                      description: value(data, "description"),
-                      status: value(data, "status"),
-                      ...accessData(data),
-                    });
-                    await courses.refetch();
-                    if (isNew) navigate("/admin/cursos/" + saved.id);
-                  }}
-                >
-                  <IdentityFields row={course} />
-                  <RichEditor
-                    initial={text(course, "description")}
-                    label="Descrição do curso"
-                  />
-                  <StatusField row={course} />
-                  <AccessFields row={course} />
-                </Form>
+              <div className={course ? "course-edit-layout" : "reading"}>
+                <section className="content-panel" aria-label="Dados do curso">
+                  <Form
+                    key={id}
+                    submitInHeading
+                    label={isNew ? "Criar curso" : "Salvar curso"}
+                    onSave={async (data) => {
+                      const saved = await save("courses", isNew ? null : id!, {
+                        title: value(data, "title"),
+                        slug: value(data, "slug"),
+                        description: value(data, "description"),
+                        status: value(data, "status"),
+                        ...accessData(data),
+                      });
+                      await courses.refetch();
+                      if (isNew) navigate("/admin/cursos/" + saved.id);
+                    }}
+                  >
+                    <IdentityFields row={course} />
+                    <RichEditor
+                      initial={text(course, "description")}
+                      label="Descrição do curso"
+                    />
+                    <StatusField row={course} />
+                    <AccessFields row={course} />
+                  </Form>
+                </section>
                 {course && (
-                  <>
+                  <section className="content-panel" aria-label="Publicação e capa">
                     {course.status === "draft" && (
                       <AdminCatalogLaunch entity="courses" id={course.id} />
                     )}
@@ -557,7 +565,7 @@ export function CourseEditor() {
                       onUploaded={() => void courses.refetch()}
                     />
                     <Archive entity="courses" row={course} />
-                  </>
+                  </section>
                 )}
               </div>
             )}
@@ -606,7 +614,7 @@ export function CourseEditor() {
                 </Form>
                 {admin ? (
                   <AssetCard key={course.id} variant="signature" courseId={course.id}
-                    saved={brandAssetUrl(course.signature_path) ?? safeUrl(course.signature_url) ?? null}
+                    saved={brandAssetUrl(course.signature_path)}
                     onChanged={() => courses.refetch()} />
                 ) : (
                   <Notice>A assinatura do certificado é enviada por um administrador.</Notice>

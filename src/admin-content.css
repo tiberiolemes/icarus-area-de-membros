@@ -100,6 +100,19 @@
   margin-inline-start: auto;
 }
 
+.admin-content .course-edit-layout {
+  display: grid;
+  align-items: start;
+  gap: var(--stitch-space-md);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1024px) {
+  .admin-content .course-edit-layout {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+}
+
 .admin-content .admin-row {
   gap: var(--stitch-space-sm) var(--stitch-space-md);
   margin-block-end: var(--stitch-space-sm);

@@ -54,8 +54,11 @@ function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
 }
 async function openArchive(name = "Arquivar publicação") {
-  fireEvent.click(await screen.findByRole("button", { name }));
-  return screen.findByRole("dialog", { name });
+  const trigger = await screen.findByText(name, { selector: "button" });
+  expect(trigger).toBeVisible();
+  expect(trigger).toHaveAccessibleName(name);
+  fireEvent.click(trigger);
+  return screen.getByRole("dialog", { name });
 }
 
 it("não oferece moderação do tópico arquivado, mantendo a moderação autorizada da resposta", async () => {
@@ -121,10 +124,10 @@ it("exibe erro recuperável, preserva a confirmação e permite nova tentativa",
   const invalidate = vi.spyOn(cache, "invalidateQueries");
   const dialog = await openArchive();
   fireEvent.click(within(dialog).getByRole("button", { name: "Confirmar arquivamento" }));
-  await screen.findByText("Falha temporária. Tente novamente.");
+  const error = await screen.findByText("Falha temporária. Tente novamente.");
   expect(invalidate).not.toHaveBeenCalled();
   expect(screen.queryByText("Publicação arquivada. Seu histórico foi preservado.")).not.toBeInTheDocument();
-  await waitFor(() => expect(screen.getByRole("alert")).toHaveFocus());
+  await waitFor(() => expect(error.closest('[role="alert"]')).toHaveFocus());
   fireEvent.click(within(dialog).getByRole("button", { name: "Confirmar arquivamento" }));
   await screen.findByText("Publicação arquivada. Seu histórico foi preservado.");
   expect(calls.filter((name) => name === "app_archive_post")).toHaveLength(2);

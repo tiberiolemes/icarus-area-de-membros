@@ -99,9 +99,7 @@ it.each([
       "dark",
     );
     fireEvent.click(submit);
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Confira os campos",
-    );
+    expect((await screen.findByText(/Confira os campos/)).closest('[role="alert"]')).toBeVisible();
     expect(rpc).not.toHaveBeenCalled();
     expect(
       screen.getByText("Selecione uma opção para continuar."),
@@ -109,9 +107,9 @@ it.each([
     fireEvent.input(name, { target: { value: "Empresa Teste" } });
     fireEvent.click(stage);
     fireEvent.click(submit);
-    expect(
-      await screen.findByRole("heading", { name: destination }),
-    ).toBeVisible();
+    const heading = await screen.findByText(destination, { selector: "h1" });
+    expect(heading).toBeVisible();
+    expect(heading).toHaveAccessibleName(destination);
     expect(rpc).toHaveBeenCalledExactlyOnceWith("app_profile", {
       p_data: {
         full_name: "Aluna Teste",

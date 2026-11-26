@@ -93,8 +93,11 @@ it("com os módulos desligados, o aluno não vê menu, atalhos nem feedback, e a
 it("religar devolve o menu, os atalhos e a rota", () => {
   mount("/app/comunidade");
   const menu = screen.getByRole("navigation", { name: "Área de membros" });
-  for (const name of ["Cursos", "Comunidade", "Materiais", "Podcasts", "Certificados", "Ranking", "Encontros ao vivo", "Suporte", "Central de ajuda"])
-    expect(within(menu).getByRole("link", { name })).toBeInTheDocument();
+  const links = within(menu).getAllByRole("link");
+  for (const name of ["Cursos", "Comunidade", "Materiais", "Podcasts", "Certificados", "Ranking", "Encontros ao vivo", "Suporte", "Central de ajuda"]) {
+    const link = links.find((item) => item.textContent?.trim() === name);
+    expect(link).toHaveAccessibleName(name);
+  }
   expect(screen.getByText("Conteúdo da rota")).toBeInTheDocument();
   expect(within(screen.getByRole("navigation", { name: "Navegação rápida" })).getByRole("link", { name: "Ranking" })).toBeInTheDocument();
 });
@@ -104,7 +107,9 @@ it("o admin continua no painel do módulo desligado, com selo e aviso", () => {
   settings.modules = { community: false };
   mount("/admin/comunidade");
   const menu = screen.getByRole("navigation", { name: "Administração" });
-  expect(within(menu).getByRole("link", { name: "Comunidade Desativado" })).toHaveAttribute("href", "/admin/comunidade");
+  const community = menu.querySelector('a[href="/admin/comunidade"]');
+  expect(community).toBeVisible();
+  expect(community).toHaveAccessibleName("Comunidade Desativado");
   expect(within(menu).getByRole("link", { name: "Suporte" })).toBeInTheDocument();
   expect(screen.getByText("O módulo Comunidade está desativado.")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Configurações > Módulos" })).toHaveAttribute("href", "/admin/configuracoes?aba=modulos");
@@ -147,8 +152,10 @@ it("a Central de ajuda desligada fica indisponível para o aluno e esconde artig
   settings.modules = { help: false, podcasts: false };
   mount("/app/ajuda", <Help member />, cache);
   expect(screen.getByText(/A Central de ajuda está desativada para os alunos/)).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Cadastre conteúdo e opere as filas" })).toBeInTheDocument();
-  expect(screen.queryByRole("link", { name: "Assista a podcasts e masterclasses" })).not.toBeInTheDocument();
+  const article = screen.getByText("Cadastre conteúdo e opere as filas", { selector: "a" });
+  expect(article).toBeVisible();
+  expect(article).toHaveAccessibleName("Cadastre conteúdo e opere as filas");
+  expect(screen.queryByText("Assista a podcasts e masterclasses", { selector: "a" })).not.toBeInTheDocument();
 });
 
 it("busca artigos sem acentos e confirma o voto só quando o servidor salva", async () => {

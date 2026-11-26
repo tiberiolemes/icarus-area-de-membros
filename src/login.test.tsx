@@ -177,18 +177,16 @@ afterEach(async () => {
   cache.clear();
 });
 async function password() {
-  await waitFor(() =>
-    expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled()
-  );
+  const submit = await screen.findByText("Entrar", { selector: "button" });
+  expect(submit).toHaveAccessibleName("Entrar");
+  await waitFor(() => expect(submit).toBeEnabled());
   fireEvent.change(screen.getByLabelText("Email"), {
     target: { value: "admin@example.test" },
   });
   fireEvent.change(screen.getByLabelText("Senha"), {
     target: { value: "synthetic-password" },
   });
-  fireEvent.submit(
-    screen.getByRole("button", { name: "Entrar" }).closest("form")!,
-  );
+  fireEvent.submit(submit.closest("form")!);
 }
 it("sem fator ativo entra após a senha e preserva o destino interno", async () => {
   const { requests } = setup(false);
@@ -328,12 +326,17 @@ it.each([
   [false, "Sua sessão termina em", true],
   [true, "Os 15 dias desta sessão terminam em", false],
 ])("no último minuto avisa a sessão lembrada (%s) sem oferecer prolongar o que não prolonga", async (remembered, text, extend) => {
-  touchReply = { seconds: 30, remembered };
-  setup(false);
-  await password();
-  await screen.findByText("Destino autorizado");
-  expect(await screen.findByRole("alert")).toHaveTextContent(text);
-  expect(screen.queryByRole("button", { name: "Continuar conectado" }) !== null).toBe(extend);
+  vi.setSystemTime(new Date("2026-11-26T14:00:00Z"));
+  try {
+    touchReply = { seconds: 30, remembered };
+    setup(false);
+    await password();
+    await screen.findByText("Destino autorizado");
+    expect((await screen.findByText(new RegExp(text))).closest('[role="alert"]')).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continuar conectado" }) !== null).toBe(extend);
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 it("conta suspensa vê título, orientação e a saída, que encerra a sessão", async () => {
@@ -350,7 +353,9 @@ it("papel sem permissão vê título e o caminho para a própria área do painel
   startAt = "/entrar?returnTo=/admin/membros";
   setup(false);
   await password();
-  expect(await screen.findByRole("heading", { level: 1, name: "Acesso restrito" })).toBeVisible();
+  const heading = await screen.findByText("Acesso restrito", { selector: "h1" });
+  expect(heading).toBeVisible();
+  expect(heading).toHaveAccessibleName("Acesso restrito");
   expect(screen.getByRole("alert")).toHaveTextContent("Você não tem permissão para esta área.");
   expect(screen.getByRole("link", { name: "Voltar ao painel" })).toHaveAttribute("href", "/admin/comunidade");
 });

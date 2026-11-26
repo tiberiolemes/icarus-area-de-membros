@@ -171,10 +171,14 @@ beforeEach(() => {
   cache.clear();
 });
 afterEach(async () => {
-  await client().auth.signOut({ scope: "local" });
   cleanup();
-  vi.unstubAllGlobals();
-  cache.clear();
+  try {
+    await client().auth.signOut({ scope: "local" });
+  } finally {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    cache.clear();
+  }
 });
 async function password() {
   const submit = await screen.findByText("Entrar", { selector: "button" });
@@ -326,17 +330,14 @@ it.each([
   [false, "Sua sessão termina em", true],
   [true, "Os 15 dias desta sessão terminam em", false],
 ])("no último minuto avisa a sessão lembrada (%s) sem oferecer prolongar o que não prolonga", async (remembered, text, extend) => {
+  // A limpeza restaura o relógio depois de encerrar a sessão simulada.
   vi.setSystemTime(new Date("2026-11-26T14:00:00Z"));
-  try {
-    touchReply = { seconds: 30, remembered };
-    setup(false);
-    await password();
-    await screen.findByText("Destino autorizado");
-    expect((await screen.findByText(new RegExp(text))).closest('[role="alert"]')).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Continuar conectado" }) !== null).toBe(extend);
-  } finally {
-    vi.useRealTimers();
-  }
+  touchReply = { seconds: 30, remembered };
+  setup(false);
+  await password();
+  await screen.findByText("Destino autorizado");
+  expect((await screen.findByText(new RegExp(text))).closest('[role="alert"]')).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Continuar conectado" }) !== null).toBe(extend);
 });
 
 it("conta suspensa vê título, orientação e a saída, que encerra a sessão", async () => {

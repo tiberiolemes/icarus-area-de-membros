@@ -1,4 +1,5 @@
 import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1.0.19";
+import { HttpError } from "../../supabase/functions/_shared/http.ts";
 import { normalizeBrandSvg } from "../../supabase/functions/upload/svg.ts";
 
 const svg = (body: string, root = 'viewBox="0 0 400 200"') =>
@@ -91,5 +92,28 @@ Deno.test("SVG: conserva visualmente degradê, clipPath e use e identifica magen
     }
   } finally {
     original.free(); cropped.free(); originalImage.free(); cleanImage.free();
+  }
+});
+
+Deno.test("SVG: recusa rapidamente 900 máscaras e limita o total de recortes", async () => {
+  const cases = [
+    [
+      "900 máscaras",
+      '<mask id="m"><rect width="400" height="200" fill="#fff"/></mask>',
+      '<rect mask="url(#m)" width="400" height="200" fill="#123456"/>'.repeat(900),
+    ],
+    [
+      "33 recortes",
+      '<clipPath id="c"><rect width="400" height="200"/></clipPath>',
+      '<rect clip-path="url(#c)" width="400" height="200"/>'.repeat(33),
+    ],
+  ];
+  for (const [label, definition, shapes] of cases) {
+    const started = performance.now();
+    const error = await assertRejects(() => normalize(svg(`<defs>${definition}</defs>${shapes}`)), HttpError, "até 32 aplicações de máscaras e recortes");
+    const elapsed = performance.now() - started;
+    assertEquals(error.status, 422);
+    assert(elapsed < 1000, `${label}: ${elapsed} ms`);
+    console.log(`${label}: HTTP ${error.status} em ${Math.round(elapsed)} ms`);
   }
 });

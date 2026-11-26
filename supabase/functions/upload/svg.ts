@@ -24,6 +24,7 @@ const localPaint = /^url\(\s*(['"]?)(#[A-Za-z0-9_.:-]{1,100})\1\s*\)$/i;
 const color = /^(?:[A-Za-z]+|#[\da-f]{3,8}|(?:rgb|rgba|hsl|hsla)\([\d.%,+ /-]+\))$/i;
 const coordinateLimit = 1_000_000;
 const renderSize = 1024;
+const maxEffectApplications = 32;
 const maxBytes = 512_000;
 const linear = Float32Array.from({ length: 256 }, (_, byte) => {
   const srgb = byte / 255;
@@ -175,7 +176,7 @@ function verifyReferences(root: Node) {
     node.children.forEach(index);
   }
   index(root);
-  let cost = 0;
+  let cost = 0, effectApplications = 0;
   function verify(node: Node, seen: Set<Node>, effects: number) {
     if ((cost += 1 + (node.attributes.get("d")?.length ?? 0) / 100 + (node.attributes.get("points")?.length ?? 0) / 100) > 6000 || seen.size >= 48 || effects > 4) throw complex();
     if (seen.has(node)) throw invalid();
@@ -187,8 +188,16 @@ function verifyReferences(root: Node) {
       const valid = target && (name === "href" && node.tag === "use" ? shapes.has(target.tag)
         : name === "clip-path" ? target.tag === "clipPath" : name === "mask" ? target.tag === "mask"
         : target.tag === "linearGradient" || target.tag === "radialGradient");
-      if (valid) verify(target, seen, effects + Number(name === "clip-path" || name === "mask"));
-      else node.attributes.delete(name);
+      if (!valid) {
+        node.attributes.delete(name);
+        continue;
+      }
+      const effect = name === "clip-path" || name === "mask";
+      // A mesma máscara ou recorte pode exigir uma nova camada a cada aplicação.
+      if (effect && ++effectApplications > maxEffectApplications) {
+        throw new HttpError(422, "INVALID_FILE", `O SVG é complexo demais. Use até ${maxEffectApplications} aplicações de máscaras e recortes.`);
+      }
+      verify(target, seen, effects + Number(effect));
     }
     node.children.forEach((child) => verify(child, seen, effects));
     seen.delete(node);

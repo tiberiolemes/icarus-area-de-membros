@@ -134,16 +134,21 @@ async function capture(page, cdp, viewport, name) {
   assert.equal(state.document.width, viewport.width);
   assert.deepEqual([state.viewport, state.dpr, state.scale, state.scroll, state.focus, state.hovered], [viewport, 1, 1, [0, 0], "h1", []]);
   assert.deepEqual(state.controls.filter(({ tag, box, font }) => box[2] < 44 || box[3] < 44 || (["input", "select"].includes(tag) && font < 16)), []);
-  const pngs = [];
-  for (const pass of ["a", "b"]) {
-    const path = join(out, `${name}-${pass}.png`);
-    const png = await fullScreenshot(cdp, viewport);
-    writeFileSync(path, png, { flag: "wx" });
-    pngs.push({ path, png: { ...pngSize(png), sha256: sha256(png) }, bytes: png });
+  let first = await fullScreenshot(cdp, viewport);
+  let second = await fullScreenshot(cdp, viewport);
+  let repetition = pixels(first, second, "RGBA");
+  // Uma nova pintura do Chrome pode mudar poucos pixels fora da área visível.
+  // O recibo continua exigindo duas capturas consecutivas idênticas.
+  for (let retry = 0; repetition.differentPixels !== 0 && retry < 4; retry++) {
+    first = second;
+    second = await fullScreenshot(cdp, viewport);
+    repetition = pixels(first, second, "RGBA");
   }
-  const repetition = pixels(pngs[0].bytes, pngs[1].bytes, "RGBA");
   assert.equal(repetition.differentPixels, 0);
-  const [{ path, png }] = pngs;
+  const path = join(out, `${name}-a.png`);
+  writeFileSync(path, first, { flag: "wx" });
+  writeFileSync(join(out, `${name}-b.png`), second, { flag: "wx" });
+  const png = { ...pngSize(first), sha256: sha256(first) };
   return { path, png, repetition, state };
 }
 

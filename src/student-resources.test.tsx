@@ -6,6 +6,7 @@ import { cache } from "./api";
 import type { Certificate } from "./api";
 import { CertificatePage, Certificates } from "./pages/certificates";
 import { Materials } from "./pages/materials";
+import { certificateCanvas } from "./certificate";
 
 vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:58521");
@@ -127,6 +128,35 @@ it("a verificação pública não carrega a URL externa de assinatura de certifi
   mount("/verificar/" + validCode);
   expect(await screen.findByText("Pessoa Responsável")).toBeInTheDocument();
   expect(screen.queryByRole("img", { name: "Assinatura de Pessoa Responsável" })).not.toBeInTheDocument();
+});
+
+it("o canvas dos downloads usa a imagem do Storage oficial e ignora a assinatura legada", async () => {
+  const drawImage = vi.fn();
+  const fonts = Object.getOwnPropertyDescriptor(document, "fonts");
+  Object.defineProperty(document, "fonts", { configurable: true, value: { ready: Promise.resolve() } });
+  const canvas = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+    drawImage, fillRect: vi.fn(), strokeRect: vi.fn(), fillText: vi.fn(), measureText: () => ({ width: 20 }),
+  } as unknown as CanvasRenderingContext2D);
+  const sources: string[] = [];
+  vi.stubGlobal("Image", class {
+    width = 200;
+    height = 50;
+    decode = async () => {};
+    set src(value: string) { sources.push(value); }
+  });
+  const legacy = { ...certificate, signature_url: "https://externo.example/rubrica.png" };
+  try {
+    await certificateCanvas(legacy);
+    const path = "signature/55555555-5555-4555-8555-555555555555.png";
+    await certificateCanvas({ ...legacy, signature_path: path });
+    expect(sources.filter((source) => source.includes("rubrica.png"))).toEqual([]);
+    expect(sources.at(-1)).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${path}`);
+    expect(drawImage).toHaveBeenCalledTimes(3);
+  } finally {
+    canvas.mockRestore();
+    if (fonts) Object.defineProperty(document, "fonts", fonts);
+    else Reflect.deleteProperty(document, "fonts");
+  }
 });
 
 it("revalida o código atual e distingue falha de consulta de revogação", async () => {

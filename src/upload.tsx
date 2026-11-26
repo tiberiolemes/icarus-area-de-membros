@@ -195,6 +195,12 @@ export function Upload({
         setFileName(selected?.name ?? "");
         setError("");
         setState("");
+        if (kind === "course-cover" && selected && selected.size > 500 * 1024) {
+          setError("Esta imagem passa de 500 KB. Escolha uma menor, em PNG, JPG ou WebP.");
+          input.value = "";
+          setFileName("");
+          return;
+        }
         if (kind !== "avatar") return;
         setPreview("");
         if (!selected) return;
@@ -240,6 +246,8 @@ export function Upload({
             ? "MP4 de até 500 MiB no armazenamento da plataforma."
             : kind === "material"
             ? "Até 500 MiB, conforme o tipo permitido pelo servidor. O andamento abaixo não estima percentual."
+            : kind === "course-cover"
+            ? "PNG, JPG ou WebP de até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px."
             : "Imagem raster até 5 MiB; anexos até 20 MiB, conforme o tipo permitido."
         }
       >

@@ -8,6 +8,7 @@ import { Settings } from "./pages/settings";
 import { Help } from "./pages/help";
 import { Ranking } from "./pages/ranking";
 import { NotificationHistory } from "./pages/notifications";
+import { helpPathFor } from "./pages/help-paths";
 import { moduleOfPath, modules as moduleList, readModules } from "./modules";
 
 vi.hoisted(() => {
@@ -140,7 +141,7 @@ it("a aba Módulos liga e desliga por AJAX e avisa a falha", async () => {
   expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível desligar o módulo Comunidade. Confirme o segundo fator para continuar.");
 });
 
-it("a Central de ajuda desligada fica indisponível para o aluno e esconde artigos de módulos desligados da equipe", () => {
+it("a Central de ajuda desligada fica indisponível para o aluno, e a equipe segue vendo os artigos do painel", () => {
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
   cache.setQueryData(["app_public_context", {}], { name: "Icarus", modules: { help: false, podcasts: false } });
   const view = mount("/ajuda", <Help />, cache);
@@ -150,18 +151,87 @@ it("a Central de ajuda desligada fica indisponível para o aluno e esconde artig
 
   profile.role = "support";
   settings.modules = { help: false, podcasts: false };
-  mount("/app/ajuda", <Help member />, cache);
+  const home = mount("/app/ajuda", <Help member />, cache);
   expect(screen.getByText(/A Central de ajuda está desativada para os alunos/)).toBeInTheDocument();
-  const article = screen.getByText("Cadastre conteúdo e opere as filas", { selector: "a" });
-  expect(article).toBeVisible();
-  expect(article).toHaveAccessibleName("Cadastre conteúdo e opere as filas");
-  expect(screen.queryByText("Assista a podcasts e masterclasses", { selector: "a" })).not.toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Para a equipe" })).toBeVisible();
+  expect(screen.getByRole("link", { name: "Integrações" })).toHaveAttribute("href", "/app/ajuda?categoria=integracoes");
+  home.unmount();
+
+  // Com Podcasts desligado, o artigo do aluno some e o do painel continua, porque a equipe ainda prepara episódios.
+  const student = mount("/app/ajuda?categoria=comunidade-e-eventos", <Help member />, cache);
+  expect(screen.getByRole("link", { name: "Participar dos encontros ao vivo" })).toBeVisible();
+  expect(screen.queryByRole("link", { name: "Assistir a podcasts e masterclasses" })).not.toBeInTheDocument();
+  student.unmount();
+  mount("/app/ajuda?categoria=conteudo", <Help member />, cache);
+  expect(screen.getByRole("link", { name: "Publicar podcasts e masterclasses" })).toHaveAttribute("href", "/app/ajuda/administracao-podcasts");
+});
+
+it("o aluno vê só os assuntos dele, e artigo da equipe aberto pelo endereço não aparece", () => {
+  const home = mount("/app/ajuda", <Help member />);
+  expect(screen.getByRole("link", { name: "Primeiros passos" })).toHaveAttribute("href", "/app/ajuda?categoria=primeiros-passos");
+  expect(screen.queryByRole("heading", { name: "Para a equipe" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Integrações" })).not.toBeInTheDocument();
+  home.unmount();
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={["/app/ajuda/integracao-asaas"]}>
+        <Routes><Route path="/app/ajuda/:artigo" element={<Help member />} /></Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  expect(screen.getByRole("heading", { name: "Artigo não encontrado" })).toBeVisible();
+  expect(screen.queryByText(/Chave de API/)).not.toBeInTheDocument();
+});
+
+it("o artigo de integração mostra passos, imagem com descrição e links para os outros artigos", () => {
+  profile.role = "admin";
+  settings.modules = { support: false };
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={["/app/ajuda/integracao-asaas"]}>
+        <Routes><Route path="/app/ajuda/:artigo" element={<Help member />} /></Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  expect(screen.getByRole("heading", { level: 1, name: "Receber pagamentos com o Asaas" })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Antes de começar" })).toBeVisible();
+  const menu = screen.getByRole("img", { name: /menu do usuário aberto/ });
+  expect(menu).toHaveAttribute("loading", "lazy");
+  expect(menu.closest("a")).toHaveAttribute("target", "_blank");
+  expect(screen.getAllByText("CHECKOUT_PAID", { selector: "strong" })[0]).toBeVisible();
+  expect(screen.getAllByRole("link", { name: "verificação em duas etapas" })[0]).toHaveAttribute("href", "/app/ajuda/verificacao-em-duas-etapas");
+  expect(screen.getByRole("link", { name: "Integrações" })).toHaveAttribute("href", "/app/ajuda?categoria=integracoes");
+  expect(screen.queryByRole("link", { name: "Preciso de suporte" })).not.toBeInTheDocument();
+});
+
+it("cada aba de Configurações, no painel e na conta, abre o artigo que explica aquela aba", () => {
+  // As abas vêm da tela: aba nova ou renomeada muda esta lista e pede a escolha do artigo dela.
+  const articleByTab = (label: string) => Object.fromEntries(
+    within(screen.getByRole("navigation", { name: label })).getAllByRole("link").map((link) => {
+      const url = new URL(link.getAttribute("href")!, "http://icarus.test");
+      return [url.searchParams.get("aba") ?? "", helpPathFor(url.pathname, url.search)];
+    }));
+  profile.role = "admin";
+  const panel = mount("/admin/configuracoes?aba=modulos", <AdminSettings />);
+  expect(articleByTab("Configurações da plataforma")).toEqual({
+    onboarding: "/ajuda/perguntas-do-primeiro-acesso", marca: "/ajuda/marca-da-plataforma", certificado: "/ajuda/certificado-do-curso", modulos: "/ajuda/modulos",
+    integracoes: "/ajuda/integracao-asaas", legal: "/ajuda/documentos-legais", equipe: "/ajuda/equipe-e-papeis",
+    auditoria: "/ajuda/privacidade-e-auditoria", privacidade: "/ajuda/privacidade-e-auditoria",
+  });
+  panel.unmount();
+  profile.role = "member";
+  mount("/app/configuracoes?aba=assinatura", <Settings />);
+  expect(articleByTab("Configurações")).toEqual({
+    perfil: "/ajuda/conta", empresa: "/ajuda/conta", notificacoes: "/ajuda/notificacoes", assinatura: "/ajuda/assinatura",
+    seguranca: "/ajuda/verificacao-em-duas-etapas", privacidade: "/ajuda/privacidade",
+  });
 });
 
 it("busca artigos sem acentos e confirma o voto só quando o servidor salva", async () => {
   const search = mount("/app/ajuda?q=notificacoes+sino", <Help member />);
-  expect(screen.getByRole("heading", { name: "Para alunos" })).toBeVisible();
-  expect(screen.getByRole("link", { name: /notificações/i })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Resultados da busca" })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Conta e assinatura" })).toBeVisible();
+  expect(screen.getByRole("link", { name: "Ler avisos e escolher notificações" })).toHaveAttribute("href", "/app/ajuda/notificacoes");
   expect(screen.queryByRole("heading", { name: "Para a equipe" })).not.toBeInTheDocument();
   search.unmount();
   const empty = mount("/app/ajuda?q=naoexiste", <Help member />);

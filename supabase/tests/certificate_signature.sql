@@ -52,7 +52,6 @@ set local role service_role;
 select pg_temp.service('admin');
 select pg_temp.ok(public.app_brand_asset_begin(pg_temp.id('admin'), 'signature', 'image/png') ~ '^signature/[0-9a-f-]{36}\.png$', 'Caminho da assinatura gerado no servidor');
 select pg_temp.denied(format('select public.app_brand_asset_begin(%L, %L, %L)', pg_temp.id('admin'), 'signature', 'image/webp'), 'P0001', 'Assinatura só em PNG');
-select pg_temp.denied(format('select public.app_brand_asset_commit(%L, %L, %L, null)', pg_temp.id('admin'), 'signature', (select sig1 from fixture)), 'P0001', 'Assinatura exige o curso');
 select pg_temp.denied(format('select public.app_brand_asset_commit(%L, %L, %L, %L)', pg_temp.id('admin'), 'signature', (select sig1 from fixture), gen_random_uuid()), 'P0001', 'Curso inexistente');
 select pg_temp.denied(format('select public.app_brand_asset_commit(%L, %L, %L, %L)', pg_temp.id('admin'), 'signature', 'signature/' || gen_random_uuid() || '.png', (select course from fixture)), 'P0001', 'Objeto inexistente');
 select pg_temp.denied(format('select public.app_brand_asset_commit(%L, %L, %L, %L)', pg_temp.id('admin'), 'light', 'logo/light-' || gen_random_uuid() || '.png', (select course from fixture)), 'P0001', 'Curso só vale para a assinatura');

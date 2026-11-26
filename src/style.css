@@ -1482,48 +1482,210 @@ img.brand-custom[data-brand-shape="compact"] {
   padding-left: 24px;
 }
 .member-shell-stitch > .workspace:has(.reading[data-tour="help"]) { background-color: var(--stitch-canvas); }
+/* Nome de evento, endereço ou termo buscado muito longo quebra de linha em vez de empurrar a página para o lado no celular. */
+.reading.help {
+  max-width: 46rem;
+  overflow-wrap: anywhere;
+}
 .help-back {
   display: flex;
   flex-wrap: wrap;
   column-gap: var(--stitch-space-md);
 }
 .help-group { margin-block-start: var(--stitch-space-xl); }
+.help-eyebrow {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.help-eyebrow a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--stitch-control-min-size);
+  color: var(--stitch-text-secondary);
+}
+.help-categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: var(--stitch-space-md);
+  list-style: none;
+  padding: 0;
+  margin: var(--stitch-space-md) 0 0;
+}
+.help-categories li {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--stitch-space-sm);
+  padding: var(--stitch-space-lg);
+  border: 1px solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-md);
+  background: var(--stitch-surface-card);
+  box-shadow: var(--stitch-shadow-card);
+}
+.help-categories li:hover,
+.help-categories li:focus-within {
+  border-color: var(--stitch-border-strong);
+  box-shadow: var(--stitch-shadow-active);
+}
+.help-categories a {
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+/* O título é o link, e a área clicável cobre o cartão inteiro. */
+.help-categories a::after,
+.help-list a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.help-categories p {
+  margin: 0;
+  color: var(--stitch-text-secondary);
+}
+.help-categories small {
+  font-size: 0.875rem;
+  color: var(--stitch-text-muted);
+}
 .help-list {
   list-style: none;
   padding: 0;
   margin-block: var(--stitch-space-sm);
 }
-.help-list a {
-  display: flex;
+.help-list li {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--stitch-space-sm);
   align-items: center;
-  justify-content: space-between;
-  gap: var(--stitch-space-sm);
-  min-height: var(--stitch-control-min-size);
-  padding-block: var(--stitch-space-sm);
+  padding-block: var(--stitch-space-md);
   border-bottom: 1px solid var(--stitch-border-subtle);
-  font-weight: 500;
+}
+.help-list a {
+  font-weight: 600;
   text-decoration: none;
 }
-.help-list a svg { flex-shrink: 0; }
-.help-list a:hover {
-  text-decoration: underline;
+.help-list li:hover a { text-decoration: underline; }
+.help-list p {
+  grid-column: 1;
+  margin: var(--stitch-space-xs) 0 0;
+  color: var(--stitch-text-secondary);
 }
+.help-list svg {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.help-support .help-list li:last-child { border-bottom: 0; }
+.help-need {
+  padding: var(--stitch-space-lg);
+  border: 1px solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-md);
+  background: var(--stitch-surface-control);
+}
+.help-need h2 {
+  font-size: 1.125rem;
+  margin-bottom: var(--stitch-space-sm);
+}
+.help-need ul,
+.help-items {
+  padding-left: 1.25rem;
+  margin: 0;
+}
+.help-need li,
+.help-items li { margin-top: var(--stitch-space-sm); }
+.help-section { margin-top: var(--stitch-space-xl); }
 .help-steps {
-  padding-left: 24px;
-  margin: 32px 0;
+  counter-reset: help-step;
+  list-style: none;
+  padding: 0;
+  margin: var(--stitch-space-md) 0 0;
 }
-.help-steps li {
-  padding-left: 8px;
-  margin-bottom: 24px;
+.help-steps > li {
+  position: relative;
+  counter-increment: help-step;
+  min-height: 2rem;
+  padding-left: 3rem;
+  margin-bottom: var(--stitch-space-lg);
+}
+.help-steps > li::before {
+  content: counter(help-step);
+  position: absolute;
+  top: -0.125rem;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--stitch-radius-full);
+  background: var(--stitch-action);
+  color: var(--stitch-on-action);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.help-shot { margin: var(--stitch-space-md) 0 0; }
+/* As telas das plataformas são claras: o fundo fica branco nos dois temas. */
+.help-shot a {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--stitch-border-strong);
+  border-radius: var(--stitch-radius-md);
+  background: #fff;
+}
+.help-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* No celular, a imagem do passo ocupa a largura toda, sem o recuo do número. */
+@media (max-width: 639px) {
+  .help-steps .help-shot { margin-left: -3rem; }
+}
+.help-shot figcaption {
+  margin-top: var(--stitch-space-sm);
+  font-size: 0.875rem;
+  color: var(--stitch-text-secondary);
+}
+.help-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stitch-space-sm);
+  margin: var(--stitch-space-md) 0 0;
+  padding: var(--stitch-space-md);
+  border: 1px solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-md);
+  background: var(--stitch-surface-control);
+}
+.help-callout svg {
+  flex: none;
+  margin-top: 0.125rem;
+}
+.help-warn {
+  border-color: var(--stitch-text-primary);
+  border-left-width: 4px;
+}
+.help-trouble:not(:last-child) { border-bottom: 1px solid var(--stitch-border-subtle); }
+.help-trouble summary {
+  padding-block: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.help-trouble p { margin: 0 0 var(--stitch-space-md); }
+.help code {
+  padding: 0.1em 0.35em;
+  border-radius: var(--stitch-radius-sm);
+  background: var(--stitch-surface-control);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875em;
 }
 .help-feedback,
 .help-support {
-  border-top: 1px solid var(--ic-border);
+  border-top: 1px solid var(--stitch-border-subtle);
   padding-top: 24px;
   margin-top: 32px;
 }
 .help-support p {
-  color: var(--ic-text-secondary);
+  color: var(--stitch-text-secondary);
 }
 .tour-launch {
   flex-shrink:0;

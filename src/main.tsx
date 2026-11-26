@@ -15,7 +15,6 @@ import {
 } from "./pages/access";
 import { Shell } from "./shell";
 import { Loading, Heading, Notice } from "./ui";
-import { Help } from "./pages/help";
 import { NotificationHistory } from "./pages/notifications";
 import "./style.css";
 
@@ -29,6 +28,8 @@ function MemberRanking() {
   return data && <Ranking key={data.profile.id} memberId={data.profile.id} />;
 }
 
+// A ajuda carrega o texto de todos os artigos: só entra quando alguém abre a Central.
+const Help = lazy(() => import("./pages/help").then((m) => ({ default: m.Help })));
 const Ranking = lazy(() => import("./pages/ranking").then((m) => ({ default: m.Ranking })));
 const Events = lazy(() => import("./pages/events").then((m) => ({ default: m.Events })));
 const AdminEvents = lazy(() => import("./pages/admin-events").then((m) => ({ default: m.AdminEvents })));

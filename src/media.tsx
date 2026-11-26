@@ -8,7 +8,7 @@ export function usePrivateImageQuery(kind: ImageKind, id: string) {
   return useQuery({
     queryKey: ["media", kind, id],
     queryFn: () =>
-      edge<{ url: string; expires_at: string }>("media", { kind, id }),
+      edge<{ url: string; expires_at: string; focus?: string }>("media", { kind, id }),
     retry: false,
     gcTime: 0,
     staleTime: 0,
@@ -42,6 +42,8 @@ export function PrivateImage({
       alt={alt}
       loading="lazy"
       referrerPolicy="no-referrer"
+      // Só a capa de curso traz foco: o ponto escolhido no painel continua visível em qualquer recorte.
+      style={query.data?.focus ? { objectPosition: query.data.focus } : undefined}
       onError={() => {
         if (!retried.current) {
           retried.current = true;

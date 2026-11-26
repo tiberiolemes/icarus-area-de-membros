@@ -56,20 +56,25 @@ export const material: Material = {
   file_type: "text/plain", size_bytes: 160, can_access: true,
 };
 export const videoUrl = new URL("./aula.mp4", import.meta.url).href;
+export const certificateModel = () => ({ signer_name: "Equipe de demonstração", signer_title: "Coordenação pedagógica", signature_path: null as string | null });
 
 export function seed() {
   const courses: Row[] = names.map(([slug, title, description], index) => ({
     id: demoId(100 + index), slug, title, description: text(description), status: "published",
     access_mode: index === 3 ? "plans" : "members", plan_ids: index === 3 ? [demoId(22)] : [],
-    certificate_enabled: index === 0, order_index: index, has_cover: false,
+    // Nome e cargo nulos: o curso usa o modelo global de certificado.
+    certificate_enabled: index === 0, signer_name: null, signer_title: null, order_index: index,
+    // Só o primeiro curso tem capa, para a demonstração mostrar o cartão com imagem e o cartão só com título.
+    cover_url: index === 0 ? "demo/capa-estrategia.svg" : null, cover_focus: "50% 50%", has_cover: index === 0,
   }));
   const modules: Row[] = courses.map((course, index) => ({
     id: demoId(200 + index), course_id: course.id, slug: "primeiros-passos",
     title: "Primeiros passos", status: "published", order_index: 0, access_mode: "inherit",
   }));
-  const sections: Row[] = modules.map((module, index) => ({
-    id: demoId(250 + index), module_id: module.id, title: "Fundamentos", status: "published", order_index: 0, is_bonus: false,
-  }));
+  // O primeiro curso usa só Curso > Módulo > Aulas, com a seção automática; os outros mostram uma seção criada pela equipe.
+  const sections: Row[] = modules.map((module, index) => index === 0
+    ? { id: demoId(250 + index), module_id: module.id, title: "Aulas do módulo", status: "published", order_index: -1, is_bonus: false, is_default: true }
+    : { id: demoId(250 + index), module_id: module.id, title: "Fundamentos", status: "published", order_index: 0, is_bonus: false, is_default: false });
   const lessons: Row[] = sections.flatMap((section, index) => [
     ["objetivos", "Defina os objetivos da trilha", "text"],
     ["modulos-e-aulas", "Organize módulos e aulas", "video"],
@@ -108,7 +113,7 @@ export function seed() {
       },
     } as Record<string, unknown>,
     checklists: {} as Record<string, string[]>,
-    installation: { name: "Icarus", name_revision: 0, modules: {} as Record<string, boolean> },
+    installation: { name: "Icarus", name_revision: 0, modules: {} as Record<string, boolean>, certificate: certificateModel() },
   };
 }
 

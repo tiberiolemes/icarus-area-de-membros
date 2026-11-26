@@ -48,12 +48,45 @@ it("a capa mostra um seletor em português com o nome do arquivo e habilita o en
   const submit = screen.getByRole("button", { name: "Enviar arquivo" });
   expect(screen.getByText("Escolher arquivo")).toBeInTheDocument();
   expect(screen.getByText("Nenhum arquivo selecionado")).toBeInTheDocument();
-  expect(input).toHaveAccessibleDescription("Imagem raster até 5 MiB; anexos até 20 MiB, conforme o tipo permitido.");
+  expect(input).toHaveAttribute("accept", "image/png,image/jpeg,image/webp");
+  expect(input).toHaveAccessibleDescription("PNG, JPG ou WebP de até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px.");
   expect(submit).toBeDisabled();
   fireEvent.change(input, { target: { files: [new File([png], "capa.png", { type: "image/png" })] } });
   expect(screen.getByText("capa.png")).toBeInTheDocument();
   expect(submit).toBeEnabled();
   expect(invoke).not.toHaveBeenCalled();
+});
+
+it("recusa capa acima de 500 KB antes de enviar e diz o motivo", async () => {
+  render(<Upload kind="course-cover" resourceId="curso-1" />);
+  const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
+  fireEvent.change(input, { target: { files: [new File([jpeg(500 * 1024 + 1)], "capa.jpg", { type: "image/jpeg" })] } });
+  expect(await screen.findByText("Esta imagem passa de 500 KB. Escolha uma menor, em PNG, JPG ou WebP.")).toBeInTheDocument();
+  expect(input).toHaveValue("");
+  expect(screen.getByText("Nenhum arquivo selecionado")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Enviar arquivo" })).toBeDisabled();
+  expect(invoke).not.toHaveBeenCalled();
+});
+
+it("capa de exatamente 500 KB segue para o envio", async () => {
+  invoke.mockResolvedValue({ data: { uploaded: true }, error: null });
+  render(<Upload kind="course-cover" resourceId="curso-1" />);
+  fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), {
+    target: { files: [new File([jpeg(500 * 1024)], "capa.jpg", { type: "image/jpeg" })] },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
+  expect(await screen.findByText("Arquivo enviado e associado ao registro.")).toBeInTheDocument();
+  expect(invoke).toHaveBeenCalledTimes(1);
+});
+
+it("os outros envios de imagem continuam com a dica geral e sem o limite da capa", async () => {
+  render(<Upload kind="post-image" resourceId="post-1" />);
+  const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
+  expect(input).toHaveAccessibleDescription("Imagem raster até 5 MiB; anexos até 20 MiB, conforme o tipo permitido.");
+  fireEvent.change(input, { target: { files: [new File([jpeg(500 * 1024 + 1)], "foto.jpg", { type: "image/jpeg" })] } });
+  expect(await screen.findByText("foto.jpg")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Enviar arquivo" })).toBeEnabled();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
 
 it("recusa foto acima de 500 KB dizendo que o problema é o tamanho", async () => {

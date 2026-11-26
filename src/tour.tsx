@@ -5,6 +5,7 @@ import { HelpCircle } from "lucide-react";
 import { rpc } from "./api";
 import { useAuth, useBootstrap } from "./auth";
 import { readModules, type Modules } from "./modules";
+import { helpPathFor } from "./pages/help-paths";
 import { Action } from "./ui";
 
 const steps = [
@@ -16,7 +17,7 @@ const steps = [
   {
     target: "help",
     title: "Consulte a Central de ajuda",
-    body: "Busque por palavras ou escolha um artigo. Você pode dizer se o artigo ajudou e usar Voltar à área de membros para retornar aos cursos.",
+    body: "Busque por uma palavra ou escolha um assunto para ver os artigos. Em cada artigo, você pode dizer se ele ajudou. Use Voltar à área de membros para retornar aos cursos.",
   },
   {
     target: "member-search",
@@ -149,6 +150,11 @@ const steps = [
     body: "Use Salvar nome para publicar o nome. Se outra sessão tiver alterado o nome, revise o valor publicado antes de reenviar. Envie a versão colorida e a branca em SVG, PNG ou WebP. Confira o encaixe nos menus, nas telas de entrada, no painel e no certificado, nos dois temas, antes de salvar. O favicon aceita SVG ou PNG quadrado.",
   },
   {
+    target: "admin-settings-certificate",
+    title: "Defina o modelo de certificado",
+    body: "Preencha o responsável e o cargo e use Salvar modelo. Envie a assinatura em PNG no cartão Assinatura. Os cursos em Usar o modelo global saem com estes dados, e os certificados já emitidos não mudam.",
+  },
+  {
     target: "admin-settings-modules",
     title: "Escolha os módulos da plataforma",
     body: "Use o interruptor de cada módulo para ligar ou desligar. Desligar esconde o recurso dos alunos e bloqueia o acesso no servidor, sem apagar dados. A mudança vale assim que o servidor confirma.",
@@ -237,13 +243,9 @@ export function Tour() {
   const launch = useRef<HTMLDivElement>(null), panel = useRef<HTMLElement>(null);
   const spotlight = useRef<HTMLDivElement>(null);
   const adminSettingsScreen = pathname === "/admin/configuracoes";
-  const rankingScreen = pathname === "/app/ranking";
-  const adminReport = pathname === "/admin/dashboard" || pathname === "/admin/analytics";
-  const adminOrders = pathname === "/admin/pedidos";
   const params = new URLSearchParams(search);
   const settingsTab = adminSettingsScreen || pathname === "/app/configuracoes" ? params.get("aba") : null;
   const provider = adminSettingsScreen && settingsTab === "integracoes" ? params.get("provedor") : null;
-  const podcastScreen = pathname === "/app/podcasts" || /^\/admin\/podcasts(?:\/|$)/.test(pathname);
   useEffect(() => {
     setActive(false);
     setDone(false);
@@ -413,7 +415,7 @@ export function Tour() {
         </>
       )}
       {helpOpen && (
-        <Link className="text-action" to={adminSettingsScreen || adminReport || adminOrders ? "/ajuda/administracao" : rankingScreen ? "/ajuda/ranking" : podcastScreen ? pathname.startsWith("/admin") ? "/ajuda/administracao-podcasts" : "/ajuda/podcasts" : "/ajuda"}>
+        <Link className="text-action" to={helpPathFor(pathname, search)}>
           Ajuda completa
         </Link>
       )}

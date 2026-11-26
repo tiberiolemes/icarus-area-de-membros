@@ -311,6 +311,8 @@ export type Section = {
   title: string;
   order_index: number;
   is_bonus: boolean;
+  /** Seção criada sozinha para as aulas postas direto no módulo; não mostra cabeçalho. */
+  is_default?: boolean;
   lessons: Lesson[];
 };
 export type Module = {

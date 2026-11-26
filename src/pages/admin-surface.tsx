@@ -1,7 +1,8 @@
 import { Fragment, useState, type ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { FormHeadingTarget, Heading } from "../ui";
+import { helpPathFor } from "./help-paths";
 import "./admin-settings.css";
 
 /** Página padrão do painel (classe admin-settings): trilha, título, descrição, ação à direita, abas e cartões. */
@@ -17,6 +18,7 @@ export function AdminSurface({ section, trail, title, description, action, tabs,
   children: ReactNode;
 }) {
   const [target, setTarget] = useState<HTMLDivElement | null>(null);
+  const { pathname, search } = useLocation();
   return (
     <div className={`admin-settings ${className}`} data-section={section}>
       <p className="settings-breadcrumb">
@@ -30,7 +32,7 @@ export function AdminSurface({ section, trail, title, description, action, tabs,
       <Heading title={title} action={formAction ? <div className="editor-actions">{action}<div className="heading-submit" ref={setTarget} /></div> : action}>{description}</Heading>
       {tabs}
       <FormHeadingTarget.Provider value={target}>{children}</FormHeadingTarget.Provider>
-      <Link className="button settings-help" to="/ajuda/administracao">Ajuda da administração</Link>
+      <Link className="button settings-help" to={helpPathFor(pathname, search)}>Ajuda da administração</Link>
     </div>
   );
 }

@@ -22,7 +22,7 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   if (!gate.storage_path || gate.storage_path.includes("..") || gate.storage_path.startsWith("/")) throw new HttpError(503, "CONFIGURATION_REQUIRED", "Arquivo ainda não configurado.");
   const { data, error } = await a.admin.storage.from("icarus-private").createSignedUrl(gate.storage_path, 120);
   if (error || !data) throw new HttpError(404, "FILE_UNAVAILABLE", "Arquivo indisponível.");
-  return { url: publicStorageUrl(data.signedUrl, d.env), expires_at: new Date(expires * 1000).toISOString(), provider: "supabase" };
+  return { url: publicStorageUrl(data.signedUrl, d.env), expires_at: new Date(expires * 1000).toISOString(), provider: "supabase", ...(gate.focus ? { focus: gate.focus } : {}) };
 }, d.env);
 export const handler = createHandler();
 if (import.meta.main) Deno.serve(handler);

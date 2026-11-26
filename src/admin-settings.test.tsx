@@ -96,6 +96,7 @@ it("Cobranças em produção exige teste aprovado e uma reautenticação separad
 const tabs = [
   ["onboarding", "Onboarding", "Onboarding dos membros"],
   ["marca", "Plataforma e marca", "Plataforma, marca e white label"],
+  ["certificado", "Certificado", "Modelo de certificado"],
   ["modulos", "Módulos", "Módulos da plataforma"],
   ["integracoes", "Gateway Asaas", "Gateway de pagamento Asaas"],
   ["legal", "Documentos legais", "Documentos legais"],

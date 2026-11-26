@@ -117,7 +117,7 @@ it("o guia de auditoria acompanha a paginação e fecha ao mudar de superfície"
   );
   fireEvent.click(screen.getByRole("button", { name: "Guia desta tela" }));
   const panel = await screen.findByRole("complementary", { name: "Guia desta tela" });
-  expect(within(panel).getByRole("link", { name: "Ajuda completa" })).toHaveAttribute("href", "/ajuda/administracao");
+  expect(within(panel).getByRole("link", { name: "Ajuda completa" })).toHaveAttribute("href", "/ajuda/privacidade-e-auditoria");
   await waitFor(() => expect(screen.getByText("Eventos registrados")).toHaveClass("tour-target"));
   fireEvent.click(screen.getByRole("link", { name: "Próxima página" }));
   expect(panel).toBeInTheDocument();

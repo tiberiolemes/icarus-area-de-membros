@@ -22,7 +22,7 @@ const comment = {
 };
 const coursePath = `${root}/${course.slug}`;
 
-function show(role: string, path: string, reviewDenied = false) {
+function show(role: string, path: string, reviewDenied = false, loose = false) {
   let pending = true;
   const requests: { name: string; args: Record<string, unknown> }[] = [];
   const page = (items: unknown[], p: unknown = 1) => Response.json({ items, total: items.length, page: p, page_size: 20 });
@@ -38,7 +38,7 @@ function show(role: string, path: string, reviewDenied = false) {
       case "app_course":
         return Response.json({ course, modules: [{
           title: "Módulo de teste", can_access: false,
-          sections: [{ title: "Seção de teste", lessons: [lesson, locked] }],
+          sections: [{ title: loose ? "Aulas do módulo" : "Seção de teste", is_default: loose, lessons: [lesson, locked] }],
         }] });
       case "app_lesson_comments":
         return reviewDenied
@@ -88,6 +88,16 @@ it("permite ao moderador localizar a aula e voltar aos cursos com a busca preser
   fireEvent.click(screen.getByRole("link", { name: "Cursos para moderação" }));
   expect(screen.getByRole("searchbox", { name: "Buscar" })).toHaveValue("Curso de teste");
   expect(screen.getByRole("link", { name: "Administração da comunidade" })).toHaveAttribute("href", "/admin/comunidade");
+});
+
+it("não mostra o nome da seção automática na lista nem no cabeçalho da aula", async () => {
+  show("moderator", coursePath, false, true);
+  const row = await screen.findByRole("link", { name: /Aula de teste/ });
+  expect(row).toHaveTextContent(/Módulo de teste$/);
+  fireEvent.click(row);
+  expect(await screen.findByText(comment.body)).toBeVisible();
+  expect(screen.getByText("Curso de teste · Módulo de teste")).toBeVisible();
+  expect(screen.queryByText(/Aulas do módulo/)).toBeNull();
 });
 
 it.each([

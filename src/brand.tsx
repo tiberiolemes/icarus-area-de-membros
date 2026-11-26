@@ -84,6 +84,26 @@ export const acceptOf = (variant: AssetVariant) => [
 
 export type AssetPreview = { url: string; ratio: number; warnings: string[] };
 
+async function svgPreview(svg: string, ratio: number) {
+  const canvas = document.createElement("canvas");
+  const size = 1024;
+  canvas.width = Math.max(1, Math.round(size * Math.min(ratio, 1)));
+  canvas.height = Math.max(1, Math.round(size * Math.min(1 / ratio, 1)));
+  const context = canvas.getContext("2d");
+  const previewError = "Não foi possível preparar a prévia da imagem.";
+  if (!context) throw new Error(previewError);
+
+  // A fonte SVG fica em uma imagem fora do documento e com origem opaca.
+  const image = new Image();
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  try { await image.decode(); }
+  catch { throw new Error(previewError); }
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const raster = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+  if (!raster) throw new Error(previewError);
+  return URL.createObjectURL(raster);
+}
+
 /** Confere tipo pelo conteúdo, tamanho e dimensões antes do envio e devolve a URL da prévia. O servidor confere tudo de novo. */
 export async function checkImageFile(file: File, variant: AssetVariant) {
   const rule = assetRules[variant], kinds = rule.webp ? "PNG ou WebP" : "PNG";
@@ -101,7 +121,7 @@ export async function checkImageFile(file: File, variant: AssetVariant) {
     body.set("variant", variant);
     body.set("file", file);
     const preview = await edge<{ svg: string; ratio: number; warnings: string[] }>("upload", body);
-    return { url: URL.createObjectURL(new Blob([preview.svg], { type })), ratio: preview.ratio, warnings: preview.warnings };
+    return { url: await svgPreview(preview.svg, preview.ratio), ratio: preview.ratio, warnings: preview.warnings };
   }
   const bytes = new Uint8Array(await file.slice(0, 12).arrayBuffer()), ascii = (start: number, end: number) => String.fromCharCode(...bytes.slice(start, end));
   const real = type === "image/png" ? [137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => bytes[index] === byte) : ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP";

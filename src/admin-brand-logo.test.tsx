@@ -179,18 +179,34 @@ it("a assinatura do certificado vai com o curso e remove pela mesma Edge", async
   expect(edge).toHaveBeenLastCalledWith("upload", { action: "brand-asset-remove", variant: "signature", course_id: "curso-1" });
 });
 
-it("busca a prévia sanitizada para SVG, mostra os avisos e salva o arquivo original pelo fluxo verificado", async () => {
+it("mostra apenas a prévia PNG do SVG sanitizado e salva o arquivo original", async () => {
   const original = new File(['<svg viewBox="0 0 100 100" onload="alert(1)"><rect width="90" height="90"/></svg>'], "logo.svg", { type: "image/svg+xml" });
   const clean = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 90"><rect width="90" height="90"/></svg>';
-  edge.mockResolvedValueOnce({ svg: clean, ratio: 1, warnings: ["O desenho tem pouco contraste no tema escuro."] });
-  mount();
-  choose("Escolher logo branca", original);
-  expect(await screen.findByText("O desenho tem pouco contraste no tema escuro.")).toBeInTheDocument();
-  expect(screen.getByRole("img", { name: "Prévia da logo branca" })).toHaveAttribute("data-brand-shape", "compact");
-  const [previewName, previewBody] = edge.mock.calls[0] as [string, FormData];
-  expect([previewName, previewBody.get("kind"), previewBody.get("file")]).toEqual(["upload", "brand-asset-preview", original]);
-  expect(URL.createObjectURL).toHaveBeenCalledWith(expect.objectContaining({ type: "image/svg+xml", size: clean.length }));
-  fireEvent.click(screen.getByRole("button", { name: "Salvar logo branca" }));
-  expect(await screen.findByText("Logo branca salva.")).toBeInTheDocument();
-  expect(edge.mock.calls[1][1].get("file")).toEqual(original);
+  const decode = vi.fn(async () => {});
+  const image = Object.assign(document.createElement("img"), { decode });
+  const drawImage = vi.fn();
+  const frame = new Blob([pngBytes()], { type: "image/png" });
+  const Image = vi.spyOn(window, "Image").mockImplementation(function () { return image; });
+  const canvas = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage } as unknown as CanvasRenderingContext2D);
+  const toBlob = vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => callback(frame));
+  try {
+    edge.mockResolvedValueOnce({ svg: clean, ratio: 1, warnings: ["O desenho tem pouco contraste no tema escuro."] });
+    mount();
+    choose("Escolher logo branca", original);
+    expect(await screen.findByText("O desenho tem pouco contraste no tema escuro.")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Prévia da logo branca" })).toHaveAttribute("data-brand-shape", "compact");
+    const [previewName, previewBody] = edge.mock.calls[0] as [string, FormData];
+    expect([previewName, previewBody.get("kind"), previewBody.get("file")]).toEqual(["upload", "brand-asset-preview", original]);
+    expect(image.src).toBe(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(clean)}`);
+    expect(decode).toHaveBeenCalledOnce();
+    expect(drawImage).toHaveBeenCalledWith(image, 0, 0, 1024, 1024);
+    expect(URL.createObjectURL).toHaveBeenCalledExactlyOnceWith(frame);
+    fireEvent.click(screen.getByRole("button", { name: "Salvar logo branca" }));
+    expect(await screen.findByText("Logo branca salva.")).toBeInTheDocument();
+    expect(edge.mock.calls[1][1].get("file")).toEqual(original);
+  } finally {
+    Image.mockRestore();
+    canvas.mockRestore();
+    toBlob.mockRestore();
+  }
 });

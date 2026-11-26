@@ -81,6 +81,13 @@ async function fixture(shape, theme, width, role) {
     .map((part) => Buffer.from(JSON.stringify(part)).toString("base64url")).join(".");
   await browserFixture.addInitScript(({ key, session }) => {
     if (session) localStorage.setItem(key, JSON.stringify(session));
+    const createObjectUrl = URL.createObjectURL.bind(URL);
+    window.fixturePreviewMimeTypes = {};
+    URL.createObjectURL = (value) => {
+      const url = createObjectUrl(value);
+      window.fixturePreviewMimeTypes[url] = value.type;
+      return url;
+    };
   }, { key, session: role ? { access_token: token, refresh_token: "fixture", expires_at: expires, user } : null });
   const errors = [];
   let previews = 0;
@@ -130,7 +137,8 @@ async function assertImage(image, ratio, prefix = "") {
   const rendered = await image.evaluate(async (img) => {
     await img.decode();
     const { width, height } = img.getBoundingClientRect();
-    return { width, height, fit: getComputedStyle(img).objectFit, src: img.getAttribute("src"), naturalWidth: img.naturalWidth };
+    return { width, height, fit: getComputedStyle(img).objectFit, src: img.getAttribute("src"),
+      naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight };
   });
   assert(rendered.naturalWidth > 0 && rendered.fit === "contain" && rendered.height > 0);
   assert(Math.abs(rendered.width / rendered.height - ratio) < 0.025, JSON.stringify({ rendered, ratio }));
@@ -254,9 +262,25 @@ try {
           const visible = page.locator(".brand-samples .brand-custom:visible");
           for (const logo of await visible.all()) {
             const slot = await logo.evaluate((img) => [img.closest("[data-brand-slot]").dataset.brandSlot, img.closest("[data-theme]").dataset.theme]);
-            snapshots.push(await assertImage(logo, slot[0] === "icon" ? 1 : files[slot[1]].ratio, "blob:"));
+            const raster = await assertImage(logo, slot[0] === "icon" ? 1 : files[slot[1]].ratio, "blob:");
+            const rgba = await logo.evaluate((image) => {
+              const sample = document.createElement("canvas");
+              sample.width = sample.height = 1;
+              const ctx = sample.getContext("2d");
+              ctx.drawImage(image, Math.floor(image.naturalWidth / 2), Math.floor(image.naturalHeight / 2), 1, 1, 0, 0, 1, 1);
+              return Array.from(ctx.getImageData(0, 0, 1, 1).data);
+            });
+            assert.equal(rgba[3], 255, "Prévia com o desenho visível");
+            if (slot[0] !== "icon") assert(slot[1] === "light" ? rgba[1] < 90 : rgba[1] > 140, "Pintura da variante do tema");
+            snapshots.push({ ...raster, rgba });
           }
           assert.equal(snapshots.length, 15);
+          const mimeTypes = await page.evaluate(() => window.fixturePreviewMimeTypes);
+          assert.deepEqual(Object.values(mimeTypes), ["image/png", "image/png", "image/png"]);
+          for (const image of snapshots) {
+            assert.equal(mimeTypes[image.src], "image/png");
+            assert.equal(Math.max(image.naturalWidth, image.naturalHeight), 1024);
+          }
           assert.equal(admin.previews(), 3);
           assert.equal(await page.getByRole("button", { name: "Salvar logo colorida" }).isEnabled(), true);
           assert.deepEqual(errors, []);

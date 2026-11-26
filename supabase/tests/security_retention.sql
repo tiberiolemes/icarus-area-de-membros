@@ -65,6 +65,24 @@ insert into public.reauth_nonces(token_hash,actor_id,session_id,expires_at) valu
 insert into public.audit_events(id,action,target_type,created_at)
  values(pg_temp.uid(20),'retention-test','fixture',now()-interval '500 days');
 
+do $$
+declare seed double precision; selected boolean:=false;
+begin
+ if not exists(select 1 from pg_extension where extname='pg_cron') then
+  for guess in 1..1000 loop
+   seed:=guess/1000.0;
+   perform setseed(seed);
+   if random()<0.1 then selected:=true;exit;end if;
+  end loop;
+  perform pg_temp.expect(selected,'semente da amostra de manutenção');
+  perform setseed(seed);
+  perform public.app_touch_session(false);
+  perform pg_temp.expect(exists(select 1 from public.rate_limits where bucket='expired_fixture'),'consulta de sessão não dispara manutenção');
+  perform setseed(seed);
+  perform public.app_touch_session(true);
+  perform pg_temp.expect(not exists(select 1 from public.rate_limits where bucket='expired_fixture'),'atividade autenticada executa a manutenção amostrada');
+ end if;
+end $$;
 select app_private.reap_security_state(500);
 select pg_temp.expect(not exists(select 1 from public.rate_limits where bucket='expired_fixture'),'limite vencido removido');
 select pg_temp.expect(exists(select 1 from public.rate_limits where actor_id=pg_temp.uid(1) and bucket='reauth_hour'),'janela atual preservada');
@@ -80,5 +98,5 @@ select pg_temp.denied('select public.app_bootstrap()', 'Sessão expirada');
 reset role;
 delete from auth.sessions where id=pg_temp.uid(12);
 select pg_temp.expect(not exists(select 1 from app_private.retired_sessions where id=pg_temp.uid(12)),'marcador removido junto com a sessão Auth');
-select 18;
+select 20;
 rollback;

@@ -22,6 +22,8 @@ A `202611250004` cria os módulos da plataforma com todos ligados; depois da atu
 
 Na atualização da 2.7.0, a `202611260001` habilita o Vault para as integrações e marca os pedidos existentes como Sandbox. A `202611260010` trata retenção, limites e assinatura de certificados. A `202611260011` habilita a edição do vídeo e a reordenação no painel. Aplique as três antes de publicar o frontend e as funções `capabilities`, `checkout`, `asaas-webhook`, `media` e `reauthenticate` da mesma versão. As variáveis existentes têm prioridade. O interruptor de cobranças em Produção começa desligado.
 
+A retenção elimina contadores de mais de dois dias, nonces expirados e sessões encerradas. Quando o projeto já tem `pg_cron`, o serviço executa a limpeza diariamente. Nas demais instalações, a renovação de sessão por atividade amostra lotes curtos e usa um lock que desiste se outra sessão estiver limpando. O histórico em `audit_events` é mantido.
+
 Publique também as Edge Functions da tag:
 - na 2.4.0, `upload` passou a receber a logo, o ícone e a assinatura do certificado (`kind=brand-asset`) e a gravá-los no bucket público `icarus-brand`, criado pela `202611250003`;
 - na 2.2.2, `checkout` e `reauthenticate` passaram a limitar tentativas, a `checkout` confere o Turnstile e todas exigem `APP_ORIGIN` em produção;

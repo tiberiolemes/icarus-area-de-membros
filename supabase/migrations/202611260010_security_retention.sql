@@ -74,20 +74,22 @@ end $$;
 
 revoke execute on function app_private.actor(boolean) from public,anon,authenticated,service_role;
 
-create or replace function app_private.throttle(p_actor uuid,p_bucket text,p_limit integer) returns void language plpgsql security definer set search_path='' as $$
-declare n integer;begin
- insert into public.rate_limits values(p_actor,p_bucket,date_trunc('minute',now()),1) on conflict(actor_id,bucket,window_start) do update set count=public.rate_limits.count+1 returning count into n;
- if n>p_limit then perform app_private.fail('Muitas solicitações. Aguarde um minuto.');end if;
- -- Em instalações sem cron, a amostragem e o lote curto evitam varrer tabelas em toda chamada.
- if random()<0.01 and not exists(select 1 from pg_extension where extname='pg_cron') then
+create or replace function public.app_touch_session(p_activity boolean default false) returns jsonb language plpgsql security definer set search_path='' as $$
+declare u uuid:=app_private.actor(true);sid uuid:=(auth.jwt()->>'session_id')::uuid;s public.app_sessions;begin
+ if p_activity then update public.app_sessions set last_activity_at=now(),expires_at=coalesce(remember_until,now()+case when (select role from public.profiles where id=u)='member' then interval '2 hours' else interval '30 minutes' end) where id=sid and expires_at>now() and revoked_at is null;end if;
+ -- Sem cron, a renovação por atividade amostra uma limpeza curta. O throttle continua com a operação de contador.
+ if p_activity and random()<0.1 and not exists(select 1 from pg_extension where extname='pg_cron')
+    and pg_try_advisory_xact_lock(hashtextextended('icarus:security-retention',0)) then
   begin
    perform app_private.reap_security_state(200);
   exception when deadlock_detected or lock_not_available then null;
   end;
  end if;
+ select * into s from public.app_sessions where id=sid;
+ return jsonb_build_object('expires_at',s.expires_at,'warning_seconds',60,'remembered',s.remember_until is not null);
 end $$;
-
-revoke execute on function app_private.throttle(uuid,text,integer) from public,anon,authenticated,service_role;
+revoke execute on function public.app_touch_session(boolean) from public,anon,authenticated,service_role;
+grant execute on function public.app_touch_session(boolean) to authenticated;
 
 create or replace function public.app_reauth_throttle(p_actor_id uuid) returns void language plpgsql security definer set search_path='' as $$
 declare n integer;begin

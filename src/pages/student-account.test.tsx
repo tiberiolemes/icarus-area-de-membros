@@ -124,6 +124,8 @@ it.each([
 it("mantém as respostas e foca o erro de onboarding antes de permitir nova tentativa", async () => {
   rpc.mockRejectedValueOnce(new Error("Cadastro indisponível"));
   mount("/onboarding?returnTo=%2Fapp%2Fmateriais");
+  const heading = screen.getByRole("heading", { name: "Complete seu perfil" });
+  await waitFor(() => expect(heading).toHaveFocus());
   const name = screen.getByRole("textbox", { name: "Nome da empresa" });
   const stage = screen.getByRole("radio", { name: "Expansão" });
   const submit = screen.getByRole("button", { name: "Concluir e continuar" });

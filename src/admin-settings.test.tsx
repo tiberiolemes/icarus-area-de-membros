@@ -34,12 +34,14 @@ function show(tab: string, node = <AdminSettings />, path = "/admin/configuracoe
   );
 }
 
-it("Integrações exibe a origem, usa o teste AJAX e nunca preenche a chave salva", async () => {
+it.each([true, false])("Integrações permite teste AJAX só com segundo fator confirmado (%s)", async (canWrite) => {
+  const actions: string[] = [];
   vi.stubGlobal("fetch", vi.fn(async (_input, init) => {
     const { action } = JSON.parse(String(init?.body));
+    actions.push(action);
     return new Response(JSON.stringify(action === "integration-test"
       ? { ok: false, message: "O Asaas recusou a chave de API." }
-      : { configured: true, test_ready: true, fields: { env: { source: "environment", value: "sandbox" }, api_key: { source: "vault", suffix: "abcd" }, webhook_token: { source: "vault", suffix: "5678" } }, webhook_url: "https://supabase.example.test/functions/v1/asaas-webhook", turnstile: true }), {
+      : { configured: true, can_write: canWrite, test_ready: true, fields: { env: { source: "environment", value: "sandbox" }, api_key: { source: "vault", suffix: "abcd" }, webhook_token: { source: "vault", suffix: "5678" } }, webhook_url: "https://supabase.example.test/functions/v1/asaas-webhook", turnstile: true }), {
       status: 200, headers: { "Content-Type": "application/json" },
     });
   }));
@@ -49,7 +51,15 @@ it("Integrações exibe a origem, usa o teste AJAX e nunca preenche a chave salv
   expect(screen.getByText(/termina em abcd/)).toBeInTheDocument();
   expect(screen.getByRole("combobox", { name: "Ambiente" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "Copiar URL do webhook" })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Testar conexão" }));
+  const testButton = screen.getByRole("button", { name: "Testar conexão" });
+  if (!canWrite) {
+    expect(testButton).toBeDisabled();
+    fireEvent.click(testButton);
+    expect(actions).not.toContain("integration-test");
+    return;
+  }
+  expect(testButton).toBeEnabled();
+  fireEvent.click(testButton);
   const error = await screen.findByText("O Asaas recusou a chave de API.");
   expect(error).toBeInTheDocument();
   expect(screen.getByText("Com erro")).toBeInTheDocument();

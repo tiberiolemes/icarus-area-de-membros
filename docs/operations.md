@@ -20,7 +20,7 @@ Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHA
 
 A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos. A `202611250005` cria três RPCs de leitura e registro do painel (denúncias e pedidos LGPD) e reserva a identidade de quem denunciou para administradores, inclusive na listagem genérica. A migration não cria tabelas nem altera dados. A `202611250006` adiciona as RPCs do painel e permite arquivar episódios, preservando os registros existentes. A `202611250007` ajusta as permissões da fila de comentários, registra as exportações CSV feitas pela tela de Membros ou Pedidos e pagina os eventos de auditoria antes de montar os rótulos quando a busca está vazia. A `202611250008` registra somente se a busca foi preenchida e limita a 10 exportações por minuto por administrador, somando as duas telas. O painel gera o arquivo após a confirmação do registro na auditoria.
 
-Na atualização da 2.7.0, a `202611260001` habilita o Vault para as integrações e marca os pedidos existentes como Sandbox. A `202611260010` trata retenção, limites e assinatura de certificados. A `202611260011` habilita a edição do vídeo e a reordenação no painel. Aplique as três antes de publicar o frontend e as funções `capabilities`, `checkout`, `asaas-webhook`, `media` e `reauthenticate` da mesma versão. As variáveis existentes têm prioridade. O interruptor de cobranças em Produção começa desligado.
+Na atualização da 2.7.0, a `202611260001` habilita o Vault para as integrações e marca os pedidos existentes como Sandbox. A `202611260010` trata retenção, limites e assinatura de certificados. A `202611260011` habilita a edição do vídeo e a reordenação no painel. A `202611260012` limita os testes de conexão das integrações. Aplique as quatro, publique as funções `capabilities`, `checkout`, `asaas-webhook`, `media` e `reauthenticate` da mesma versão e só então publique o frontend. As variáveis existentes têm prioridade. O interruptor de cobranças em Produção começa desligado.
 
 A retenção elimina contadores de mais de dois dias, nonces expirados e sessões encerradas. Quando o projeto já tem `pg_cron`, o serviço executa a limpeza diariamente. Nas demais instalações, a renovação de sessão por atividade amostra lotes curtos e usa um lock que desiste se outra sessão estiver limpando. O histórico em `audit_events` é mantido.
 
@@ -197,6 +197,7 @@ header {
     Strict-Transport-Security "max-age=31536000"
     X-Content-Type-Options "nosniff"
     Referrer-Policy "strict-origin-when-cross-origin"
+    Permissions-Policy "camera=(), microphone=(), geolocation=()"
     X-Frame-Options "DENY"
 }
 ```
@@ -255,10 +256,16 @@ Em **Administração → Configurações → Integrações**, o painel mostra o 
 
 1. Comece em **Sandbox**. Selecione o ambiente, informe a chave de API correspondente e salve.
 2. Clique em **Gerar token**. Copie o token da janela e a **URL do webhook** para o painel Asaas daquele ambiente. Use os eventos de checkout `CHECKOUT_PAID`, `CHECKOUT_CANCELED` e `CHECKOUT_EXPIRED`, e os eventos de estorno e contestação usados pela conciliação. A URL contém `?ambiente=sandbox` ou `?ambiente=production`. Ao rotacionar o token, atualize o painel Asaas imediatamente.
-3. Use **Testar conexão**. O teste só consulta a API do ambiente escolhido. Faça o ensaio de Pix/cartão, webhook, confirmação e convite no Sandbox da instalação, com comprador fictício autorizado. Antes de liberar acesso por `CHECKOUT_PAID`, o Icarus consulta as cobranças do checkout na API e confere situação, forma e total.
+3. Use **Testar conexão** com o segundo fator confirmado. São até 10 testes por minuto por administrador, somando Asaas e Bunny Stream. O teste só consulta a API do ambiente escolhido. Faça o ensaio de Pix/cartão, webhook, confirmação e convite no Sandbox da instalação, com comprador fictício autorizado. Antes de liberar acesso por `CHECKOUT_PAID`, o Icarus consulta as cobranças do checkout na API e confere situação, forma e total.
 4. Para configurar Produção, selecione **Produção** e repita os passos com a chave e o webhook desse ambiente. Antes de ativar **Cobranças em produção**, confirme o Turnstile do checkout e faça **Testar conexão** com a chave e o token atuais. A aprovação vale por 24 horas para ligar o interruptor. Confirme a senha para ativar ou desativar. Uma mudança nas credenciais de Produção invalida a aprovação e desliga as cobranças. A desativação impede novas cobranças e os webhooks autenticados continuam conciliando pedidos já registrados.
 
 As variáveis `ASAAS_ENV`, `ASAAS_API_KEY` e `ASAAS_WEBHOOK_TOKEN` continuam valendo para o ambiente ativo. Para manter webhooks de ambientes distintos após uma troca, configure cada conta com sua URL com `ambiente` explícito e guarde as credenciais correspondentes no cofre. A URL legada sem parâmetro usa o ambiente ativo ou Sandbox quando ele estiver ausente. Se houver token definido no servidor, a rotação é feita nesse ambiente. Pause e desative cobranças antes de trocar variáveis de Produção, depois rode um novo teste e reative pelo painel. `ASAAS_ITEM_IMAGE_BASE64` pode adicionar uma imagem do item no checkout.
+
+**Cache e rotação.** A consulta pública de disponibilidade guarda apenas os indicadores dos provedores. Cada instância da Edge mantém esses indicadores e, no caso do webhook, a leitura do Vault por até 60 segundos. Após rotacionar o token, a propagação às instâncias já ativas pode levar até um minuto. O checkout continua consultando as credenciais atuais antes de reservar uma cobrança.
+
+**Monitoramento do limite global.** Acompanhe as respostas HTTP 429 da Edge `checkout` e o código `PT429` do RPC `app_checkout_begin` no PostgREST. A Edge apresenta esse código como `RATE_LIMITED`. Separe essas recusas das do RPC `app_checkout_throttle`, que aplica os limites por identidade. Use a contagem do bucket `checkout_global` por minuto, os picos legítimos de pedidos e as recusas para calibrar o teto inicial de 60 reservas novas por minuto. Registre apenas contagens e códigos, mantendo fora dos registros o corpo do checkout e os dados do comprador.
+
+**Supabase compartilhado.** Em 26/nov/2026, Tibério aceitou o risco de a chave de Produção do Asaas no Vault ser legível por quem tem a `service_role` do projeto. Mantenha essa credencial do Supabase apenas em servidores dele, sem disponibilizá-la a sistemas de terceiros.
 
 ### Bunny Stream
 

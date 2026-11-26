@@ -49,7 +49,7 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   await throttle(admin, "app_checkout_throttle", { p_actor_id: a?.userInfo.id || null, p_client_ip: ip && limitKey(ip), p_email: buyerData.email });
   const order = await rpc(admin, "app_checkout_begin", { p_actor_id: a?.userInfo.id || null, p_plan_id: uuid(body.plan_id), p_attempt_key: text(body.attempt_key, 128), p_method: method, p_installments: installments, p_buyer_data: buyerData, p_legal_version_ids: body.legal_version_ids.map(uuid), p_marketing_opt_in: body.marketing_opt_in, p_receipt_hash: receiptHash, p_asaas_environment: config.mode, ...(config.productionFingerprint ? { p_production_fingerprint: config.productionFingerprint } : {}) });
   if (order.asaas_environment !== config.mode) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Tentativa feita em outro ambiente. Consulte o pedido existente.");
-  if (order.checkout_url) return { order_id: order.order_id, status: order.status, url: order.checkout_url };
+  if (order.checkout_url) return { order_id: order.order_id, status: order.status, url: order.checkout_url, asaas_environment: order.asaas_environment };
   if (order.create_gateway !== true) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Tentativa já recebida. Consulte o pedido antes de tentar novamente.");
   if (!Number.isSafeInteger(order.amount_cents) || order.amount_cents <= 0) throw new HttpError(503, "INVALID_OFFER", "Oferta indisponível.");
   const callback = new URL(`/pedido/${uuid(order.order_id)}`, origin).href;
@@ -60,7 +60,7 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   const gatewayId = uuid(gateway.id);
   const url = `${gatewayEndpoints.checkout}/checkoutSession/show?id=${gatewayId}`;
   await rpc(admin, "app_checkout_gateway", { p_order_id: order.order_id, p_gateway_id: gatewayId, p_checkout_url: url });
-  return { order_id: order.order_id, status: "pending", url, receipt_token: receipt };
+  return { order_id: order.order_id, status: "pending", url, asaas_environment: order.asaas_environment, receipt_token: receipt };
 }, d.env);
 export const handler = createHandler();
 if (import.meta.main) Deno.serve(handler);

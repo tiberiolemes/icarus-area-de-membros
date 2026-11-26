@@ -6,7 +6,10 @@ const app = new URL(process.env.CHECKOUT_QA_APP_ORIGIN ?? "http://127.0.0.1:8189
 const api = new URL(process.env.VITE_SUPABASE_URL ?? "http://127.0.0.1:58521").origin;
 const order = "11111111-1111-4111-8111-111111111111";
 const callback = `${app}/pedido/${order}`;
-const hosted = "https://sandbox.asaas.com/checkoutSession/show?id=fixture";
+const environment = process.env.CHECKOUT_QA_ENVIRONMENT ?? "sandbox";
+assert(["sandbox", "production"].includes(environment));
+const origin = environment === "production" ? "https://asaas.com" : "https://sandbox.asaas.com";
+const hosted = `${origin}/checkoutSession/show?id=fixture`;
 const contextBody = {
   plans: [{ id: order, slug: "demo", name: "DEMONSTRAÇÃO", price_cents: 12345, access_months: 12, benefits: [] }],
   legal_ready: true,
@@ -49,7 +52,7 @@ async function guest() {
         if (purchases.length === 1) {
           return route.fulfill({ status: 503, json: { message: "Falha temporária da fixture." }, headers });
         }
-        return route.fulfill({ json: { order_id: order, status: "pending", url: hosted }, headers });
+        return route.fulfill({ json: { order_id: order, status: "pending", url: hosted, asaas_environment: environment }, headers });
       }
       case "/functions/v1/order-status": {
         const { order_id, receipt_token } = request.postDataJSON();

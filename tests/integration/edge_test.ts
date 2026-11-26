@@ -31,7 +31,7 @@ function deps(route: Route = () => undefined, config: Record<string, string> = {
     if (url.pathname.endsWith("/app_touch_session")) return response({ expires_at: "2026-11-23T01:00:00Z" });
     if (url.pathname.endsWith("/app_bootstrap")) return response({ profile: { role: "member" } });
     if (url.pathname.endsWith("/app_integration_credentials")) return response({});
-    if (url.pathname.endsWith("/app_checkout_throttle") || url.pathname.endsWith("/app_reauth_throttle")) return response(null);
+    if (["app_checkout_throttle", "app_reauth_throttle", "app_admin_integration_test_throttle"].includes(url.pathname.split("/").at(-1) ?? "")) return response(null);
     throw Error(`Unexpected fake transport request: ${url.pathname}`);
   }) as typeof fetch };
   return { d, requests };
@@ -46,8 +46,42 @@ const paidPayments = (value: number, status = "RECEIVED") => response({ hasMore:
 
 Deno.test("capabilities exposes only public capability flags", async () => {
   const { d, requests } = deps(); const result = await capabilities(d)(new Request("http://localhost/test"));
-  equal(await result.json(), { asaas: false, bunny: false, storage: true, email: "local", mode: "local" });
+  equal(await result.json(), { asaas: false, bunny: false, storage: true });
   assert(requests.every((r) => r.url.endsWith("app_integration_credentials") && r.headers.get("apikey") === "local-test-secret"));
+});
+Deno.test("public capabilities coalesces Vault reads and recalculates provider flags after one minute", async () => {
+  const { d, requests } = deps((url, init) => {
+    if (url.pathname.endsWith("app_integration_credentials") && JSON.parse(String(init.body)).p_provider === "asaas")
+      return response({ env: "sandbox", sandbox_api_key: "fixture-key", sandbox_webhook_token: billing.ASAAS_WEBHOOK_TOKEN });
+  });
+  const handler = capabilities(d);
+  const read = () => handler(new Request("http://localhost/test")).then((result) => result.json());
+  const realNow = Date.now;
+  let now = realNow();
+  Date.now = () => now;
+  try {
+    const results = await Promise.all([read(), read(), read()]);
+    assert(results.every((data) => data.asaas === true && !JSON.stringify(data).includes("fixture-key")));
+    equal(requests.length, 2);
+    now += 59_999;
+    await read();
+    equal(requests.length, 2);
+    now += 1;
+    await read();
+    equal(requests.length, 4);
+  } finally { Date.now = realNow; }
+});
+Deno.test("webhook reuses the Vault without processing unauthorized requests", async () => {
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_integration_credentials")
+    ? response({ env: "sandbox", sandbox_api_key: "fixture-key", sandbox_webhook_token: billing.ASAAS_WEBHOOK_TOKEN })
+    : undefined);
+  const handler = webhook(d);
+  for (let i = 0; i < 3; i++) {
+    const invalid = new Request("http://localhost/test", { method: "POST", body: "invalid JSON" });
+    equal((await handler(invalid)).status, 401);
+    assert(!invalid.bodyUsed);
+  }
+  equal(requests.map((r) => r.url.split("/").at(-1)), ["app_integration_credentials"]);
 });
 Deno.test("missing provider denies checkout after the Vault check and before any payment operation", async () => {
   const { d, requests } = deps(); const result = await checkout(d)(request(purchase, { token: null }));
@@ -85,12 +119,13 @@ Deno.test("a signed Bunny embed uses the Vault and honors a per-field environmen
 Deno.test("admin checks connection with environment priority and receives only safe results", async () => {
   for (const status of [200, 401]) {
     const { d, requests } = deps((url) => {
+      if (url.pathname === "/auth/v1/user") return response({ ...user, factors: [{ status: "verified" }] });
       if (url.pathname.endsWith("app_bootstrap")) return response({ profile: { role: "admin" } });
       if (url.pathname.endsWith("app_integration_credentials")) return response({ env: "sandbox", sandbox_api_key: "fake-vault-key", sandbox_webhook_token: billing.ASAAS_WEBHOOK_TOKEN });
       if (url.pathname.endsWith("app_admin_asaas_production")) return response(null);
       if (url.hostname === "api.asaas.com") return response({ balance: 9999, internal: "não mostrar" }, status);
     }, { ASAAS_ENV: "production", ASAAS_API_KEY: "fake-environment-key", TURNSTILE_SECRET_KEY: "test-captcha" });
-    const result = await capabilities(d)(request({ action: "integration-test", provider: "asaas" }));
+    const result = await capabilities(d)(request({ action: "integration-test", provider: "asaas" }, { token: jwt({ aal: "aal2" }) }));
     equal(result.status, 200);
     const data = await result.json();
     equal(data.ok, status === 200);
@@ -103,17 +138,35 @@ Deno.test("admin checks connection with environment priority and receives only s
 Deno.test("Bunny connection uses the Stream key and never sends it to the configured CDN", async () => {
   for (const status of [200, 401]) {
     const { d, requests } = deps((url) => {
+      if (url.pathname === "/auth/v1/user") return response({ ...user, factors: [{ status: "verified" }] });
       if (url.pathname.endsWith("app_bootstrap")) return response({ profile: { role: "admin" } });
       if (url.pathname.endsWith("app_integration_credentials")) return response({
         library_id: "42", api_key: "synthetic-stream-key", token_key: "synthetic-player-key", cdn_host: "vz-fixture.b-cdn.net",
       });
       if (url.hostname === "video.bunnycdn.com") return response({ items: ["fixture"] }, status);
     });
-    const result = await capabilities(d)(request({ action: "integration-test", provider: "bunny" }));
+    const result = await capabilities(d)(request({ action: "integration-test", provider: "bunny" }, { token: jwt({ aal: "aal2" }) }));
     equal((await result.json()).ok, status === 200);
     const calls = requests.filter((r) => !r.url.startsWith("http://127.0.0.1"));
     equal(calls.map((r) => r.url), ["https://video.bunnycdn.com/library/42/videos?itemsPerPage=1"]);
     equal(calls[0].headers.get("accesskey"), "synthetic-stream-key");
+  }
+});
+Deno.test("integration test denies AAL1 and enforces a shared admin limit before the Vault or provider", async () => {
+  for (const provider of ["asaas", "bunny"]) {
+    for (const aal of ["aal1", "aal2"]) {
+      const { d, requests } = deps((url) => {
+        if (url.pathname === "/auth/v1/user" && aal === "aal2") return response({ ...user, factors: [{ status: "verified" }] });
+        if (url.pathname.endsWith("app_bootstrap")) return response({ profile: { role: "admin" } });
+        if (url.pathname.endsWith("app_admin_integration_test_throttle")) return response({ code: "PT429" }, 429);
+      });
+      const result = await capabilities(d)(request({ action: "integration-test", provider }, { token: jwt({ aal }) }));
+      equal(result.status, aal === "aal1" ? 403 : 429);
+      equal((await result.json()).error.code, aal === "aal1" ? "MFA_REQUIRED" : "RATE_LIMITED");
+      equal(requests.filter((r) => r.url.endsWith("app_admin_integration_test_throttle")).map((r) => r.body),
+        aal === "aal1" ? [] : [{ p_actor_id: id }]);
+      assert(!requests.some((r) => r.url.endsWith("app_integration_credentials") || !r.url.startsWith("http://127.0.0.1")));
+    }
   }
 });
 Deno.test("rotation returns a newly generated token once, only after MFA and without accepting a supplied token", async () => {
@@ -176,7 +229,10 @@ Deno.test("checkout in production requires switch proof for the current keys and
     equal(result.status, status);
     const order = await result.json();
     if (code) equal(order.error.code, code);
-    else equal(new URL(order.url).hostname, "asaas.com");
+    else {
+      equal(new URL(order.url).hostname, "asaas.com");
+      equal(order.asaas_environment, "production");
+    }
     equal(requests.some((r) => r.url.includes("api.asaas.com")), status === 200);
   }
 });
@@ -317,7 +373,9 @@ Deno.test("guest browser receipt is bound by hash and stays outside provider req
     const result = await checkout(d)(request({ ...purchase, receipt_hash: hash }, { token: null }));
     equal(result.status, 200);
     equal(result.headers.get("cache-control"), "no-store");
-    assert(!(await result.text()).includes("receipt"));
+    const data = await result.json();
+    equal(data.asaas_environment, "sandbox");
+    assert(!JSON.stringify(data).includes("receipt"));
   }
   const provider = requests.filter((r) => r.url.includes("api-sandbox.asaas.com"));
   equal(provider.length, 1);

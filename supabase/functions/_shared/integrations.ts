@@ -10,6 +10,26 @@ export type AsaasEnvironment = keyof typeof asaasEndpoints;
 export type Provider = "asaas" | "bunny";
 type Vault = Record<string, string | undefined>;
 
+export function minuteCache<T>() {
+  let entry: { value: Promise<T>; expiresAt: number } | undefined;
+  return {
+    get(load: () => Promise<T>) {
+      if (entry && entry.expiresAt > Date.now()) return entry.value;
+      const next = { value: load(), expiresAt: Infinity };
+      entry = next;
+      next.value = next.value.then((value) => {
+        next.expiresAt = Date.now() + 60_000;
+        return value;
+      }, (error) => {
+        if (entry === next) entry = undefined;
+        throw error;
+      });
+      return next.value;
+    },
+    clear() { entry = undefined; },
+  };
+}
+
 export function asaasEnvironment(value: unknown): value is AsaasEnvironment {
   return value === "sandbox" || value === "production";
 }
@@ -35,12 +55,14 @@ function updated(stored: Vault) {
 export async function asaasConfig(
   d: Dependencies,
   admin: SupabaseClient,
-  options: { details?: boolean; webhookEnvironment?: AsaasEnvironment } = {},
+  options: { details?: boolean; webhookEnvironment?: AsaasEnvironment; readVault?: ReturnType<typeof minuteCache<Vault>>["get"] } = {},
 ) {
   const envMode = d.env("ASAAS_ENV"), envApiKey = d.env("ASAAS_API_KEY"), envToken = d.env("ASAAS_WEBHOOK_TOKEN");
   const fullyInEnvironment = envMode !== undefined && envApiKey !== undefined && envToken !== undefined &&
     (!options.webhookEnvironment || options.webhookEnvironment === envMode);
-  const stored = options.details || envMode === "production" || !fullyInEnvironment ? await credentials(admin, "asaas") : {};
+  const read = () => credentials(admin, "asaas");
+  const stored = options.details || envMode === "production" || !fullyInEnvironment
+    ? await (options.readVault ? options.readVault(read) : read()) : {};
   const modeField = configured(envMode, stored.env);
   const configuredMode = asaasEnvironment(modeField.value) ? modeField.value : undefined;
   // Sem seletor, webhooks antigos com token no ambiente pertencem ao Sandbox.

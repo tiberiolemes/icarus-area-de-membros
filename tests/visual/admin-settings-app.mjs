@@ -181,7 +181,7 @@ async function exercise(browser, settings, commit, target, theme, width) {
     const timeOrigin = await page.evaluate(() => performance.timeOrigin);
 
     if (target.name === "equipe") {
-      assert.equal(await page.getByRole("link", { name: "Gerenciar membros e equipe" }).getAttribute("href"), "/admin/membros");
+      assert.equal(await page.getByRole("link", { name: "Gerenciar membros e equipe" }).getAttribute("href"), "/admin/membros?papel=staff");
       await page.getByRole("link", { name: "Consultar trilha de auditoria" }).press("Enter");
       await page.getByText("22 registros · página 1 de 2").waitFor();
       assert(page.url().endsWith("?aba=auditoria"));

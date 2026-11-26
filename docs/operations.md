@@ -6,8 +6,9 @@ O Icarus é uma plataforma de área de membros e cursos online em React/Vite e S
 
 Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes. Numa instalação hospedada, siga [Aplicar migrações no Supabase hospedado](#aplicar-migrações-no-supabase-hospedado). Para Linux com Docker, use o [roteiro da v0.1.6](#atualizar-uma-instalação-docker-completa) ou o [roteiro a partir da v0.2.0](#atualizar-o-stack-docker-a-partir-da-v020).
 
-| Versão instalada | Histórico esperado | Migrations novas até a 2.6.0 |
+| Versão instalada | Histórico esperado | Migrations a aplicar |
 | --- | --- | --- |
+| 2.7.0 | `202611230001` a `202611250009` | `202611260001`, `202611260010` e `202611260011` |
 | 2.5.1 | `202611230001` a `202611250005` | `202611250006` a `202611250008` |
 | 2.5.0 | `202611230001` a `202611250004` | `202611250005` a `202611250008` |
 | 2.4.0 | `202611230001` a `202611250003` | `202611250004` a `202611250008` |
@@ -19,7 +20,7 @@ Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHA
 
 A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos. A `202611250005` cria três RPCs de leitura e registro do painel (denúncias e pedidos LGPD) e reserva a identidade de quem denunciou para administradores, inclusive na listagem genérica. A migration não cria tabelas nem altera dados. A `202611250006` adiciona as RPCs do painel e permite arquivar episódios, preservando os registros existentes. A `202611250007` ajusta as permissões da fila de comentários, registra as exportações CSV feitas pela tela de Membros ou Pedidos e pagina os eventos de auditoria antes de montar os rótulos quando a busca está vazia. A `202611250008` registra somente se a busca foi preenchida e limita a 10 exportações por minuto por administrador, somando as duas telas. O painel gera o arquivo após a confirmação do registro na auditoria.
 
-Ao atualizar a 2.7.0, a migration `202611260001` habilita o uso do Supabase Vault para as integrações e marca os pedidos existentes como Sandbox. Aplique a migration antes de publicar o frontend e as funções `capabilities`, `checkout`, `asaas-webhook`, `media` e `reauthenticate` da mesma versão. As variáveis já instaladas têm prioridade. O interruptor de cobranças em Produção começa desligado.
+Na atualização da 2.7.0, a `202611260001` habilita o Vault para as integrações e marca os pedidos existentes como Sandbox. A `202611260010` trata retenção, limites e assinatura de certificados. A `202611260011` habilita a edição do vídeo e a reordenação no painel. Aplique as três antes de publicar o frontend e as funções `capabilities`, `checkout`, `asaas-webhook`, `media` e `reauthenticate` da mesma versão. As variáveis existentes têm prioridade. O interruptor de cobranças em Produção começa desligado.
 
 Publique também as Edge Functions da tag:
 - na 2.4.0, `upload` passou a receber a logo, o ícone e a assinatura do certificado (`kind=brand-asset`) e a gravá-los no bucket público `icarus-brand`, criado pela `202611250003`;

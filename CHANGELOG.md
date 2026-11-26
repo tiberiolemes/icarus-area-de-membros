@@ -3,6 +3,7 @@
 ## 2.8.0 · 2026-11-26
 
 - Asaas e Bunny Stream podem ser configurados no painel. As chaves ficam no Supabase Vault, com precedência para as variáveis do servidor. O Asaas separa Sandbox e Produção, oferece teste de conexão e token do webhook por ambiente e exige confirmação para ativar cobranças de produção.
+- O checkout preserva o ambiente do pedido, exige Turnstile em instalações de produção e limita as novas reservas a 60 por minuto. O evento de pagamento do checkout só libera acesso após conferência do pagamento na API do Asaas. As cobranças de produção exigem senha, 2FA e teste recente das credenciais atuais.
 - Recuperação de acesso orienta quem abre a redefinição sem sessão e indica a ação certa quando um link expira. O título e o foco acompanham o conteúdo carregado após a navegação. O cabeçalho das telas públicas mantém a ajuda ao lado da marca no celular.
 - Ajustes na ementa e no progresso dos módulos, no relógio e contraste do player, nas opções de materiais, nos caminhos para assinatura, nos selos da comunidade e na lista de chamados. Estados vazios e de carregamento têm tratamento compartilhado e os controles seguem o mesmo padrão nos dois temas.
 - O painel ganha busca por área conforme o papel da equipe. É possível reordenar espaços e perguntas do primeiro acesso, corrigir a URL de um episódio sem perder sua identidade e abrir a estrutura de um curso diretamente da lista.

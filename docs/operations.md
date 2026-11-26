@@ -8,7 +8,8 @@ Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHA
 
 | Versão instalada | Histórico esperado | Migrations a aplicar |
 | --- | --- | --- |
-| 2.9.0 | Até `202611260013` | `202611260014` a `202611260016` |
+| 2.10.0 | Até `202611260016` | `202611260017` |
+| 2.9.0 | Até `202611260013` | `202611260014` a `202611260017` |
 | 2.8.0 | Até `202611260012` | `202611260013` |
 | 2.7.0 | `202611230001` a `202611250009` | `202611260001` e `202611260010` a `202611260012` |
 | 2.5.1 | `202611230001` a `202611250005` | `202611250006` a `202611250008` |
@@ -21,6 +22,8 @@ Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHA
 | 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` e `202611250001` a `202611250008` |
 
 A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos. A `202611250005` cria três RPCs de leitura e registro do painel (denúncias e pedidos LGPD) e reserva a identidade de quem denunciou para administradores, inclusive na listagem genérica. A migration não cria tabelas nem altera dados. A `202611250006` adiciona as RPCs do painel e permite arquivar episódios, preservando os registros existentes. A `202611250007` ajusta as permissões da fila de comentários, registra as exportações CSV feitas pela tela de Membros ou Pedidos e pagina os eventos de auditoria antes de montar os rótulos quando a busca está vazia. A `202611250008` registra somente se a busca foi preenchida e limita a 10 exportações por minuto por administrador, somando as duas telas. O painel gera o arquivo após a confirmação do registro na auditoria.
+
+Na atualização da 2.10.0 para a 2.10.1, aplique a migration `202611260017_certificate_defaults_volatile.sql`. Ela só tira a marcação de leitura da função que carrega o modelo de certificado, que quebrava a aba Certificado de Configurações. Não há Edge Function nem frontend novos.
 
 Na atualização da 2.9.0 para a 2.10.0, aplique as migrations `202611260014_course_cover_focus.sql`, `202611260015_default_sections.sql` e `202611260016_certificate_defaults.sql`, publique as Edge Functions `upload` e `media` desta revisão e então publique o frontend. A `202611260014` acrescenta o foco do corte da capa, com o centro como padrão, e não altera as capas existentes. A Edge `media` da 2.9.0 continua funcionando durante a troca, só não entrega o foco. A Edge `upload` nova passa a recusar capa de curso acima de 500 KB. A `202611260015` torna as seções opcionais. Ela só cria a seção automática de um módulo quando alguém adiciona uma aula direto nele, então os cursos existentes não mudam.
 
@@ -141,7 +144,7 @@ Ensaie primeiro numa cópia desligada da internet pública, sem webhooks, SMTP e
 
 ### Migrations e fluxos da árvore atual
 
-Aplique todas as migrations do repositório em ordem até `202611260016` antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, o bucket público de marca `icarus-brand`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
+Aplique todas as migrations do repositório em ordem até `202611260017` antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, o bucket público de marca `icarus-brand`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
 
 | Migration | O que configurar ou validar |
 | --- | --- |
@@ -171,6 +174,7 @@ Aplique todas as migrations do repositório em ordem até `202611260016` antes d
 | `202611260014` | Enviar uma capa de curso de até 500 KB e conferir a recusa de uma maior. No editor do curso, mudar o foco do corte pelo clique e pelos controles, salvar e conferir a capa na lista de cursos, na página do curso e no início de uma aula com vídeo enviado à plataforma. Conferir que instrutor salva o foco e que moderador e membro não conseguem. |
 | `202611260015` | Em Estrutura e aulas, clicar em Adicionar aula direto num módulo sem seções e conferir que a aula aparece sem cabeçalho de seção no painel, na ementa e no currículo da aula. Num módulo com seções, conferir que a aula solta vem antes delas e que Reordenar continua funcionando. Conferir que um curso existente não muda. |
 | `202611260016` | Em Configurações → Certificado, salvar responsável e cargo e enviar a assinatura em PNG. Num curso em Usar o modelo global, conferir o modelo em leitura e emitir um certificado com ele; trocar o modelo e conferir que o certificado já emitido não muda. Personalizar um curso e conferir que ele usa os próprios dados. Conferir que cursos com responsável preenchido antes da atualização continuam personalizados. |
+| `202611260017` | Abrir Configurações → Certificado como admin e conferir que o modelo carrega sem erro. |
 | `202611250003` | Em Configurações → Plataforma e marca, enviar a logo colorida e a branca em PNG ou WebP de até 500 KB e o ícone em PNG quadrado; trocar e remover cada um. Conferir a logo nas telas de entrada antes do login, no menu do aluno e do admin, no checkout e no certificado, nos dois temas, e o ícone na aba. Na aba Certificado de um curso, enviar a assinatura em PNG, emitir um certificado e conferir a assinatura e o "Emitido por" com o nome da instalação na tela, em `/verificar` e no PNG e PDF. Conferir que um arquivo renomeado, maior que 500 KB ou fora das dimensões é recusado e que um membro recebe 403. Publicar a `upload` da mesma tag. |
 
 **Logo, ícone e assinatura** ficam no bucket público `icarus-brand`, com limite de 500 KB por arquivo. Em Configurações → Plataforma e marca, logos aceitam SVG, PNG e WebP. O favicon aceita SVG e PNG quadrado. A assinatura do curso continua em PNG e o certificado preserva a assinatura da emissão. O arquivo anterior de marca sai do Storage após a gravação do novo caminho. Cópias em cache podem ficar acessíveis por até um ano, então envie somente imagens que possam ser públicas.

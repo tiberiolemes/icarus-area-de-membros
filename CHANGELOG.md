@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.10.1 · 2026-11-26
+
+- A aba Certificado de Configurações abria com o erro "cannot execute SELECT FOR UPDATE in a read-only transaction". A leitura do modelo estava marcada como função só de leitura, mas ela confere a sessão do admin, que precisa gravar. A migration `202611260017_certificate_defaults_volatile.sql` corrige a marcação, e um teste novo recusa qualquer RPC que confira sessão marcada assim.
+- Para atualizar da 2.10.0, aplique a migration `202611260017`. Não há Edge Function nem frontend novos.
+
 ## 2.10.0 · 2026-11-26
 
 - A Central de ajuda foi reescrita. São 45 artigos em 11 assuntos, com passos numerados, o nome exato de cada botão, dicas, alertas e uma lista de saídas para quando algo não funciona. A página inicial mostra os assuntos em cartões, e a busca passa a ler o texto inteiro de cada artigo.

@@ -210,3 +210,28 @@ it("mostra apenas a prévia PNG do SVG sanitizado e salva o arquivo original", a
     toBlob.mockRestore();
   }
 });
+
+it.each(["ausente", "erro", "nulo"])("mostra a mensagem da prévia em caso de falha do canvas (%s)", async (failure) => {
+  const clean = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 90"><rect width="90" height="90"/></svg>';
+  const image = Object.assign(document.createElement("img"), { decode: vi.fn(async () => {}) });
+  const Image = vi.spyOn(window, "Image").mockImplementation(function () { return image; });
+  const canvas = vi.spyOn(HTMLCanvasElement.prototype, "getContext")
+    .mockReturnValue({ drawImage: vi.fn() } as unknown as CanvasRenderingContext2D);
+  const toBlob = vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => {
+    if (failure === "erro") throw new Error("Falha técnica do canvas");
+    callback(null);
+  });
+  if (failure === "ausente") Object.defineProperty(HTMLCanvasElement.prototype, "toBlob", { value: undefined });
+  try {
+    edge.mockResolvedValueOnce({ svg: clean, ratio: 1, warnings: [] });
+    mount();
+    choose("Escolher logo colorida", new File([clean], "logo.svg", { type: "image/svg+xml" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível preparar a prévia da imagem.");
+    expect(screen.getByRole("button", { name: "Salvar logo colorida" })).toBeDisabled();
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  } finally {
+    Image.mockRestore();
+    canvas.mockRestore();
+    toBlob.mockRestore();
+  }
+});

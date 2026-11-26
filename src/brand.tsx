@@ -85,23 +85,26 @@ export const acceptOf = (variant: AssetVariant) => [
 export type AssetPreview = { url: string; ratio: number; warnings: string[] };
 
 async function svgPreview(svg: string, ratio: number) {
-  const canvas = document.createElement("canvas");
-  const size = 1024;
-  canvas.width = Math.max(1, Math.round(size * Math.min(ratio, 1)));
-  canvas.height = Math.max(1, Math.round(size * Math.min(1 / ratio, 1)));
-  const context = canvas.getContext("2d");
   const previewError = "Não foi possível preparar a prévia da imagem.";
-  if (!context) throw new Error(previewError);
+  try {
+    const canvas = document.createElement("canvas");
+    const size = 1024;
+    canvas.width = Math.max(1, Math.round(size * Math.min(ratio, 1)));
+    canvas.height = Math.max(1, Math.round(size * Math.min(1 / ratio, 1)));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error(previewError);
 
-  // A fonte SVG fica em uma imagem fora do documento e com origem opaca.
-  const image = new Image();
-  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-  try { await image.decode(); }
-  catch { throw new Error(previewError); }
-  context.drawImage(image, 0, 0, canvas.width, canvas.height);
-  const raster = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-  if (!raster) throw new Error(previewError);
-  return URL.createObjectURL(raster);
+    // A fonte SVG fica em uma imagem fora do documento e com origem opaca.
+    const image = new Image();
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    await image.decode();
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const raster = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!raster) throw new Error(previewError);
+    return URL.createObjectURL(raster);
+  } catch {
+    throw new Error(previewError);
+  }
 }
 
 /** Confere tipo pelo conteúdo, tamanho e dimensões antes do envio e devolve a URL da prévia. O servidor confere tudo de novo. */

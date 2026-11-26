@@ -76,9 +76,12 @@ async function prepare(browser, viewport, theme, role = "admin", aal = "aal2") {
         return reply({
           configured: n >= 3, test_ready: n >= 3, can_write: true, fields: n >= 3 ? fields : {},
           updated_at: n >= 3 ? clock.toISOString() : null, updated_by: n >= 3 ? "Admin da demonstração" : null,
-          storage: true, email: "local", mode: "local", turnstile: n >= 3,
-          webhook_url: "https://api.example.test/functions/v1/asaas-webhook?ambiente=" + (n >= 3 ? "production" : "sandbox"),
-          production_enabled: false, production_test_valid: false, checkout_allowed: n < 3,
+          storage: true, email: "local", mode: "local",
+          ...(args.provider === "asaas" ? {
+            turnstile: n >= 3,
+            webhook_url: "https://api.example.test/functions/v1/asaas-webhook?ambiente=" + (n >= 3 ? "production" : "sandbox"),
+            production_enabled: false, production_test_valid: false, checkout_allowed: n < 3,
+          } : {}),
         });
       }
       case "app_admin_list": {

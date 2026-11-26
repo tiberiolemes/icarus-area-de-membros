@@ -45,7 +45,9 @@ function IntegrationField({ name, label, field, secret = false }: {
         disabled={field?.source === "environment"} maxLength={secret ? 512 : name === "library_id" ? 15 : 253}
         inputMode={name === "library_id" ? "numeric" : undefined}
         pattern={name === "library_id" ? "[1-9][0-9]*" : undefined}
-        placeholder={secret && field?.configured ? "Em branco para manter" : undefined} />
+        placeholder={secret && field?.configured
+          ? field.source === "environment" ? "Definida no servidor" : "Em branco para manter"
+          : undefined} />
     </Field>
   );
 }

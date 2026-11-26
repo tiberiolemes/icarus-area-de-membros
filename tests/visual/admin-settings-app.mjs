@@ -272,7 +272,7 @@ try {
       for (const target of cases) {
         await page.goto(`${base}?${target.params}`);
         if (aal === "aal1") await page.waitForURL("**/entrar?returnTo=*");
-        else await page.getByText(/Acesso restrito|Você não tem permissão para esta área/).waitFor();
+        else await page.getByRole("heading", { name: "Acesso restrito", exact: true }).waitFor();
         denied.push({ role, aal, route: target.params });
       }
       assert(!calls.some(({ name }) => name === "capabilities" || name.startsWith("app_admin_")));

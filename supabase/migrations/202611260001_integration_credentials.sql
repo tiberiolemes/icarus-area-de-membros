@@ -86,7 +86,7 @@ begin
      when 'library_id' then supplied !~ '^[1-9][0-9]{0,14}$'
      when 'cdn_host' then length(supplied)>253 or supplied !~ '^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z][a-z0-9]{1,62}$'
      when 'webhook_token' then supplied !~ '^[a-f0-9]{64}$'
-     else supplied !~ '^[!-~]{5,512}$'
+     else length(supplied) not between 5 and 512 or supplied ~ '[^!-~]'
     end) then
    perform app_private.fail('Confira os campos da integração.');
   end if;

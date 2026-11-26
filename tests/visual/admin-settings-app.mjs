@@ -6,8 +6,8 @@ import { createServer } from "vite";
 import { browserContext, fullScreenshot, launchChrome, pngSize } from "./browser.mjs";
 import { pixels, sha256 } from "./pixels.mjs";
 
-const [outArg] = process.argv.slice(2);
-assert(outArg, "Uso: node tests/visual/admin-settings-app.mjs DIRETÓRIO");
+const [outArg, scope] = process.argv.slice(2);
+assert(outArg && (!scope || scope === "--integracoes"), "Uso: node tests/visual/admin-settings-app.mjs DIRETÓRIO [--integracoes]");
 const out = resolve(outArg);
 const port = Number(process.env.STITCH_SETTINGS_PORT || 8293);
 assert(Number.isInteger(port) && port >= 1024 && port <= 65535);
@@ -21,7 +21,7 @@ const cases = [
   { name: "auditoria", params: "aba=auditoria", title: "Trilha de auditoria", screen: "gest_o_de_equipe_logs_de_auditoria" },
   { name: "bunny", params: "aba=integracoes&provedor=bunny", title: "Integração Bunny Stream", screen: "integra_o_bunny_stream_video_delivery" },
   { name: "asaas", params: "aba=integracoes&provedor=asaas", title: "Gateway de pagamento Asaas", screen: "gateway_de_pagamento_asaas" },
-];
+].filter(({ name }) => !scope || name === "asaas" || name === "bunny");
 const events = Array.from({ length: 22 }, (_, index) => ({
   id: id(100 + index), actor_id: index === 1 ? null : id(1),
   action: index % 2 ? "ticket-reply" : "member-change",
@@ -103,9 +103,14 @@ async function prepare(browser, viewport, theme, role = "admin", aal = "aal2") {
 }
 
 async function capture(page, cdp, viewport, name) {
-  await page.evaluate(() => document.fonts.ready);
   await cdp.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: -1, y: -1 });
   await page.waitForFunction(() => !document.querySelector(":hover"));
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await Promise.all(document.getAnimations().filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().endTime))
+      .map((animation) => animation.finished.catch(() => {})));
+  });
   const state = await page.evaluate(() => {
     const root = document.documentElement;
     const panel = document.querySelector(".admin-settings");

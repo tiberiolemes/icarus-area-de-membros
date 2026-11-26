@@ -506,6 +506,7 @@
     color: #fff;
     font: 500 11px / 16.5px ui-monospace, monospace;
     letter-spacing: -0.025em;
+    white-space: nowrap;
   }
   .lesson-video-controls__mobile-clock > span:last-child { opacity: 0.75; }
   .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__track { height: var(--lesson-video-track-slot); }
@@ -548,6 +549,7 @@
     align-items: center;
     inset: auto auto 19px 12px;
     min-height: 16px;
+    width: max-content;
     margin: 0;
   }
   [data-theme="dark"] .stitch-lesson-media:not(:fullscreen) .lesson-video-controls__row { justify-content: flex-end; }

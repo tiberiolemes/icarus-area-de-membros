@@ -112,7 +112,7 @@ it.each([true, false])("reabre por URL direta a segunda aula e usa o gate do ser
   if (nextAllowed) {
     expect(await screen.findByText("Leitura da segunda seção")).toBeVisible();
   } else {
-    expect(await screen.findByRole("link", { name: "Ver minha assinatura" })).toBeVisible();
+    expect(await screen.findByRole("link", { name: "Ver planos disponíveis" })).toBeVisible();
     expect(screen.queryByText("Leitura da segunda seção")).not.toBeInTheDocument();
     expect(requests.map(({ name }) => name)).toEqual(["app_course", "app_lesson"]);
   }
@@ -156,7 +156,7 @@ it("preserva a descrição, foco das abas e lista filtrável ao alternar o modo 
 
 it("mantém o gate antes de solicitar áudio ou exibir descrição, material ou conclusão", async () => {
   const requests = mount({ type: "audio", allowed: false });
-  expect(await screen.findByRole("link", { name: "Ver minha assinatura" })).toBeVisible();
+  expect(await screen.findByRole("link", { name: "Ver planos disponíveis" })).toBeVisible();
   expect(requests.map(({ name }) => name)).toEqual(["app_course", "app_lesson"]);
   expect(screen.queryByText("Leitura autorizada de teste")).toBeNull();
   expect(screen.queryByRole("tab", { name: /Materiais/ })).toBeNull();
@@ -212,7 +212,7 @@ it.each([
   { type: "video", allowed: true, provider: "bunny" },
 ])("não consulta a capa para $type, acesso $allowed, provedor $provider", async (scenario) => {
   const requests = mount({ ...scenario, cover: true });
-  if (!scenario.allowed) await screen.findByRole("link", { name: "Ver minha assinatura" });
+  if (!scenario.allowed) await screen.findByRole("link", { name: "Ver planos disponíveis" });
   else if (scenario.provider === "bunny") await screen.findByText("Preparando controles do player…");
   else await screen.findByLabelText(textLesson.title);
   expect(requests).not.toContainEqual({ name: "media", args: { kind: "course-cover", id: "course" } });

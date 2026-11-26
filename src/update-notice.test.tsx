@@ -11,9 +11,11 @@ const release = (tag: string) => Response.json({ tag_name: tag, html_url: `https
 
 function mount() {
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(<QueryClientProvider client={cache}><main id="main" tabIndex={-1}><UpdateNotice /></main></QueryClientProvider>);
+  return { cache, ...render(<QueryClientProvider client={cache}><main id="main" tabIndex={-1}><UpdateNotice /></main></QueryClientProvider>) };
 }
 const empty = () => expect(document.querySelector("main")).toBeEmptyDOMElement();
+const waitRelease = (cache: QueryClient) => waitFor(() =>
+  expect(cache.getQueryState(["latest-release", official])?.status).toBe("success"));
 
 beforeEach(() => {
   localStorage.clear();
@@ -55,7 +57,6 @@ it("consulta o repositório configurado e não consulta nada quando a variável 
   fetchMock.mockClear();
   vi.stubEnv("VITE_ICARUS_UPDATE_REPO", "");
   mount();
-  await new Promise((resolve) => setTimeout(resolve, 0));
   expect(fetchMock).not.toHaveBeenCalled();
   empty();
 });
@@ -68,9 +69,8 @@ it.each([
   ["resposta inesperada", () => Promise.resolve(Response.json({ tag_name: "v99.0.0", html_url: "javascript:alert(1)" }))],
 ])("não mostra nada com %s", async (_, answer) => {
   fetchMock.mockImplementation(answer);
-  mount();
-  await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await waitRelease(mount().cache);
+  expect(fetchMock).toHaveBeenCalledOnce();
   empty();
 });
 
@@ -101,7 +101,7 @@ it("dispensa o aviso daquela versão e volta a avisar na seguinte", async () => 
   expect(document.activeElement).toBe(document.querySelector("main"));
   first.unmount();
   const again = mount();
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await waitRelease(again.cache);
   empty();
   again.unmount();
   localStorage.removeItem(`icarus:release:${official}`);
@@ -124,11 +124,12 @@ it("guarda também a falha por 24 horas para não repetir a consulta a cada reca
   vi.setSystemTime(new Date("2026-11-25T12:00:00Z"));
   fetchMock.mockResolvedValue(Response.json({ message: "API rate limit exceeded" }, { status: 403 }));
   const first = mount();
-  await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+  await waitRelease(first.cache);
+  expect(fetchMock).toHaveBeenCalledOnce();
   first.unmount();
   vi.setSystemTime(Date.now() + day - 60_000);
   const second = mount();
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await waitRelease(second.cache);
   expect(fetchMock).toHaveBeenCalledOnce();
   empty();
   second.unmount();
@@ -145,9 +146,8 @@ it.each([
 ])("não confia em cache com %s", async (_, cached) => {
   localStorage.setItem(`icarus:release:${official}`, JSON.stringify(cached));
   fetchMock.mockResolvedValue(release("v0.2.0"));
-  mount();
-  await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await waitRelease(mount().cache);
+  expect(fetchMock).toHaveBeenCalledOnce();
   empty();
 });
 

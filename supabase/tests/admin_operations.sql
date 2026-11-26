@@ -177,11 +177,23 @@ select pg_temp.ok((select count(*) from public.audit_events where action='export
  'requisição acima do limite não grava evento');
 select pg_temp.ok((select count(*) from public.audit_events where action='export:csv' and actor_id=pg_temp.id(7))=1,
  'outro administrador tem sua própria cota');
+insert into public.spaces(id,name,status,access_mode,order_index) values
+ (pg_temp.id(600),'Espaço A','published','members',500),
+ (pg_temp.id(601),'Espaço B','published','members',500);
+set local role authenticated;
+select pg_temp.login(5);
+select pg_temp.denied($q$select public.app_admin_move_setting('spaces',pg_temp.id(600),1)$q$,'membro não reordena espaços');
+select pg_temp.login(2);
+select pg_temp.denied($q$select public.app_admin_move_setting('onboarding_questions',pg_temp.id(600),1)$q$,'moderador não reordena o primeiro acesso');
+select pg_temp.ok(public.app_admin_move_setting('spaces',pg_temp.id(601),-1),'moderador reordena os espaços');
+reset role;
+select pg_temp.ok((select order_index from public.spaces where id=pg_temp.id(601))
+ < (select order_index from public.spaces where id=pg_temp.id(600)), 'movimento também resolve posições empatadas');
 select pg_temp.ok(not exists (
  select 1 from unnest(array['app_admin_commercial(text,text,integer,text,text,text)','app_admin_ticket_queue(text,text,text,integer)',
  'app_admin_lesson_comment_queue(integer)','app_admin_archive_podcast(uuid,boolean)','app_admin_audit(text,integer)',
  'app_admin_lesson_context(uuid,uuid)','app_admin_moderation_queue(text,text,text,integer)',
- 'app_admin_log_csv_export(text,boolean,text,text,text)']) signature
+ 'app_admin_log_csv_export(text,boolean,text,text,text)','app_admin_move_setting(text,uuid,integer)']) signature
  where has_function_privilege('anon','public.'||signature,'execute')
 ),'nenhuma RPC nova aceita anon');
 select count(*) as admin_operations_assertions from operations_checks;

@@ -23,7 +23,6 @@ import {
   MessageSquare,
   Reply,
   History,
-  KeyRound,
   ListOrdered,
   Pencil,
   Plus,
@@ -46,11 +45,11 @@ import {
   roleLabel,
   roleLabels,
   rpc,
-  safeUrl,
   useRpc,
 } from "../api";
 import { buildAdminCsv, exportLimit } from "../admin-export";
 import { courseLessonPath } from "../course-paths";
+import { IntegrationCards, IntegrationTestMessage, integrationKey, useIntegrationTest, type IntegrationStatus } from "./admin-integrations";
 import type { Page, Plan, Course } from "../api";
 import {
   Action,
@@ -147,6 +146,25 @@ function useAll(entity: string) {
       return items;
     },
   });
+}
+function orderedSettings(rows: Row[] | undefined) {
+  return [...(rows ?? [])].sort((a, b) => Number(a.order_index) - Number(b.order_index) || a.id.localeCompare(b.id));
+}
+
+function MoveSetting({ collection, item, label, index, total }: {
+  collection: "spaces" | "onboarding_questions"; item: Row; label: string; index: number; total: number;
+}) {
+  async function move(direction: -1 | 1) {
+    await rpc("app_admin_move_setting", { p_collection: collection, p_id: item.id, p_direction: direction });
+    await Promise.all([
+      cache.invalidateQueries({ queryKey: ["app_admin_list", collection] }),
+      cache.invalidateQueries({ queryKey: [collection === "spaces" ? "app_feed" : "bootstrap"] }),
+    ]);
+  }
+  return <>
+    <Action disabled={!index} run={() => move(-1)}>Subir<span className="sr-only"> {label}</span></Action>
+    <Action disabled={index === total - 1} run={() => move(1)}>Descer<span className="sr-only"> {label}</span></Action>
+  </>;
 }
 /** Com `icon`, a lista vira o cartão padrão das Configurações, com a busca na barra do cartão. */
 function AdminList({
@@ -289,6 +307,12 @@ function StatusField({ row }: { row?: Row }) {
     </Field>
   );
 }
+const courseAccessLabel: Record<string, string> = {
+  members: "Todos os membros",
+  plans: "Planos selecionados",
+  subscribers: "Assinatura ativa",
+};
+
 function AccessFields({
   row,
   inherit = false,
@@ -310,9 +334,7 @@ function AccessFields({
           )}
         >
           {inherit && <option value="inherit">Herdar do curso</option>}
-          <option value="members">Todos os membros</option>
-          <option value="plans">Planos selecionados</option>
-          <option value="subscribers">Assinatura ativa</option>
+          {Object.entries(courseAccessLabel).map(([mode, label]) => <option key={mode} value={mode}>{label}</option>)}
         </select>
       </Field>
       <fieldset className="plan-options">
@@ -404,6 +426,7 @@ function OrderControl({
 export function AdminCourses() {
   return (
     <AdminSurface
+      className="admin-content admin-courses-index"
       section="conteudo"
       trail={["Administração", "Conteúdo"]}
       title="Cursos e aulas"
@@ -424,16 +447,16 @@ export function AdminCourses() {
                 <h3>
                   <Link to={editor}>{text(course, "title")}</Link>
                 </h3>
-                <p>
-                  {statusName(text(course, "status"))} · /
-                  {text(course, "slug")}
+                <p className="actions">
+                  <span className="badge">{statusName(text(course, "status"))}</span>
+                  <span className="badge">{course.certificate_enabled ? "Certificado disponível" : "Sem certificado"}</span>
                 </p>
               </div>
               <div className="actions">
                 <Link className="button" to={editor}>
                   Editar curso
                 </Link>
-                <Link className="button" to={`${editor}?aba=estrutura`}>
+                <Link className="button primary" to={`${editor}?aba=estrutura`}>
                   Estrutura e aulas
                 </Link>
               </div>
@@ -469,9 +492,12 @@ export function CourseEditor() {
                   <span className="content-icon">
                     <BookOpen size={20} aria-hidden="true" />
                   </span>
-                  <div>
-                    <strong>{statusName(text(course, "status"))}</strong>
-                    <p>/{text(course, "slug")}</p>
+                  <div className="actions" role="group" aria-label="Situação do curso">
+                    <span className="badge">{statusName(text(course, "status"))}</span>
+                    {courseAccessLabel[text(course, "access_mode")] && (
+                      <span className="badge">{courseAccessLabel[text(course, "access_mode")]}</span>
+                    )}
+                    <span className="badge">{course.certificate_enabled ? "Certificado disponível" : "Sem certificado"}</span>
                   </div>
                 </div>
               )}
@@ -500,33 +526,35 @@ export function CourseEditor() {
               </NavigationTabs>
             </div>
             {tab === "course" && (
-              <div className="reading content-panel">
-                <Form
-                  key={id}
-                  submitInHeading
-                  label={isNew ? "Criar curso" : "Salvar curso"}
-                  onSave={async (data) => {
-                    const saved = await save("courses", isNew ? null : id!, {
-                      title: value(data, "title"),
-                      slug: value(data, "slug"),
-                      description: value(data, "description"),
-                      status: value(data, "status"),
-                      ...accessData(data),
-                    });
-                    await courses.refetch();
-                    if (isNew) navigate("/admin/cursos/" + saved.id);
-                  }}
-                >
-                  <IdentityFields row={course} />
-                  <RichEditor
-                    initial={text(course, "description")}
-                    label="Descrição do curso"
-                  />
-                  <StatusField row={course} />
-                  <AccessFields row={course} />
-                </Form>
+              <div className={course ? "course-edit-layout" : "reading"}>
+                <section className="content-panel" aria-label="Dados do curso">
+                  <Form
+                    key={id}
+                    submitInHeading
+                    label={isNew ? "Criar curso" : "Salvar curso"}
+                    onSave={async (data) => {
+                      const saved = await save("courses", isNew ? null : id!, {
+                        title: value(data, "title"),
+                        slug: value(data, "slug"),
+                        description: value(data, "description"),
+                        status: value(data, "status"),
+                        ...accessData(data),
+                      });
+                      await courses.refetch();
+                      if (isNew) navigate("/admin/cursos/" + saved.id);
+                    }}
+                  >
+                    <IdentityFields row={course} />
+                    <RichEditor
+                      initial={text(course, "description")}
+                      label="Descrição do curso"
+                    />
+                    <StatusField row={course} />
+                    <AccessFields row={course} />
+                  </Form>
+                </section>
                 {course && (
-                  <>
+                  <section className="content-panel" aria-label="Publicação e capa">
                     {course.status === "draft" && (
                       <AdminCatalogLaunch entity="courses" id={course.id} />
                     )}
@@ -537,7 +565,7 @@ export function CourseEditor() {
                       onUploaded={() => void courses.refetch()}
                     />
                     <Archive entity="courses" row={course} />
-                  </>
+                  </section>
                 )}
               </div>
             )}
@@ -586,7 +614,7 @@ export function CourseEditor() {
                 </Form>
                 {admin ? (
                   <AssetCard key={course.id} variant="signature" courseId={course.id}
-                    saved={brandAssetUrl(course.signature_path) ?? safeUrl(course.signature_url) ?? null}
+                    saved={brandAssetUrl(course.signature_path)}
                     onChanged={() => courses.refetch()} />
                 ) : (
                   <Notice>A assinatura do certificado é enviada por um administrador.</Notice>
@@ -1908,7 +1936,7 @@ function MemberFacts({ detail }: { detail: MemberDetail }) {
         ))}
       </section>
       <section className="commercial-panel">
-        <h2>Tickets ({detail.tickets.total})</h2>
+        <h2>Chamados ({detail.tickets.total})</h2>
         {detail.tickets.total === 0 && <Empty>Nenhum chamado registrado.</Empty>}
         {detail.tickets.items.map((ticket) => (
           <p key={ticket.id}>
@@ -2251,6 +2279,7 @@ export function AdminCommunity() {
     tab = params.get("aba") ?? "moderacao",
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
     spaces = useAll("spaces");
+  const orderedSpaces = orderedSettings(spaces.data);
   const current = communityTabs.find(([id]) => id === tab) ?? communityTabs[0];
   const pending = params.get("situacao") !== "todas";
   const moderationFilters = (result: Page<Row> & { pending?: number } | undefined) =>
@@ -2386,13 +2415,16 @@ export function AdminCommunity() {
               </button>
             </header>
             <QueryState query={spaces}>
-              {spaces.data?.length ? spaces.data.map((space) => (
+              {orderedSpaces.length ? orderedSpaces.map((space, index) => (
                 <div className="resource-row" key={space.id}>
                   <div>
                     <h3>{text(space, "name")}</h3>
                     <p>{text(space, "description")}</p>
                   </div>
-                  <button onClick={() => setEditing(space)}>Editar espaço</button>
+                  <div className="actions">
+                    <MoveSetting collection="spaces" item={space} label={text(space, "name")} index={index} total={orderedSpaces.length} />
+                    <button onClick={() => setEditing(space)}>Editar espaço</button>
+                  </div>
                 </div>
               )) : <Empty>Nenhum espaço cadastrado.</Empty>}
             </QueryState>
@@ -2683,21 +2715,16 @@ const integrationTabs = [
   { id: "bunny", label: "Bunny Stream", to: "?aba=integracoes&provedor=bunny" },
 ];
 
-async function getAdminCapabilities() {
-  const data = await edge<Record<string, unknown> | null>("capabilities");
-  return {
-    asaas: typeof data?.asaas === "boolean" ? data.asaas : undefined,
-    bunny: typeof data?.bunny === "boolean" ? data.bunny : undefined,
-    mode: data?.mode === "production" || data?.mode === "local" ? data.mode : undefined,
-    storage: data?.storage === true,
-    email: data?.email === "configured" || data?.email === "local" ? data.email : undefined,
-  };
-}
-
 function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
-  const capabilities = useQuery({ queryKey: ["admin-capabilities"], queryFn: getAdminCapabilities });
+  const settings = useQuery({ queryKey: integrationKey(provider), queryFn: async () => {
+    const data = await edge<IntegrationStatus>("capabilities", { action: "integration-status", provider });
+    if (!data?.fields) throw new Error("Não foi possível consultar a configuração.");
+    return data;
+  } });
+  const test = useIntegrationTest(provider);
   const asaas = provider === "asaas";
-  const configured = capabilities.data?.[provider];
+  const configured = settings.data?.configured;
+  const hasError = settings.isError || Boolean(settings.data?.error) || test.isError || test.data?.ok === false;
   const ProviderIcon = asaas ? CreditCard : Video;
 
   return (
@@ -2707,9 +2734,11 @@ function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
       title={asaas ? "Gateway de pagamento Asaas" : "Integração Bunny Stream"}
       description={asaas ? "Checkout hospedado para pagamentos por Pix e cartão." : "Reprodução de vídeos autorizada pelo servidor."}
       action={
-        <button type="button" aria-controls="settings-provider-status" aria-disabled={capabilities.isFetching}
+        <button type="button" aria-controls="settings-provider-status" aria-disabled={settings.isFetching || test.isPending}
           onClick={() => {
-            if (!capabilities.isFetching) void capabilities.refetch({ cancelRefetch: false });
+            if (settings.isFetching || test.isPending) return;
+            test.reset();
+            void settings.refetch({ cancelRefetch: false });
           }}>
           <RefreshCw size={16} aria-hidden="true" /> Atualizar estado
         </button>
@@ -2721,46 +2750,34 @@ function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
           <ProviderIcon size={22} aria-hidden="true" />
           <div>
             <h2 id="settings-provider-title">Configuração do provedor</h2>
-            <p id="settings-provider-status" role="status" data-configured={capabilities.isSuccess && configured === true}>
-              {capabilities.isFetching ? "Consultando configuração…" :
-                capabilities.isError || configured === undefined ? "Estado indisponível" :
-                configured ? "Configuração detectada" : "Não configurado"}
+            <p id="settings-provider-status" role="status" data-configured={!hasError && configured}>
+              {settings.isFetching ? "Consultando configuração…" :
+                hasError ? "Com erro" : configured ? "Configurado" : "Não configurado"}
             </p>
-            {capabilities.isError && <p role="alert">A consulta falhou. Use Atualizar estado para tentar novamente.</p>}
-            <p>O indicador informa a presença da configuração no servidor.</p>
+            {settings.isError && <p role="alert">A consulta falhou. Use Atualizar estado para tentar novamente.</p>}
+            {settings.data?.error && <p role="alert">{settings.data.error}</p>}
+            {asaas && settings.data?.checkout_allowed === false && <p>Cobranças em Produção aguardam ativação.</p>}
+            {settings.data && <button type="button" disabled={!settings.data.test_ready || settings.isFetching || test.isPending}
+              onClick={() => test.mutate()}>
+              {test.isPending ? "Testando conexão…" : "Testar conexão"}
+            </button>}
+            <IntegrationTestMessage test={test} />
           </div>
         </section>
       </div>
-      <div className="settings-provider-grid">
-        <section className="settings-panel">
-          <h2><KeyRound size={20} aria-hidden="true" /> {asaas ? "API e autenticação" : "Credenciais e biblioteca"}</h2>
-          <p>{asaas
-            ? "O checkout usa o ambiente sandbox. Configure a chave da API, o token do webhook, a origem da aplicação e a imagem do item no servidor."
-            : "Configure o identificador da biblioteca, a chave de assinatura e o domínio permitido no servidor."}</p>
-        </section>
-        <section className="settings-panel">
-          <h2><Shield size={20} aria-hidden="true" /> {asaas ? "Webhooks e confirmação" : "Acesso e reprodução"}</h2>
-          <p>{asaas
-            ? "O servidor valida o token do webhook e processa a confirmação do pagamento antes de conceder acesso."
-            : "Associe o identificador do vídeo à aula. O servidor verifica o acesso antes de emitir um link de reprodução temporário."}</p>
-          <Link className="button" to={asaas ? "/admin/pedidos" : "/admin/cursos"}>
-            {asaas ? "Consultar pedidos" : "Gerenciar aulas"}
-          </Link>
-        </section>
-        <section className="settings-panel">
-          <h2><FileText size={20} aria-hidden="true" /> {asaas ? "Conciliação e operações fiscais" : "Processamento de vídeo"}</h2>
-          <p>{asaas
-            ? "Consulte taxas, conciliação e operações fiscais no painel do Asaas."
-            : "Consulte a biblioteca, o processamento e os perfis de vídeo no painel do Bunny Stream."}</p>
-        </section>
-      </div>
-      {capabilities.isSuccess && (
+      {settings.data && <>
+        <IntegrationCards provider={provider} settings={settings.data} onSave={test.reset} />
+        <Link className="button settings-help" to={asaas ? "/admin/pedidos" : "/admin/cursos"}>
+          {asaas ? "Consultar pedidos" : "Gerenciar aulas"}
+        </Link>
+      </>}
+      {settings.data?.mode && (
         <details className="settings-panel settings-services">
           <summary>Outros serviços da plataforma</summary>
           <dl className="settings-roles">
-            <div><dt>Aplicação</dt><dd>{capabilities.data.mode === "production" ? "Produção" : capabilities.data.mode === "local" ? "Local" : "Indisponível"}</dd></div>
-            <div><dt>Armazenamento</dt><dd>{capabilities.data.storage ? "Disponível na configuração" : "Indisponível"}</dd></div>
-            <div><dt>E-mail</dt><dd>{capabilities.data.email === "configured" ? "Configuração detectada" : capabilities.data.email === "local" ? "Local" : "Indisponível"}</dd></div>
+            <div><dt>Aplicação</dt><dd>{settings.data.mode === "production" ? "Produção" : "Local"}</dd></div>
+            <div><dt>Armazenamento</dt><dd>{settings.data.storage ? "Disponível na configuração" : "Indisponível"}</dd></div>
+            <div><dt>E-mail</dt><dd>{settings.data.email === "configured" ? "Configuração detectada" : settings.data.email === "local" ? "Local" : "Indisponível"}</dd></div>
           </dl>
         </details>
       )}
@@ -2783,7 +2800,10 @@ export function AdminSettings() {
   if (tab === "modulos") return <AdminModules />;
   if (tab === "equipe") return <AdminTeam />;
   if (tab === "auditoria") return <AdminAudit />;
-  if (tab === "integracoes") return <AdminIntegrations provider={params.get("provedor") === "bunny" ? "bunny" : "asaas"} />;
+  if (tab === "integracoes") {
+    const provider = params.get("provedor") === "bunny" ? "bunny" : "asaas";
+    return <AdminIntegrations key={provider} provider={provider} />;
+  }
   if (tab === "legal") return <LegalSettings />;
   if (tab === "privacidade") return <PrivacySettings />;
   return <OnboardingAdmin />;
@@ -2954,6 +2974,7 @@ function PrivacySettings() {
 function OnboardingAdmin() {
   const questions = useAll("onboarding_questions"),
     [selected, setSelected] = useState<Row | null | undefined>(undefined);
+  const orderedQuestions = orderedSettings(questions.data);
   return (
     <SettingsSurface
       tab="onboarding"
@@ -2967,7 +2988,7 @@ function OnboardingAdmin() {
           <p>A ordem e a obrigatoriedade valem no cadastro de perfil.</p>
         </header>
         <QueryState query={questions}>
-          {questions.data?.length ? questions.data.map((question) => (
+          {orderedQuestions.length ? orderedQuestions.map((question, index) => (
             <div className="resource-row" key={question.id}>
               <div>
                 <h3>{text(question, "label")}</h3>
@@ -2976,9 +2997,10 @@ function OnboardingAdmin() {
                   {question.required ? "Obrigatória" : "Opcional"}
                 </p>
               </div>
-              <button onClick={() => setSelected(question)}>
-                Editar pergunta
-              </button>
+              <div className="actions">
+                <MoveSetting collection="onboarding_questions" item={question} label={text(question, "label")} index={index} total={orderedQuestions.length} />
+                <button onClick={() => setSelected(question)}>Editar pergunta</button>
+              </div>
             </div>
           )) : <Empty>Nenhuma pergunta cadastrada.</Empty>}
         </QueryState>
@@ -3008,17 +3030,12 @@ function OnboardingAdmin() {
                   name="key"
                   defaultValue={text(selected ?? undefined, "key", "name")}
                 >
-                  {[
-                    "name",
-                    "segment",
-                    "role",
-                    "size",
-                    "stage",
-                    "revenue_range",
-                    "acquisition",
-                    "product_description",
-                  ].map((key) => (
-                    <option key={key}>{key}</option>
+                  {Object.entries({
+                    name: "Nome da empresa", segment: "Segmento", role: "Cargo",
+                    size: "Tamanho da equipe", stage: "Estágio do produto", revenue_range: "Faturamento mensal",
+                    acquisition: "Aquisição de clientes", product_description: "Descrição do produto",
+                  }).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
               </Field>

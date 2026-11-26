@@ -30,7 +30,7 @@ export const articles = [
       "Consulte os próximos lançamentos na vitrine. Na página de cada curso, você também encontra os anúncios de módulos quando estiverem disponíveis. Use Quero ser avisado. O sino recebe o aviso quando o conteúdo for publicado, se a opção Lançamentos inscritos estiver ativa nas preferências e você ainda tiver o acesso exigido para o módulo.",
       "Cada curso, módulo e aula tem endereço próprio. Use esses links para retornar diretamente ao conteúdo.",
       "Acima do player, use Anterior ou Próxima aula. Abaixo do player ficam o título e as ações de progresso. No celular, a lista de aulas vem depois da descrição. Em telas maiores, use Conteúdos para abrir ou fechar a lista. Use Filtrar tópicos e aulas para localizar itens do curso.",
-      "O cadeado indica acesso restrito. Consulte sua assinatura; o servidor decide o acesso em cada operação.",
+      "O cadeado indica acesso restrito. Use Ver planos disponíveis para consultar opções de assinatura. O servidor verifica o acesso a cada material ou aula.",
       "No vídeo nativo, a posição é salva durante a reprodução e ao pausar. Use Salvar ponto de retomada para confirmar manualmente.",
       "Marque a aula como concluída ao finalizar. O progresso só muda depois da confirmação do servidor. Sem provedor de vídeo configurado, a tela informa a causa.",
     ],
@@ -145,7 +145,7 @@ export const articles = [
     slug: "administracao-podcasts",
     title: "Publique podcasts e masterclasses",
     steps: [
-      "Na administração, abra Podcasts e escolha Novo episódio. Cole a URL do vídeo do YouTube e preencha os metadados. A miniatura é derivada do vídeo. Para trocar o vídeo de um episódio já salvo, cadastre outro.",
+      "Na administração, abra Podcasts e escolha Novo episódio. Cole a URL do vídeo do YouTube e preencha os metadados. Ao editar um episódio, você pode corrigir a URL e revisar os horários dos capítulos. O histórico de assistidos acompanha o episódio.",
       "Cadastre um capítulo por linha, em ordem crescente, com o horário e o título. Escolha Publicado para exibir no acervo ou Rascunho para ocultar. A opção de destaque substitui o destaque atual ao salvar.",
     ],
   },
@@ -169,6 +169,7 @@ export const articles = [
     steps: [
       "Em Conteúdo, crie um curso e salve. Defina título, endereço, descrição rica e acesso.",
       "Em Cursos e aulas, o editor fica ao lado do currículo em telas largas e abaixo dele em telas estreitas. Ao criar ou editar um item, o editor recebe o foco. Fechar editor retorna ao botão que você usou para abrir a edição.",
+      "Para localizar uma área, abra Buscar no painel na barra superior. Em Comunidade, use Subir ou Descer em Espaços para ajustar a ordem. Em Configurações, os mesmos botões organizam as perguntas do primeiro acesso.",
       "Em Estrutura e aulas, crie módulos, seções e aulas. Ative Reordenar para revelar Subir e Descer. No editor da aula, Mídia da aula reúne tipo, duração, ID do Bunny e envio de vídeo para uma aula salva.",
       "No editor de um curso ou módulo salvo como rascunho, abra Anúncio de lançamento. Salve o título e o resumo aprovados para os alunos. A previsão é informativa e o aviso só é enviado na publicação.",
       "Abra a edição de uma aula salva e use Editar apresentação para cadastrar subtítulo, capítulos, destaques, fórmula, checklist e CTA. Remover um item publicado também remove as marcações dele.",
@@ -190,7 +191,10 @@ export const articles = [
       "Em Configurações, abra Módulos para ligar ou desligar Comunidade, Materiais, Podcasts, Ranking, Encontros ao vivo, Suporte, Central de ajuda e Feedback dos alunos. Desligar esconde o recurso dos alunos e bloqueia o acesso no servidor, sem apagar dados, e religar traz tudo de volta. Cursos e Certificados ficam sempre ativos, e nenhuma exportação depende dos módulos. O painel de cada módulo continua acessível, com o selo Desativado. Os comentários das aulas seguem com Cursos, e um link de sala de encontro já entregue continua abrindo até você trocá-lo na sala.",
       "Em Configurações, revise perguntas e versões legais. Na aba Equipe, consulte os papéis e abra Gerenciar membros e equipe para alterar o acesso pela ficha.",
       "Em Auditoria, busque eventos por ação, ator ou alvo e navegue entre as páginas. A trilha mostra o motivo quando registrado.",
-      "Em Integrações, escolha Gateway Asaas ou Bunny Stream. Atualizar estado consulta se há configuração no servidor. Configure as credenciais no servidor.",
+      "Em Configurações, abra Integrações e escolha Gateway Asaas ou Bunny Stream. Ative a verificação em duas etapas em Sua conta → Segurança e entre com o segundo fator. Confirme sua senha ao salvar. O painel informa os últimos quatro caracteres das chaves e a origem de cada valor. As variáveis do servidor têm prioridade.",
+      "No Asaas, selecione Sandbox ou Produção e salve a chave de API do ambiente. Use Gerar token, copie o token antes de fechar a janela e cadastre-o com a URL fornecida no webhook da conta Asaas. Ao rotacionar o token, atualize o webhook no Asaas imediatamente.",
+      "Use Testar conexão para conferir a chave. Para ligar Cobranças em produção, selecione Produção, salve as credenciais, configure o Turnstile do checkout e obtenha um teste aprovado nas últimas 24 horas com as credenciais atuais. Confirme a senha também ao ligar ou desligar o interruptor. Trocar a chave ou o token de Produção desliga as cobranças e exige novo teste.",
+      "No Bunny Stream, informe o ID da biblioteca, a chave da API, o hostname da CDN e a chave de autenticação do player. Use Testar conexão para conferir a chave de API e a biblioteca. Para confirmar a reprodução protegida, abra uma aula com um vídeo dessa biblioteca.",
     ],
   },
 ];

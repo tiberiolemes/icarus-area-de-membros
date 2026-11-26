@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { client, edge, errorMessage, uploadStorage } from "./api";
 import { Field, Notice, Unsaved } from "./ui";
 
@@ -8,12 +8,21 @@ const avatarSignatures: Record<string, number[]> = {
   "image/png": [137, 80, 78, 71, 13, 10, 26, 10],
 };
 
+function FilePicker({ fileName, ...input }: ComponentProps<"input"> & { fileName: string }) {
+  return (
+    <span className="upload-picker">
+      <span className="button" aria-hidden="true">Escolher arquivo</span>
+      <span>{fileName || "Nenhum arquivo selecionado"}</span>
+      <input {...input} type="file" />
+    </span>
+  );
+}
+
 export function Upload({
   kind,
   resourceId,
   onUploaded,
   onBusyChange,
-  customPicker = false,
 }: {
   kind:
     | "course-cover"
@@ -24,7 +33,6 @@ export function Upload({
     | "avatar";
   resourceId: string;
   onUploaded?: () => void;
-  customPicker?: boolean;
   onBusyChange?: (busy: boolean) => void;
 }) {
   const [state, setState] = useState(""),
@@ -59,6 +67,7 @@ export function Upload({
       setState("");
       setError("Não foi possível ler esta foto. Escolha outro JPG ou PNG.");
       if (file.current) file.current.value = "";
+      setFileName("");
     };
     image.src = preview;
     return () => {
@@ -167,11 +176,10 @@ export function Upload({
     }
   }
   const input = (
-    <input
+    <FilePicker
       ref={file}
-      type="file"
+      fileName={fileName}
       disabled={busy}
-      aria-label={customPicker ? "Anexar arquivo à conversa" : undefined}
       accept={
         kind === "avatar"
           ? "image/jpeg,image/png"
@@ -184,7 +192,7 @@ export function Upload({
       onChange={async (e) => {
         const input = e.currentTarget,
           selected = input.files?.[0];
-        if (customPicker) setFileName(selected?.name ?? "");
+        setFileName(selected?.name ?? "");
         setError("");
         setState("");
         if (kind !== "avatar") return;
@@ -203,6 +211,7 @@ export function Upload({
               : "Escolha uma foto JPG ou PNG de até 500 KB.",
           );
           input.value = "";
+          setFileName("");
           return;
         }
         setPreview(URL.createObjectURL(selected));
@@ -234,13 +243,7 @@ export function Upload({
             : "Imagem raster até 5 MiB; anexos até 20 MiB, conforme o tipo permitido."
         }
       >
-        {customPicker ? (
-          <span className="support-upload-picker">
-            <span className="button" aria-hidden="true">Escolher arquivo</span>
-            <span>{fileName || "Nenhum arquivo selecionado"}</span>
-            {input}
-          </span>
-        ) : input}
+        {input}
       </Field>
       {kind === "avatar" && preview && (
         <div>
@@ -266,7 +269,7 @@ export function Upload({
         <button
           type="button"
           className={kind === "avatar" ? "primary" : undefined}
-          disabled={busy || (kind === "avatar" && !preview) || (customPicker && !fileName)}
+          disabled={busy || !fileName || (kind === "avatar" && !preview)}
           onClick={upload}
         >
           {kind === "avatar" ? "Salvar foto" : "Enviar arquivo"}

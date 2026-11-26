@@ -4,10 +4,11 @@ O Icarus é uma plataforma de área de membros e cursos online em React/Vite e S
 
 ## Atualizar de versão
 
-Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes. Numa instalação hospedada, siga [Aplicar migrações no Supabase hospedado](#aplicar-migrações-no-supabase-hospedado), que vale para a 0.1.6 e para a 0.2.0. O roteiro do [stack Docker completo](#atualizar-uma-instalação-docker-completa) foi escrito e ensaiado para a v0.1.6. A partir da 0.2.0, o banco foi ensaiado pelo [ensaio isolado](#ensaio-de-banco-isolado) (`install` da tag v0.2.0, `upgrade` e `verify` no mesmo Postgres), mas o stack Docker completo da 0.2.0 ainda não tem roteiro próprio ensaiado para as Edge Functions.
+Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes. Numa instalação hospedada, siga [Aplicar migrações no Supabase hospedado](#aplicar-migrações-no-supabase-hospedado). Para Linux com Docker, use o [roteiro da v0.1.6](#atualizar-uma-instalação-docker-completa) ou o [roteiro a partir da v0.2.0](#atualizar-o-stack-docker-a-partir-da-v020).
 
-| Versão instalada | Histórico esperado | Migrations novas até a 2.6.0 |
+| Versão instalada | Histórico esperado | Migrations a aplicar |
 | --- | --- | --- |
+| 2.7.0 | `202611230001` a `202611250009` | `202611260001`, `202611260010` e `202611260011` |
 | 2.5.1 | `202611230001` a `202611250005` | `202611250006` a `202611250008` |
 | 2.5.0 | `202611230001` a `202611250004` | `202611250005` a `202611250008` |
 | 2.4.0 | `202611230001` a `202611250003` | `202611250004` a `202611250008` |
@@ -18,6 +19,10 @@ Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHA
 | 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` e `202611250001` a `202611250008` |
 
 A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos. A `202611250005` cria três RPCs de leitura e registro do painel (denúncias e pedidos LGPD) e reserva a identidade de quem denunciou para administradores, inclusive na listagem genérica. A migration não cria tabelas nem altera dados. A `202611250006` adiciona as RPCs do painel e permite arquivar episódios, preservando os registros existentes. A `202611250007` ajusta as permissões da fila de comentários, registra as exportações CSV feitas pela tela de Membros ou Pedidos e pagina os eventos de auditoria antes de montar os rótulos quando a busca está vazia. A `202611250008` registra somente se a busca foi preenchida e limita a 10 exportações por minuto por administrador, somando as duas telas. O painel gera o arquivo após a confirmação do registro na auditoria.
+
+Na atualização da 2.7.0, a `202611260001` habilita o Vault para as integrações e marca os pedidos existentes como Sandbox. A `202611260010` trata retenção, limites e assinatura de certificados. A `202611260011` habilita a edição do vídeo e a reordenação no painel. Aplique as três antes de publicar o frontend e as funções `capabilities`, `checkout`, `asaas-webhook`, `media` e `reauthenticate` da mesma versão. As variáveis existentes têm prioridade. O interruptor de cobranças em Produção começa desligado.
+
+A retenção elimina contadores de mais de dois dias, nonces expirados e sessões encerradas. Quando o projeto já tem `pg_cron`, o serviço executa a limpeza diariamente. Nas demais instalações, a renovação de sessão por atividade amostra lotes curtos e usa um lock que desiste se outra sessão estiver limpando. O histórico em `audit_events` é mantido.
 
 Publique também as Edge Functions da tag:
 - na 2.4.0, `upload` passou a receber a logo, o ícone e a assinatura do certificado (`kind=brand-asset`) e a gravá-los no bucket público `icarus-brand`, criado pela `202611250003`;
@@ -110,6 +115,15 @@ Use este roteiro para o stack completo da v0.1.6 criado pelo Supabase CLI, com A
 
    Confirme a saúde de Auth, Storage, PostgREST e Edge, além dos IDs e volumes já registrados. Valide login de conta existente, acesso a material privado, permissões de membro e admin e um convite via Mailpit antes de liberar escritas. Execute a mesma sequência na instalação de origem só depois de validar a cópia. O ensaio DB-only abaixo usa projeto próprio e serve à verificação do instalador.
 
+### Atualizar o stack Docker a partir da v0.2.0
+
+Ensaie primeiro numa cópia desligada da internet pública, sem webhooks, SMTP externo ou tarefas de pagamento. Separe os checkouts das duas tags em `ICARUS_ANTIGO` e `ICARUS_NOVO`. Use o socket e o ID do daemon que instalou o stack. Suspenda escritas da aplicação e dos jobs. Faça e verifique o backup pelos comandos da versão instalada, incluindo Postgres e Storage, e preserve o ambiente Edge e um snapshot da VM para recuperação.
+
+1. No checkout antigo, rode `node scripts/local.mjs status` com `ICARUS_INSTALL_DOCKER_HOST` e `ICARUS_INSTALL_DOCKER_ID`. Confira os IDs registrados em `.local/local-installation.json`. O CLI deve usar o mesmo `DOCKER_HOST` e `SUPABASE_SERVICES_HOSTNAME=127.0.0.1`. Na tag nova, rode `supabase migration list --local` e `supabase db push --local --dry-run`. Compare a sequência remota com a da tag instalada. Depois do ensaio e da conferência, rode `supabase db push --local`. Confira novamente a lista e a prévia vazia.
+2. Confira por `docker inspect --format '{{json .Mounts}}' "$ICARUS_EDGE_ID"` que o Edge registrado monta `supabase/functions` do checkout antigo, com o ID completo conferido no recibo. Enquanto o frontend está suspenso, pare só esse Edge pelo ID. Preserve a pasta de funções antiga e instale a pasta completa da nova tag no mesmo caminho da montagem, incluindo `_shared`. Copie somente o `.env` privado da pasta antiga com modo `0600`. Se o caminho da montagem for outro, use a origem exibida no `inspect`, dentro do checkout registrado. Preserve o TOML, o checkout, a rede, o ambiente do contêiner e os volumes do stack original.
+3. No checkout antigo, rode `node scripts/local.mjs functions-restart`. O helper retoma o mesmo Edge e valida as respostas. Confira `capabilities`, login de uma conta existente, mídia privada assinada, acesso de membro e admin e um convite via Mailpit. A configuração precisa dos secrets da versão nova para exercer integrações elegíveis. Em produção, configure secrets pelo procedimento da instalação antes de ativar funcionalidades externas.
+4. Copie com modo `0600` o `.env.local` do checkout antigo para o novo. No checkout novo, use `umask 022`, `npm ci`, `npm run build` e sirva o novo `dist` depois dos testes. Confira o frontend com a mesma URL pública do ambiente Edge. Em falha, restaure o snapshot e o conjunto de banco, arquivos e configuração e volte à versão antiga do frontend e das funções.
+
 ### Ensaio de banco isolado
 
 `node scripts/clean-install.mjs install` (ou sem argumento) cria o projeto DB-only `icarus-courses-install-qa` em uma bridge própria com `127.0.0.1:58622`. O diretório `.local/clean-install` precisa estar ausente. Use o gate do Docker dedicado, inventário vazio e porta livre acima. Um start interrompido pode deixar o diretório ou a rede da tentativa. Preserve o diagnóstico e use um ambiente vazio para repetir.
@@ -173,6 +187,22 @@ node scripts/first-admin.mjs promote
 
 Essa ação é SQL privilegiado **específico para o ID salvo em `.local/first-admin.json`**, sem RPC pública de papel. Só promove se a conta não for demo/suspensa, tiver email confirmado, primeira senha concluída. Demais usuários não conseguem editar role pelo perfil. Contas com fator verificado exigem JWT/sessãoAAL2; contas sem fator podem operar em AAL1; não existe bypass por email ou marker no user_metadata. O arquivo privado do operador não deve ser commitado.
 
+## Cabeçalhos do frontend hospedado
+
+Envie os cabeçalhos pelo servidor que entrega o `index.html` e o fallback da aplicação. Em Caddy, coloque o bloco abaixo dentro do site HTTPS e substitua `https://projeto.supabase.co` pela origem de `VITE_SUPABASE_URL`. Use também a origem pública do Storage se ela for diferente. A mesma política se aplica ao login e à administração.
+
+```caddyfile
+header {
+    Content-Security-Policy "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://projeto.supabase.co https://api.github.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://player.mediadelivery.net https://iframe.mediadelivery.net https://www.youtube-nocookie.com https://open.spotify.com; img-src 'self' data: blob: https://projeto.supabase.co https://i.ytimg.com; media-src 'self' blob: https://projeto.supabase.co; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'"
+    Strict-Transport-Security "max-age=31536000"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    X-Frame-Options "DENY"
+}
+```
+
+`style-src 'unsafe-inline'` permite os estilos aplicados pelos componentes React, como a posição do vídeo. O JavaScript usa apenas arquivos próprios e o Turnstile. A consulta de atualizações usa `api.github.com`. Site com domínio próprio para o player deve acrescentar a origem exata à lista de frames. Aplique HSTS no HTTPS depois de verificar o certificado e o redirecionamento HTTP. Use `caddy validate` antes de recarregar a configuração. Confira os cabeçalhos no login e em uma rota interna e teste os frames de Turnstile, Bunny, YouTube e Spotify, a marca do Storage, a ajuda e o checkout em uma instalação de ensaio. Consulte a [referência do Caddy](https://caddyserver.com/docs/caddyfile/directives/header) e as [diretrizes do Turnstile](https://developers.cloudflare.com/turnstile/reference/content-security-policy/).
+
 ## Edge Functions e secrets
 
 `start` cria o Edge Runtime com o stack nativo. `functions` verifica sua prontidão e `functions-restart` recupera também o Edge registrado que já parou, desde que os demais serviços estejam ativos. O comando usa o ID e a configuração original. `stop` para os IDs registrados e preserva containers e volumes. O start aguarda até 30 s por Auth/Storage/PostgREST e até 90 s pela resposta Edge. Os recibos ficam em `.local/start-evidence.json` e `.local/edge-readiness.json`. `.local/command-failure.json` guarda o diagnóstico privado de falhas do CLI.
@@ -193,33 +223,56 @@ Em runtime hospedado pode ser usado `SUPABASE_PUBLIC_URL=https://dominio-publico
 
 Fora do modo local (`ICARUS_MODE=local`), `APP_ORIGIN` é obrigatório. Sem ele, em produção, com `ICARUS_MODE` ausente ou com valor diferente, as funções respondem 503 `CONFIGURATION_REQUIRED` em vez de usar `http://127.0.0.1:8088`, que só vale no modo local. Os convites pós-pagamento usam esse endereço. Como a resposta sai sem CORS, o navegador mostra só um erro de conexão; o código aparece no log da função ou numa chamada por `curl`.
 
-**Checkout e reautenticação têm limite de tentativas** (migration `202611250001`), com o throttle por minuto do banco.
+**Checkout e reautenticação têm limite de tentativas** no banco.
 - O checkout aceita 5 tentativas por IP, 5 por conta logada e 3 por email do comprador. O limite por email vale também para quem está logado, porque usa o email da conta. Trocar a `attempt_key` não contorna o limite.
-- A confirmação de senha da `reauthenticate` aceita 5 tentativas por usuário.
+- A reserva aceita até 60 novos pedidos por minuto por instalação, inclusive sem o cabeçalho de IP. Retomar uma tentativa existente preserva o ambiente original e não consome a cota global. Ao atingir o teto, o servidor responde 429 e a transação não cria o pedido.
+- A confirmação de senha da `reauthenticate` aceita 5 tentativas por minuto e 20 por hora por usuário.
 - Passou do limite, a Edge responde 429 `RATE_LIMITED` e a janela seguinte libera.
 - O IP vem só de `cf-connecting-ip`, que a Cloudflare deve preencher no Supabase hospedado, e o IPv6 conta pelo bloco /64. Confira na instalação depois de publicar: do mesmo IP, trocando o email a cada tentativa, a sexta no minuto deve receber 429. Se só o limite por email agir, o cabeçalho não chega à função.
 - O `x-forwarded-for` é ignorado: o primeiro valor é o que o cliente escreve, e o último pode ser o próprio proxy, o mesmo para todos.
-- Sem `cf-connecting-ip`, não há limite por IP; valem o limite por email e conta e o Turnstile.
+- Sem `cf-connecting-ip`, valem os limites por email, conta, instalação e o Turnstile.
 - Numa instalação própria sem a Cloudflare na frente, deixe um proxy que remova o `cf-connecting-ip` vindo do cliente e o preencha com o IP real. Sem isso, o cliente escolhe o IP do limite.
 - O banco guarda um md5 com prefixo fixo do IP e do email, não o texto. Isso não é anonimização: um IPv4 se recupera testando os endereços, e um email conhecido se confirma pelo hash.
-- O projeto não apaga linhas antigas de `rate_limits`, deste e dos demais limites. Inclua essa tabela na política de retenção da instalação.
+- O feed, os materiais, os podcasts e os encontros aceitam 60 consultas por minuto por usuário, com janela própria para cada recurso. O servidor aplica os limites antes de listar dados.
+
+**Retenção operacional.** O banco remove em lotes os contadores com mais de dois dias, os nonces vencidos e as sessões Icarus vencidas há mais de um dia. Um marcador de sessão vencida fica associado ao ID do Auth até o Auth apagá-lo, para impedir que o acesso seja reaberto. A auditoria de ações é mantida. Quando `pg_cron` já está instalado na aplicação da migration, a rotina roda diariamente às 03h35 no fuso do cron do banco. Nos demais ambientes, o limitador inicia lotes curtos em uma amostra das consultas bem-sucedidas e evita rodadas simultâneas com um lock sem espera.
 
 **Turnstile no checkout.** Com o segredo `TURNSTILE_SECRET_KEY` nos secrets das Edge Functions, a `checkout` confere o token em `https://challenges.cloudflare.com/turnstile/v0/siteverify` antes de reservar o pedido ou falar com o Asaas.
 - Token ausente ou recusado volta como 403 `CAPTCHA_FAILED`.
 - Se a Cloudflare não responde, volta 503 e a compra fica bloqueada.
 - Gere o frontend com `VITE_TURNSTILE_SITE_KEY` do mesmo widget: com o segredo e sem a chave do site, toda compra é recusada.
 - Se o script da Cloudflare não carrega no navegador, o checkout mostra o aviso para recarregar e não envia a compra, como no login.
-- Sem o segredo, o servidor não confere nada. Se o frontend tiver `VITE_TURNSTILE_SITE_KEY`, por exemplo para o login, o desafio aparece no checkout, mas é só visual, e um script o ignora. Para valer no checkout, grave o segredo.
+- Em uma instalação com `ICARUS_MODE=production`, a falta de `TURNSTILE_SECRET_KEY` bloqueia o checkout com 503 `CAPTCHA_UNAVAILABLE`, inclusive para pedidos no Sandbox. Em modo local, o segredo é opcional.
 - O segredo fica só no servidor e é gravado por último, depois de ver o token chegar na página publicada.
 
 O config declara `verify_jwt=false` para os handlers que fazem autorização própria: capabilities/checkout guest/recibo/webhook precisam chegar sem JWT; media/upload/reauth/password-setup exigem Auth `getUser/getClaims` e gates de sessão/recurso; process-invites aceita exclusivamente a credencial de serviço. Desativar o gateway não torna a mídia pública. As provas HTTP positivas/negativas ficam no relatório de aceite.
+
+## Configurar Asaas e Bunny Stream
+
+Em **Administração → Configurações → Integrações**, o painel mostra o estado e a origem de cada campo. Para salvar credenciais, gerar o token do webhook ou alterar o interruptor de Produção, ative 2FA em **Sua conta → Segurança**, entre com o segundo fator e confirme sua senha na operação. O banco aceita até cinco alterações por minuto por administrador e registra as ações sem os valores. Campos de chave vazios mantêm o conteúdo salvo.
+
+### Gateway Asaas
+
+1. Comece em **Sandbox**. Selecione o ambiente, informe a chave de API correspondente e salve.
+2. Clique em **Gerar token**. Copie o token da janela e a **URL do webhook** para o painel Asaas daquele ambiente. Use os eventos de checkout `CHECKOUT_PAID`, `CHECKOUT_CANCELED` e `CHECKOUT_EXPIRED`, e os eventos de estorno e contestação usados pela conciliação. A URL contém `?ambiente=sandbox` ou `?ambiente=production`. Ao rotacionar o token, atualize o painel Asaas imediatamente.
+3. Use **Testar conexão**. O teste só consulta a API do ambiente escolhido. Faça o ensaio de Pix/cartão, webhook, confirmação e convite no Sandbox da instalação, com comprador fictício autorizado. Antes de liberar acesso por `CHECKOUT_PAID`, o Icarus consulta as cobranças do checkout na API e confere situação, forma e total.
+4. Para configurar Produção, selecione **Produção** e repita os passos com a chave e o webhook desse ambiente. Antes de ativar **Cobranças em produção**, confirme o Turnstile do checkout e faça **Testar conexão** com a chave e o token atuais. A aprovação vale por 24 horas para ligar o interruptor. Confirme a senha para ativar ou desativar. Uma mudança nas credenciais de Produção invalida a aprovação e desliga as cobranças. A desativação impede novas cobranças e os webhooks autenticados continuam conciliando pedidos já registrados.
+
+As variáveis `ASAAS_ENV`, `ASAAS_API_KEY` e `ASAAS_WEBHOOK_TOKEN` continuam valendo para o ambiente ativo. Para manter webhooks de ambientes distintos após uma troca, configure cada conta com sua URL com `ambiente` explícito e guarde as credenciais correspondentes no cofre. A URL legada sem parâmetro usa o ambiente ativo ou Sandbox quando ele estiver ausente. Se houver token definido no servidor, a rotação é feita nesse ambiente. Pause e desative cobranças antes de trocar variáveis de Produção, depois rode um novo teste e reative pelo painel. `ASAAS_ITEM_IMAGE_BASE64` pode adicionar uma imagem do item no checkout.
+
+### Bunny Stream
+
+Salve o **ID da biblioteca**, a **Chave de API do Stream**, o **Hostname da CDN** sem protocolo ou caminho e a **Chave de autenticação do player**. Use **Testar conexão** para validar o ID e a chave de API. No Bunny, autorize o domínio do Icarus, ative a autenticação por token do player e restrinja o acesso direto a arquivos. Abra uma aula que use um vídeo dessa biblioteca para conferir a reprodução assinada. O teste de API não verifica a chave de assinatura, o hostname da CDN nem as regras de reprodução do provedor.
+
+As variáveis correspondentes são `BUNNY_LIBRARY_ID`, `BUNNY_STREAM_API_KEY`, `BUNNY_CDN_HOST` e `BUNNY_TOKEN_KEY`. Em instalações que já usam `BUNNY_ALLOWED_DOMAIN`, a assinatura continua exigindo que o hostname de `APP_ORIGIN` seja igual a ele. Esse domínio é o do aplicativo. O hostname da CDN é o da biblioteca e o servidor sempre usa a URL oficial do iframe para reprodução.
+
+O cofre usa os registros `icarus_integration_asaas` e `icarus_integration_bunny`. Mantenha o backup recuperável do Vault com o backup da instalação. O roteiro de backup de aplicação abaixo abrange os schemas de aplicação, Auth e Storage. Para recuperação das credenciais, valide a restauração do Vault do próprio Supabase ou reprovisione as credenciais e faça novo teste antes de religar cobranças.
 
 ## Instalação hospedada e recursos comerciais
 
 - Provisione um projeto Supabase próprio e [aplique as migrations](#aplicar-migrações-no-supabase-hospedado). Configure `ICARUS_MODE=production`, o `APP_ORIGIN` exato, a URL pública HTTPS da API, a Site URL do Auth e a URL absoluta de `/auth/callback` na allowlist. Publique as Edge Functions de `supabase/functions/` com a política de JWT do `supabase/config.toml`. Homologue convite, recuperação e confirmação de email com o SMTP real. `EMAIL_CONFIGURED=true` apenas sinaliza a configuração no aplicativo.
 - Gere `dist/` com a URL do seu projeto e sua chave pública em `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. Sirva por HTTPS com fallback das rotas para `index.html`. Se o CAPTCHA do Supabase Auth estiver ligado (Turnstile), gere o build também com `VITE_TURNSTILE_SITE_KEY`, a chave do site de um widget que inclua o hostname da instalação; o segredo fica só no Supabase Auth. Sem essa chave, entrar, cadastrar, recuperar senha e reenviar confirmação são recusados pelo Auth. Ao redistribuir, acompanhe a aplicação com o [texto MIT](../LICENSE) e preservação das licenças de terceiros indicadas em [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). Use nomes, marcas e conteúdos para os quais você tenha autorização.
-- Publique os textos legais aprovados e configure planos, preços e ofertas reais no admin antes de abrir cadastro ou compra. O Asaas funciona apenas em Sandbox neste código. A homologação exige `ASAAS_ENV=sandbox`, `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKEN` e `ASAAS_ITEM_IMAGE_BASE64` no servidor, URL HTTPS do webhook e prova de pedido, confirmação e convite reconciliados. Cobrança real e emissão fiscal continuam pendentes.
-- Para Bunny, configure biblioteca, chave de assinatura e hostname autorizado (`BUNNY_LIBRARY_ID`, `BUNNY_TOKEN_KEY`, `BUNNY_ALLOWED_DOMAIN`). Confirme token, política de domínio/referrer e acesso aos arquivos originais no provedor. Mídia externa, links de encontros e vídeos de terceiros dependem de autorização e teste na instalação de destino.
+- Publique os textos legais aprovados e configure planos, preços e ofertas reais no admin antes de abrir cadastro ou compra. Configure o Asaas e o Bunny pelo [roteiro de integrações](#configurar-asaas-e-bunny-stream). Emissão fiscal, mídias externas e links de terceiros dependem da instalação de destino.
 - Configure o [primeiro administrador](#primeiro-administrador-hospedado) em uma instalação vazia. Configure o consumidor de convites no servidor com credencial de serviço e valide entrega real em ambiente autorizado.
 
 ### Aplicar migrações no Supabase hospedado

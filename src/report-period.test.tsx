@@ -9,6 +9,7 @@ afterEach(() => {
 });
 
 function mount() {
+  vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2024-03-01T02:30:00Z")); // Ainda é 29/02 em Brasília.
   const changed = vi.fn();
   function Filter() {
@@ -35,14 +36,23 @@ it("aplica atalhos na hora e conta sete dias civis no fim de fevereiro bissexto"
 
 it("seleção por dia aguarda duas pontas, aceita a ordem inversa e descarta o rascunho cancelado", () => {
   const changed = mount();
-  fireEvent.click(screen.getByRole("button", { name: "Período: Mês atual" }));
-  fireEvent.click(screen.getByRole("button", { name: "15/02/2024" }));
-  expect(screen.getByRole("button", { name: "Aplicar" })).toBeDisabled();
-  fireEvent.click(screen.getByRole("button", { name: "12/02/2024" }));
+  const trigger = screen.getByRole("button", { name: "Período: Mês atual" });
+  fireEvent.click(trigger);
+  const dialog = screen.getByRole("dialog");
+  const pickDay = (iso: string, label: string) => {
+    const button = dialog.querySelector(`button[data-day="${iso}"]`);
+    expect(button).toHaveAccessibleName(label);
+    fireEvent.click(button!);
+  };
+  const apply = within(dialog).getByRole("button", { name: "Aplicar" });
+  pickDay("2024-02-15", "15/02/2024");
+  expect(apply).toBeDisabled();
+  pickDay("2024-02-12", "12/02/2024");
   expect(changed).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Aplicar" }));
+  fireEvent.click(apply);
   expect(changed).toHaveBeenCalledExactlyOnceWith({ p_period: "custom", p_from: "2024-02-12", p_through: "2024-02-15" });
-  const open = () => fireEvent.click(screen.getByRole("button", { name: "Período: 12/02/2024 a 15/02/2024" }));
+  expect(trigger).toHaveAccessibleName("Período: 12/02/2024 a 15/02/2024");
+  const open = () => fireEvent.click(trigger);
   open();
   fireEvent.change(screen.getByLabelText("Data final"), { target: { value: "29022024" } });
   fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));

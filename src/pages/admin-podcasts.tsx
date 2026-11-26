@@ -97,7 +97,7 @@ function EpisodeEditor({ episode }: { episode?: AdminEpisodeDetail }) {
         disabled={archived}
         className="podcast-editor"
         onSave={async (data) => {
-          const youtube = episode?.youtube_id ?? parseYouTube(value(data, "youtube_url"));
+          const youtube = parseYouTube(value(data, "youtube_url"));
           if (!youtube) throw new AppError("Informe uma URL válida de vídeo do YouTube.");
           const spotifyInput = value(data, "spotify_url");
           const spotify = parseSpotify(spotifyInput);
@@ -122,8 +122,8 @@ function EpisodeEditor({ episode }: { episode?: AdminEpisodeDetail }) {
           if (savedId.current) navigate(`${route}/${savedId.current}`, { replace: true, state: { created: true } });
         }}
       >
-        <Field label="URL do vídeo no YouTube" hint={episode ? "Para usar outro vídeo, cadastre um novo episódio." : "Preencha os metadados abaixo. A miniatura vem do vídeo informado."}>
-          <input name="youtube_url" type="url" required maxLength={500} readOnly={Boolean(episode)}
+        <Field label="URL do vídeo no YouTube" hint="A miniatura vem do vídeo informado. Revise os capítulos se trocar o vídeo.">
+          <input name="youtube_url" type="url" required maxLength={500}
             defaultValue={episode ? `https://www.youtube.com/watch?v=${episode.youtube_id}` : ""} />
         </Field>
         <Field label="Tipo">

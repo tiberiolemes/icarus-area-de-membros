@@ -1,4 +1,4 @@
-import { ArrowRight, Folder, FolderOpen, LayoutGrid, List, LockKeyhole } from "lucide-react";
+import { ArrowRight, Folder, FolderOpen, LockKeyhole } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useRpc } from "../api";
 import type { Material, Page } from "../api";
@@ -49,10 +49,10 @@ export function Materials() {
             />
             {!pasta && <div className="materials-view" role="group" aria-label="Visualização do acervo">
               <button type="button" aria-pressed={!filesOnly} aria-label="Pastas e arquivos" onClick={() => updateParams({ vista: "" })}>
-                <LayoutGrid size={18} aria-hidden="true" />
+                Pastas e arquivos
               </button>
               <button type="button" aria-pressed={filesOnly} aria-label="Apenas arquivos da seção" onClick={() => updateParams({ vista: "arquivos" })}>
-                <List size={18} aria-hidden="true" />
+                Só arquivos
               </button>
             </div>}
           </div>
@@ -102,7 +102,7 @@ export function Materials() {
                       ? "Abra uma pasta para consultar os arquivos dela."
                       : <>
                         <p>Ainda não há materiais disponíveis nesta seção para sua conta.</p>
-                        <Link className="text-action" to="/app/configuracoes?aba=assinatura">Ver minha assinatura</Link>
+                        <Link className="text-action" to="/app/configuracoes?aba=assinatura">Ver planos disponíveis</Link>
                       </>}
                   </Empty>
                 )}
@@ -117,7 +117,7 @@ export function Materials() {
                   <h2 id="materials-access"><LockKeyhole size={20} aria-hidden="true" /> Materiais com acesso restrito</h2>
                   <p>Consulte sua assinatura para saber quais materiais estão disponíveis para sua conta.</p>
                 </div>
-                <Link className="button primary" to="/app/configuracoes?aba=assinatura">Consultar assinatura</Link>
+                <Link className="button primary" to="/app/configuracoes?aba=assinatura">Ver planos disponíveis</Link>
               </section>
             )}
           </div>

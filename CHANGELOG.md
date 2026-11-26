@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.8.0 · 2026-11-26
+
+- Asaas e Bunny Stream podem ser configurados no painel. As chaves ficam no Supabase Vault, com precedência para as variáveis do servidor. O Asaas separa Sandbox e Produção, oferece teste de conexão e token do webhook por ambiente e exige confirmação para ativar cobranças de produção.
+- O checkout preserva o ambiente do pedido, exige Turnstile em instalações de produção e limita as novas reservas a 60 por minuto. O evento de pagamento do checkout só libera acesso após conferência do pagamento na API do Asaas. As cobranças de produção exigem senha, 2FA e teste recente das credenciais atuais.
+- Recuperação de acesso orienta quem abre a redefinição sem sessão e indica a ação certa quando um link expira. O título e o foco acompanham o conteúdo carregado após a navegação. O cabeçalho das telas públicas mantém a ajuda ao lado da marca no celular.
+- Ajustes na ementa e no progresso dos módulos, no relógio e contraste do player, nas opções de materiais, nos caminhos para assinatura, nos selos da comunidade e na lista de chamados. Estados vazios e de carregamento têm tratamento compartilhado e os controles seguem o mesmo padrão nos dois temas.
+- O painel ganha busca por área conforme o papel da equipe. É possível reordenar espaços e perguntas do primeiro acesso, corrigir a URL de um episódio sem perder sua identidade e abrir a estrutura de um curso diretamente da lista. O editor reúne estado, acesso e certificado no cabeçalho e separa os dados do curso da publicação e da capa.
+- O seletor de arquivo da plataforma mostra a ação e o arquivo selecionado em português, com foco visível e envio disponível após a escolha.
+- O banco aplica limite por minuto às listas do aluno e limite adicional por hora à confirmação de senha. Remove contadores, nonces e sessões expiradas em lotes e mantém o histórico da auditoria. Reservas de foto recusam arquivos fora de JPG ou PNG de até 500 KB. Certificados legados usam somente assinatura do armazenamento oficial na tela, no PNG e no PDF.
+- O [guia de operação](docs/operations.md) inclui a atualização do Docker a partir da 0.2.0, a configuração das integrações e uma política de cabeçalhos para o frontend hospedado. Na atualização da 2.7.0, aplique as migrations novas e atualize Edge Functions e frontend da mesma versão.
+
 ## 2.7.0 · 2026-11-25
 
 - Área do aluno com navegação consistente no desktop e no celular. A barra inferior prioriza Materiais no quinto atalho e usa o próximo módulo disponível quando necessário.

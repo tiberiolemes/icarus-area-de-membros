@@ -1,4 +1,4 @@
-import { safeUrl, downloadBlob } from "./api";
+import { downloadBlob } from "./api";
 import type { Certificate } from "./api";
 import { brandAssetUrl, defaultLogo, logoBox } from "./brand";
 
@@ -62,15 +62,11 @@ export async function certificateCanvas(
     100,
     804,
   );
-  if (certificate.signature_path || certificate.signature_url) {
-    const url = brandAssetUrl(certificate.signature_path) ?? safeUrl(certificate.signature_url);
-    if (!url)
-      throw new Error(
-        "A assinatura do certificado tem um endereço inválido. Consulte o responsável pela emissão.",
-      );
+  const signatureUrl = brandAssetUrl(certificate.signature_path);
+  if (signatureUrl) {
     const signature = new Image();
     signature.crossOrigin = "anonymous";
-    signature.src = url;
+    signature.src = signatureUrl;
     try {
       await signature.decode();
       const ratio = Math.min(220 / signature.width, 70 / signature.height);

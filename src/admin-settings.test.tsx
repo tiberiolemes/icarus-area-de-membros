@@ -34,6 +34,55 @@ function show(tab: string, node = <AdminSettings />, path = "/admin/configuracoe
   );
 }
 
+it("Integrações exibe a origem, usa o teste AJAX e nunca preenche a chave salva", async () => {
+  vi.stubGlobal("fetch", vi.fn(async (_input, init) => {
+    const { action } = JSON.parse(String(init?.body));
+    return new Response(JSON.stringify(action === "integration-test"
+      ? { ok: false, message: "O Asaas recusou a chave de API." }
+      : { configured: true, test_ready: true, fields: { env: { source: "environment", value: "sandbox" }, api_key: { source: "vault", suffix: "abcd" }, webhook_token: { source: "vault", suffix: "5678" } }, webhook_url: "https://supabase.example.test/functions/v1/asaas-webhook", turnstile: true }), {
+      status: 200, headers: { "Content-Type": "application/json" },
+    });
+  }));
+  show("integracoes");
+  const key = await screen.findByLabelText(/^Chave de API/);
+  expect(key).toHaveValue("");
+  expect(screen.getByText(/termina em abcd/)).toBeInTheDocument();
+  expect(screen.getByRole("combobox", { name: "Ambiente" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Copiar URL do webhook" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Testar conexão" }));
+  const error = await screen.findByText("O Asaas recusou a chave de API.");
+  expect(error).toBeInTheDocument();
+  expect(screen.getByText("Com erro")).toBeInTheDocument();
+});
+
+it("Cobranças em produção exige teste aprovado e uma reautenticação separada", async () => {
+  let approved = false, enabled = false;
+  const calls: Record<string, unknown>[] = [];
+  vi.stubGlobal("fetch", vi.fn(async (_input, init) => {
+    const body = JSON.parse(String(init?.body));
+    calls.push(body);
+    if (body.action === "integration-test") approved = true;
+    if (body.action === "integration-production") enabled = body.enabled;
+    const data = body.password ? { token: "fake-reauth-token" }
+      : body.action === "integration-test" ? { ok: true, message: "Conexão com Asaas confirmada." }
+        : { configured: true, can_write: true, test_ready: true, production_test_valid: approved, production_enabled: enabled,
+          fields: { env: { source: "vault", value: "production" }, api_key: { source: "vault", suffix: "1234" } } };
+    return new Response(JSON.stringify(data), { status: 200, headers: { "Content-Type": "application/json" } });
+  }));
+  show("integracoes");
+  const toggle = await screen.findByRole("switch", { name: "Cobranças em produção" });
+  expect(toggle).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Testar conexão" }));
+  await waitFor(() => expect(toggle).toBeEnabled());
+  fireEvent.click(toggle);
+  const dialog = await screen.findByRole("dialog", { name: "Ativar cobranças em produção" });
+  expect(calls.some((body) => body.action === "integration-production")).toBe(false);
+  fireEvent.change(within(dialog).getByLabelText("Senha atual"), { target: { value: "fake-password" } });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Ativar cobranças" }));
+  await waitFor(() => expect(toggle).toBeChecked());
+  expect(calls).toContainEqual({ action: "integration-production", provider: "asaas", enabled: true, reauth_token: "fake-reauth-token" });
+});
+
 const tabs = [
   ["onboarding", "Onboarding", "Onboarding dos membros"],
   ["marca", "Plataforma e marca", "Plataforma, marca e white label"],

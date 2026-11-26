@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { Briefcase, Check, ClipboardList, ListChecks, TrendingUp, Users } from "lucide-react";
+import { Briefcase, Check, ListChecks, TrendingUp, Users } from "lucide-react";
 import "./onboarding.css";
 import {
   cache,
@@ -363,6 +363,7 @@ export function Access({
 }: {
   mode: "login" | "register" | "forgot" | "reset" | "confirm";
 }) {
+  const { session, loading } = useAuth();
   const [params] = useSearchParams(),
     navigate = useNavigate(),
     [message, setMessage] = useState("");
@@ -371,6 +372,7 @@ export function Access({
   if (mode === "login") return <Login target={target} />;
   // Os dois indicadores vêm da mesma regra no banco; fechado, o cadastro mostra só o aviso e a saída.
   const registerClosed = !context.data?.registration_enabled || !context.data?.legal_ready;
+  const resetUnavailable = mode === "reset" && !session;
   const titles = {
     login: "Entre na sua área de membros",
     register: "Crie sua conta",
@@ -383,6 +385,10 @@ export function Access({
       <div className="access">
         <Heading title={titles[mode]} />
         {message && <Notice>{message}</Notice>}
+        {resetUnavailable && (loading ? <Loading /> : <Notice>
+          <p>Abra o link mais recente enviado por email para definir uma nova senha.</p>
+          <Link className="button" to="/recuperar">Solicitar recuperação</Link>
+        </Notice>)}
         {mode === "register" && (
           <QueryState query={context}>
             {registerClosed && (
@@ -394,7 +400,7 @@ export function Access({
             )}
           </QueryState>
         )}
-        {(mode !== "register" || (context.data && !registerClosed)) && <Form
+        {!resetUnavailable && (mode !== "register" || (context.data && !registerClosed)) && <Form
           label={
             {
               login: "Entrar",
@@ -568,6 +574,9 @@ export function Callback() {
   const navigate = useNavigate(),
     [params] = useSearchParams(),
     [error, setError] = useState("");
+  const recovery = isRecoveryLink || params.get("type") === "recovery";
+  const confirmation = ["signup", "email"].includes(params.get("type") ?? "");
+  const returnTo = encodeURIComponent(internalPath(params.get("returnTo")));
   useEffect(() => {
     let alive = true;
     async function complete() {
@@ -610,11 +619,14 @@ export function Callback() {
   return (
     <PublicFrame>
       <div className="access">
-        <Heading title="Confirmando seu acesso" />
+        <Heading title={error ? "Link expirado ou inválido" : "Confirmando seu acesso"} />
         {error ? (
           <Notice error>
             <p>{error}</p>
-            <Link className="button" to="/recuperar">Solicitar novo link</Link>
+            <div className="actions">
+              {!recovery && <Link className="button" to={`/confirmar-email?returnTo=${returnTo}`}>Reenviar confirmação</Link>}
+              {!confirmation && <Link className="button" to={`/recuperar?returnTo=${returnTo}`}>Solicitar recuperação</Link>}
+            </div>
           </Notice>
         ) : (
           <p role="status">Aguarde a confirmação da sua sessão…</p>
@@ -765,8 +777,8 @@ export function CompanyFields({
               key={question.id}
               label={
                 question.label +
-                (question.required ||
-                (question.key === "name" && companyRequired)
+                (!choiceCards && (question.required ||
+                (question.key === "name" && companyRequired))
                   ? " *"
                   : "")
               }
@@ -838,18 +850,6 @@ export function Onboarding() {
     >
       <PublicFrame>
         <div className="student-onboarding-content">
-          <div className="student-onboarding-progress">
-            <div>
-              <ClipboardList size={20} aria-hidden="true" />
-              <strong>Configuração inicial</strong>
-              <span>Etapa 2 de 2 · Perfil</span>
-            </div>
-            <progress
-              aria-label="Etapas concluídas"
-              max={2}
-              value={boot.data?.profile.onboarding_complete ? 2 : 1}
-            />
-          </div>
           <QueryState query={boot}>
             {boot.data && (
               <Form

@@ -111,7 +111,7 @@ function PostMeta({ post }: { post: Post & { avatar_id?: string | null } }) {
 function ReviewInfo({ guide = false }: { guide?: boolean }) {
   const modules = useModules();
   return (
-    <aside
+    <section
       className="community-card community-info"
       aria-label="Moderação da comunidade"
     >
@@ -128,13 +128,13 @@ function ReviewInfo({ guide = false }: { guide?: boolean }) {
           Como publicar na comunidade <ArrowRight size={16} aria-hidden="true" />
         </Link>
       )}
-    </aside>
+    </section>
   );
 }
 
 function SpaceInfo({ space, link = false }: { space: Space; link?: boolean }) {
   return (
-    <aside
+    <section
       className="community-card community-info community-side-context"
       aria-label="Espaço da comunidade"
     >
@@ -153,7 +153,7 @@ function SpaceInfo({ space, link = false }: { space: Space; link?: boolean }) {
           Ver publicações do espaço <ArrowRight size={16} aria-hidden="true" />
         </Link>
       )}
-    </aside>
+    </section>
   );
 }
 
@@ -436,15 +436,15 @@ export function Community() {
         <div className="community-sidebar">
           {currentSpace?.description && <SpaceInfo space={currentSpace} />}
           {modules.ranking && (
-            <aside className="community-card community-info community-side-context">
-              <h2>
+            <section className="community-card community-info community-side-context" aria-labelledby="community-ranking">
+              <h2 id="community-ranking">
                 <Trophy size={18} aria-hidden="true" /> Ranking
               </h2>
               <p>Acompanhe sua colocação e consulte a classificação por período.</p>
               <Link className="community-context-link" to="/app/ranking">
                 Consultar ranking <ArrowRight size={16} aria-hidden="true" />
               </Link>
-            </aside>
+            </section>
           )}
           <ReviewInfo guide />
         </div>

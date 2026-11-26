@@ -122,8 +122,13 @@
 }
 
 .stitch-shell > .workspace {
+  background-color: var(--stitch-canvas);
   background-image: linear-gradient(var(--shell-topbar-underlay) var(--shell-topbar-height), transparent var(--shell-topbar-height));
 }
+
+.admin-search-group h3 { margin-block: var(--stitch-space-md) var(--stitch-space-xs); }
+.admin-search-group ul { list-style: none; margin: 0; padding: 0; }
+.admin-search-group a { display: flex; align-items: center; min-height: var(--stitch-control-min-size); }
 
 .stitch-shell > .workspace > .topbar {
   position: sticky;
@@ -668,8 +673,8 @@
       padding: 0;
       background: transparent;
       color: var(--stitch-text-secondary);
-      font-size: 10px;
-      line-height: 12px;
+      font-size: var(--stitch-type-label-uppercase-size);
+      line-height: var(--stitch-type-label-uppercase-line);
     }
 
     .mobile-frame-plan[data-role="admin"] {

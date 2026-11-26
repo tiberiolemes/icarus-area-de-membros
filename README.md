@@ -3,7 +3,7 @@
 ![Icarus · Área de membros e cursos online · Código aberto sob licença MIT](docs/assets/icarus-banner-github.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-2.7.0-black)
+![Version](https://img.shields.io/badge/version-2.8.0-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)
@@ -86,7 +86,7 @@ Banco e integrações nativas exigem instalação local e fixtures próprias. Pa
 
 O [modelo do GitHub Actions](docs/ci/README.md) descreve a automação. A execução da trilha nativa em Actions aguarda um runner com Docker dedicado.
 
-Na 2.7.0, a área do aluno tem navegação consistente, atalho de Materiais no celular, retomada na página do curso e Central de ajuda integrada à sessão. A aba Assinatura destaca o plano atual e o acesso ao pagamento preserva o pedido ao voltar do login. Para atualizar da 2.6.0, aplique `202611250009_student_experience.sql` antes de servir o frontend.
+Na 2.8.0, o administrador configura Asaas e Bunny Stream no painel, com credenciais guardadas no servidor. A versão melhora a recuperação de acesso, o player em telas pequenas, a organização do aprendizado e os estados das telas. Para atualizar da 2.7.0, aplique as migrations novas e atualize as Edge Functions e o frontend da mesma versão. Veja o [Changelog](CHANGELOG.md) e o [guia de operação](docs/operations.md).
 
 Desde a 2.6.0, o painel segue o padrão de Equipe e controle de acesso. Membros, pedidos e chamados têm filtros e indicadores calculados no servidor. Somente administradores recebem o e-mail do membro no diretório e na ficha. A moderação reúne comentários pendentes numa fila e a auditoria mostra nomes e ações em português. As exportações CSV feitas pela tela de Membros ou Pedidos são registradas na auditoria. Para atualizar da 2.5.1, aplique as migrations `202611250006` a `202611250008` antes de servir o novo frontend. Veja o [roteiro de atualização](docs/operations.md#atualizar-de-versão).
 

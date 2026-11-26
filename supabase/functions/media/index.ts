@@ -1,5 +1,6 @@
 import { actor, defaults, rpc, type Dependencies } from "../_shared/client.ts";
-import { appOrigin, endpoint, HttpError, json, required, sha256, text, uuid } from "../_shared/http.ts";
+import { endpoint, HttpError, json, sha256, text, uuid } from "../_shared/http.ts";
+import { bunnyConfig } from "../_shared/integrations.ts";
 import { publicStorageUrl } from "../_shared/storage.ts";
 export const createHandler = (d: Dependencies = defaults) => endpoint(async (req) => {
   const a = (await actor(req, d))!, body = await json(req);
@@ -12,9 +13,10 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   if (!gate?.can_access) throw new HttpError(403, "FORBIDDEN", "Acesso não permitido.");
   const expires = Math.floor(Date.now() / 1000) + 120;
   if (gate.video_id && gate.provider === "bunny") {
-    const [library, key, domain] = required(d.env, "BUNNY_LIBRARY_ID", "BUNNY_TOKEN_KEY", "BUNNY_ALLOWED_DOMAIN");
-    if (!/^\d+$/.test(library) || !/^[a-f0-9-]{36}$/i.test(gate.video_id) || new URL(appOrigin(d.env)).hostname !== domain) throw new HttpError(503, "CONFIGURATION_REQUIRED", "Vídeo ainda não configurado.");
-    const token = await sha256(key + gate.video_id + expires);
+    const { playbackReady, fields } = await bunnyConfig(d, a.admin);
+    if (!playbackReady || !/^[a-f0-9-]{36}$/i.test(gate.video_id)) throw new HttpError(503, "CONFIGURATION_REQUIRED", "Vídeo ainda não configurado.");
+    const library = fields.library_id.value;
+    const token = await sha256(fields.token_key.value! + gate.video_id + expires);
     return { url: `https://player.mediadelivery.net/embed/${library}/${gate.video_id}?token=${token}&expires=${expires}`, expires_at: new Date(expires * 1000).toISOString(), provider: "bunny" };
   }
   if (!gate.storage_path || gate.storage_path.includes("..") || gate.storage_path.startsWith("/")) throw new HttpError(503, "CONFIGURATION_REQUIRED", "Arquivo ainda não configurado.");

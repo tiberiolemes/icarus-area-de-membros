@@ -25,6 +25,8 @@ const fixtures: Record<string, { id: string; [key: string]: unknown }[]> = {
       title: "Curso editorial",
       slug: "editorial",
       status: "published",
+      access_mode: "plans",
+      certificate_enabled: true,
     },
   ],
   modules: [
@@ -142,6 +144,10 @@ it("abre a estrutura pela listagem e preserva a ordem confirmada pelo servidor",
     await screen.findByRole("link", { name: "Estrutura e aulas" }),
   );
   expect(await screen.findByText("1 módulo · 2 aulas")).toBeInTheDocument();
+  const summary = screen.getByRole("group", { name: "Situação do curso" });
+  expect(summary).toHaveTextContent("Publicado");
+  expect(summary).toHaveTextContent("Planos selecionados");
+  expect(summary).toHaveTextContent("Certificado disponível");
   expect(screen.queryByRole("button", { name: "Subir Revisão" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Reordenar" }));
   fireEvent.click(screen.getByRole("button", { name: "Subir Revisão" }));

@@ -183,14 +183,23 @@
 .admin-settings .settings-status [data-configured] { font-weight: var(--stitch-type-headline-sm-weight); }
 .admin-settings .settings-status [data-configured="true"] { color: var(--stitch-status-success); }
 .admin-settings .settings-status [role="alert"] { color: var(--stitch-error); }
+.admin-settings .settings-status > div { display: grid; gap: var(--stitch-space-sm); justify-items: start; }
 
 .admin-settings .settings-provider-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: var(--stitch-space-md);
 }
 
-.admin-settings .settings-provider-grid .button { justify-self: start; }
+.settings-copy {
+  display: grid;
+  gap: var(--stitch-space-xs);
+  min-width: 0;
+}
+
+.settings-copy button { justify-self: start; }
+.settings-copy [role="status"]:empty { display: none; }
 
 .admin-settings .settings-services summary {
   align-content: center;
@@ -232,6 +241,13 @@
 }
 
 .admin-settings .settings-module-state[data-on="true"] { color: var(--stitch-status-success); }
+
+.admin-settings .admin-row h3 > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--stitch-control-min-size);
+}
+.admin-settings :is(.admin-row, .search) :is(a.button, button) { white-space: nowrap; }
 .admin-settings .settings-modules .notification-switch,
 .admin-settings .settings-modules .notification-switch:hover { border: 0; background: transparent; }
 .admin-settings .settings-module-status { min-block-size: 1.5em; }

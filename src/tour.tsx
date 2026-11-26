@@ -165,8 +165,8 @@ const steps = [
   },
   {
     target: "admin-settings-providers",
-    title: "Consulte a configuração dos provedores",
-    body: "Escolha Gateway Asaas ou Bunny Stream. Atualizar estado consulta a configuração no servidor.",
+    title: "Configure pagamentos e vídeo",
+    body: "Escolha o provedor, salve com senha e 2FA e use Testar conexão. No Asaas, copie a URL e o token do webhook. Cobranças em produção têm confirmação própria.",
   },
   {
     target: "member-filters",

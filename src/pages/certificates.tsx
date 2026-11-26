@@ -278,7 +278,7 @@ export function CertificatePage({ verify = false }: { verify?: boolean }) {
         {certificate ? (
           <div ref={result} tabIndex={-1} className="certificate-register">
             <div>
-              <h1>{verify ? "Verificação de certificado" : "Certificado de conclusão"}</h1>
+              <h1 tabIndex={-1}>{verify ? "Verificação de certificado" : "Certificado de conclusão"}</h1>
               <code>{certificate.code}</code>
             </div>
             <strong role="status" aria-label="Situação do certificado">

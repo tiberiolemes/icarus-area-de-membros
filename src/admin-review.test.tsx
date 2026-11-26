@@ -29,7 +29,8 @@ it.each(["", "   "])("identifica uma ficha sem nome sem inventar dados pessoais 
   render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={["/admin/membros/12345678-member-id"]}><Routes>
     <Route path="/admin/membros/:id" element={<MemberEditor />} />
   </Routes></MemoryRouter></QueryClientProvider>);
-  expect(await screen.findByRole("heading", { name: "Membro sem nome · 12345678" })).toBeInTheDocument();
+  const heading = await screen.findByText("Membro sem nome · 12345678", { selector: "h1" });
+  expect(heading).toHaveAccessibleName("Membro sem nome · 12345678");
 });
 it("a revisão local anuncia preparação em português sem chamar a mutação antes da reauth", async () => {
   const requests: string[] = [];

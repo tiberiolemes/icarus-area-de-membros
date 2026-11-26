@@ -12,7 +12,7 @@ import { createPortal } from "react-dom";
 import type { FormEvent, InputHTMLAttributes, ReactNode } from "react";
 import { Link, useLocation, useNavigationType } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
-import { AlertCircle, ArrowLeft, Check, Crown, Eye, EyeOff, Search as SearchIcon, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, Check, Crown, Eye, EyeOff, Inbox, Search as SearchIcon, X } from "lucide-react";
 import { errorMessage } from "./api";
 import "./stitch-primitives.css";
 
@@ -127,14 +127,13 @@ export function AdminBadge() {
 export function Loading() {
   return (
     <div className="skeleton" role="status" aria-label="Carregando conteúdo">
-      <span />
-      <span />
-      <span />
+      <p>Carregando conteúdo…</p>
+      <div aria-hidden="true"><span /><span /><span /></div>
     </div>
   );
 }
 export function Empty({ children }: { children: ReactNode }) {
-  return <div className="empty">{children}</div>;
+  return <div className="empty"><Inbox size={20} aria-hidden="true" /><div>{children}</div></div>;
 }
 export function QueryState({
   query,
@@ -585,28 +584,25 @@ export function RouteFocus({ name = "Icarus" }: { name?: string }) {
     const searching = previousPath.current === pathname && navigation !== "POP" &&
       document.activeElement?.closest('form[role="search"]');
     previousPath.current = pathname;
-    let stopWaiting: (() => void) | undefined;
+    let observer: MutationObserver | undefined;
     if (!searching) {
       const content = document.getElementById("main") ?? document.body;
-      function focusHeading() {
+      let lastHeading: HTMLElement | null = null;
+      function updateHeading(onNavigation: boolean) {
         const heading = content.querySelector<HTMLElement>("h1");
         // Cada tela ganha título próprio (WCAG 2.4.2): o H1 que recebe o foco e o nome da instalação.
-        if (heading?.textContent) document.title = `${heading.textContent.trim()} · ${installation.current}`;
-        heading?.focus({ preventScroll: true });
-        return heading === document.activeElement;
-      }
-      if (!focusHeading()) {
-        const observer = new MutationObserver(() => {
-          if (focusHeading()) stop();
-        });
-        function stop() {
-          observer.disconnect();
-          document.removeEventListener("focusin", stop, true);
+        if (!heading?.textContent || heading.closest("[hidden]")) return;
+        const title = `${heading.textContent.trim()} · ${installation.current}`;
+        if (document.title !== title) document.title = title;
+        if (heading !== lastHeading && (onNavigation || document.activeElement === document.body || document.activeElement === lastHeading)) {
+          if (!heading.hasAttribute("tabindex")) heading.tabIndex = -1;
+          heading.focus({ preventScroll: true });
         }
-        observer.observe(content, { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "style", "tabindex"] });
-        document.addEventListener("focusin", stop, true);
-        stopWaiting = stop;
+        lastHeading = heading;
       }
+      updateHeading(true);
+      observer = new MutationObserver(() => updateHeading(false));
+      observer.observe(content, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["hidden"] });
       window.scrollTo(
       0,
       navigation === "POP"
@@ -617,7 +613,7 @@ export function RouteFocus({ name = "Icarus" }: { name?: string }) {
       );
     }
     return () => {
-      stopWaiting?.();
+      observer?.disconnect();
       scrollPositions.set(key, window.scrollY);
       scrollPositions.set(pathname + search, window.scrollY);
     };

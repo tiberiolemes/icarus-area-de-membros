@@ -42,6 +42,20 @@ it("o seletor da foto aceita só JPG e PNG de até 500 KB", () => {
   expect(screen.getByText("JPG ou PNG de até 500 KB.")).toBeInTheDocument();
 });
 
+it("a capa mostra um seletor em português com o nome do arquivo e habilita o envio após a escolha", () => {
+  render(<Upload kind="course-cover" resourceId="curso-1" />);
+  const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
+  const submit = screen.getByRole("button", { name: "Enviar arquivo" });
+  expect(screen.getByText("Escolher arquivo")).toBeInTheDocument();
+  expect(screen.getByText("Nenhum arquivo selecionado")).toBeInTheDocument();
+  expect(input).toHaveAccessibleDescription("Imagem raster até 5 MiB; anexos até 20 MiB, conforme o tipo permitido.");
+  expect(submit).toBeDisabled();
+  fireEvent.change(input, { target: { files: [new File([png], "capa.png", { type: "image/png" })] } });
+  expect(screen.getByText("capa.png")).toBeInTheDocument();
+  expect(submit).toBeEnabled();
+  expect(invoke).not.toHaveBeenCalled();
+});
+
 it("recusa foto acima de 500 KB dizendo que o problema é o tamanho", async () => {
   const input = choose(new File([jpeg(500 * 1024 + 1)], "grande.jpg", { type: "image/jpeg" }));
   expect(await screen.findByText("Esta foto passa de 500 KB. Escolha uma menor, em JPG ou PNG.")).toBeInTheDocument();
@@ -108,7 +122,9 @@ it("Salvar foto envia o recorte em JPEG com fundo branco, confirma e encerra a p
   expect([invoke.mock.calls[0][0], sent.name, sent.type]).toEqual(["upload", "avatar.jpg", "image/jpeg"]);
   expect(onUploaded).toHaveBeenCalledOnce();
   expect(screen.getByRole("button", { name: "Salvar foto" })).toBeDisabled();
-  const leaving = new Event("beforeunload", { cancelable: true });
-  window.dispatchEvent(leaving);
-  expect(leaving.defaultPrevented).toBe(false);
+  await waitFor(() => {
+    const leaving = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(leaving);
+    expect(leaving.defaultPrevented).toBe(false);
+  });
 });

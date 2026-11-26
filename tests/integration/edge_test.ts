@@ -30,6 +30,7 @@ function deps(route: Route = () => undefined, config: Record<string, string> = {
     if (url.pathname === "/auth/v1/user") return response(user);
     if (url.pathname.endsWith("/app_touch_session")) return response({ expires_at: "2026-11-23T01:00:00Z" });
     if (url.pathname.endsWith("/app_bootstrap")) return response({ profile: { role: "member" } });
+    if (url.pathname.endsWith("/app_integration_credentials")) return response({});
     if (url.pathname.endsWith("/app_checkout_throttle") || url.pathname.endsWith("/app_reauth_throttle")) return response(null);
     throw Error(`Unexpected fake transport request: ${url.pathname}`);
   }) as typeof fetch };
@@ -41,19 +42,201 @@ function request(body: unknown, { token = jwt(), headers = {} }: { token?: strin
 const billing = { ASAAS_API_KEY: "sandbox-test-only", ASAAS_WEBHOOK_TOKEN: "synthetic-webhook-token-32-characters", ASAAS_ENV: "sandbox", ASAAS_ITEM_IMAGE_BASE64: "synthetic-image" };
 const buyer = { name: "DEMONSTRAÇÃO comprador", email: "new@demo.icarus.invalid", document: "00000000000", phone: "00000000000" };
 const purchase = { plan_id: id, method: "PIX", installments: 1, attempt_key: "synthetic-attempt", buyer, legal_version_ids: [id, other], marketing_opt_in: false };
+const paidPayments = (value: number, status = "RECEIVED") => response({ hasMore: false, data: [{ status, billingType: "PIX", value }] });
 
 Deno.test("capabilities exposes only public capability flags", async () => {
   const { d, requests } = deps(); const result = await capabilities(d)(new Request("http://localhost/test"));
-  equal(await result.json(), { asaas: false, bunny: false, storage: true, email: "local", mode: "local" }); equal(requests.length, 0);
+  equal(await result.json(), { asaas: false, bunny: false, storage: true, email: "local", mode: "local" });
+  assert(requests.every((r) => r.url.endsWith("app_integration_credentials") && r.headers.get("apikey") === "local-test-secret"));
 });
-Deno.test("missing provider denies checkout before DB or network", async () => {
+Deno.test("missing provider denies checkout after the Vault check and before any payment operation", async () => {
   const { d, requests } = deps(); const result = await checkout(d)(request(purchase, { token: null }));
-  equal(result.status, 503); equal((await result.json()).error.code, "CONFIGURATION_REQUIRED"); equal(requests.length, 0);
+  equal(result.status, 503); equal((await result.json()).error.code, "CONFIGURATION_REQUIRED");
+  assert(requests.every((r) => r.url.endsWith("app_integration_credentials")));
 });
 Deno.test("invalid JWT never reaches resource RPC", async () => {
   const { d, requests } = deps((url) => url.pathname === "/auth/v1/user" ? response({ msg: "invalid JWT" }, 401) : undefined);
   equal((await media(d)(request({ kind: "lesson", id }))).status, 401);
   assert(!requests.some((r) => r.url.includes("app_media_access")));
+});
+Deno.test("Vault supplies checkout credentials without forwarding them to the client", async () => {
+  const { d, requests } = deps((url) =>
+    url.pathname.endsWith("app_integration_credentials")
+      ? response({ env: "sandbox", sandbox_api_key: "fake-vault-asaas-key", sandbox_webhook_token: billing.ASAAS_WEBHOOK_TOKEN })
+      : reserve(url));
+  const result = await checkout(d)(request(purchase, { token: null }));
+  equal(result.status, 200);
+  assert(!(await result.text()).includes("fake-vault-asaas-key"));
+  equal(requests.find((r) => r.url.includes("api-sandbox.asaas.com"))?.headers.get("access_token"), "fake-vault-asaas-key");
+  equal(requests.find((r) => r.url.endsWith("app_integration_credentials"))?.headers.get("apikey"), "local-test-secret");
+});
+Deno.test("a signed Bunny embed uses the Vault and honors a per-field environment override", async () => {
+  const { d } = deps((url) => url.pathname.endsWith("app_media_access")
+    ? response({ can_access: true, provider: "bunny", video_id: other })
+    : url.pathname.endsWith("app_integration_credentials")
+      ? response({ library_id: "842", token_key: "fake-vault-signing-key", api_key: "fake-stream-key", cdn_host: "vz-teste.b-cdn.net" })
+      : undefined, { BUNNY_LIBRARY_ID: "902" });
+  const result = await media(d)(request({ kind: "lesson", id }));
+  equal(result.status, 200);
+  const url = new URL((await result.json()).url);
+  equal(url.pathname, `/embed/902/${other}`);
+  equal(url.searchParams.get("token"), await sha256("fake-vault-signing-key" + other + url.searchParams.get("expires")));
+});
+Deno.test("admin checks connection with environment priority and receives only safe results", async () => {
+  for (const status of [200, 401]) {
+    const { d, requests } = deps((url) => {
+      if (url.pathname.endsWith("app_bootstrap")) return response({ profile: { role: "admin" } });
+      if (url.pathname.endsWith("app_integration_credentials")) return response({ env: "sandbox", sandbox_api_key: "fake-vault-key", sandbox_webhook_token: billing.ASAAS_WEBHOOK_TOKEN });
+      if (url.pathname.endsWith("app_admin_asaas_production")) return response(null);
+      if (url.hostname === "api.asaas.com") return response({ balance: 9999, internal: "não mostrar" }, status);
+    }, { ASAAS_ENV: "production", ASAAS_API_KEY: "fake-environment-key", TURNSTILE_SECRET_KEY: "test-captcha" });
+    const result = await capabilities(d)(request({ action: "integration-test", provider: "asaas" }));
+    equal(result.status, 200);
+    const data = await result.json();
+    equal(data.ok, status === 200);
+    assert(!JSON.stringify(data).includes("fake-environment-key") && !JSON.stringify(data).includes("balance"));
+    const call = requests.find((r) => r.url.includes("api.asaas.com"));
+    equal(call?.url, "https://api.asaas.com/v3/payments?limit=1");
+    equal(call?.headers.get("access_token"), "fake-environment-key");
+  }
+});
+Deno.test("Bunny connection uses the Stream key and never sends it to the configured CDN", async () => {
+  for (const status of [200, 401]) {
+    const { d, requests } = deps((url) => {
+      if (url.pathname.endsWith("app_bootstrap")) return response({ profile: { role: "admin" } });
+      if (url.pathname.endsWith("app_integration_credentials")) return response({
+        library_id: "42", api_key: "synthetic-stream-key", token_key: "synthetic-player-key", cdn_host: "vz-fixture.b-cdn.net",
+      });
+      if (url.hostname === "video.bunnycdn.com") return response({ items: ["fixture"] }, status);
+    });
+    const result = await capabilities(d)(request({ action: "integration-test", provider: "bunny" }));
+    equal((await result.json()).ok, status === 200);
+    const calls = requests.filter((r) => !r.url.startsWith("http://127.0.0.1"));
+    equal(calls.map((r) => r.url), ["https://video.bunnycdn.com/library/42/videos?itemsPerPage=1"]);
+    equal(calls[0].headers.get("accesskey"), "synthetic-stream-key");
+  }
+});
+Deno.test("rotation returns a newly generated token once, only after MFA and without accepting a supplied token", async () => {
+  let stored: Record<string, string> = { env: "sandbox", sandbox_api_key: "fake-original-api" };
+  const { d, requests } = deps((url, init) => {
+    if (url.pathname.endsWith("app_bootstrap")) return response({ profile: { role: "admin" } });
+    if (url.pathname === "/auth/v1/user") return response({ ...user, factors: [{ status: "verified" }] });
+    if (url.pathname === "/auth/v1/token") return response({ access_token: jwt({ session_id: id }), refresh_token: "synthetic-refresh", token_type: "bearer", expires_in: 3600, user });
+    if (url.pathname === "/auth/v1/logout") return response({});
+    if (url.pathname.endsWith("app_confirm_reauth")) return response({ expires_at: new Date(Date.now() + 300_000).toISOString() });
+    if (url.pathname.endsWith("app_integration_credentials")) return response(stored);
+    if (url.pathname.endsWith("app_admin_save_integration")) {
+      const fields = JSON.parse(String(init.body)).p_fields;
+      stored = { ...stored, sandbox_webhook_token: fields.webhook_token, _updated_at: "2026-11-26T00:00:00Z", _updated_by_name: "Admin de teste" };
+      return response(null);
+    }
+  });
+  const body = { action: "rotate-asaas-webhook", environment: "sandbox", password: "fake-admin-password" };
+  equal((await reauthenticate(d)(request(body))).status, 403);
+  const bearer = { token: jwt({ aal: "aal2" }) };
+  equal((await reauthenticate(d)(request({ ...body, webhook_token: "externally-supplied" }, bearer))).status, 422);
+  equal((await capabilities(d)(request({ action: "integration-save", provider: "asaas", fields: { env: "sandbox", webhook_token: "externally-supplied" } }, bearer))).status, 422);
+  const generatedResponse = await reauthenticate(d)(request(body, bearer));
+  equal(generatedResponse.headers.get("cache-control"), "no-store");
+  const { webhook_token: generated } = await generatedResponse.json();
+  assert(/^[a-f0-9]{64}$/.test(generated));
+  const state = await (await capabilities(d)(request({ action: "integration-status", provider: "asaas" }, bearer))).text();
+  assert(!state.includes(generated) && !state.includes("fake-original-api"));
+  const result = JSON.parse(state);
+  equal(result.fields.webhook_token.suffix, generated.slice(-4));
+  equal(result.updated_by, "Admin de teste");
+  equal(requests.filter((r) => r.url.endsWith("app_admin_save_integration")).length, 1);
+});
+Deno.test("member cannot inspect integrations and missing Bunny or webhook stays 503", async () => {
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_media_access") ? response({ can_access: true, provider: "bunny", video_id: other }) : undefined);
+  const result = await capabilities(d)(request({ action: "integration-status", provider: "bunny" }));
+  equal(result.status, 403);
+  assert(!requests.some((r) => r.url.endsWith("app_integration_credentials")));
+  equal((await media(d)(request({ kind: "lesson", id }))).status, 503);
+  equal((await webhook(d)(request({}, { token: null }))).status, 503);
+});
+Deno.test("checkout in production requires switch proof for the current keys and the Turnstile secret", async () => {
+  const apiKey = "fake-asaas-production";
+  const config = { ...billing, ASAAS_ENV: "production", ASAAS_API_KEY: apiKey, ICARUS_MODE: "production" };
+  const fingerprint = await sha256(JSON.stringify([apiKey, billing.ASAAS_WEBHOOK_TOKEN]));
+  for (const [activeHash, captcha, status, code] of [
+    [undefined, "fake-captcha", 503, "CONFIGURATION_REQUIRED"],
+    ["stale", "fake-captcha", 503, "CONFIGURATION_REQUIRED"],
+    [fingerprint, "", 503, "CAPTCHA_UNAVAILABLE"],
+    [fingerprint, "fake-captcha", 200, undefined],
+  ] as const) {
+    const { d, requests } = deps((url) => {
+      if (url.pathname.endsWith("app_integration_credentials")) return response({ _production_active_hash: activeHash });
+      if (url.hostname === "challenges.cloudflare.com") return response({ success: true });
+      if (url.pathname.endsWith("app_checkout_begin")) return response({ order_id: id, asaas_environment: "production", create_gateway: true, amount_cents: 1000, plan_name: "Teste" });
+      if (url.hostname === "api.asaas.com") return response({ id: other });
+      if (url.pathname.endsWith("app_checkout_gateway")) return response({ id });
+    }, { ...config, TURNSTILE_SECRET_KEY: captcha });
+    const result = await checkout(d)(request({ ...purchase, captcha_token: "synthetic-captcha-response" }, { token: null }));
+    equal(result.status, status);
+    const order = await result.json();
+    if (code) equal(order.error.code, code);
+    else equal(new URL(order.url).hostname, "asaas.com");
+    equal(requests.some((r) => r.url.includes("api.asaas.com")), status === 200);
+  }
+});
+Deno.test("production activation accepts only recent provider proof and sends reauthentication to the restricted RPC", async () => {
+  const apiKey = "fake-production-api-key";
+  const fingerprint = await sha256(JSON.stringify([apiKey, billing.ASAAS_WEBHOOK_TOKEN]));
+  let proofTime = new Date(Date.now() - 25 * 3_600_000).toISOString();
+  const { d, requests } = deps((url, init) => {
+    if (url.pathname === "/auth/v1/user") return response({ ...user, factors: [{ status: "verified" }] });
+    if (url.pathname.endsWith("app_bootstrap")) return response({ profile: { role: "admin" } });
+    if (url.pathname.endsWith("app_integration_credentials")) return response({
+      env: "production", production_api_key: apiKey, production_webhook_token: billing.ASAAS_WEBHOOK_TOKEN,
+      _production_test_hash: fingerprint, _production_tested_at: proofTime,
+    });
+    if (url.hostname === "api.asaas.com") return response({ data: [] });
+    if (url.pathname.endsWith("app_admin_asaas_production")) {
+      if (JSON.parse(String(init.body)).p_action === "test") proofTime = new Date().toISOString();
+      return response(null);
+    }
+  });
+  const setter = { action: "integration-production", provider: "asaas", enabled: true, reauth_token: "fake-password-confirmation" };
+  const bearer = { token: jwt({ aal: "aal2" }) };
+  equal((await capabilities(d)(request(setter, bearer))).status, 409);
+  equal((await capabilities(d)(request({ action: "integration-test", provider: "asaas" }, bearer))).status, 200);
+  equal((await capabilities(d)(request(setter, bearer))).status, 200);
+  equal(requests.filter((r) => r.url.endsWith("app_admin_asaas_production")).map((r) => r.body), [
+    { p_actor_id: id, p_action: "test", p_fingerprint: fingerprint },
+    { p_actor_id: id, p_action: "enable", p_fingerprint: fingerprint, p_reauth_token: "fake-password-confirmation" },
+  ]);
+});
+Deno.test("the global order limit returns 429 before any payment request, even without IP", async () => {
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin")
+    ? response({ code: "PT429" }, 429) : undefined, billing);
+  const result = await checkout(d)(request(purchase, { token: null }));
+  equal(result.status, 429);
+  equal((await result.json()).error.code, "RATE_LIMITED");
+  assert(!requests.some((r) => r.url.includes("asaas.com")));
+});
+Deno.test("CHECKOUT_PAID from the Vault is persisted only if the Asaas confirms it in the order's environment", async () => {
+  for (const [providerStatus, orderEnvironment, status] of [
+    ["PENDING", "sandbox", 409], ["CONFIRMED", "production", 409], ["CONFIRMED", "sandbox", 200],
+  ] as const) {
+    const { d, requests } = deps((url) => {
+      if (url.pathname.endsWith("app_integration_credentials")) return response({
+        env: "sandbox", sandbox_api_key: "fake-reconciliation-key", sandbox_webhook_token: billing.ASAAS_WEBHOOK_TOKEN,
+      });
+      if (url.pathname.endsWith("app_payment_context")) return response({ order_id: id, gateway_id: other, asaas_environment: orderEnvironment });
+      if (url.hostname === "api-sandbox.asaas.com") {
+        equal(url.searchParams.get("checkoutSession"), other);
+        return paidPayments(10, providerStatus);
+      }
+      if (url.pathname.endsWith("app_process_payment")) return response({ duplicate: false });
+    });
+    const body = { id: "evt_vault", event: "CHECKOUT_PAID", checkout: { id: other, externalReference: id, billingTypes: ["PIX"], items: [{ value: 10, quantity: 1 }] } };
+    const result = await webhook(d)(request(body, { token: null, headers: { "asaas-access-token": billing.ASAAS_WEBHOOK_TOKEN } }));
+    equal(result.status, status);
+    equal(requests.some((r) => r.url.endsWith("app_process_payment")), status === 200);
+    equal(requests.find((r) => r.url.includes("api-sandbox.asaas.com"))?.headers.get("access_token"),
+      orderEnvironment === "sandbox" ? "fake-reconciliation-key" : undefined);
+  }
 });
 Deno.test("media requires server object gate before signing", async () => {
   const { d, requests } = deps((url) => url.pathname.endsWith("app_media_access") ? response({ message: "denied", code: "42501" }, 403) : undefined);
@@ -83,10 +266,11 @@ Deno.test("webhook token checked before parsing or persistence", async () => {
   assert(await constantEqual("same", "same")); assert(!(await constantEqual("same", "different")));
 });
 Deno.test("webhook normalizes minimal event and waits DB persistence before 200", async () => {
-  const { d, requests } = deps((url) => url.pathname.endsWith("app_payment_context") ? response({ order_id: id, gateway_id: other }) : url.pathname.endsWith("app_process_payment") ? response({ order_id: id, status: "paid", duplicate: false, invite_pending: true, invite_email: buyer.email }) : undefined, billing);
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_payment_context") ? response({ order_id: id, gateway_id: other, asaas_environment: "sandbox" }) : url.hostname === "api-sandbox.asaas.com" ? paidPayments(10.15) : url.pathname.endsWith("app_process_payment") ? response({ order_id: id, status: "paid", duplicate: false, invite_pending: false }) : undefined, billing);
   const body = { id: "evt_synthetic", event: "CHECKOUT_PAID", checkout: { id: other, externalReference: id, billingTypes: ["PIX"], items: [{ value: 10.15, quantity: 1 }], customerData: { email: buyer.email } } };
   const result = await webhook(d)(request(body, { token: null, headers: { "asaas-access-token": billing.ASAAS_WEBHOOK_TOKEN } })); equal(result.status, 200);
   equal(requests.find((r) => r.url.includes("app_process_payment"))!.body, { p_event: { id: "evt_synthetic", type: "paid", order_id: id, gateway_id: other, amount_cents: 1015, method: "PIX" } });
+  assert(requests.findIndex((r) => r.url.includes("/v3/payments")) < requests.findIndex((r) => r.url.endsWith("app_process_payment")));
   assert(!JSON.stringify(await result.json()).includes(buyer.email));
 });
 Deno.test("invalid amount and ambiguous checkout methods reject before DB", async () => {
@@ -98,7 +282,7 @@ Deno.test("invalid amount and ambiguous checkout methods reject before DB", asyn
 });
 Deno.test("guest checkout reserves order before provider; existing attempt never calls Asaas", async () => {
   for (const reserved of [true, false]) {
-    const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", status: "pending", create_gateway: reserved }) : url.hostname === "api-sandbox.asaas.com" ? response({ id: other }) : url.pathname.endsWith("app_checkout_gateway") ? response({ id, status: "pending" }) : undefined, billing);
+    const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, asaas_environment: "sandbox", amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", status: "pending", create_gateway: reserved }) : url.hostname === "api-sandbox.asaas.com" ? response({ id: other }) : url.pathname.endsWith("app_checkout_gateway") ? response({ id, status: "pending" }) : undefined, billing);
     const result = await checkout(d)(request(purchase, { token: null }));
     equal(result.status, reserved ? 200 : 409);
     equal(requests.filter((r) => r.url.includes("api-sandbox.asaas.com")).length, reserved ? 1 : 0);
@@ -113,9 +297,9 @@ Deno.test("guest browser receipt is bound by hash and stays outside provider req
     if (url.pathname.endsWith("app_checkout_begin")) {
       const { p_receipt_hash } = JSON.parse(String(init.body));
       equal(p_receipt_hash, hash);
-      if (reserved) return response({ order_id: id, status: "pending", checkout_url: "https://sandbox.asaas.com/checkoutSession/show?id=fixture" });
+      if (reserved) return response({ order_id: id, asaas_environment: "sandbox", status: "pending", checkout_url: "https://sandbox.asaas.com/checkoutSession/show?id=fixture" });
       reserved = true;
-      return response({ order_id: id, amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: true });
+      return response({ order_id: id, asaas_environment: "sandbox", amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: true });
     }
     if (url.hostname === "api-sandbox.asaas.com") return response({ id: other });
     if (url.pathname.endsWith("app_checkout_gateway")) return response({ id });
@@ -146,7 +330,7 @@ Deno.test("guest browser receipt is bound by hash and stays outside provider req
   equal(await accepted.json(), { order_id: id, status: "pending", amount_cents: 1000, access_granted: false });
 });
 Deno.test("authenticated checkout email is native Auth email", async () => {
-  const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, status: "pending", checkout_url: "https://sandbox.asaas.com/checkoutSession/show?id=test" }) : undefined, billing);
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, asaas_environment: "sandbox", status: "pending", checkout_url: "https://sandbox.asaas.com/checkoutSession/show?id=test" }) : undefined, billing);
   equal((await checkout(d)(request(purchase))).status, 200);
   const args = requests.find((r) => r.url.includes("app_checkout_begin"))!.body as Record<string, Record<string, string>>;
   equal(args.p_buyer_data.email, user.email);
@@ -156,12 +340,12 @@ Deno.test("order status needs actor or receipt, never email", async () => {
   equal((await orderStatus(d)(request({ order_id: id, email: buyer.email }, { token: null }))).status, 401); equal(requests.length, 0);
 });
 Deno.test("public SDK anon bearer is guest; arbitrary invalid bearer is rejected", async () => {
-  const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, status: "pending", checkout_url: "https://sandbox.asaas.com/checkoutSession/show?id=test" }) : undefined, billing);
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, asaas_environment: "sandbox", status: "pending", checkout_url: "https://sandbox.asaas.com/checkoutSession/show?id=test" }) : undefined, billing);
   equal((await checkout(d)(request(purchase, { token: "local-public" }))).status, 200);
   equal((requests.find((r) => r.url.includes("app_checkout_begin"))!.body as Record<string, unknown>).p_actor_id, null);
 });
 Deno.test("refund resolves payment id through official checkoutSession filter", async () => {
-  const { d, requests } = deps((url) => url.pathname.endsWith("app_payment_context") ? response({ order_id: id, gateway_id: other }) : url.hostname === "api-sandbox.asaas.com" ? response({ hasMore: false, data: [{ id: "pay_synthetic", value: 10.15, billingType: "PIX", status: "REFUNDED" }] }) : url.pathname.endsWith("app_process_payment") ? response({ status: "refunded", duplicate: false }) : undefined, billing);
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_payment_context") ? response({ order_id: id, gateway_id: other, asaas_environment: "sandbox" }) : url.hostname === "api-sandbox.asaas.com" ? response({ hasMore: false, data: [{ id: "pay_synthetic", value: 10.15, billingType: "PIX", status: "REFUNDED" }] }) : url.pathname.endsWith("app_process_payment") ? response({ status: "refunded", duplicate: false }) : undefined, billing);
   const result = await webhook(d)(request({ id: "evt_refund_synthetic", event: "PAYMENT_REFUNDED", payment: { id: "pay_synthetic", externalReference: id, value: 10.15, billingType: "PIX" } }, { token: null, headers: { "asaas-access-token": billing.ASAAS_WEBHOOK_TOKEN } }));
   equal(result.status, 200);
   assert(requests.some((r) => r.url.includes(`checkoutSession=${other}`)));
@@ -169,7 +353,7 @@ Deno.test("refund resolves payment id through official checkoutSession filter", 
   equal(event.gateway_id, other);
 });
 Deno.test("unlinked refund never reaches financial transition", async () => {
-  const { d, requests } = deps((url) => url.pathname.endsWith("app_payment_context") ? response({ order_id: id, gateway_id: other }) : url.hostname === "api-sandbox.asaas.com" ? response({ hasMore: false, data: [{ id: "another-payment", value: 10, billingType: "PIX" }] }) : undefined, billing);
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_payment_context") ? response({ order_id: id, gateway_id: other, asaas_environment: "sandbox" }) : url.hostname === "api-sandbox.asaas.com" ? response({ hasMore: false, data: [{ id: "another-payment", value: 10, billingType: "PIX" }] }) : undefined, billing);
   const result = await webhook(d)(request({ id: "evt_unlinked_synthetic", event: "PAYMENT_REFUNDED", payment: { id: "pay_synthetic", externalReference: id, value: 10, billingType: "PIX" } }, { token: null, headers: { "asaas-access-token": billing.ASAAS_WEBHOOK_TOKEN } }));
   equal(result.status, 409); assert(!requests.some((r) => r.url.includes("app_process_payment")));
 });
@@ -253,20 +437,21 @@ Deno.test("stale native session denies before service RPC", async () => {
   assert(!requests.some((r) => r.url.includes("app_media_access")));
 });
 Deno.test("checkout event cannot substitute a different stored gateway link", async () => {
-  const { d, requests } = deps((url) => url.pathname.endsWith("app_payment_context") ? response({ order_id: id, gateway_id: id }) : undefined, billing);
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_payment_context") ? response({ order_id: id, gateway_id: id, asaas_environment: "sandbox" }) : undefined, billing);
   const body = { id: "evt_wrong_gateway", event: "CHECKOUT_PAID", checkout: { id: other, externalReference: id, billingTypes: ["PIX"], items: [{ value: 10, quantity: 1 }] } };
   equal((await webhook(d)(request(body, { token: null, headers: { "asaas-access-token": billing.ASAAS_WEBHOOK_TOKEN } }))).status, 409);
   assert(!requests.some((r) => r.url.includes("app_process_payment")));
 });
 Deno.test("DB persistence failure never acknowledges a webhook as received", async () => {
-  const { d } = deps((url) => url.pathname.endsWith("app_payment_context") ? response({ order_id: id, gateway_id: other }) : url.pathname.endsWith("app_process_payment") ? response({ code: "XX000", message: "private internals" }, 500) : undefined, billing);
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_payment_context") ? response({ order_id: id, gateway_id: other, asaas_environment: "sandbox" }) : url.hostname === "api-sandbox.asaas.com" ? paidPayments(10) : url.pathname.endsWith("app_process_payment") ? response({ code: "XX000", message: "private internals" }, 500) : undefined, billing);
   const result = await webhook(d)(request({ id: "evt_storage_failure", event: "CHECKOUT_PAID", checkout: { id: other, externalReference: id, billingTypes: ["PIX"], items: [{ value: 10, quantity: 1 }] } }, { token: null, headers: { "asaas-access-token": billing.ASAAS_WEBHOOK_TOKEN } }));
   equal(result.status, 503); assert(!(await result.text()).includes("private internals"));
+  assert(requests.some((r) => r.url.endsWith("app_process_payment")));
 });
 Deno.test("checkout timeout leaves reserved attempt for reconciliation, retry never creates second charge", async () => {
   let fresh = true, external = 0;
   const { d } = deps((url) => {
-    if (url.pathname.endsWith("app_checkout_begin")) { const create = fresh; fresh = false; return response({ order_id: id, amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: create }); }
+    if (url.pathname.endsWith("app_checkout_begin")) { const create = fresh; fresh = false; return response({ order_id: id, asaas_environment: "sandbox", amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: create }); }
     if (url.hostname === "api-sandbox.asaas.com") { external++; throw new DOMException("Synthetic timeout", "TimeoutError"); }
   }, billing);
   equal((await checkout(d)(request(purchase, { token: null }))).status, 503);
@@ -315,7 +500,7 @@ Deno.test("signed Storage origin is translated only for the configured internal 
   equal(publicStorageUrl(cloud, (name) => name === "SUPABASE_URL" ? "https://project.supabase.co" : undefined), cloud);
 });
 Deno.test("checkout optional phone and callback use the real /pedido route", async () => {
-  const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: true }) : url.hostname === "api-sandbox.asaas.com" ? response({ id: other }) : url.pathname.endsWith("app_checkout_gateway") ? response({ id }) : undefined, billing);
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, asaas_environment: "sandbox", amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: true }) : url.hostname === "api-sandbox.asaas.com" ? response({ id: other }) : url.pathname.endsWith("app_checkout_gateway") ? response({ id }) : undefined, billing);
   equal((await checkout(d)(request({ ...purchase, buyer: { ...buyer, phone: "" } }, { token: null }))).status, 200);
   const posted = requests.find((r) => r.url.includes("api-sandbox.asaas.com"))!.body as { callback: Record<string, string> };
   const callback = `http://127.0.0.1:8088/pedido/${id}`;
@@ -325,7 +510,8 @@ Deno.test("paid webhook schedules claimed invitation after persistence and ackno
   const tasks: Promise<unknown>[] = []; let release!: (value: Response) => void; let started!: () => void;
   const inviteStarted = new Promise<void>((resolve) => { started = resolve; });
   const { d, requests } = deps((url) => {
-    if (url.pathname.endsWith("app_payment_context")) return response({ order_id: id, gateway_id: other });
+    if (url.pathname.endsWith("app_payment_context")) return response({ order_id: id, gateway_id: other, asaas_environment: "sandbox" });
+    if (url.hostname === "api-sandbox.asaas.com") return paidPayments(10);
     if (url.pathname.endsWith("app_process_payment")) return response({ order_id: id, status: "paid", invite_pending: true });
     if (url.pathname.endsWith("app_claim_payment_invite")) return response({ claimed: true, invite_email: buyer.email });
     if (url.pathname.endsWith("app_finalize_paid_order")) return response({ finalized: false });
@@ -351,7 +537,7 @@ Deno.test("definite invitation failure retries through claim; ambiguous delivery
 
 const siteverify = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const turnstile = { TURNSTILE_SECRET_KEY: "synthetic-turnstile-secret" };
-const reserve = (url: URL) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: true }) : url.hostname === "api-sandbox.asaas.com" ? response({ id: other }) : url.pathname.endsWith("app_checkout_gateway") ? response({ id }) : undefined;
+const reserve = (url: URL) => url.pathname.endsWith("app_checkout_begin") ? response({ order_id: id, asaas_environment: "sandbox", amount_cents: 1000, plan_name: "DEMONSTRAÇÃO", create_gateway: true }) : url.hostname === "api-sandbox.asaas.com" ? response({ id: other }) : url.pathname.endsWith("app_checkout_gateway") ? response({ id }) : undefined;
 Deno.test("checkout com Turnstile configurado confere o token no servidor antes do pedido e do Asaas", async () => {
   for (const [token, answer, status] of [[undefined, null, 403], ["token-recusado", { success: false }, 403], ["token-valido", { success: true }, 200]] as const) {
     let verified: FormData | undefined;

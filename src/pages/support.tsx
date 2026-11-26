@@ -495,7 +495,6 @@ function TicketConversation({
             </Form>
             <Upload
               kind="ticket-attachment"
-              customPicker={!admin}
               resourceId={ticket}
               onUploaded={() => void query.refetch()}
             />

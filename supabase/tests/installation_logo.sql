@@ -42,15 +42,17 @@ create function pg_temp.path(variant text, ext text) returns text language sql a
 
 -- Permissões das RPCs e do bucket.
 select pg_temp.ok(not has_function_privilege(r, 'public.app_brand_asset_begin(uuid,text,text)', 'EXECUTE')
-  and not has_function_privilege(r, 'public.app_brand_asset_commit(uuid,text,text,uuid)', 'EXECUTE'), 'RPCs fechadas para ' || r)
+  and not has_function_privilege(r, 'public.app_brand_asset_commit(uuid,text,text,uuid)', 'EXECUTE')
+  and not has_function_privilege(r, 'public.app_brand_asset_commit(uuid,text,text,uuid,double precision)', 'EXECUTE'), 'RPCs fechadas para ' || r)
 from unnest(array['anon', 'authenticated']) r;
 select pg_temp.ok(has_function_privilege('service_role', 'public.app_brand_asset_begin(uuid,text,text)', 'EXECUTE')
-  and has_function_privilege('service_role', 'public.app_brand_asset_commit(uuid,text,text,uuid)', 'EXECUTE'), 'Edge executa as RPCs');
+  and has_function_privilege('service_role', 'public.app_brand_asset_commit(uuid,text,text,uuid)', 'EXECUTE')
+  and has_function_privilege('service_role', 'public.app_brand_asset_commit(uuid,text,text,uuid,double precision)', 'EXECUTE'), 'Edge executa as RPCs');
 select pg_temp.ok(not has_table_privilege(r, 'app_private.installation_brand', 'SELECT,UPDATE'), 'Marca fechada para ' || r)
 from unnest(array['anon', 'authenticated', 'service_role']) r;
-select pg_temp.ok((select public and file_size_limit = 512000 and allowed_mime_types = array['image/png', 'image/webp'] from storage.buckets where id = 'icarus-brand'), 'Bucket público só PNG e WebP até 500 KB');
+select pg_temp.ok((select public and file_size_limit = 512000 and allowed_mime_types = array['image/png', 'image/webp', 'image/svg+xml'] from storage.buckets where id = 'icarus-brand'), 'Bucket público só PNG, WebP e SVG até 500 KB');
 select pg_temp.ok(not exists(select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects'
-  and coalesce(qual, '') || coalesce(with_check, '') not like '%icarus-private%'), 'Nenhuma policy de storage.objects alcança o bucket de marca');
+  and policyname <> 'icarus_brand_service_only' and coalesce(qual, '') || coalesce(with_check, '') not like '%icarus-private%'), 'Nenhuma policy de storage.objects alcança o bucket de marca');
 
 -- Objetos de teste gravados como a Edge gravaria (service role ignora RLS).
 create temporary table paths as select pg_temp.path('light', 'png') light, pg_temp.path('light', 'webp') light2, pg_temp.path('dark', 'png') dark, pg_temp.path('light', 'png') missing, 'icon/' || gen_random_uuid() || '.png' icon;
@@ -83,7 +85,7 @@ select pg_temp.denied(format('select public.app_brand_asset_begin(%L, %L, %L)', 
 
 select pg_temp.service('admin');
 select pg_temp.denied(format('select public.app_brand_asset_begin(%L, %L, %L)', pg_temp.id('admin'), 'sepia', 'image/png'), 'P0001', 'Variante desconhecida');
-select pg_temp.denied(format('select public.app_brand_asset_begin(%L, %L, %L)', pg_temp.id('admin'), 'light', 'image/svg+xml'), 'P0001', 'SVG recusado');
+select pg_temp.denied(format('select public.app_brand_asset_begin(%L, %L, %L)', pg_temp.id('admin'), 'signature', 'image/svg+xml'), 'P0001', 'Assinatura em SVG recusada');
 select pg_temp.denied(format('select public.app_brand_asset_begin(%L, %L, %L)', pg_temp.id('admin'), 'light', 'image/jpeg'), 'P0001', 'JPEG recusado');
 select pg_temp.ok(public.app_brand_asset_begin(pg_temp.id('admin'), 'light', 'image/png') ~ '^logo/light-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.png$', 'Caminho PNG gerado no servidor');
 select pg_temp.ok(public.app_brand_asset_begin(pg_temp.id('admin'), 'dark', 'image/webp') ~ '^logo/dark-[0-9a-f-]{36}\.webp$', 'Caminho WebP gerado no servidor');
@@ -147,6 +149,45 @@ begin
     if attempt > 11 then raise exception 'Falhou: limite de envios não aplicado'; end if;
   end loop;
 end $$;
+reset role;
+
+
+-- A proteção continua valendo quando outro sistema cria uma policy permissiva no banco compartilhado.
+create policy fixture_storage_permissive on storage.objects for all to authenticated using (true) with check (true);
+set local role authenticated;
+select pg_temp.ok(not exists(select 1 from storage.objects where bucket_id = 'icarus-brand'), 'Policy permissiva não abre a listagem');
+select pg_temp.denied($q$insert into storage.objects(bucket_id, name) values('icarus-brand', 'icon/00000000-0000-4000-8000-000000000000.svg')$q$, '42501', 'Policy permissiva não abre a gravação');
+reset role;
+
+create temporary table vectors as select pg_temp.path('light', 'svg') light, pg_temp.path('dark', 'svg') dark, 'icon/' || gen_random_uuid() || '.svg' icon;
+grant select on vectors to service_role, authenticated, anon;
+insert into storage.objects(bucket_id, name, metadata)
+select 'icarus-brand', unnest(array[light, dark, icon]), '{"size":2048,"mimetype":"image/svg+xml"}' from vectors;
+delete from public.rate_limits where actor_id = pg_temp.id('admin') and bucket = 'brand-asset';
+
+set local role service_role;
+select pg_temp.service('admin');
+select pg_temp.ok(public.app_brand_asset_begin(pg_temp.id('admin'), 'light', 'image/svg+xml') ~ '^logo/light-[0-9a-f-]{36}\.svg$', 'Nome de logo SVG');
+select pg_temp.ok(public.app_brand_asset_begin(pg_temp.id('admin'), 'icon', 'image/svg+xml') ~ '^icon/[0-9a-f-]{36}\.svg$', 'Nome de favicon SVG');
+select pg_temp.denied(format('select public.app_brand_asset_commit(%L, %L, %L)', pg_temp.id('admin'), 'light', (select light from vectors)), 'P0001', 'SVG exige proporção calculada');
+select pg_temp.denied(format('select public.app_brand_asset_commit(%L, %L, %L, null, %L)', pg_temp.id('admin'), 'light', (select light from vectors), 'NaN'), 'P0001', 'Proporção não finita recusada');
+select pg_temp.denied(format('select public.app_brand_asset_commit(%L, %L, %L, null, 2)', pg_temp.id('admin'), 'icon', (select icon from vectors)), 'P0001', 'Favicon SVG exige proporção quadrada');
+select pg_temp.ok(public.app_brand_asset_commit(pg_temp.id('admin'), 'light', (select light from vectors), null, 3.125) @> '{"logo_light_ratio":3.125}', 'Proporção da logo armazenada');
+select pg_temp.ok(public.app_brand_asset_commit(pg_temp.id('admin'), 'dark', (select dark from vectors), null, 1) @> '{"logo_dark_ratio":1}', 'Proporção da segunda logo armazenada');
+select pg_temp.ok(public.app_brand_asset_commit(pg_temp.id('admin'), 'icon', (select icon from vectors), null, 1)->>'icon' = (select icon from vectors), 'Favicon quadrado aceito');
+reset role;
+
+set local role anon;
+select pg_temp.ok(public.app_public_context() @> '{"logo_light_ratio":3.125,"logo_dark_ratio":1}', 'Proporções no contexto anônimo');
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claims', jsonb_build_object('sub', pg_temp.id('member'), 'session_id', (select session_id from actors where role = 'member'), 'aal', 'aal2', 'role', 'authenticated')::text, true);
+select pg_temp.ok(public.app_bootstrap()->'settings' @> '{"logo_light_ratio":3.125,"logo_dark_ratio":1}', 'Proporções no bootstrap');
+reset role;
+
+set local role service_role;
+select pg_temp.service('admin');
+select pg_temp.ok(public.app_brand_asset_commit(pg_temp.id('admin'), 'light', null, null, null) @> '{"logo_light":null,"logo_light_ratio":null}', 'Remoção também limpa proporção');
 reset role;
 
 select count(*) from results;

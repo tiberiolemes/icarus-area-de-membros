@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.9.0 · 2026-11-26
+
+- A logo colorida, a logo branca e o ícone da instalação aceitam SVG de até 500 KB. O servidor mantém apenas desenho com referências internas, remove margens vazias, centraliza o favicon e guarda a proporção das logos.
+- A prévia de Plataforma e marca mostra os encaixes nos dois temas e avisa sobre proporções extremas, texto que deve virar curva e baixo contraste no escuro. O PNG e o PDF do certificado usam a logo colorida em resolução ampliada para SVG.
+- Para atualizar da 2.8.0, aplique a migration `202611260013_installation_brand_svg.sql`, atualize a Edge `upload` e publique o frontend. Veja o [guia de operação](docs/operations.md#atualizar-de-versão).
+
 ## 2.8.0 · 2026-11-26
 
 - Asaas e Bunny Stream podem ser configurados no painel. As chaves ficam no Supabase Vault, com precedência para as variáveis do servidor. O Asaas separa Sandbox e Produção, oferece teste de conexão e token do webhook por ambiente e exige confirmação para ativar cobranças de produção.

@@ -9,7 +9,7 @@ import { Action, Empty, Field, Form, Heading, Notice, Progress, QueryState, valu
 import { PublicFrame } from "./access";
 import { RichContent } from "../rich";
 import { exportCertificate } from "../certificate";
-import { BrandLogo, brandAssetUrl, defaultLogo } from "../brand";
+import { BrandLogo, brandAssetUrl, brandRatio, defaultLogo } from "../brand";
 import { readModules } from "../modules";
 import { notificationListKey, reconcileNotificationQueries } from "./notifications";
 import "./student-resources.css";
@@ -23,7 +23,14 @@ function certificateStatus(certificate: Certificate) {
   return certificate.demo ? "Demonstração sem validade" : "Certificado válido";
 }
 
-type PublicBrand = { name?: string; logo_light?: string | null; logo_dark?: string | null; modules?: unknown };
+type PublicBrand = {
+  name?: string;
+  logo_light?: string | null;
+  logo_dark?: string | null;
+  logo_light_ratio?: number | null;
+  logo_dark_ratio?: number | null;
+  modules?: unknown;
+};
 
 function CertificateDocument({ certificate }: { certificate: Certificate }) {
   const brand = useRpc<PublicBrand>("app_public_context").data;
@@ -34,6 +41,7 @@ function CertificateDocument({ certificate }: { certificate: Certificate }) {
       <header className="certificate-document-header">
         <span className="certificate-brand">
           <BrandLogo light={brandAssetUrl(brand?.logo_light)} dark={brandAssetUrl(brand?.logo_dark)} name={brand?.name || "Icarus"}
+            ratios={{ light: brandRatio(brand?.logo_light_ratio), dark: brandRatio(brand?.logo_dark_ratio) }}
             fallback={<img src={defaultLogo} alt="Icarus" width="244" height="64" />} />
         </span>
         <span className="certificate-code">Código de verificação <code>{certificate.code}</code></span>
@@ -71,7 +79,7 @@ function CertificateActions({ certificate }: { certificate: Certificate }) {
   const verificationUrl = new URL(verifyHref, window.location.href).href;
   // O arquivo exportado tem fundo branco: usa a logo colorida ou, sem ela, a do Icarus.
   const brand = useRpc<PublicBrand>("app_public_context").data;
-  const exported = { logoUrl: brandAssetUrl(brand?.logo_light), issuer: brand?.name || "Icarus" };
+  const exported = { logoUrl: brandAssetUrl(brand?.logo_light), logoRatio: brandRatio(brand?.logo_light_ratio), issuer: brand?.name || "Icarus" };
   return (
     <div className="certificate-actions">
       {!certificate.revoked_at && (

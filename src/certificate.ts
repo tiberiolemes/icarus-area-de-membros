@@ -2,10 +2,12 @@ import { downloadBlob } from "./api";
 import type { Certificate } from "./api";
 import { brandAssetUrl, defaultLogo, logoBox } from "./brand";
 
+type CertificateBrand = { logoUrl: string | null; logoRatio?: number; issuer: string };
+
 export async function certificateCanvas(
   certificate: Certificate,
   verificationUrl = `${location.origin}/verificar/${encodeURIComponent(certificate.code)}`,
-  { logoUrl, issuer }: { logoUrl: string | null; issuer: string } = { logoUrl: null, issuer: "Icarus" },
+  { logoUrl, logoRatio, issuer }: CertificateBrand = { logoUrl: null, issuer: "Icarus" },
 ) {
   if (certificate.revoked_at)
     throw new Error(
@@ -13,13 +15,15 @@ export async function certificateCanvas(
     );
   await document.fonts.ready;
   const canvas = document.createElement("canvas");
-  canvas.width = 1600;
-  canvas.height = 1120;
+  const scale = logoUrl?.endsWith(".svg") ? 2 : 1;
+  canvas.width = 1600 * scale;
+  canvas.height = 1120 * scale;
   const ctx = canvas.getContext("2d");
   if (!ctx)
     throw new Error(
       "Seu navegador não permite gerar o arquivo. Tente outro navegador.",
     );
+  if (scale > 1) ctx.scale(scale, scale);
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, 1600, 1120);
   ctx.strokeStyle = "#000000";
@@ -34,7 +38,7 @@ export async function certificateCanvas(
   } catch {
     throw new Error("Não foi possível carregar a logo para exportar o certificado. Tente novamente.");
   }
-  const box = logoUrl ? logoBox(logo.naturalWidth, logo.naturalHeight) : { x: 100, y: 96, width: 305, height: 80 };
+  const box = logoUrl ? logoBox(logoRatio ?? logo.naturalWidth, logoRatio ? 1 : logo.naturalHeight) : { x: 100, y: 96, width: 305, height: 80 };
   ctx.drawImage(logo, box.x, box.y, box.width, box.height);
   ctx.fillStyle = "#000000";
   ctx.font = "500 24px Inter";
@@ -170,7 +174,7 @@ export async function exportCertificate(
   certificate: Certificate,
   format: "png" | "pdf",
   verificationUrl?: string,
-  brand?: { logoUrl: string | null; issuer: string },
+  brand?: CertificateBrand,
 ) {
   const canvas = await certificateCanvas(certificate, verificationUrl, brand);
   if (format === "png") {

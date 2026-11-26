@@ -57,12 +57,12 @@ const choose = (label: string, file: File) => fireEvent.change(screen.getByLabel
 it("mostra formatos, tamanho e dimensões e recusa arquivos inválidos sem chamar o servidor", async () => {
   mount();
   const input = screen.getByLabelText("Escolher logo colorida");
-  expect(input).toHaveAttribute("accept", "image/png,image/webp");
-  expect(screen.getAllByText("PNG ou WebP, até 500 KB. Mínimo de 240 × 60 px; recomendado 960 × 240 px (proporção 4:1), com fundo transparente.")).toHaveLength(2);
+  expect(input).toHaveAttribute("accept", "image/png,image/webp,image/svg+xml");
+  expect(screen.getAllByText("SVG, PNG ou WebP, até 500 KB. PNG e WebP precisam de pelo menos 240 × 60 px. Prefira fundo transparente.")).toHaveLength(2);
   const jpeg = new Uint8Array(64); jpeg.set([255, 216, 255, 224]);
   for (const [file, message, dimensions] of [
     [new File([pngBytes(512001)], "grande.png", { type: "image/png" }), "A logo precisa ter até 500 KB.", size],
-    [new File(["<svg xmlns='http://www.w3.org/2000/svg'/>"], "logo.svg", { type: "image/svg+xml" }), "A logo precisa ser PNG ou WebP.", size],
+    [new File(["<svg/>"], "logo.xml", { type: "application/xml" }), "A logo precisa ser PNG, WebP ou SVG.", size],
     [new File([jpeg], "foto.png", { type: "image/png" }), "O conteúdo do arquivo não é um PNG ou WebP válido.", size],
     [new File([pngBytes()], "pequena.png", { type: "image/png" }), "A logo precisa ter pelo menos 240 × 60 px e no máximo 4096 px de cada lado.", { width: 239, height: 60 }],
     [new File([pngBytes()], "enorme.png", { type: "image/png" }), "A logo precisa ter pelo menos 240 × 60 px e no máximo 4096 px de cada lado.", { width: 4097, height: 300 }],
@@ -82,7 +82,7 @@ it("mostra a prévia nos dois temas antes de salvar e salva a colorida por AJAX"
   mount();
   choose("Escolher logo colorida", file);
   const preview = screen.getByRole("region", { name: "Prévia da identidade" });
-  await waitFor(() => expect(within(preview).getAllByRole("img", { name: "Icarus" }).map((img) => img.getAttribute("src"))).toEqual(["blob:previa", "blob:previa"]));
+  await waitFor(() => expect(within(preview).getAllByRole("img", { name: "Icarus" }).filter((img) => img.getAttribute("src") === "blob:previa")).toHaveLength(13));
   expect(edge).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Salvar logo colorida" }));
   expect(await screen.findByText("Logo colorida salva.")).toBeInTheDocument();
@@ -127,22 +127,22 @@ it("uma validação atrasada não reabre a prévia de um arquivo trocado", async
   mount();
   choose("Escolher logo colorida", new File([pngBytes()], "lenta.png", { type: "image/png" }));
   await waitFor(() => expect(createImageBitmap).toHaveBeenCalledTimes(1));
-  choose("Escolher logo colorida", new File(["<svg/>"], "logo.svg", { type: "image/svg+xml" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent("A logo precisa ser PNG ou WebP.");
+  choose("Escolher logo colorida", new File(["<svg/>"], "logo.xml", { type: "application/xml" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("A logo precisa ser PNG, WebP ou SVG.");
   finish({ width: 960, height: 240, close: vi.fn() });
   await new Promise((resolve) => setTimeout(resolve, 0));
   expect(screen.queryByRole("img", { name: "Prévia da logo colorida" })).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Salvar logo colorida" })).toBeDisabled();
-  expect(screen.getByRole("alert")).toHaveTextContent("A logo precisa ser PNG ou WebP.");
+  expect(screen.getByRole("alert")).toHaveTextContent("A logo precisa ser PNG, WebP ou SVG.");
 });
 
-it("o ícone aceita só PNG quadrado e salva pela mesma Edge", async () => {
+it("o ícone recusa WebP e exige PNG quadrado ou SVG", async () => {
   mount();
   const input = screen.getByLabelText("Escolher ícone");
-  expect(input).toHaveAttribute("accept", "image/png");
-  expect(screen.getByText("PNG quadrado, até 500 KB. Mínimo de 180 × 180 px; recomendado 512 × 512 px.")).toBeInTheDocument();
+  expect(input).toHaveAttribute("accept", "image/png,image/svg+xml");
+  expect(screen.getByText("SVG ou PNG quadrado, até 500 KB. PNG precisa de pelo menos 180 × 180 px.")).toBeInTheDocument();
   choose("Escolher ícone", new File([new Uint8Array(64)], "icone.webp", { type: "image/webp" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent("O ícone precisa ser PNG.");
+  expect(await screen.findByRole("alert")).toHaveTextContent("O ícone precisa ser PNG ou SVG.");
   size = { width: 512, height: 500 };
   choose("Escolher ícone", new File([pngBytes()], "icone.png", { type: "image/png" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("O ícone precisa ser quadrado, com pelo menos 180 × 180 px e no máximo 4096 px.");
@@ -177,4 +177,61 @@ it("a assinatura do certificado vai com o curso e remove pela mesma Edge", async
   fireEvent.click(screen.getByRole("button", { name: "Remover assinatura" }));
   expect(await screen.findByText("Assinatura removida.")).toBeInTheDocument();
   expect(edge).toHaveBeenLastCalledWith("upload", { action: "brand-asset-remove", variant: "signature", course_id: "curso-1" });
+});
+
+it("mostra apenas a prévia PNG do SVG sanitizado e salva o arquivo original", async () => {
+  const original = new File(['<svg viewBox="0 0 100 100" onload="alert(1)"><rect width="90" height="90"/></svg>'], "logo.svg", { type: "image/svg+xml" });
+  const clean = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 90"><rect width="90" height="90"/></svg>';
+  const decode = vi.fn(async () => {});
+  const image = Object.assign(document.createElement("img"), { decode });
+  const drawImage = vi.fn();
+  const frame = new Blob([pngBytes()], { type: "image/png" });
+  const Image = vi.spyOn(window, "Image").mockImplementation(function () { return image; });
+  const canvas = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage } as unknown as CanvasRenderingContext2D);
+  const toBlob = vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => callback(frame));
+  try {
+    edge.mockResolvedValueOnce({ svg: clean, ratio: 1, warnings: ["O desenho tem pouco contraste no tema escuro."] });
+    mount();
+    choose("Escolher logo branca", original);
+    expect(await screen.findByText("O desenho tem pouco contraste no tema escuro.")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Prévia da logo branca" })).toHaveAttribute("data-brand-shape", "compact");
+    const [previewName, previewBody] = edge.mock.calls[0] as [string, FormData];
+    expect([previewName, previewBody.get("kind"), previewBody.get("file")]).toEqual(["upload", "brand-asset-preview", original]);
+    expect(image.src).toBe(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(clean)}`);
+    expect(decode).toHaveBeenCalledOnce();
+    expect(drawImage).toHaveBeenCalledWith(image, 0, 0, 1024, 1024);
+    expect(URL.createObjectURL).toHaveBeenCalledExactlyOnceWith(frame);
+    fireEvent.click(screen.getByRole("button", { name: "Salvar logo branca" }));
+    expect(await screen.findByText("Logo branca salva.")).toBeInTheDocument();
+    expect(edge.mock.calls[1][1].get("file")).toEqual(original);
+  } finally {
+    Image.mockRestore();
+    canvas.mockRestore();
+    toBlob.mockRestore();
+  }
+});
+
+it.each(["ausente", "erro", "nulo"])("mostra a mensagem da prévia em caso de falha do canvas (%s)", async (failure) => {
+  const clean = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 90"><rect width="90" height="90"/></svg>';
+  const image = Object.assign(document.createElement("img"), { decode: vi.fn(async () => {}) });
+  const Image = vi.spyOn(window, "Image").mockImplementation(function () { return image; });
+  const canvas = vi.spyOn(HTMLCanvasElement.prototype, "getContext")
+    .mockReturnValue({ drawImage: vi.fn() } as unknown as CanvasRenderingContext2D);
+  const toBlob = vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => {
+    if (failure === "erro") throw new Error("Falha técnica do canvas");
+    callback(null);
+  });
+  if (failure === "ausente") Object.defineProperty(HTMLCanvasElement.prototype, "toBlob", { value: undefined });
+  try {
+    edge.mockResolvedValueOnce({ svg: clean, ratio: 1, warnings: [] });
+    mount();
+    choose("Escolher logo colorida", new File([clean], "logo.svg", { type: "image/svg+xml" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível preparar a prévia da imagem.");
+    expect(screen.getByRole("button", { name: "Salvar logo colorida" })).toBeDisabled();
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  } finally {
+    Image.mockRestore();
+    canvas.mockRestore();
+    toBlob.mockRestore();
+  }
 });

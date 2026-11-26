@@ -875,21 +875,47 @@ h2 > a,
 [data-theme="dark"] { --brand-tone-light: none; --brand-tone-dark: block; }
 [data-brand-tone="light"] { display: var(--brand-tone-light, block) !important; }
 [data-brand-tone="dark"] { display: var(--brand-tone-dark, none) !important; }
-/* Logo própria: altura de cada lugar e largura pela proporção do arquivo. Vence a largura fixa e o invert da logo do Icarus. */
 img.brand-custom {
   width: auto !important;
   height: var(--brand-logo-height, 40px) !important;
-  max-width: 100%;
+  max-width: min(100%, var(--brand-logo-width, 180px));
   object-fit: contain;
   object-position: left center;
   filter: none !important;
 }
-.public-top { --brand-logo-height: 56px; }
-.rail-brand,
-.admin-topbar-brand,
-.mobile-frame-label,
-.student-onboarding .public-top { --brand-logo-height: 32px; }
-.certificate-brand { --brand-logo-height: 36px; }
+img.brand-custom[data-brand-shape] {
+  width: min(100%, var(--brand-logo-width, 180px), calc(var(--brand-logo-height, 40px) * var(--brand-ratio))) !important;
+  height: auto !important;
+  aspect-ratio: var(--brand-ratio);
+}
+img.brand-custom[data-brand-shape="compact"] {
+  --brand-logo-width: var(--brand-logo-compact, 40px);
+  --brand-logo-height: var(--brand-logo-compact, 40px);
+}
+:is(.public-top, [data-brand-slot="public"]) {
+  --brand-logo-height: 56px;
+  --brand-logo-width: 240px;
+  --brand-logo-compact: 52px;
+}
+:is(.rail-brand, [data-brand-slot="rail"], [data-brand-slot="drawer"]) {
+  --brand-logo-height: 32px;
+  --brand-logo-width: 156px;
+  --brand-logo-compact: 36px;
+}
+:is(.admin-topbar-brand, .mobile-frame-label, [data-brand-slot="admin"], [data-brand-slot="mobile"]) {
+  --brand-logo-height: 30px;
+  --brand-logo-width: 112px;
+  --brand-logo-compact: 32px;
+}
+:is(.certificate-brand, [data-brand-slot="certificate"]) {
+  --brand-logo-height: 36px;
+  --brand-logo-width: 136px;
+  --brand-logo-compact: 36px;
+}
+.student-onboarding .public-top {
+  --brand-logo-height: 32px;
+  --brand-logo-compact: 36px;
+}
 .public-top > a:first-child { min-width: 0; }
 .public-top > a + a {
   flex: none;
@@ -1655,7 +1681,11 @@ img.brand-custom {
     width: min(136px, 100%);
     height: auto;
   }
-  .public-top { --brand-logo-height: 48px; }
+  :is(.public-top, [data-brand-slot="public"]) {
+    --brand-logo-height: 48px;
+    --brand-logo-width: 158px;
+    --brand-logo-compact: 44px;
+  }
   .public-main {
     padding: 32px 0 64px;
   }

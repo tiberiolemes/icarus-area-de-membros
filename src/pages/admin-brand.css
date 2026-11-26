@@ -71,7 +71,32 @@
 
 .brand-sample[data-theme="dark"] img { filter: invert(1); }
 .brand-sample strong { overflow-wrap: anywhere; }
-.brand-sample { --brand-logo-height: 48px; }
+.brand-preview-sizes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--stitch-space-sm);
+  margin: 0;
+  width: 100%;
+}
+.brand-preview-sizes > div {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  align-items: center;
+  min-width: 0;
+  min-height: 76px;
+  gap: var(--stitch-space-xs);
+  padding: var(--stitch-space-xs);
+  border: var(--stitch-border-width) solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-base);
+}
+.brand-preview-sizes dt { font-size: var(--stitch-type-body-sm-size); }
+.brand-preview-sizes dd { display: grid; justify-items: center; min-width: 0; margin: 0; }
+.brand-preview-sizes img { object-position: center; }
+[data-brand-slot="icon"] { --brand-logo-compact: 24px; }
+[data-brand-slot="export"] { --brand-logo-height: 40px; --brand-logo-width: 153px; }
+[data-brand-slot="export"] img.brand-custom[data-brand-shape="compact"] {
+  --brand-logo-width: 153px;
+}
 
 .brand-logos {
   display: grid;

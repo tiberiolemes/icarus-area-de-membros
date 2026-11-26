@@ -12,6 +12,8 @@ export async function rpc(client: SupabaseClient, name: string, args: Record<str
   const { data, error } = await client.rpc(name, args);
   if (error) {
     const code = error.code;
+    if (code === "PT429") throw new HttpError(429, "RATE_LIMITED", "Muitas tentativas. Aguarde um minuto e tente novamente.");
+    if (code === "PT503" && name === "app_checkout_begin") throw new HttpError(503, "CONFIGURATION_REQUIRED", "Cobranças em Produção estão desativadas.");
     throw new HttpError(code === "42501" ? 403 : code === "23505" ? 409 : code === "P0001" || code === "22023" ? 422 : 503, code === "42501" ? "FORBIDDEN" : code === "23505" ? "CONFLICT" : "REQUEST_REJECTED", "Operação não autorizada ou indisponível. Confira os dados e tente novamente.");
   }
   return data;

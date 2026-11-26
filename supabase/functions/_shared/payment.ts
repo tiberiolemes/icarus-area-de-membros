@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.2";
 import { rpc, type Dependencies } from "./client.ts";
 import { HttpError, text, uuid } from "./http.ts";
+import { asaasEndpoints, asaasHeaders, type AsaasEnvironment } from "./integrations.ts";
 type ObjectValue = Record<string, unknown>;
 export function cents(value: unknown) {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0 || Math.abs(value * 100 - Math.round(value * 100)) > 0.00001 || !Number.isSafeInteger(Math.round(value * 100))) throw new HttpError(422, "INVALID_AMOUNT", "Valor de pagamento inválido.");
@@ -23,22 +24,31 @@ export function normalizeEvent(body: ObjectValue) {
   if (types[event] === "paid" || types[event] === "expired" || types[event] === "cancelled") return null;
   return { id, type: types[event], order_id: uuid(payment.externalReference), gateway_id: text(payment.id, 100), amount_cents: cents(payment.value), method: text(payment.billingType, 32) };
 }
-export async function resolvePaymentEvent(admin: SupabaseClient, event: NonNullable<ReturnType<typeof normalizeEvent>>, body: ObjectValue, d: Dependencies) {
+export async function resolvePaymentEvent(admin: SupabaseClient, event: NonNullable<ReturnType<typeof normalizeEvent>>, body: ObjectValue, d: Dependencies, mode: AsaasEnvironment, apiKey?: string) {
   const context = await rpc(admin, "app_payment_context", { p_order_id: event.order_id, p_gateway_id: body.checkout ? event.gateway_id : null });
   if (!context?.order_id || !context.gateway_id) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Vínculo de pagamento ainda não confirmado.");
+  if (context.asaas_environment !== mode) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Notificação de outro ambiente de pagamento.");
   if (body.checkout && context.gateway_id !== event.gateway_id) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Checkout não corresponde ao pedido.");
-  if (!body.payment) return { ...event, order_id: uuid(context.order_id), gateway_id: text(context.gateway_id, 100) };
-  if (!d.env("ASAAS_API_KEY") || d.env("ASAAS_ENV") !== "sandbox") throw new HttpError(503, "CONFIGURATION_REQUIRED", "Reconciliação ainda não configurada.");
-  const url = new URL("https://api-sandbox.asaas.com/v3/payments");
+  const forOrder = { ...event, order_id: uuid(context.order_id), gateway_id: text(context.gateway_id, 100) };
+  if (!body.payment && event.type !== "paid") return forOrder;
+  if (!apiKey) throw new HttpError(503, "CONFIGURATION_REQUIRED", "Reconciliação ainda não configurada.");
+  const url = new URL(`${asaasEndpoints[mode].api}/payments`);
   url.searchParams.set("checkoutSession", context.gateway_id); url.searchParams.set("limit", "100");
-  const result = await d.fetch(url, { headers: { access_token: d.env("ASAAS_API_KEY")!, "User-Agent": "Icarus/0.1" }, signal: AbortSignal.timeout(10_000) });
+  const result = await d.fetch(url, { headers: asaasHeaders(apiKey), redirect: "error", signal: AbortSignal.timeout(10_000) });
   if (!result.ok) throw new HttpError(503, "RECONCILIATION_REQUIRED", "Conciliação de pagamento pendente.");
   const payments = await result.json();
   if (payments.hasMore || !Array.isArray(payments.data) || payments.data.length < 1 || payments.data.length > 12) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Conciliação de pagamento pendente.");
-  const actual = payments.data.find((p: ObjectValue) => p.id === event.gateway_id);
-  if (!actual || cents(actual.value) !== event.amount_cents || actual.billingType !== event.method || payments.data.some((p: ObjectValue) => p.billingType !== event.method)) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Conciliação de pagamento pendente.");
+  if (payments.data.some((p: ObjectValue) => p.billingType !== event.method)) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Conciliação de pagamento pendente.");
   const amount = payments.data.reduce((sum: number, p: ObjectValue) => sum + cents(p.value), 0);
-  return { ...event, order_id: uuid(context.order_id), gateway_id: text(context.gateway_id, 100), amount_cents: amount };
+  if (event.type === "paid") {
+    if (amount !== event.amount_cents || payments.data.some((p: ObjectValue) => p.status !== "CONFIRMED" && p.status !== "RECEIVED")) {
+      throw new HttpError(409, "RECONCILIATION_REQUIRED", "O Asaas ainda não confirmou o pagamento deste pedido.");
+    }
+  } else {
+    const actual = payments.data.find((p: ObjectValue) => p.id === event.gateway_id);
+    if (!actual || cents(actual.value) !== event.amount_cents) throw new HttpError(409, "RECONCILIATION_REQUIRED", "Conciliação de pagamento pendente.");
+  }
+  return { ...forOrder, amount_cents: amount };
 }
 export async function finishPaidOrder(admin: SupabaseClient, orderId: string, email: string, origin: string) {
   const existing = await rpc(admin, "app_finalize_paid_order", { p_order_id: orderId, p_actor_id: null });

@@ -65,7 +65,7 @@ it("preserva os filtros ao abrir e voltar de uma discussão de espaço somente l
           spaces: [{ ...spaces[0], description: "Estudos compartilhados." }],
         }),
   );
-  const title = await screen.findByText(topic.title, { selector: "a" });
+  const title = await screen.findByText(topic.title!, { selector: "a" });
   expect(title).toHaveAccessibleName(topic.title);
   expect(screen.getByRole("link", { name: "Estudos" })).toHaveAttribute(
     "aria-current",

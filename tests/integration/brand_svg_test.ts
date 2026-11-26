@@ -82,8 +82,9 @@ Deno.test("SVG: conserva visualmente degradê, clipPath e use e identifica magen
   try {
     const sample = (image: typeof original, x: number, y: number) =>
       [...image.pixels.slice((y * image.width + x) * 4, (y * image.width + x) * 4 + 4)];
-    assert(Math.abs(cropped.width - 200) <= 2);
-    assert(Math.abs(cropped.height - 100) <= 2);
+    // A margem de uma amostra da Edge também aparece na imagem reescalada para o tamanho do original.
+    assert(Math.abs(cropped.width - 200) <= 4);
+    assert(Math.abs(cropped.height - 100) <= 4);
     for (const x of [20, 100, 180]) {
       const before = sample(original, x + 100, 100);
       const after = sample(cropped, x, 50);
@@ -110,10 +111,45 @@ Deno.test("SVG: recusa rapidamente 900 máscaras e limita o total de recortes", 
   ];
   for (const [label, definition, shapes] of cases) {
     const started = performance.now();
-    const error = await assertRejects(() => normalize(svg(`<defs>${definition}</defs>${shapes}`)), HttpError, "até 32 aplicações de máscaras e recortes");
+    const error = await assertRejects(() => normalize(svg(`<defs>${definition}</defs>${shapes}`)), HttpError, "até 32 camadas de composição");
     const elapsed = performance.now() - started;
     assertEquals(error.status, 422);
     assert(elapsed < 1000, `${label}: ${elapsed} ms`);
     console.log(`${label}: HTTP ${error.status} em ${Math.round(elapsed)} ms`);
+  }
+});
+
+Deno.test("SVG: conta cada SVG aninhado e opacidade de composição, inclusive em expansões de use", async () => {
+  const nested = '<svg width="10" height="10"><rect width="10" height="10"/></svg>';
+  const translucent = '<g style="opacity: 50%"><rect width="10" height="10"/></g>';
+  const shapeOpacity = '<rect opacity="0.9" width="10" height="10"/>';
+  for (const layer of [nested, translucent, shapeOpacity]) {
+    await assertRejects(() => normalize(svg(layer.repeat(33))), HttpError, "até 32 camadas de composição");
+    const template = `<defs><g id="layer">${layer}</g></defs>`;
+    await assertRejects(() => normalize(svg(template + '<use href="#layer"/>'.repeat(33))), HttpError, "até 32 camadas de composição");
+    assert((await normalize(svg(template + '<use href="#layer"/>'.repeat(32)))).ratio > 0);
+  }
+});
+
+Deno.test("SVG: opacidade de pintura permanece com preenchimento e traço", async () => {
+  const pieces = Array.from({ length: 40 }, (_, i) =>
+    `<rect x="${i * 10}" y="1" width="7" height="20" fill="#fa1" stroke="#40f" fill-opacity="50%" stroke-opacity=".75"/>`);
+  const cleaned = await normalize(svg(pieces.join("")));
+  assert(cleaned.svg.includes('fill-opacity="0.5"'));
+  assert(cleaned.svg.includes('stroke-opacity="0.75"'));
+
+  const { Resvg } = await import("npm:@cf-wasm/resvg@0.4.0/node");
+  const sample = '<rect x="16" y="16" width="68" height="68" fill="red" stroke="blue" stroke-width="16"';
+  const root = 'viewBox="0 0 100 100"';
+  for (const [markup, expected] of [
+    [sample + ' fill-opacity="0.5" stroke-opacity="0.75"/>', [128, 223]],
+    ['<g opacity="0.5">' + sample + '/></g>', [128, 128]],
+  ] as const) {
+    const tree = await Resvg.async(svg(markup, root));
+    const image = tree.render();
+    try {
+      const alpha = (x: number) => image.pixels[(50 * image.width + x) * 4 + 3];
+      assert([alpha(50), alpha(20)].every((value, i) => Math.abs(value - expected[i]) <= 1));
+    } finally { image.free(); tree.free(); }
   }
 });

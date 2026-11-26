@@ -4,10 +4,12 @@ import { HttpError } from "../_shared/http.ts";
 const ns = "http://www.w3.org/2000/svg";
 const xlink = "http://www.w3.org/1999/xlink";
 const shapes = new Set("path rect circle ellipse line polyline polygon g use".split(" "));
-const elements = new Set([...shapes, ..."svg defs linearGradient radialGradient stop clipPath mask title".split(" ")]);
+const definitions = new Set("defs linearGradient radialGradient clipPath mask title".split(" "));
+const elements = new Set([...shapes, ...definitions, "svg", "stop"]);
 const geometry = new Set("x y x1 x2 y1 y2 width height cx cy r rx ry fx fy fr offset pathLength".split(" "));
 const paint = new Set("fill stroke stop-color color".split(" "));
-const lengths = new Set("stroke-width stroke-dashoffset stroke-miterlimit fill-opacity stroke-opacity stop-opacity opacity".split(" "));
+const lengths = new Set("stroke-width stroke-dashoffset stroke-miterlimit".split(" "));
+const opacity = new Set("opacity fill-opacity stroke-opacity stop-opacity".split(" "));
 const enums: Record<string, string> = {
   "fill-rule": "nonzero evenodd", "clip-rule": "nonzero evenodd",
   "stroke-linecap": "butt round square", "stroke-linejoin": "miter round bevel", "vector-effect": "none non-scaling-stroke",
@@ -23,8 +25,9 @@ const idSyntax = /^[A-Za-z0-9_.:-]{1,100}$/;
 const localPaint = /^url\(\s*(['"]?)(#[A-Za-z0-9_.:-]{1,100})\1\s*\)$/i;
 const color = /^(?:[A-Za-z]+|#[\da-f]{3,8}|(?:rgb|rgba|hsl|hsla)\([\d.%,+ /-]+\))$/i;
 const coordinateLimit = 1_000_000;
-const renderSize = 1024;
-const maxEffectApplications = 32;
+const maxRenderSide = 1024;
+const maxRasterWork = 12_000_000;
+const maxLayers = 32;
 const maxBytes = 512_000;
 const linear = Float32Array.from({ length: 256 }, (_, byte) => {
   const srgb = byte / 255;
@@ -62,6 +65,10 @@ function presentation(name: string, value: string) {
   if (paint.has(name)) return color.test(value) ? value : cleanReference(name, value);
   if (name === "clip-path" || name === "mask") return value === "none" ? value : cleanReference(name, value);
   if (lengths.has(name)) return length(value) ? value : undefined;
+  if (opacity.has(name) && length(value)) {
+    const alpha = value.endsWith("%") ? Number(value.slice(0, -1)) / 100 : Number(value);
+    if (Number.isFinite(alpha)) return String(Math.max(0, Math.min(1, alpha)));
+  }
   if (name === "stroke-dasharray") {
     if (value === "none" || (value.length <= 512 && value.split(/[\s,]+/).every(length))) return value;
   }
@@ -176,11 +183,22 @@ function verifyReferences(root: Node) {
     node.children.forEach(index);
   }
   index(root);
-  let cost = 0, effectApplications = 0;
-  function verify(node: Node, seen: Set<Node>, effects: number) {
+  let cost = 0, layers = 0;
+  function countLayers(count: number) {
+    if ((layers += count) > maxLayers) {
+      throw new HttpError(422, "INVALID_FILE", `O SVG é complexo demais. Use até ${maxLayers} camadas de composição. Reduza máscaras, recortes, SVGs aninhados e opacidade de grupos.`);
+    }
+  }
+  function verify(node: Node, seen: Set<Node>, effects: number, rendered: boolean) {
     if ((cost += 1 + (node.attributes.get("d")?.length ?? 0) / 100 + (node.attributes.get("points")?.length ?? 0) / 100) > 6000 || seen.size >= 48 || effects > 4) throw complex();
     if (seen.has(node)) throw invalid();
     seen.add(node);
+    // fill-opacity e stroke-opacity são aplicadas à tinta do caminho pelo resvg.
+    if (rendered) {
+      const viewportLayer = node.tag === "svg" && node !== root;
+      const opacityLayer = Number(node.attributes.get("opacity") ?? 1) < 1;
+      countLayers(Number(viewportLayer) + Number(opacityLayer));
+    }
     for (const name of ["href", "fill", "stroke", "clip-path", "mask"]) {
       const value = node.attributes.get(name);
       if (!value || (name !== "href" && !value.startsWith("url("))) continue;
@@ -193,16 +211,14 @@ function verifyReferences(root: Node) {
         continue;
       }
       const effect = name === "clip-path" || name === "mask";
-      // A mesma máscara ou recorte pode exigir uma nova camada a cada aplicação.
-      if (effect && ++effectApplications > maxEffectApplications) {
-        throw new HttpError(422, "INVALID_FILE", `O SVG é complexo demais. Use até ${maxEffectApplications} aplicações de máscaras e recortes.`);
-      }
-      verify(target, seen, effects + Number(effect));
+      if (effect && rendered) countLayers(1);
+      verify(target, seen, effects + Number(effect), rendered);
     }
-    node.children.forEach((child) => verify(child, seen, effects));
+    node.children.forEach((child) => verify(child, seen, effects, rendered && !definitions.has(child.tag)));
     seen.delete(node);
   }
-  verify(root, new Set(), 0);
+  verify(root, new Set(), 0, true);
+  return { cost, layers };
 }
 
 const escape = (value: string) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
@@ -233,7 +249,7 @@ function wrapped(box: Box, content: string) {
   return `<svg xmlns="${ns}" viewBox="${box.join(" ")}" preserveAspectRatio="xMidYMid meet">${content}</svg>`;
 }
 
-async function drawingBounds(source: string, box: Box) {
+async function drawingBounds(source: string, box: Box, renderSize: number) {
   const [x, y, width, height] = box;
   const scale = renderSize / Math.max(width, height);
   if (Math.min(width, height) * scale < 2) throw complex();
@@ -276,7 +292,10 @@ export async function normalizeBrandSvg(bytes: Uint8Array, variant: "light" | "d
   try { source = new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
   catch { throw invalid(); }
   const { root, removedText } = parse(source);
-  verifyReferences(root);
+  const { cost, layers } = verifyReferences(root);
+  // Uma camada pode repetir o custo do desenho inteiro numa área maior que a viewport.
+  const layerWork = layers ? Math.max(cost, 64 * layers) : 0;
+  const renderSize = Math.min(maxRenderSide, Math.floor(Math.sqrt(maxRasterWork / (cost + layerWork))));
   const box = viewport(root);
   const [x, y, width, height] = box;
   // A viewport interna preserva a escala de porcentagens, recortes e gradientes ao cortar a externa.
@@ -284,7 +303,7 @@ export async function normalizeBrandSvg(bytes: Uint8Array, variant: "light" | "d
     root.attributes.set(name, String(value));
   }
   const content = serialize(root);
-  const result = await drawingBounds(wrapped(box, content), box);
+  const result = await drawingBounds(wrapped(box, content), box, renderSize);
   let [left, top, cropWidth, cropHeight] = result.bounds;
   const ratio = cropWidth / cropHeight;
   const warnings = [];

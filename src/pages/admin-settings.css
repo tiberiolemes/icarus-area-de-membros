@@ -183,14 +183,23 @@
 .admin-settings .settings-status [data-configured] { font-weight: var(--stitch-type-headline-sm-weight); }
 .admin-settings .settings-status [data-configured="true"] { color: var(--stitch-status-success); }
 .admin-settings .settings-status [role="alert"] { color: var(--stitch-error); }
+.admin-settings .settings-status > div { display: grid; gap: var(--stitch-space-sm); justify-items: start; }
 
 .admin-settings .settings-provider-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: var(--stitch-space-md);
 }
 
-.admin-settings .settings-provider-grid .button { justify-self: start; }
+.settings-copy {
+  display: grid;
+  gap: var(--stitch-space-xs);
+  min-width: 0;
+}
+
+.settings-copy button { justify-self: start; }
+.settings-copy [role="status"]:empty { display: none; }
 
 .admin-settings .settings-services summary {
   align-content: center;

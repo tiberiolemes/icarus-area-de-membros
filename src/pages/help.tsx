@@ -191,7 +191,10 @@ export const articles = [
       "Em Configurações, abra Módulos para ligar ou desligar Comunidade, Materiais, Podcasts, Ranking, Encontros ao vivo, Suporte, Central de ajuda e Feedback dos alunos. Desligar esconde o recurso dos alunos e bloqueia o acesso no servidor, sem apagar dados, e religar traz tudo de volta. Cursos e Certificados ficam sempre ativos, e nenhuma exportação depende dos módulos. O painel de cada módulo continua acessível, com o selo Desativado. Os comentários das aulas seguem com Cursos, e um link de sala de encontro já entregue continua abrindo até você trocá-lo na sala.",
       "Em Configurações, revise perguntas e versões legais. Na aba Equipe, consulte os papéis e abra Gerenciar membros e equipe para alterar o acesso pela ficha.",
       "Em Auditoria, busque eventos por ação, ator ou alvo e navegue entre as páginas. A trilha mostra o motivo quando registrado.",
-      "Em Integrações, escolha Gateway Asaas ou Bunny Stream. Atualizar estado consulta se há configuração no servidor. Configure as credenciais no servidor.",
+      "Em Configurações, abra Integrações e escolha Gateway Asaas ou Bunny Stream. Ative a verificação em duas etapas em Sua conta → Segurança e entre com o segundo fator. Confirme sua senha ao salvar. O painel informa os últimos quatro caracteres das chaves e a origem de cada valor. As variáveis do servidor têm prioridade.",
+      "No Asaas, selecione Sandbox ou Produção e salve a chave de API do ambiente. Use Gerar token, copie o token antes de fechar a janela e cadastre-o com a URL fornecida no webhook da conta Asaas. Ao rotacionar o token, atualize o webhook no Asaas imediatamente.",
+      "Use Testar conexão para conferir a chave. Para ligar Cobranças em produção, selecione Produção, salve as credenciais, configure o Turnstile do checkout e obtenha um teste aprovado nas últimas 24 horas com as credenciais atuais. Confirme a senha também ao ligar ou desligar o interruptor. Trocar a chave ou o token de Produção desliga as cobranças e exige novo teste.",
+      "No Bunny Stream, informe o ID da biblioteca, a chave da API, o hostname da CDN e a chave de autenticação do player. Use Testar conexão para conferir a chave de API e a biblioteca. Para confirmar a reprodução protegida, abra uma aula com um vídeo dessa biblioteca.",
     ],
   },
 ];

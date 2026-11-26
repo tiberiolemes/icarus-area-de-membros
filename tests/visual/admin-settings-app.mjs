@@ -60,11 +60,25 @@ async function prepare(browser, viewport, theme, role = "admin", aal = "aal2") {
       });
       case "app_touch_session": return reply({ expires_at: new Date(expiry * 1000).toISOString(), warning_seconds: 60 });
       case "capabilities": {
-        const n = calls.filter((call) => call.name === name).length;
+        if (args.action === "integration-test") return reply({ ok: false, message: "A chave de API foi recusada no teste." });
+        const n = calls.filter((call) => call.name === name && call.args?.action === "integration-status" && call.args.provider === args.provider).length;
         if (n === 2) return reply({ message: "Falha de leitura na fixture." }, 503);
+        const fields = args.provider === "asaas" ? {
+          env: { source: "vault", value: "production" },
+          api_key: { source: "environment", suffix: "a109", configured: true },
+          webhook_token: { source: "vault", suffix: "b147", configured: true },
+        } : {
+          library_id: { source: "vault", value: "12840" },
+          cdn_host: { source: "environment", value: "vz-demo.b-cdn.net" },
+          api_key: { source: "vault", suffix: "a735", configured: true },
+          token_key: { source: "vault", suffix: "c852", configured: true },
+        };
         return reply({
-          asaas: n >= 3 ? true : false, bunny: n >= 3 ? "valor inválido da fixture" : true,
-          storage: true, email: "local", mode: "local", unexpected: "campo fora do contrato",
+          configured: n >= 3, test_ready: n >= 3, can_write: true, fields: n >= 3 ? fields : {},
+          updated_at: n >= 3 ? clock.toISOString() : null, updated_by: n >= 3 ? "Admin da demonstração" : null,
+          storage: true, email: "local", mode: "local", turnstile: n >= 3,
+          webhook_url: "https://api.example.test/functions/v1/asaas-webhook?ambiente=" + (n >= 3 ? "production" : "sandbox"),
+          production_enabled: false, production_test_valid: false, checkout_allowed: n < 3,
         });
       }
       case "app_admin_list": {
@@ -99,7 +113,7 @@ async function capture(page, cdp, viewport, name) {
       const { x, y, width, height } = element.getBoundingClientRect();
       return [x, y, width, height];
     };
-    const controls = [...panel.querySelectorAll("button, a, input, summary")]
+    const controls = [...panel.querySelectorAll("button, a, input, select, summary")]
       .filter((element) => element.getClientRects().length > 0)
       .map((element) => ({ tag: element.localName, box: rect(element), font: parseFloat(getComputedStyle(element).fontSize) }));
     return {
@@ -114,7 +128,7 @@ async function capture(page, cdp, viewport, name) {
   });
   assert.equal(state.document.width, viewport.width);
   assert.deepEqual([state.viewport, state.dpr, state.scale, state.scroll, state.focus, state.hovered], [viewport, 1, 1, [0, 0], "h1", []]);
-  assert.deepEqual(state.controls.filter(({ tag, box, font }) => box[2] < 44 || box[3] < 44 || (tag === "input" && font < 16)), []);
+  assert.deepEqual(state.controls.filter(({ tag, box, font }) => box[2] < 44 || box[3] < 44 || (["input", "select"].includes(tag) && font < 16)), []);
   const pngs = [];
   for (const pass of ["a", "b"]) {
     const path = join(out, `${name}-${pass}.png`);
@@ -140,9 +154,10 @@ async function exercise(browser, settings, commit, target, theme, width) {
     await page.waitForFunction(() => document.activeElement === document.querySelector(".admin-settings h1"));
     const isProvider = target.name === "bunny" || target.name === "asaas";
     const status = page.locator("#settings-provider-status");
-    if (isProvider) await status.filter({ hasText: target.name === "bunny" ? /^Configuração detectada$/ : /^Não configurado$/ }).waitFor();
+    if (isProvider) await status.filter({ hasText: /^Não configurado$/ }).waitFor();
     if (target.name === "auditoria") await page.getByText("22 registros · página 1 de 2").waitFor();
     const baseline = await capture(page, cdp, viewport, prefix);
+    const providerStates = {};
     assert.equal(baseline.state.theme, theme);
     await page.keyboard.press("Tab");
     assert.deepEqual(await page.evaluate(() => {
@@ -188,24 +203,31 @@ async function exercise(browser, settings, commit, target, theme, width) {
     } else {
       const refresh = page.getByRole("button", { name: "Atualizar estado" });
       await page.keyboard.press("Enter");
-      await page.getByRole("alert").getByText(/A consulta falhou/).waitFor();
+      await page.getByRole("alert").filter({ hasText: /A consulta falhou/ }).waitFor();
       assert(await refresh.evaluate((button) => button === document.activeElement));
       await page.keyboard.press("Enter");
-      await status.filter({ hasText: target.name === "bunny" ? /^Estado indisponível$/ : /^Configuração detectada$/ }).waitFor();
-      assert.equal(await page.getByText(/valor inválido da fixture|campo fora do contrato/).count(), 0);
+      await status.filter({ hasText: /^Configurado$/ }).waitFor();
+      assert.equal(await page.getByLabel(/^Chave de API/).inputValue(), "");
+      await heading.evaluate((element) => { element.focus({ preventScroll: true }); window.scrollTo(0, 0); });
+      providerStates.configured = await capture(page, cdp, viewport, prefix + "-configurado");
+      await page.getByRole("button", { name: "Testar conexão" }).click();
+      await page.getByRole("alert").filter({ hasText: "A chave de API foi recusada no teste." }).waitFor();
+      await status.filter({ hasText: /^Com erro$/ }).waitFor();
+      await heading.evaluate((element) => { element.focus({ preventScroll: true }); window.scrollTo(0, 0); });
+      providerStates.connectionError = await capture(page, cdp, viewport, prefix + "-com-erro");
       const services = page.locator("summary");
       await services.press("Enter");
       await page.getByText("Armazenamento", { exact: true }).waitFor();
       assert.equal(await page.getByRole("link", { name: target.name === "bunny" ? "Gerenciar aulas" : "Consultar pedidos" }).getAttribute("href"), target.name === "bunny" ? "/admin/cursos" : "/admin/pedidos");
       await page.getByRole("link", { name: target.name === "bunny" ? "Gateway Asaas" : "Bunny Stream" }).press("Enter");
-      await status.filter({ hasText: target.name === "bunny" ? /^Configuração detectada$/ : /^Estado indisponível$/ }).waitFor();
-      assert.equal(calls.filter(({ name }) => name === "capabilities").length, 3);
+      await status.filter({ hasText: /^Não configurado$/ }).waitFor();
+      assert.equal(calls.filter(({ name, args }) => name === "capabilities" && args.action === "integration-test").length, 1);
       assert(!calls.some(({ name }) => name.startsWith("app_admin_")));
     }
     assert.equal(await page.evaluate(() => performance.timeOrigin), timeOrigin);
     assert.deepEqual([unexpected, errors], [[], []]);
     writeFileSync(join(out, `${prefix}.json`), JSON.stringify({
-      ...baseline, screen: target.screen, commit, settings, clock: clock.toISOString(),
+      ...baseline, providerStates, screen: target.screen, commit, settings, clock: clock.toISOString(),
       stateProof: { equivalent: false, evidence: ["A fixture usa somente os contratos atuais. As amostras do Stitch incluem dados e operações sem contrato."] },
     }, null, 2) + "\n", { flag: "wx" });
   } finally {

@@ -23,7 +23,6 @@ import {
   MessageSquare,
   Reply,
   History,
-  KeyRound,
   ListOrdered,
   Pencil,
   Plus,
@@ -51,6 +50,7 @@ import {
 } from "../api";
 import { buildAdminCsv, exportLimit } from "../admin-export";
 import { courseLessonPath } from "../course-paths";
+import { IntegrationCards, IntegrationTestMessage, integrationKey, useIntegrationTest, type IntegrationStatus } from "./admin-integrations";
 import type { Page, Plan, Course } from "../api";
 import {
   Action,
@@ -2707,21 +2707,16 @@ const integrationTabs = [
   { id: "bunny", label: "Bunny Stream", to: "?aba=integracoes&provedor=bunny" },
 ];
 
-async function getAdminCapabilities() {
-  const data = await edge<Record<string, unknown> | null>("capabilities");
-  return {
-    asaas: typeof data?.asaas === "boolean" ? data.asaas : undefined,
-    bunny: typeof data?.bunny === "boolean" ? data.bunny : undefined,
-    mode: data?.mode === "production" || data?.mode === "local" ? data.mode : undefined,
-    storage: data?.storage === true,
-    email: data?.email === "configured" || data?.email === "local" ? data.email : undefined,
-  };
-}
-
 function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
-  const capabilities = useQuery({ queryKey: ["admin-capabilities"], queryFn: getAdminCapabilities });
+  const settings = useQuery({ queryKey: integrationKey(provider), queryFn: async () => {
+    const data = await edge<IntegrationStatus>("capabilities", { action: "integration-status", provider });
+    if (!data?.fields) throw new Error("Não foi possível consultar a configuração.");
+    return data;
+  } });
+  const test = useIntegrationTest(provider);
   const asaas = provider === "asaas";
-  const configured = capabilities.data?.[provider];
+  const configured = settings.data?.configured;
+  const hasError = settings.isError || Boolean(settings.data?.error) || test.isError || test.data?.ok === false;
   const ProviderIcon = asaas ? CreditCard : Video;
 
   return (
@@ -2731,9 +2726,11 @@ function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
       title={asaas ? "Gateway de pagamento Asaas" : "Integração Bunny Stream"}
       description={asaas ? "Checkout hospedado para pagamentos por Pix e cartão." : "Reprodução de vídeos autorizada pelo servidor."}
       action={
-        <button type="button" aria-controls="settings-provider-status" aria-disabled={capabilities.isFetching}
+        <button type="button" aria-controls="settings-provider-status" aria-disabled={settings.isFetching || test.isPending}
           onClick={() => {
-            if (!capabilities.isFetching) void capabilities.refetch({ cancelRefetch: false });
+            if (settings.isFetching || test.isPending) return;
+            test.reset();
+            void settings.refetch({ cancelRefetch: false });
           }}>
           <RefreshCw size={16} aria-hidden="true" /> Atualizar estado
         </button>
@@ -2745,46 +2742,34 @@ function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
           <ProviderIcon size={22} aria-hidden="true" />
           <div>
             <h2 id="settings-provider-title">Configuração do provedor</h2>
-            <p id="settings-provider-status" role="status" data-configured={capabilities.isSuccess && configured === true}>
-              {capabilities.isFetching ? "Consultando configuração…" :
-                capabilities.isError || configured === undefined ? "Estado indisponível" :
-                configured ? "Configuração detectada" : "Não configurado"}
+            <p id="settings-provider-status" role="status" data-configured={!hasError && configured}>
+              {settings.isFetching ? "Consultando configuração…" :
+                hasError ? "Com erro" : configured ? "Configurado" : "Não configurado"}
             </p>
-            {capabilities.isError && <p role="alert">A consulta falhou. Use Atualizar estado para tentar novamente.</p>}
-            <p>O indicador informa a presença da configuração no servidor.</p>
+            {settings.isError && <p role="alert">A consulta falhou. Use Atualizar estado para tentar novamente.</p>}
+            {settings.data?.error && <p role="alert">{settings.data.error}</p>}
+            {settings.data?.checkout_allowed === false && <p>Cobranças em Produção aguardam liberação.</p>}
+            {settings.data && <button type="button" disabled={!settings.data.test_ready || settings.isFetching || test.isPending}
+              onClick={() => test.mutate()}>
+              {test.isPending ? "Testando conexão…" : "Testar conexão"}
+            </button>}
+            <IntegrationTestMessage test={test} />
           </div>
         </section>
       </div>
-      <div className="settings-provider-grid">
-        <section className="settings-panel">
-          <h2><KeyRound size={20} aria-hidden="true" /> {asaas ? "API e autenticação" : "Credenciais e biblioteca"}</h2>
-          <p>{asaas
-            ? "O checkout usa o ambiente sandbox. Configure a chave da API, o token do webhook, a origem da aplicação e a imagem do item no servidor."
-            : "Configure o identificador da biblioteca, a chave de assinatura e o domínio permitido no servidor."}</p>
-        </section>
-        <section className="settings-panel">
-          <h2><Shield size={20} aria-hidden="true" /> {asaas ? "Webhooks e confirmação" : "Acesso e reprodução"}</h2>
-          <p>{asaas
-            ? "O servidor valida o token do webhook e processa a confirmação do pagamento antes de conceder acesso."
-            : "Associe o identificador do vídeo à aula. O servidor verifica o acesso antes de emitir um link de reprodução temporário."}</p>
-          <Link className="button" to={asaas ? "/admin/pedidos" : "/admin/cursos"}>
-            {asaas ? "Consultar pedidos" : "Gerenciar aulas"}
-          </Link>
-        </section>
-        <section className="settings-panel">
-          <h2><FileText size={20} aria-hidden="true" /> {asaas ? "Conciliação e operações fiscais" : "Processamento de vídeo"}</h2>
-          <p>{asaas
-            ? "Consulte taxas, conciliação e operações fiscais no painel do Asaas."
-            : "Consulte a biblioteca, o processamento e os perfis de vídeo no painel do Bunny Stream."}</p>
-        </section>
-      </div>
-      {capabilities.isSuccess && (
+      {settings.data && <>
+        <IntegrationCards provider={provider} settings={settings.data} onSave={test.reset} />
+        <Link className="button settings-help" to={asaas ? "/admin/pedidos" : "/admin/cursos"}>
+          {asaas ? "Consultar pedidos" : "Gerenciar aulas"}
+        </Link>
+      </>}
+      {settings.data?.mode && (
         <details className="settings-panel settings-services">
           <summary>Outros serviços da plataforma</summary>
           <dl className="settings-roles">
-            <div><dt>Aplicação</dt><dd>{capabilities.data.mode === "production" ? "Produção" : capabilities.data.mode === "local" ? "Local" : "Indisponível"}</dd></div>
-            <div><dt>Armazenamento</dt><dd>{capabilities.data.storage ? "Disponível na configuração" : "Indisponível"}</dd></div>
-            <div><dt>E-mail</dt><dd>{capabilities.data.email === "configured" ? "Configuração detectada" : capabilities.data.email === "local" ? "Local" : "Indisponível"}</dd></div>
+            <div><dt>Aplicação</dt><dd>{settings.data.mode === "production" ? "Produção" : "Local"}</dd></div>
+            <div><dt>Armazenamento</dt><dd>{settings.data.storage ? "Disponível na configuração" : "Indisponível"}</dd></div>
+            <div><dt>E-mail</dt><dd>{settings.data.email === "configured" ? "Configuração detectada" : settings.data.email === "local" ? "Local" : "Indisponível"}</dd></div>
           </dl>
         </details>
       )}
@@ -2807,7 +2792,10 @@ export function AdminSettings() {
   if (tab === "modulos") return <AdminModules />;
   if (tab === "equipe") return <AdminTeam />;
   if (tab === "auditoria") return <AdminAudit />;
-  if (tab === "integracoes") return <AdminIntegrations provider={params.get("provedor") === "bunny" ? "bunny" : "asaas"} />;
+  if (tab === "integracoes") {
+    const provider = params.get("provedor") === "bunny" ? "bunny" : "asaas";
+    return <AdminIntegrations key={provider} provider={provider} />;
+  }
   if (tab === "legal") return <LegalSettings />;
   if (tab === "privacidade") return <PrivacySettings />;
   return <OnboardingAdmin />;

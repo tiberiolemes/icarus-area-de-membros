@@ -525,7 +525,14 @@ export const transport: typeof fetch = async (input, init) => {
     const item = state.profiles.flatMap(earned).find((certificate) => certificate.code === a.p_code);
     return item ? Response.json(item) : fail("Certificado não encontrado.");
   }
-  if (path === "/functions/v1/capabilities") return Response.json({ asaas: false, bunny: false, storage: true, email: "local", mode: "local" });
+  if (path === "/functions/v1/capabilities") {
+    const services = { storage: true, email: "local", mode: "local" };
+    if (a.action === undefined) return Response.json({ asaas: false, bunny: false, ...services });
+    if (a.action === "integration-status" && profile?.role === "admin") {
+      return Response.json({ ...services, demo: true, configured: false, can_write: false, test_ready: false, fields: {} });
+    }
+    return fail("A configuração exige uma instalação do Icarus.", 403);
+  }
   if (!profile) return fail("Entre com uma conta da demonstração.", 401, "PGRST301");
   if (path === "/functions/v1/media") {
     const lesson = a.kind === "lesson" && findLesson(a.id, profile);

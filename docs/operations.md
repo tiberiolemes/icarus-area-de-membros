@@ -4,7 +4,7 @@ O Icarus é uma plataforma de área de membros e cursos online em React/Vite e S
 
 ## Atualizar de versão
 
-Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes. Numa instalação hospedada, siga [Aplicar migrações no Supabase hospedado](#aplicar-migrações-no-supabase-hospedado), que vale para a 0.1.6 e para a 0.2.0. O roteiro do [stack Docker completo](#atualizar-uma-instalação-docker-completa) foi escrito e ensaiado para a v0.1.6. A partir da 0.2.0, o banco foi ensaiado pelo [ensaio isolado](#ensaio-de-banco-isolado) (`install` da tag v0.2.0, `upgrade` e `verify` no mesmo Postgres), mas o stack Docker completo da 0.2.0 ainda não tem roteiro próprio ensaiado para as Edge Functions.
+Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHANGELOG.md). A atualização aplica só as migrations novas sobre o histórico existente, publica as Edge Functions da mesma tag e gera o frontend de novo. Faça backup e ensaie numa cópia antes. Numa instalação hospedada, siga [Aplicar migrações no Supabase hospedado](#aplicar-migrações-no-supabase-hospedado). Para Linux com Docker, use o [roteiro da v0.1.6](#atualizar-uma-instalação-docker-completa) ou o [roteiro a partir da v0.2.0](#atualizar-o-stack-docker-a-partir-da-v020).
 
 | Versão instalada | Histórico esperado | Migrations novas até a 2.6.0 |
 | --- | --- | --- |
@@ -110,6 +110,15 @@ Use este roteiro para o stack completo da v0.1.6 criado pelo Supabase CLI, com A
 
    Confirme a saúde de Auth, Storage, PostgREST e Edge, além dos IDs e volumes já registrados. Valide login de conta existente, acesso a material privado, permissões de membro e admin e um convite via Mailpit antes de liberar escritas. Execute a mesma sequência na instalação de origem só depois de validar a cópia. O ensaio DB-only abaixo usa projeto próprio e serve à verificação do instalador.
 
+### Atualizar o stack Docker a partir da v0.2.0
+
+Ensaie primeiro numa cópia desligada da internet pública, sem webhooks, SMTP externo ou tarefas de pagamento. Separe os checkouts das duas tags em `ICARUS_ANTIGO` e `ICARUS_NOVO`. Use o socket e o ID do daemon que instalou o stack. Suspenda escritas da aplicação e dos jobs. Faça e verifique o backup pelos comandos da versão instalada, incluindo Postgres e Storage, e preserve o ambiente Edge e um snapshot da VM para recuperação.
+
+1. No checkout antigo, rode `node scripts/local.mjs status` com `ICARUS_INSTALL_DOCKER_HOST` e `ICARUS_INSTALL_DOCKER_ID`. Confira os IDs registrados em `.local/local-installation.json`. O CLI deve usar o mesmo `DOCKER_HOST` e `SUPABASE_SERVICES_HOSTNAME=127.0.0.1`. Na tag nova, rode `supabase migration list --local` e `supabase db push --local --dry-run`. Compare a sequência remota com a da tag instalada. Depois do ensaio e da conferência, rode `supabase db push --local`. Confira novamente a lista e a prévia vazia.
+2. Confira por `docker inspect --format '{{json .Mounts}}' "$ICARUS_EDGE_ID"` que o Edge registrado monta `supabase/functions` do checkout antigo, com o ID completo conferido no recibo. Enquanto o frontend está suspenso, pare só esse Edge pelo ID. Preserve a pasta de funções antiga e instale a pasta completa da nova tag no mesmo caminho da montagem, incluindo `_shared`. Copie somente o `.env` privado da pasta antiga com modo `0600`. Se o caminho da montagem for outro, use a origem exibida no `inspect`, dentro do checkout registrado. Preserve o TOML, o checkout, a rede, o ambiente do contêiner e os volumes do stack original.
+3. No checkout antigo, rode `node scripts/local.mjs functions-restart`. O helper retoma o mesmo Edge e valida as respostas. Confira `capabilities`, login de uma conta existente, mídia privada assinada, acesso de membro e admin e um convite via Mailpit. A configuração precisa dos secrets da versão nova para exercer integrações elegíveis. Em produção, configure secrets pelo procedimento da instalação antes de ativar funcionalidades externas.
+4. Copie com modo `0600` o `.env.local` do checkout antigo para o novo. No checkout novo, use `umask 022`, `npm ci`, `npm run build` e sirva o novo `dist` depois dos testes. Confira o frontend com a mesma URL pública do ambiente Edge. Em falha, restaure o snapshot e o conjunto de banco, arquivos e configuração e volte à versão antiga do frontend e das funções.
+
 ### Ensaio de banco isolado
 
 `node scripts/clean-install.mjs install` (ou sem argumento) cria o projeto DB-only `icarus-courses-install-qa` em uma bridge própria com `127.0.0.1:58622`. O diretório `.local/clean-install` precisa estar ausente. Use o gate do Docker dedicado, inventário vazio e porta livre acima. Um start interrompido pode deixar o diretório ou a rede da tentativa. Preserve o diagnóstico e use um ambiente vazio para repetir.
@@ -173,6 +182,22 @@ node scripts/first-admin.mjs promote
 
 Essa ação é SQL privilegiado **específico para o ID salvo em `.local/first-admin.json`**, sem RPC pública de papel. Só promove se a conta não for demo/suspensa, tiver email confirmado, primeira senha concluída. Demais usuários não conseguem editar role pelo perfil. Contas com fator verificado exigem JWT/sessãoAAL2; contas sem fator podem operar em AAL1; não existe bypass por email ou marker no user_metadata. O arquivo privado do operador não deve ser commitado.
 
+## Cabeçalhos do frontend hospedado
+
+Envie os cabeçalhos pelo servidor que entrega o `index.html` e o fallback da aplicação. Em Caddy, coloque o bloco abaixo dentro do site HTTPS e substitua `https://projeto.supabase.co` pela origem de `VITE_SUPABASE_URL`. Use também a origem pública do Storage se ela for diferente. A mesma política se aplica ao login e à administração.
+
+```caddyfile
+header {
+    Content-Security-Policy "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://projeto.supabase.co https://api.github.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://player.mediadelivery.net https://iframe.mediadelivery.net https://www.youtube-nocookie.com https://open.spotify.com; img-src 'self' data: blob: https://projeto.supabase.co https://i.ytimg.com; media-src 'self' blob: https://projeto.supabase.co; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'"
+    Strict-Transport-Security "max-age=31536000"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    X-Frame-Options "DENY"
+}
+```
+
+`style-src 'unsafe-inline'` permite os estilos aplicados pelos componentes React, como a posição do vídeo. O JavaScript usa apenas arquivos próprios e o Turnstile. A consulta de atualizações usa `api.github.com`. Site com domínio próprio para o player deve acrescentar a origem exata à lista de frames. Aplique HSTS no HTTPS depois de verificar o certificado e o redirecionamento HTTP. Use `caddy validate` antes de recarregar a configuração. Confira os cabeçalhos no login e em uma rota interna e teste os frames de Turnstile, Bunny, YouTube e Spotify, a marca do Storage, a ajuda e o checkout em uma instalação de ensaio. Consulte a [referência do Caddy](https://caddyserver.com/docs/caddyfile/directives/header) e as [diretrizes do Turnstile](https://developers.cloudflare.com/turnstile/reference/content-security-policy/).
+
 ## Edge Functions e secrets
 
 `start` cria o Edge Runtime com o stack nativo. `functions` verifica sua prontidão e `functions-restart` recupera também o Edge registrado que já parou, desde que os demais serviços estejam ativos. O comando usa o ID e a configuração original. `stop` para os IDs registrados e preserva containers e volumes. O start aguarda até 30 s por Auth/Storage/PostgREST e até 90 s pela resposta Edge. Os recibos ficam em `.local/start-evidence.json` e `.local/edge-readiness.json`. `.local/command-failure.json` guarda o diagnóstico privado de falhas do CLI.
@@ -193,16 +218,18 @@ Em runtime hospedado pode ser usado `SUPABASE_PUBLIC_URL=https://dominio-publico
 
 Fora do modo local (`ICARUS_MODE=local`), `APP_ORIGIN` é obrigatório. Sem ele, em produção, com `ICARUS_MODE` ausente ou com valor diferente, as funções respondem 503 `CONFIGURATION_REQUIRED` em vez de usar `http://127.0.0.1:8088`, que só vale no modo local. Os convites pós-pagamento usam esse endereço. Como a resposta sai sem CORS, o navegador mostra só um erro de conexão; o código aparece no log da função ou numa chamada por `curl`.
 
-**Checkout e reautenticação têm limite de tentativas** (migration `202611250001`), com o throttle por minuto do banco.
+**Checkout e reautenticação têm limite de tentativas** no banco.
 - O checkout aceita 5 tentativas por IP, 5 por conta logada e 3 por email do comprador. O limite por email vale também para quem está logado, porque usa o email da conta. Trocar a `attempt_key` não contorna o limite.
-- A confirmação de senha da `reauthenticate` aceita 5 tentativas por usuário.
+- A confirmação de senha da `reauthenticate` aceita 5 tentativas por minuto e 20 por hora por usuário.
 - Passou do limite, a Edge responde 429 `RATE_LIMITED` e a janela seguinte libera.
 - O IP vem só de `cf-connecting-ip`, que a Cloudflare deve preencher no Supabase hospedado, e o IPv6 conta pelo bloco /64. Confira na instalação depois de publicar: do mesmo IP, trocando o email a cada tentativa, a sexta no minuto deve receber 429. Se só o limite por email agir, o cabeçalho não chega à função.
 - O `x-forwarded-for` é ignorado: o primeiro valor é o que o cliente escreve, e o último pode ser o próprio proxy, o mesmo para todos.
 - Sem `cf-connecting-ip`, não há limite por IP; valem o limite por email e conta e o Turnstile.
 - Numa instalação própria sem a Cloudflare na frente, deixe um proxy que remova o `cf-connecting-ip` vindo do cliente e o preencha com o IP real. Sem isso, o cliente escolhe o IP do limite.
 - O banco guarda um md5 com prefixo fixo do IP e do email, não o texto. Isso não é anonimização: um IPv4 se recupera testando os endereços, e um email conhecido se confirma pelo hash.
-- O projeto não apaga linhas antigas de `rate_limits`, deste e dos demais limites. Inclua essa tabela na política de retenção da instalação.
+- O feed, os materiais, os podcasts e os encontros aceitam 60 consultas por minuto por usuário, com janela própria para cada recurso. O servidor aplica os limites antes de listar dados.
+
+**Retenção operacional.** O banco remove em lotes os contadores com mais de dois dias, os nonces vencidos e as sessões Icarus vencidas há mais de um dia. Um marcador de sessão vencida fica associado ao ID do Auth até o Auth apagá-lo, para impedir que o acesso seja reaberto. A auditoria de ações é mantida. Quando `pg_cron` já está instalado na aplicação da migration, a rotina roda diariamente às 03h35 no fuso do cron do banco. Nos demais ambientes, o limitador inicia lotes curtos em uma amostra das consultas bem-sucedidas e evita rodadas simultâneas com um lock sem espera.
 
 **Turnstile no checkout.** Com o segredo `TURNSTILE_SECRET_KEY` nos secrets das Edge Functions, a `checkout` confere o token em `https://challenges.cloudflare.com/turnstile/v0/siteverify` antes de reservar o pedido ou falar com o Asaas.
 - Token ausente ou recusado volta como 403 `CAPTCHA_FAILED`.

@@ -7,7 +7,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { edge, money, safeUrl, useRpc } from "../api";
+import { edge, money, useRpc } from "../api";
 import type { Plan } from "../api";
 import { useAuth } from "../auth";
 import { readModules } from "../modules";
@@ -28,9 +28,20 @@ type Capabilities = {
   asaas: boolean;
   bunny: boolean;
   storage: boolean;
-  email: string;
-  mode: string;
 };
+
+export function asaasCheckoutUrl(value: unknown, environment: unknown) {
+  const origin = environment === "sandbox" ? "https://sandbox.asaas.com"
+    : environment === "production" ? "https://asaas.com" : undefined;
+  if (!origin || typeof value !== "string") return;
+  try {
+    const url = new URL(value);
+    if (url.protocol === "https:" && url.origin === origin && !url.username && !url.password) return url.href;
+  } catch {
+    return undefined;
+  }
+}
+
 export function Checkout() {
   const [params] = useSearchParams(),
     { session } = useAuth(),
@@ -124,6 +135,7 @@ export function Checkout() {
                           const result = await edge<{
                             order_id: string;
                             status: string;
+                            asaas_environment: "sandbox" | "production";
                             url?: string;
                           }>("checkout", {
                             plan_id: plan.id,
@@ -156,12 +168,8 @@ export function Checkout() {
                               attempt.receipt,
                             );
                           if (result.url) {
-                            const url = safeUrl(result.url);
-                            if (
-                              !url ||
-                              new URL(url).origin !==
-                                "https://sandbox.asaas.com"
-                            )
+                            const url = asaasCheckoutUrl(result.url, result.asaas_environment);
+                            if (!url)
                               throw new Error(
                                 "O servidor retornou um destino de pagamento não reconhecido.",
                               );

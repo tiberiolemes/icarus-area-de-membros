@@ -84,9 +84,11 @@ it.each([
   expect(await screen.findByText("Foto escolhida, ainda não salva. Ajuste o recorte e clique em Salvar foto.")).toBeInTheDocument();
   expect(screen.getByLabelText("Prévia do recorte quadrado da foto")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Salvar foto" })).toHaveClass("primary");
-  const leaving = new Event("beforeunload", { cancelable: true });
-  window.dispatchEvent(leaving);
-  expect(leaving.defaultPrevented).toBe(true);
+  await waitFor(() => {
+    const leaving = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(leaving);
+    expect(leaving.defaultPrevented).toBe(true);
+  });
   expect(invoke).not.toHaveBeenCalled();
 });
 

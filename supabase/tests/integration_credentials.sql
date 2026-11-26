@@ -63,6 +63,7 @@ $$;
 set local role anon;
 select pg_temp.denied($q$select public.app_integration_credentials('asaas')$q$,'anon não lê', '42501');
 select pg_temp.denied($q$select public.app_admin_save_integration(null,'bunny','{}',null)$q$,'anon não grava', '42501');
+select pg_temp.denied($q$select public.app_admin_integration_test_throttle(pg_temp.actor(2))$q$,'anon não usa o limite de teste', '42501');
 reset role;
 set local role authenticated;
 select pg_temp.login(1,'aal1');
@@ -71,6 +72,7 @@ select pg_temp.denied($q$select public.app_admin_save_integration(pg_temp.actor(
  'membro não grava', '42501');
 select pg_temp.login(2,'aal2');
 select pg_temp.denied($q$select public.app_integration_credentials('asaas')$q$,'admin não lê a credencial', '42501');
+select pg_temp.denied($q$select public.app_admin_integration_test_throttle(pg_temp.actor(2))$q$,'admin não chama o limite pelo PostgREST', '42501');
 select pg_temp.denied($q$select decrypted_secret from vault.decrypted_secrets$q$,'admin não lê a visão do Vault', '42501');
 select pg_temp.denied($q$select public.app_admin_asaas_production(pg_temp.actor(2),'test',repeat('a',64),null)$q$,
  'admin não cria aprovação pelo PostgREST', '42501');
@@ -78,9 +80,11 @@ reset role;
 
 set local role service_role;
 select pg_temp.login(1,'aal1');
+select pg_temp.denied($q$select public.app_admin_integration_test_throttle(pg_temp.actor(1))$q$,'membro não testa integração pela Edge', '42501');
 select pg_temp.denied($q$select public.app_admin_save_integration(pg_temp.actor(1),'bunny','{"api_key":"fake-bunny"}',null)$q$,
  'a Edge não grava em nome do membro', '42501');
 select pg_temp.login(3,'aal1');
+select pg_temp.denied($q$select public.app_admin_integration_test_throttle(pg_temp.actor(3))$q$,'admin AAL1 sem MFA não testa integração', '42501');
 select pg_temp.confirm(3,'fake-admin-without-mfa');
 select pg_temp.denied($q$select public.app_admin_save_integration(pg_temp.actor(3),'bunny','{"api_key":"fake-bunny"}','fake-admin-without-mfa')$q$,
  'admin sem MFA não grava mesmo com nonce', '42501');
@@ -88,6 +92,13 @@ select pg_temp.login(2,'aal1');
 select pg_temp.denied($q$select public.app_admin_save_integration(pg_temp.actor(2),'bunny','{"api_key":"fake-bunny"}',null)$q$,
  'AAL1 rejeitado quando há 2FA');
 select pg_temp.login(2,'aal2');
+do $$
+begin
+ for attempt in 1..10 loop
+  perform public.app_admin_integration_test_throttle(pg_temp.actor(2));
+ end loop;
+end $$;
+select pg_temp.denied($q$select public.app_admin_integration_test_throttle(pg_temp.actor(2))$q$,'décimo primeiro teste retorna PT429', 'PT429');
 select pg_temp.denied($q$select public.app_admin_save_integration(pg_temp.actor(2),'bunny','{"api_key":"fake-bunny"}','fake-invalid-nonce')$q$,
  'admin AAL2 sem reautenticação não grava');
 select pg_temp.confirm(2,'fake-bunny-write');

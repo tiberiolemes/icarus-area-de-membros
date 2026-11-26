@@ -20,11 +20,25 @@ vi.mock("./checkout-receipt", () => ({
 }));
 import { cache } from "./api";
 import { loadReceipt } from "./checkout-receipt";
-import { Checkout, OrderStatus } from "./pages/checkout";
+import { asaasCheckoutUrl, Checkout, OrderStatus } from "./pages/checkout";
 afterEach(() => {
   cleanup();
   cache.clear();
   vi.unstubAllGlobals();
+});
+it.each([
+  ["sandbox", "https://sandbox.asaas.com/checkoutSession/show?id=fixture", true],
+  ["production", "https://asaas.com/checkoutSession/show?id=fixture", true],
+  ["production", "https://sandbox.asaas.com/checkoutSession/show?id=fixture", false],
+  ["sandbox", "https://asaas.com/checkoutSession/show?id=fixture", false],
+  ["production", "https://asaas.com.example.test/checkoutSession/show", false],
+  ["production", "https://example.test@asaas.com/checkoutSession/show", false],
+  ["production", "https://asaas.com:8443/checkoutSession/show", false],
+  ["production", "http://asaas.com/checkoutSession/show", false],
+  ["production", "blob:https://asaas.com/fixture", false],
+  [undefined, "https://asaas.com/checkoutSession/show", false],
+])("valida o destino do Asaas para %s em %s", (environment, url, allowed) => {
+  expect(asaasCheckoutUrl(url, environment)).toBe(allowed ? url : undefined);
 });
 it.each([
   { installments: "2", method: "CREDIT_CARD" },

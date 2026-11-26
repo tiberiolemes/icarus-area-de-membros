@@ -2757,7 +2757,7 @@ function AdminIntegrations({ provider }: { provider: "asaas" | "bunny" }) {
             {settings.isError && <p role="alert">A consulta falhou. Use Atualizar estado para tentar novamente.</p>}
             {settings.data?.error && <p role="alert">{settings.data.error}</p>}
             {asaas && settings.data?.checkout_allowed === false && <p>Cobranças em Produção aguardam ativação.</p>}
-            {settings.data && <button type="button" disabled={!settings.data.test_ready || settings.isFetching || test.isPending}
+            {settings.data && <button type="button" disabled={!settings.data.can_write || !settings.data.test_ready || settings.isFetching || test.isPending}
               onClick={() => test.mutate()}>
               {test.isPending ? "Testando conexão…" : "Testar conexão"}
             </button>}

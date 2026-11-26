@@ -527,7 +527,7 @@ export const transport: typeof fetch = async (input, init) => {
   }
   if (path === "/functions/v1/capabilities") {
     const services = { storage: true, email: "local", mode: "local" };
-    if (a.action === undefined) return Response.json({ asaas: false, bunny: false, ...services });
+    if (a.action === undefined) return Response.json({ asaas: false, bunny: false, storage: true });
     if (a.action === "integration-status" && profile?.role === "admin") {
       return Response.json({ ...services, demo: true, configured: false, can_write: false, test_ready: false, fields: {} });
     }

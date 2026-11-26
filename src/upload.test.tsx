@@ -108,7 +108,9 @@ it("Salvar foto envia o recorte em JPEG com fundo branco, confirma e encerra a p
   expect([invoke.mock.calls[0][0], sent.name, sent.type]).toEqual(["upload", "avatar.jpg", "image/jpeg"]);
   expect(onUploaded).toHaveBeenCalledOnce();
   expect(screen.getByRole("button", { name: "Salvar foto" })).toBeDisabled();
-  const leaving = new Event("beforeunload", { cancelable: true });
-  window.dispatchEvent(leaving);
-  expect(leaving.defaultPrevented).toBe(false);
+  await waitFor(() => {
+    const leaving = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(leaving);
+    expect(leaving.defaultPrevented).toBe(false);
+  });
 });

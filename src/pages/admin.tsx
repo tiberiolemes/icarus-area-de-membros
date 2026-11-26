@@ -148,6 +148,25 @@ function useAll(entity: string) {
     },
   });
 }
+function orderedSettings(rows: Row[] | undefined) {
+  return [...(rows ?? [])].sort((a, b) => Number(a.order_index) - Number(b.order_index) || a.id.localeCompare(b.id));
+}
+
+function MoveSetting({ collection, item, label, index, total }: {
+  collection: "spaces" | "onboarding_questions"; item: Row; label: string; index: number; total: number;
+}) {
+  async function move(direction: -1 | 1) {
+    await rpc("app_admin_move_setting", { p_collection: collection, p_id: item.id, p_direction: direction });
+    await Promise.all([
+      cache.invalidateQueries({ queryKey: ["app_admin_list", collection] }),
+      cache.invalidateQueries({ queryKey: [collection === "spaces" ? "app_feed" : "bootstrap"] }),
+    ]);
+  }
+  return <>
+    <Action disabled={!index} run={() => move(-1)}>Subir<span className="sr-only"> {label}</span></Action>
+    <Action disabled={index === total - 1} run={() => move(1)}>Descer<span className="sr-only"> {label}</span></Action>
+  </>;
+}
 /** Com `icon`, a lista vira o cartão padrão das Configurações, com a busca na barra do cartão. */
 function AdminList({
   entity,
@@ -404,6 +423,7 @@ function OrderControl({
 export function AdminCourses() {
   return (
     <AdminSurface
+      className="admin-content admin-courses-index"
       section="conteudo"
       trail={["Administração", "Conteúdo"]}
       title="Cursos e aulas"
@@ -424,16 +444,16 @@ export function AdminCourses() {
                 <h3>
                   <Link to={editor}>{text(course, "title")}</Link>
                 </h3>
-                <p>
-                  {statusName(text(course, "status"))} · /
-                  {text(course, "slug")}
+                <p className="actions">
+                  <span className="badge">{statusName(text(course, "status"))}</span>
+                  <span className="badge">{course.certificate_enabled ? "Certificado disponível" : "Sem certificado"}</span>
                 </p>
               </div>
               <div className="actions">
                 <Link className="button" to={editor}>
                   Editar curso
                 </Link>
-                <Link className="button" to={`${editor}?aba=estrutura`}>
+                <Link className="button primary" to={`${editor}?aba=estrutura`}>
                   Estrutura e aulas
                 </Link>
               </div>
@@ -1908,7 +1928,7 @@ function MemberFacts({ detail }: { detail: MemberDetail }) {
         ))}
       </section>
       <section className="commercial-panel">
-        <h2>Tickets ({detail.tickets.total})</h2>
+        <h2>Chamados ({detail.tickets.total})</h2>
         {detail.tickets.total === 0 && <Empty>Nenhum chamado registrado.</Empty>}
         {detail.tickets.items.map((ticket) => (
           <p key={ticket.id}>
@@ -2251,6 +2271,7 @@ export function AdminCommunity() {
     tab = params.get("aba") ?? "moderacao",
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
     spaces = useAll("spaces");
+  const orderedSpaces = orderedSettings(spaces.data);
   const current = communityTabs.find(([id]) => id === tab) ?? communityTabs[0];
   const pending = params.get("situacao") !== "todas";
   const moderationFilters = (result: Page<Row> & { pending?: number } | undefined) =>
@@ -2386,13 +2407,16 @@ export function AdminCommunity() {
               </button>
             </header>
             <QueryState query={spaces}>
-              {spaces.data?.length ? spaces.data.map((space) => (
+              {orderedSpaces.length ? orderedSpaces.map((space, index) => (
                 <div className="resource-row" key={space.id}>
                   <div>
                     <h3>{text(space, "name")}</h3>
                     <p>{text(space, "description")}</p>
                   </div>
-                  <button onClick={() => setEditing(space)}>Editar espaço</button>
+                  <div className="actions">
+                    <MoveSetting collection="spaces" item={space} label={text(space, "name")} index={index} total={orderedSpaces.length} />
+                    <button onClick={() => setEditing(space)}>Editar espaço</button>
+                  </div>
                 </div>
               )) : <Empty>Nenhum espaço cadastrado.</Empty>}
             </QueryState>
@@ -2954,6 +2978,7 @@ function PrivacySettings() {
 function OnboardingAdmin() {
   const questions = useAll("onboarding_questions"),
     [selected, setSelected] = useState<Row | null | undefined>(undefined);
+  const orderedQuestions = orderedSettings(questions.data);
   return (
     <SettingsSurface
       tab="onboarding"
@@ -2967,7 +2992,7 @@ function OnboardingAdmin() {
           <p>A ordem e a obrigatoriedade valem no cadastro de perfil.</p>
         </header>
         <QueryState query={questions}>
-          {questions.data?.length ? questions.data.map((question) => (
+          {orderedQuestions.length ? orderedQuestions.map((question, index) => (
             <div className="resource-row" key={question.id}>
               <div>
                 <h3>{text(question, "label")}</h3>
@@ -2976,9 +3001,10 @@ function OnboardingAdmin() {
                   {question.required ? "Obrigatória" : "Opcional"}
                 </p>
               </div>
-              <button onClick={() => setSelected(question)}>
-                Editar pergunta
-              </button>
+              <div className="actions">
+                <MoveSetting collection="onboarding_questions" item={question} label={text(question, "label")} index={index} total={orderedQuestions.length} />
+                <button onClick={() => setSelected(question)}>Editar pergunta</button>
+              </div>
             </div>
           )) : <Empty>Nenhuma pergunta cadastrada.</Empty>}
         </QueryState>
@@ -3008,17 +3034,12 @@ function OnboardingAdmin() {
                   name="key"
                   defaultValue={text(selected ?? undefined, "key", "name")}
                 >
-                  {[
-                    "name",
-                    "segment",
-                    "role",
-                    "size",
-                    "stage",
-                    "revenue_range",
-                    "acquisition",
-                    "product_description",
-                  ].map((key) => (
-                    <option key={key}>{key}</option>
+                  {Object.entries({
+                    name: "Nome da empresa", segment: "Segmento", role: "Cargo",
+                    size: "Tamanho da equipe", stage: "Estágio do produto", revenue_range: "Faturamento mensal",
+                    acquisition: "Aquisição de clientes", product_description: "Descrição do produto",
+                  }).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
               </Field>

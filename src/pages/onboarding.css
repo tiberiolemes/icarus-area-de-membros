@@ -9,7 +9,6 @@
 
 .student-onboarding[data-theme="dark"] {
   --onboarding-divider: transparent;
-  --onboarding-progress-track: var(--stitch-border-strong);
 }
 
 .student-onboarding[data-theme="light"] {
@@ -58,7 +57,6 @@
   margin-inline: auto;
 }
 
-.student-onboarding-progress,
 .student-onboarding-questions
   > :is(.page-heading, .field, .student-onboarding-choice),
 .student-onboarding-guide,
@@ -69,22 +67,12 @@
   padding: var(--stitch-space-lg);
 }
 
-.student-onboarding-progress {
-  background: var(--stitch-surface-panel);
-}
 
 .student-onboarding-content > .form {
   margin: var(--stitch-space-lg) 0 0;
 }
 
-.student-onboarding-progress > div {
-  display: flex;
-  gap: var(--stitch-space-sm);
-  flex-wrap: wrap;
-  align-items: center;
-}
 
-.student-onboarding-progress strong,
 .student-onboarding-choice legend,
 .student-onboarding-questions > .field > span,
 .student-onboarding-guide h2 {
@@ -95,43 +83,10 @@
   letter-spacing: var(--stitch-type-headline-sm-tracking);
 }
 
-.student-onboarding-progress span {
-  margin-inline-start: auto;
-  background: var(--stitch-surface-raised-strong);
-  color: var(--stitch-text-heading);
-  padding: var(--stitch-space-xs) var(--stitch-space-sm);
-  border-radius: var(--stitch-radius-full);
-  font-size: var(--stitch-type-body-sm-size);
-  line-height: var(--stitch-type-body-sm-line);
-  letter-spacing: var(--stitch-tracking-wider);
-  font-weight: var(--stitch-type-label-uppercase-weight);
-}
 
-.student-onboarding-progress progress {
-  appearance: none;
-  display: block;
-  width: 100%;
-  height: var(--stitch-progress-size-lg);
-  margin-top: var(--stitch-space-md);
-  border: 0;
-  border-radius: var(--stitch-radius-full);
-  overflow: hidden;
-  background: var(--onboarding-progress-track, var(--stitch-progress-track));
-}
 
-.student-onboarding-progress progress::-webkit-progress-bar {
-  background: var(--onboarding-progress-track, var(--stitch-progress-track));
-}
 
-.student-onboarding-progress progress::-webkit-progress-value {
-  border-radius: var(--stitch-radius-full);
-  background: var(--stitch-progress-fill);
-}
 
-.student-onboarding-progress progress::-moz-progress-bar {
-  border-radius: var(--stitch-radius-full);
-  background: var(--stitch-progress-fill);
-}
 
 .student-onboarding-content > .form > fieldset {
   display: grid;
@@ -372,6 +327,8 @@
 
   .student-onboarding-content > .form > fieldset > .form-actions {
     grid-column: 3;
+    position: sticky;
+    top: var(--stitch-space-lg);
   }
 }
 
@@ -384,13 +341,7 @@
     padding-block: var(--stitch-space-lg);
   }
 
-  .student-onboarding-progress span {
-    margin-inline-start: 0;
-  }
 
-  .student-onboarding-progress {
-    padding: var(--stitch-space-md);
-  }
 
   .student-onboarding-content .page-heading {
     padding: var(--stitch-space-lg);

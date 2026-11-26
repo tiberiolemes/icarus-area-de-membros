@@ -73,13 +73,13 @@ export function Tickets({ admin = false }: { admin?: boolean }) {
         </Link>
       </nav>
       <div className="support-member-grid">
-        <section className="support-panel">
-          <h2>Abrir novo chamado</h2>
-          <TicketForm />
-        </section>
         <section aria-label="Meus chamados recentes" data-tour="support">
           <h2>Meus chamados recentes</h2>
           <TicketQueue />
+        </section>
+        <section className="support-panel">
+          <h2>Abrir novo chamado</h2>
+          <TicketForm />
         </section>
       </div>
       {modules.help && (

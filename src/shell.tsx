@@ -26,6 +26,7 @@ import {
   FolderOpen,
   PlaneTakeoff,
   Podcast,
+  Search,
   Sun,
   UserRound,
 } from "lucide-react";
@@ -34,7 +35,7 @@ import { useBootstrap } from "./auth";
 import { usePrivateImageQuery } from "./media";
 import { NotificationBell } from "./pages/notifications";
 import { FeedbackButton } from "./pages/feedback";
-import { Action, AdminBadge, Notice, RouteFocus } from "./ui";
+import { Action, AdminBadge, Empty, Field, Modal, Notice, RouteFocus } from "./ui";
 import { Tour } from "./tour";
 import { UpdateNotice } from "./update-notice";
 import { MemberSearch } from "./pages/member-search";
@@ -84,6 +85,33 @@ const adminNav = [
   ]],
 ] as const;
 
+function staffNavigation(role: Profile["role"]) {
+  return adminNav.map(([label, routes]) => ({
+    label, routes: routes.filter(([, , , roles]) => (roles as readonly string[]).includes(role)),
+  })).filter(({ routes }) => routes.length);
+}
+
+function AdminSearch({ role }: { role: Profile["role"] }) {
+  const [open, setOpen] = useState(false), [query, setQuery] = useState("");
+  const normalize = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR");
+  const term = normalize(query.trim());
+  const groups = staffNavigation(role).map(({ label, routes }) => ({
+    label, routes: routes.filter(([name]) => normalize(`${label} ${name}`).includes(term)),
+  })).filter(({ routes }) => routes.length);
+  const close = (next: boolean) => {
+    setOpen(next);
+    if (!next) setQuery("");
+  };
+  return <Modal title="Buscar no painel" open={open} onOpenChange={close}
+    trigger={<button type="button" className="icon-button" aria-label="Buscar no painel"><Search size={20} aria-hidden="true" /></button>}>
+    <Field label="Nome da área"><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} /></Field>
+    {groups.length ? groups.map(({ label, routes }) => <section key={label} className="admin-search-group">
+      <h3>{label}</h3>
+      <ul>{routes.map(([name, path]) => <li key={path}><Link to={`/admin/${path}`} onClick={() => close(false)}>{name}</Link></li>)}</ul>
+    </section>) : <Empty>Nenhuma área corresponde à busca.</Empty>}
+  </Modal>;
+}
+
 const staffEntryLabels: Readonly<Record<string, string | undefined>> = {
   admin: "Administração",
   instructor: "Painel de conteúdo",
@@ -130,9 +158,7 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
 }) {
   const dark = profile.theme === "dark";
   const modules = useModules();
-  const staffGroups = adminNav.map(([label, routes]) => ({
-    label, routes: routes.filter(([, , , roles]) => (roles as readonly string[]).includes(profile.role)),
-  })).filter(({ routes }) => routes.length);
+  const staffGroups = staffNavigation(profile.role);
   const staffEntry = staffGroups[0]?.routes[0];
   const help = (admin || modules.help) && (
     <NavLink to={admin ? "/ajuda" : "/app/ajuda"} onClick={onNavigate}>
@@ -328,6 +354,7 @@ export function Shell() {
             <div className="admin-topbar-brand">{brandMark("strong")}</div>
           </> : <MemberSearch actorId={profile.id} drawerOpen={open} />}
           <div className="topbar-tools">
+            {admin && <AdminSearch role={profile.role} />}
             <Tour />
             {!admin && modules.feedback && <FeedbackButton key={JSON.stringify([profile.id, pathname])} />}
             {!admin && <NotificationBell key={profile.id} memberId={profile.id} />}

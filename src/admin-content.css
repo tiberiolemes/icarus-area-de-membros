@@ -433,3 +433,5 @@
     gap: 0;
   }
 }
+.admin-courses-index .admin-row > div:first-child { flex: 1 1 16rem; }
+.admin-courses-index .admin-row .actions { flex-wrap: wrap; gap: var(--stitch-space-sm); }

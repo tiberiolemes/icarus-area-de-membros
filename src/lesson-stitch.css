@@ -208,10 +208,6 @@
   padding: 6px 14px;
 }
 
-[data-theme="light"] .stitch-lesson-nav > .button {
-  text-transform: capitalize;
-}
-
 .lesson-stitch .stitch-lesson-nav .button:hover,
 .lesson-stitch .stitch-lesson-actions .action button:hover {
   background: var(--lesson-control);
@@ -1116,7 +1112,7 @@
 
 .stitch-lesson-list .stitch-lesson-unwatched,
 .stitch-lesson-list .stitch-lesson-list-wide-status {
-  color: var(--lesson-tertiary);
+  color: var(--stitch-text-secondary);
 }
 
 .stitch-lesson-list a[aria-current="page"] .stitch-lesson-list-wide-status {
@@ -1124,7 +1120,7 @@
 }
 
 [data-theme="dark"] .stitch-lesson-list .stitch-lesson-watched {
-  color: var(--lesson-muted);
+  color: var(--stitch-text-secondary);
 }
 
 .stitch-lesson-list a[aria-current="page"] {

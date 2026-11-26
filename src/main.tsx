@@ -358,7 +358,7 @@ function App() {
                   path="*"
                   element={
                     <PublicFrame>
-                      <NotFound />
+                      <div className="access"><NotFound /></div>
                     </PublicFrame>
                   }
                 />

@@ -444,7 +444,6 @@
   background: var(--stitch-canvas);
 }
 
-.certificate-public { margin-inline: var(--stitch-space-sm); }
 
 .certificate-register {
   justify-content: space-between;
@@ -473,7 +472,7 @@
   gap: var(--stitch-space-sm);
 }
 
-.certificate-public-entry { max-width: 32rem; }
+.certificate-public-entry { max-width: 32rem; margin-inline-start: auto; }
 .certificate-public-result .certificate-document {
   background: var(--stitch-surface-member-rail);
   border-radius: var(--stitch-radius-lg);

@@ -266,6 +266,19 @@ it.each([
   expect(rpc).not.toHaveBeenCalled();
 });
 
+it("busca pelo nome do menu e mantém apenas destinos permitidos para o papel", async () => {
+  profile.role = "moderator";
+  mount("/admin/comunidade");
+  fireEvent.click(screen.getByRole("button", { name: "Buscar no painel" }));
+  const dialog = screen.getByRole("dialog", { name: "Buscar no painel" });
+  const search = within(dialog).getByRole("searchbox", { name: "Nome da área" });
+  fireEvent.change(search, { target: { value: "membros" } });
+  expect(within(dialog).getByText("Nenhuma área corresponde à busca.")).toBeVisible();
+  fireEvent.change(search, { target: { value: "comentarios" } });
+  fireEvent.click(within(dialog).getByRole("link", { name: "Comentários de aula" }));
+  expect(await screen.findByRole("heading", { name: "/admin/comentarios-aula" })).toBeVisible();
+});
+
 it("abre o histórico do sino do aluno e direciona o foco ao título", async () => {
   mount("/app/cursos/curso/modulo/aula");
   const bell = screen.getByRole("button", { name: "Notificações" });

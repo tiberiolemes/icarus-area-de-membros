@@ -52,16 +52,28 @@ import "../lesson-stitch.css";
 export { Catalog } from "./catalog";
 
 export type CourseDetail = { course: Course; modules: Module[] };
-export function Curriculum({course, modules, preferredModule}: CourseDetail & {preferredModule?: string | null}) {
+function moduleProgress(module?: Module) {
+  const lessons = module?.sections.flatMap((section) => section.lessons) ?? [];
+  return {
+    total_lessons: lessons.length,
+    completed_lessons: lessons.filter((lesson) => lesson.completed).length,
+    duration_seconds: lessons.reduce((sum, lesson) => sum + lesson.duration_seconds, 0),
+  };
+}
+export function Curriculum({course, modules, preferredModule, modulePage}: CourseDetail & {preferredModule?: string | null; modulePage?: boolean}) {
   const initial = modules.find(module => module.slug === preferredModule)
     ?? modules.find(module => module.sections.some(section => section.lessons.some(lesson => lesson.can_access && !lesson.completed)))
     ?? modules[0];
   return <div className="curriculum course-syllabus">
-    {modules.map(module => <details key={module.id} open={module.id === initial?.id}>
-      <summary data-tour={module.id === initial?.id ? "course-syllabus" : undefined}>{module.title}
+    {modules.map(module => {
+      const stats = moduleProgress(module);
+      return <details key={module.id} open={module.id === initial?.id}>
+      <summary data-tour={module.id === initial?.id ? "course-syllabus" : undefined}>
+        <ChevronDown className="syllabus-chevron" size={18} aria-hidden="true" />
+        <span>{module.title}<small>{stats.completed_lessons} de {stats.total_lessons} {stats.total_lessons === 1 ? "aula concluída" : "aulas concluídas"}</small></span>
         {!module.can_access && <Lock size={16} aria-label="Acesso restrito" />}
       </summary>
-      <Link className="syllabus-module-link" to={`/app/cursos/${encodeURIComponent(course.slug)}/${encodeURIComponent(module.slug)}`}>Abrir módulo</Link>
+      {!modulePage && <Link className="syllabus-module-link" to={`/app/cursos/${encodeURIComponent(course.slug)}/${encodeURIComponent(module.slug)}`}>Abrir módulo</Link>}
       {module.sections.map(section => <div key={section.id}>
         <h3>{section.title}{section.is_bonus && <span className="badge">Bônus</span>}</h3>
         <ol>{section.lessons.map(lesson => <li key={lesson.id}>
@@ -72,7 +84,8 @@ export function Curriculum({course, modules, preferredModule}: CourseDetail & {p
           </Link>
         </li>)}</ol>
       </div>)}
-    </details>)}
+    </details>;
+    })}
   </div>;
 }
 export function CoursePage() {
@@ -84,12 +97,7 @@ export function CoursePage() {
       ? data?.modules.filter((m) => m.slug === modulo)
       : data?.modules;
   // Na página do módulo, os números vêm só das aulas dele, não do curso inteiro.
-  const moduleLessons = modules?.[0]?.sections.flatMap((section) => section.lessons) ?? [],
-    moduleStats = {
-      total_lessons: moduleLessons.length,
-      completed_lessons: moduleLessons.filter((lesson) => lesson.completed).length,
-      duration_seconds: moduleLessons.reduce((sum, lesson) => sum + lesson.duration_seconds, 0),
-    };
+  const moduleStats = moduleProgress(modules?.[0]);
   return (
     <>
       <Back
@@ -125,8 +133,8 @@ export function CoursePage() {
                   />
                 )}
                 <div className="course-outline">
-                  <h2>Conteúdo do curso</h2>
-                  <Curriculum course={data.course} modules={modules ?? []} preferredModule={modulo ?? params.get("modulo")} />
+                  <h2>{modulo ? "Aulas do módulo" : "Conteúdo do curso"}</h2>
+                  <Curriculum course={data.course} modules={modules ?? []} preferredModule={modulo ?? params.get("modulo")} modulePage={Boolean(modulo)} />
                   {!modules?.length && (
                     <Empty>
                       O conteúdo deste curso ainda não está disponível.
@@ -150,7 +158,7 @@ export function AccessRequired({ reason }: { reason?: string }) {
         {reason ??
           "Seu plano atual não libera este conteúdo. Consulte as opções de assinatura disponíveis."}
       </p>
-      <Link className="text-action" to="/app/configuracoes?aba=assinatura">Ver minha assinatura</Link>
+      <Link className="text-action" to="/app/configuracoes?aba=assinatura">Ver planos disponíveis</Link>
     </Notice>
   );
 }

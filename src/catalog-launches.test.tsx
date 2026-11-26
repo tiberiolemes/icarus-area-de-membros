@@ -78,14 +78,11 @@ it.each([false, true])("preserva o foco e permite tentar a inscrição novamente
 });
 
 it("some quando a consulta falha, para o catálogo não repetir o erro e o botão de nova tentativa", async () => {
-  let listed = 0;
   vi.stubGlobal("fetch", vi.fn(async () => {
-    listed++;
     return new Response(JSON.stringify({ code: "PGRST000", message: "Serviço indisponível" }), { status: 503, headers: { "Content-Type": "application/json" } });
   }));
   const { container } = render(<QueryClientProvider client={cache}><CatalogLaunches /></QueryClientProvider>);
-  await waitFor(() => expect(listed).toBeGreaterThan(0));
-  await new Promise(resolve => setTimeout(resolve, 50));
+  await waitFor(() => expect(cache.getQueryCache().find({ queryKey: ["app_catalog_launches"], exact: false })?.state.status).toBe("error"));
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Tentar novamente" })).not.toBeInTheDocument();
   expect(container).toBeEmptyDOMElement();

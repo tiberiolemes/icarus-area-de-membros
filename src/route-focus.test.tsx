@@ -84,3 +84,19 @@ it("atualiza o título quando o nome da instalação chega depois da primeira te
   rerender(page("Escola X"));
   await waitFor(() => expect(document.title).toBe("Entre na sua área · Escola X"));
 });
+
+it("mantém o foco no título quando a consulta substitui o cabeçalho provisório", async () => {
+  vi.stubGlobal("scrollTo", vi.fn());
+  function Fixture() {
+    const [ready, setReady] = useState(false);
+    return <MemoryRouter><main id="main"><RouteFocus />
+      <button onClick={() => setReady(true)}>Concluir consulta</button>
+      {ready ? <section><h1>Título definitivo</h1></section> : <h1 tabIndex={-1}>Abrindo registro</h1>}
+    </main></MemoryRouter>;
+  }
+  render(<Fixture />);
+  expect(screen.getByRole("heading", { name: "Abrindo registro" })).toHaveFocus();
+  fireEvent.click(screen.getByRole("button", { name: "Concluir consulta" }));
+  await waitFor(() => expect(screen.getByRole("heading", { name: "Título definitivo" })).toHaveFocus());
+  expect(document.title).toBe("Título definitivo · Icarus");
+});

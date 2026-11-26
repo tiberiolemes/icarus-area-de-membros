@@ -466,10 +466,15 @@ h2 > a,
   gap: 8px;
 }
 .empty {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stitch-space-sm);
   padding: 40px 0;
-  color: var(--ic-text-secondary);
+  color: var(--stitch-text-secondary);
   margin-top: 24px;
 }
+.empty > svg { flex: none; }
+.empty > div { min-width: 0; }
 .badge {
   display: inline-flex;
   align-items: center;
@@ -494,15 +499,16 @@ h2 > a,
   white-space: nowrap;
 }
 .skeleton {
-  padding: 24px;
+  padding: var(--stitch-space-lg);
   min-height: 180px;
 }
+.skeleton p { margin: 0 0 var(--stitch-space-md); color: var(--stitch-text-secondary); }
+.skeleton > div { display: grid; gap: var(--stitch-space-sm); }
 .skeleton span {
   display: block;
   background: var(--stitch-surface-control);
   height: 20px;
-  border-radius: 4px;
-  margin: 16px 0;
+  border-radius: var(--stitch-radius-sm);
   animation: skeleton-pulse 1.4s ease-in-out infinite;
 }
 @keyframes skeleton-pulse {
@@ -517,6 +523,11 @@ h2 > a,
 .skeleton span:nth-child(3) {
   width: 60%;
 }
+:is(.showcase, .admin-reports) .skeleton > div {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+}
+:is(.showcase, .admin-reports) .skeleton span { width: 100%; min-height: 85px; }
+.admin-commercial .skeleton span { width: 100%; height: var(--stitch-control-min-size); }
 .form {
   margin: 24px 0;
 }
@@ -879,7 +890,12 @@ img.brand-custom {
 .mobile-frame-label,
 .student-onboarding .public-top { --brand-logo-height: 32px; }
 .certificate-brand { --brand-logo-height: 36px; }
-.public-top > a:last-child {
+.public-top > a:first-child { min-width: 0; }
+.public-top > a + a {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 14px;
 }
 .public-main {
@@ -1618,9 +1634,6 @@ img.brand-custom {
   .public-top { --brand-logo-height: 48px; }
   .public-main {
     padding: 32px 0 64px;
-  }
-  .public-top > a:last-child {
-    font-size: 14px;
   }
   .course-cover {
     aspect-ratio: 16/8;

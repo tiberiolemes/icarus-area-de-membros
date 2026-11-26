@@ -85,8 +85,11 @@ select pg_temp.assert(public.app_podcasts()->>'featured_id' = pg_temp.episode('s
 select pg_temp.assert((public.app_podcast(pg_temp.episode('first'))->>'is_featured')::boolean = false, 'destaque anterior removido');
 select pg_temp.assert(public.app_podcast(pg_temp.episode('draft'),true)->>'status' = 'draft', 'admin abre rascunho');
 select pg_temp.assert((public.app_podcasts(p_admin=>true)->>'total')::int = 3, 'listagem administrativa inclui rascunho');
-select pg_temp.denied($q$select pg_temp.save('00000000004','published',false,'[]',null,pg_temp.episode('first'))$q$,
-  'Episódio indisponível ou vídeo alterado. Cadastre outro episódio para usar um novo vídeo.', 'ID do vídeo imutável');
+select pg_temp.denied($q$select pg_temp.save('00000000003','published',false,'[]',null,pg_temp.episode('first'))$q$,
+  'Este vídeo já está cadastrado.', 'outra edição preserva a exclusividade do vídeo');
+select pg_temp.assert(pg_temp.save('00000000004','published',false,
+  public.app_podcast(pg_temp.episode('first'))->'chapters', null, pg_temp.episode('first'))=pg_temp.episode('first'), 'edita URL e preserva identidade do episódio');
+select pg_temp.assert(public.app_podcast(pg_temp.episode('first'))->>'youtube_id'='00000000004', 'catálogo lê a URL corrigida');
 reset role;
 
 insert into public.podcast_episodes (youtube_id, kind, title, description, published_at, status)
@@ -99,7 +102,7 @@ select pg_temp.assert(jsonb_array_length(public.app_podcasts()->'items') = 20, '
 select pg_temp.assert((public.app_podcasts(2)->>'total')::integer = 23
   and jsonb_array_length(public.app_podcasts(2)->'items') = 3
   and public.app_podcasts()->'items'->0->>'title' = 'Masterclass paginada 21', 'página 2 e ordem por data');
-select pg_temp.assert((public.app_podcasts(p_query=>'00000000002')->>'total')::integer = 1, 'busca antes do limite');
+select pg_temp.assert((public.app_podcasts(p_query=>'00000000004')->>'total')::integer = 1, 'busca antes do limite');
 select pg_temp.denied('select public.app_podcasts(10001)', 'Confira a página ou o termo de busca.', 'limite de offset');
 select pg_temp.denied('select public.app_podcasts(p_admin=>true)', 'Acesso administrativo indisponível.', 'membro não lista rascunhos');
 select pg_temp.denied($q$select public.app_podcast(pg_temp.episode('draft'),true)$q$, 'Acesso administrativo indisponível.', 'membro não abre detalhe admin');

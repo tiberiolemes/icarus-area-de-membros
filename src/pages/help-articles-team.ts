@@ -286,15 +286,16 @@ export const teamArticles: HelpArticle[] = [
     slug: "video-da-aula",
     category: "conteudo",
     title: "Colocar vídeo em uma aula",
-    summary: "Há dois caminhos. Você pode enviar o arquivo direto para a plataforma ou hospedar o vídeo no Bunny Stream e informar o código dele.",
+    summary: "Há três caminhos. Você pode enviar o arquivo direto para a plataforma, hospedar o vídeo no Bunny Stream e informar o código dele, ou colar o link de um vídeo do YouTube.",
     sections: [
       {
         title: "Qual caminho escolher",
         list: [
           "**Arquivo de vídeo** é o mais simples. Serve para arquivos MP4 de até 500 MB e dispensa qualquer integração. O envio precisa terminar em até 15 minutos, o que pede uma boa conexão para arquivos grandes.",
-          "**Identificador do vídeo no Bunny** recebe o código de um vídeo hospedado no Bunny Stream. É o caminho indicado para muitos vídeos ou arquivos grandes, e exige a [integração com o Bunny](/ajuda/integracao-bunny), configurada por um administrador.",
+          "**Bunny Stream** recebe o código de um vídeo hospedado lá. É o caminho indicado para muitos vídeos ou arquivos grandes, e exige a [integração com o Bunny](/ajuda/integracao-bunny), configurada por um administrador.",
+          "**YouTube** recebe o link de um vídeo publicado lá. Não precisa de integração. O vídeo toca dentro da aula, mas continua no YouTube.",
         ],
-        warn: "Se a aula tiver as duas coisas, toca o vídeo do Bunny. Qualquer texto no campo **Identificador do vídeo no Bunny** faz a plataforma ignorar o arquivo enviado.",
+        warn: "O campo **Vídeo do Bunny ou link do YouTube** tem prioridade. Com qualquer valor nele, a plataforma ignora o arquivo enviado.",
       },
       {
         title: "Enviar um arquivo MP4",
@@ -312,9 +313,18 @@ export const teamArticles: HelpArticle[] = [
         title: "Usar um vídeo do Bunny Stream",
         steps: [
           "No Bunny, copie o código do vídeo, chamado **Video ID**. Ele tem 36 caracteres, com letras, números e hífens.",
-          "No editor da aula, cole o código em **Identificador do vídeo no Bunny**.",
+          "No editor da aula, cole o código em **Vídeo do Bunny ou link do YouTube**.",
           "Preencha a **Duração em segundos** e clique em **Salvar conteúdo**.",
         ],
+      },
+      {
+        title: "Usar um vídeo do YouTube",
+        steps: [
+          "No YouTube, abra o vídeo e copie o link da barra de endereço ou do botão **Compartilhar**.",
+          "No editor da aula, cole o link em **Vídeo do Bunny ou link do YouTube**.",
+          "Preencha a **Duração em segundos** e clique em **Salvar conteúdo**. A plataforma guarda só o código do vídeo e, ao reabrir a aula, mostra o link de novo.",
+        ],
+        warn: "A plataforma só mostra o vídeo a quem tem acesso à aula, mas ele continua no YouTube. Um vídeo **Não listado** abre para qualquer pessoa que tenha o link, e um **Privado** não toca dentro da aula. Para conteúdo pago, prefira o Bunny Stream ou o arquivo enviado.",
       },
       {
         title: "Conferir",
@@ -328,7 +338,8 @@ export const teamArticles: HelpArticle[] = [
       ["O campo de arquivo não aparece", "Ele só surge em aula já salva. Clique em **Salvar conteúdo**, reabra a aula pelo lápis e o campo estará lá."],
       ["O arquivo foi recusado", "Só MP4 de até 500 MB é aceito. Converta o vídeo ou reduza a qualidade na exportação."],
       ["Aparece o aviso de prazo do upload expirado", "O envio passou de 15 minutos, e o arquivo não foi associado à aula. Reduza o arquivo ou use o Bunny Stream. Depois, envie de novo."],
-      ["O aluno vê que não foi possível carregar o vídeo", "No caminho do Bunny, confira se o código foi colado inteiro e se a integração está como **Configurado**. O editor não avisa quando o código está errado, então teste sempre pela prévia. No caminho do arquivo, confira se **Identificador do vídeo no Bunny** está vazio."],
+      ["O aluno vê que não foi possível carregar o vídeo", "No caminho do Bunny, confira se o código foi colado inteiro e se a integração está como **Configurado**. O editor não avisa quando o código está errado, então teste sempre pela prévia. No caminho do YouTube, confira se o vídeo está como **Público** ou **Não listado** e se a incorporação está permitida. No caminho do arquivo, confira se **Vídeo do Bunny ou link do YouTube** está vazio."],
+      ["Aparece o aviso para colar um link do YouTube ou o ID do Bunny", "O campo aceita só esses dois formatos. Links de outras plataformas, como Vimeo, não funcionam."],
     ],
     related: ["criar-curso", "integracao-bunny", "apresentacao-da-aula"],
   },

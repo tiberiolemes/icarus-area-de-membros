@@ -307,6 +307,14 @@ Deno.test("Bunny signs server gated video for 120s without exposing key", async 
   equal(url.searchParams.get("token"), await sha256("synthetic-signing-key" + other + expires));
   assert(Number(expires) <= Math.floor(Date.now() / 1000) + 120); assert(!JSON.stringify(body).includes("synthetic-signing-key"));
 });
+Deno.test("aula com vídeo do YouTube sai pelo player sem cookies, só depois da liberação do servidor", async () => {
+  const gated = (video_id: string) => deps((url) => url.pathname.endsWith("app_media_access") ? response({ can_access: true, provider: "youtube", video_id }) : undefined).d;
+  const result = await media(gated("dQw4w9WgXcQ"))(request({ kind: "lesson", id }));
+  equal(result.status, 200);
+  const body = await result.json();
+  equal(body.provider, "youtube"); equal(body.url, "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0");
+  equal((await media(gated("javascript:alert(1)"))(request({ kind: "lesson", id }))).status, 503);
+});
 Deno.test("storage URL uses private bucket, server path and short TTL", async () => {
   const { d, requests } = deps((url) => url.pathname.endsWith("app_media_access") ? response({ can_access: true, storage_path: "synthetic/lesson.mp4", provider: "supabase" }) : url.pathname.includes("/storage/v1/object/sign/") ? response({ signedURL: "/object/sign/icarus-private/synthetic/lesson.mp4?token=test-only" }) : undefined);
   equal((await media(d)(request({ kind: "lesson", id, storage_path: "other-user/secret" }))).status, 200);

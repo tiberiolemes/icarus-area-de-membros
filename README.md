@@ -3,7 +3,7 @@
 ![Icarus · Área de membros e cursos online · Código aberto sob licença MIT](docs/assets/icarus-banner-github.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-2.10.1-black)
+![Version](https://img.shields.io/badge/version-2.11.0-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)
@@ -85,6 +85,8 @@ node scripts/test-integrations.mjs --local
 Banco e integrações nativas exigem instalação local e fixtures próprias. Para esta árvore, aplique todas as migrations em ordem e valide o stack nativo antes de liberar o uso. O ensaio de banco isolado e os requisitos por migration estão no [guia de operação](docs/operations.md). O [aceite técnico 0.1.0](docs/acceptance/release-0.1.0.md) e a [revisão visual 0.1.2](docs/audit/06-ux-accessibility.md) registram evidências de seus respectivos recortes.
 
 O [modelo do GitHub Actions](docs/ci/README.md) descreve a automação. A execução da trilha nativa em Actions aguarda um runner com Docker dedicado.
+
+Na 2.11.0, a aula passa a aceitar vídeo do YouTube, e as telas do painel seguem um padrão só. Para atualizar da 2.10.1, aplique a migration `202611260018`, atualize a Edge Function `media` e publique o frontend.
 
 Na 2.10.0, a Central de ajuda foi reescrita em 45 artigos por assunto, com passo a passo para alunos e equipe e telas reais do Asaas, do Bunny Stream e do Cloudflare Turnstile nos artigos de Integrações. O endereço (slug) passa a ser montado sozinho, a capa do curso ganha limite de 500 KB, prévia e foco do corte, as seções viram opcionais e o certificado ganha um modelo global em Configurações. Para atualizar da 2.9.0, aplique as três migrations novas, atualize as Edge Functions `upload` e `media` e publique o frontend da mesma versão. Veja o [Changelog](CHANGELOG.md), o [guia de operação](docs/operations.md) e o [guia da ajuda](docs/help/README.md).
 

@@ -12,6 +12,10 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
     : await rpc(a.admin, "app_media_access", { p_actor_id: a.userInfo.id, p_kind: kind, p_id: id });
   if (!gate?.can_access) throw new HttpError(403, "FORBIDDEN", "Acesso não permitido.");
   const expires = Math.floor(Date.now() / 1000) + 120;
+  if (gate.video_id && gate.provider === "youtube") {
+    if (!/^[A-Za-z0-9_-]{11}$/.test(gate.video_id)) throw new HttpError(503, "CONFIGURATION_REQUIRED", "Vídeo ainda não configurado.");
+    return { url: `https://www.youtube-nocookie.com/embed/${gate.video_id}?rel=0`, expires_at: new Date(expires * 1000).toISOString(), provider: "youtube" };
+  }
   if (gate.video_id && gate.provider === "bunny") {
     const { playbackReady, fields } = await bunnyConfig(d, a.admin);
     if (!playbackReady || !/^[a-f0-9-]{36}$/i.test(gate.video_id)) throw new HttpError(503, "CONFIGURATION_REQUIRED", "Vídeo ainda não configurado.");

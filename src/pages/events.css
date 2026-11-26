@@ -437,7 +437,7 @@
  * Estilos do cadastro de encontros, usados por AdminEvents.
  */
 .event-admin {
-  max-width: 1200px;
+  overflow-wrap: anywhere;
 }
 
 .event-admin .event-upcoming {
@@ -474,10 +474,6 @@
   gap: 8px;
   color: var(--stitch-text-secondary);
   font-size: .875rem;
-}
-
-.event-admin-toolbar {
-  margin-bottom: 20px;
 }
 
 .event-admin-actions {

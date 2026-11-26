@@ -1,5 +1,5 @@
 import { AdminSurface } from "./admin-surface";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ArrowUpRight,
   BookOpen,
@@ -124,16 +124,7 @@ function AdminTickets() {
           />
         </div>
       )}
-      <div
-        className={
-          ticket
-            ? "support-admin-grid support-admin-selected"
-            : "support-admin-grid"
-        }
-      >
-        <section className="support-admin-queue" aria-label="Fila de suporte">
-          <TicketQueue admin selected={ticket} />
-        </section>
+      <TicketQueue admin selected={ticket}>
         {ticket ? (
           <TicketConversation key={ticket} admin ticket={ticket} />
         ) : (
@@ -145,7 +136,7 @@ function AdminTickets() {
             </p>
           </section>
         )}
-      </div>
+      </TicketQueue>
     </AdminSurface>
   );
 }
@@ -153,9 +144,12 @@ function AdminTickets() {
 function TicketQueue({
   admin = false,
   selected,
+  children,
 }: {
   admin?: boolean;
   selected?: string;
+  /** Conversa exibida ao lado da fila no painel. */
+  children?: ReactNode;
 }) {
   const [params, setParams] = useSearchParams();
   const requestedPage = Number(params.get("page") || 1);
@@ -191,35 +185,7 @@ function TicketQueue({
   const items = query.data?.items?.filter((ticket) => admin || !status ||
     (status === "active" ? ticket.status !== "resolved" : ticket.status === status));
 
-  return (
-    <>
-      {admin && (
-        <>
-          {query.data && <dl className="admin-list-metrics" aria-label="Indicadores dos chamados">
-            <div><dt>Em aberto</dt><dd>{active}</dd></div>
-            <div><dt>Aguardando o membro</dt><dd>{counts.waiting_member ?? 0}</dd></div>
-            {response != null && <div><dt>Média da primeira resposta</dt><dd>{response < 60 ? `${response} s` : `${Math.round(response / 60)} min`}</dd></div>}
-          </dl>}
-          <form className="support-filters" data-tour="support-filters" onSubmit={(event) => { event.preventDefault(); update("q", draft.trim()); }}>
-            <Field label="Buscar por assunto">
-              <input type="search" value={draft} maxLength={200} onChange={(event) => setDraft(event.target.value)} />
-            </Field>
-            <button type="submit">Buscar</button>
-            <Field label="Prioridade">
-              <select value={priority} onChange={(event) => update("prioridade", event.target.value)}>
-                <option value="">Todas</option>
-                {priorities.map((item) => <option key={item} value={item}>{priorityName(item)}</option>)}
-              </select>
-            </Field>
-          </form>
-          <div className="tabs support-status-tabs" role="group" aria-label="Situação dos chamados">
-            {["", ...statuses].map((item) => <button key={item} type="button" aria-pressed={status === item}
-              onClick={() => update("situacao", item)}>
-              {item ? statusName(item) : "Todos"}{query.isSuccess && ` (${item ? counts[item] ?? 0 : all})`}
-            </button>)}
-          </div>
-        </>
-      )}
+  const list = (
       <QueryState query={query}>
         {query.data && items && (
           <>
@@ -289,6 +255,41 @@ function TicketQueue({
         </>
       )}
       </QueryState>
+  );
+  if (!admin) return list;
+  return (
+    <>
+      {query.data && <dl className="admin-metrics" aria-label="Indicadores dos chamados">
+        <div><dt>Em aberto</dt><dd><strong>{active}</strong></dd></div>
+        <div><dt>Aguardando o membro</dt><dd><strong>{counts.waiting_member ?? 0}</strong></dd></div>
+        {response != null && <div><dt>Média da primeira resposta</dt><dd><strong>{response < 60 ? `${response} s` : `${Math.round(response / 60)} min`}</strong></dd></div>}
+      </dl>}
+      <form className="admin-filters" data-tour="support-filters" onSubmit={(event) => { event.preventDefault(); update("q", draft.trim()); }}>
+        <div className="support-search">
+          <Field label="Buscar por assunto">
+            <input type="search" value={draft} maxLength={200} onChange={(event) => setDraft(event.target.value)} />
+          </Field>
+          <button type="submit">Buscar</button>
+        </div>
+        <div className="admin-list-filters">
+          <Field label="Prioridade">
+            <select value={priority} onChange={(event) => update("prioridade", event.target.value)}>
+              <option value="">Todas</option>
+              {priorities.map((item) => <option key={item} value={item}>{priorityName(item)}</option>)}
+            </select>
+          </Field>
+        </div>
+        <div className="tabs support-status-tabs" role="group" aria-label="Situação dos chamados">
+          {["", ...statuses].map((item) => <button key={item} type="button" aria-pressed={status === item}
+            onClick={() => update("situacao", item)}>
+            {item ? statusName(item) : "Todos"}{query.isSuccess && ` (${item ? counts[item] ?? 0 : all})`}
+          </button>)}
+        </div>
+      </form>
+      <div className={selected ? "support-admin-grid support-admin-selected" : "support-admin-grid"}>
+        <section className="support-admin-queue" aria-label="Fila de suporte">{list}</section>
+        {children}
+      </div>
     </>
   );
 }

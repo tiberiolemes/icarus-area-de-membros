@@ -397,6 +397,12 @@
   background: var(--stitch-action-hover);
 }
 
+/* A aba selecionada é clara com texto escuro: no hover ela mantém o tom, em vez do fundo escuro dos botões ativos. */
+.admin-content .tabs :is(button, .button):is([aria-current="page"], [aria-pressed="true"]):hover:not(:disabled) {
+  background: var(--stitch-surface-segment-active);
+  color: var(--stitch-text-heading);
+}
+
 .admin-content :focus-visible:not([tabindex="-1"]) {
   outline: var(--stitch-focus-width) solid var(--stitch-focus);
   outline-offset: var(--stitch-focus-offset);

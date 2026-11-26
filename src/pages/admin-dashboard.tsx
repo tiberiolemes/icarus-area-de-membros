@@ -117,10 +117,10 @@ export function AdminDashboard({ analyticsPath }: { analyticsPath: string }) {
             <CalendarDays size={16} aria-hidden="true" />
             {civilDate(data.from_day, calendarDate)} a {civilDate(data.through_day, calendarDate)} · Horário de Brasília
           </p>
-          <dl className="reports-kpis" id="dashboard-indicadores">
-            <div><dt>MRR equivalente <Wallet aria-hidden="true" /></dt><dd className="reports-number reports-currency">{kpiMoney(data.mrr_cents)}</dd><dd className="reports-note">Vigências pagas atuais, valor mensalizado</dd></div>
-            <div><dt>Receita de pedidos <CreditCard aria-hidden="true" /></dt><dd className="reports-number reports-currency">{kpiMoney(data.revenue_cents)}</dd><dd className="reports-note">Pagos no período, com status pago</dd></div>
-            <div><dt>Vencimentos em 30 dias <Repeat2 aria-hidden="true" /></dt><dd className="reports-number">{numbers.format(data.renewals_due)}</dd><dd className="reports-note">Membros com acesso pago a vencer nos próximos 30 dias a partir de hoje</dd></div>
+          <dl className="admin-metrics reports-kpis" id="dashboard-indicadores">
+            <div><dt>MRR equivalente <Wallet aria-hidden="true" /></dt><dd><strong className="reports-currency">{kpiMoney(data.mrr_cents)}</strong><small>Vigências pagas atuais, valor mensalizado</small></dd></div>
+            <div><dt>Receita de pedidos <CreditCard aria-hidden="true" /></dt><dd><strong className="reports-currency">{kpiMoney(data.revenue_cents)}</strong><small>Pagos no período, com status pago</small></dd></div>
+            <div><dt>Vencimentos em 30 dias <Repeat2 aria-hidden="true" /></dt><dd><strong>{numbers.format(data.renewals_due)}</strong><small>Membros com acesso pago a vencer nos próximos 30 dias a partir de hoje</small></dd></div>
           </dl>
           <div className="reports-overview">
             <AcquisitionChart data={data} />

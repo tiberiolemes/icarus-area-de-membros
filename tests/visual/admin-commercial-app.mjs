@@ -141,7 +141,7 @@ async function inspect(page) {
       hovered: [...document.querySelectorAll(":hover")].map((element) => element.localName),
       fonts: [...document.fonts].filter((font) => font.status === "loaded").map((font) => font.family),
       geometry: Object.fromEntries([
-        "h1", ".commercial-metrics", ".commercial-toolbar", ".commercial-results", ".stitch-search",
+        "h1", ".admin-metrics", ".admin-filters", ".commercial-results", ".stitch-search",
         ".commercial-table", ".commercial-plans", ".commercial-campaigns", ".commercial-detail",
       ].flatMap((selector) => {
         const element = panel.querySelector(selector);
@@ -182,7 +182,7 @@ async function exercise(browser, settings, commit, target, theme, width) {
     const cdp = await context.newCDPSession(page);
     await cdp.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: -1, y: -1 });
     await page.goto(origin + "/admin/" + target.route);
-    await page.locator(".commercial-metrics").waitFor();
+    await page.locator(".admin-metrics").waitFor();
     assert.equal(await page.locator(".commercial-results h2").innerText(), target.ready);
     await page.waitForFunction(() => document.activeElement === document.querySelector(".admin-commercial h1"));
     await page.keyboard.press("Tab");

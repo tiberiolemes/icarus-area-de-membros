@@ -186,6 +186,16 @@ describe("Vitrine de cursos", () => {
     expect(screen.getByRole("heading", {name:"Material extra"})).toBeInTheDocument();
   });
 
+  it("clicar na capa do cartão abre o mesmo destino do título, sem criar parada extra no teclado", async () => {
+    catalogFetch([course("capa-clicavel", { title: "Curso com capa" })]);
+    const { container } = mount();
+    const title = await screen.findByRole("link", { name: "Curso com capa" });
+    const art = container.querySelector(".showcase-card .showcase-art a");
+    expect(art).toHaveAttribute("href", title.getAttribute("href"));
+    expect(art).toHaveAttribute("tabindex", "-1");
+    expect(art).toHaveAttribute("aria-hidden", "true");
+  });
+
   it("oferece somente a consulta de acesso ao curso restrito", async () => {
     catalogFetch([course("negado", {can_access: false})]);
     mount();

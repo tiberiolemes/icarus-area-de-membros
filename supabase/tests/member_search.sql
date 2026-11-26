@@ -65,8 +65,8 @@ insert into public.sections(id,module_id,title,status,order_index) values
  (pg_temp.id(126),pg_temp.id(114),'Seção em curso arquivado','published',0),
  (pg_temp.id(127),pg_temp.id(110),'Seção rascunho anterior','draft',0);
 insert into public.lessons(id,section_id,slug,title,status,is_preview,body,video_id,storage_path) values
- (pg_temp.id(130),pg_temp.id(120),'principal','Aula de Busca Ágil','published',false,'<p>corpo sigiloso marcador</p>','video-privado','path-privado'),
- (pg_temp.id(131),pg_temp.id(121),'bloqueada','Busca Ágil aula restrita','published',false,'Marcador protegido','video-privado','path-privado'),
+ (pg_temp.id(130),pg_temp.id(120),'principal','Aula de Busca Ágil','published',false,'<p>corpo sigiloso marcador</p>','5e000000-0000-4000-8000-0000000000fe','path-privado'),
+ (pg_temp.id(131),pg_temp.id(121),'bloqueada','Busca Ágil aula restrita','published',false,'Marcador protegido','5e000000-0000-4000-8000-0000000000fe','path-privado'),
  (pg_temp.id(132),pg_temp.id(121),'previa','Prévia de Busca Ágil','published',true,'',null,null),
  (pg_temp.id(133),pg_temp.id(122),'plano','Busca Ágil aula por plano','published',false,'',null,null),
  (pg_temp.id(134),pg_temp.id(120),'rascunho','Busca Ágil aula rascunho','draft',false,'',null,null),

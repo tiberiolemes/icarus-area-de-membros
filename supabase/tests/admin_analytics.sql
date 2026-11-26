@@ -133,8 +133,8 @@ insert into public.sections(id,module_id,title,status) values
   (pg_temp.id(120),pg_temp.id(110),'Seção 1','published'),(pg_temp.id(121),pg_temp.id(111),'Seção 2','published'),
   (pg_temp.id(122),pg_temp.id(112),'Seção privada marcador','published');
 insert into public.lessons(id,section_id,slug,title,status,type,body,duration_seconds,video_id,is_required)
-values (pg_temp.id(130),pg_temp.id(120),'primeira','Primeira aula','published','video','Corpo privado marcador',300,'Video privado marcador',true),
-  (pg_temp.id(131),pg_temp.id(121),'segunda','Segunda aula','published','video','Corpo privado marcador',300,'Video privado marcador',true),
+values (pg_temp.id(130),pg_temp.id(120),'primeira','Primeira aula','published','video','Corpo privado marcador',300,'ad320000-0000-4000-8000-0000000000fe',true),
+  (pg_temp.id(131),pg_temp.id(121),'segunda','Segunda aula','published','video','Corpo privado marcador',300,'ad320000-0000-4000-8000-0000000000fe',true),
   (pg_temp.id(132),pg_temp.id(121),'opcional','Aula opcional','published','text','',0,null,false),
   (pg_temp.id(133),pg_temp.id(122),'rascunho','Aula privada marcador','published','text','',0,null,false);
 insert into public.lessons(id,section_id,slug,title,status,is_required,order_index)
@@ -258,7 +258,7 @@ select pg_temp.ok((pg_temp.result('first')->'lessons') @> '{"total":23,"page_siz
 select pg_temp.ok(pg_temp.result('empty') @> '{"started":0,"module_title":null,"module_completed":null,"course_completed":null,"lessons":{"items":[]}}',
   'curso vazio distingue zero de etapa indisponível');
 select pg_temp.ok(not exists(select from analytics_results where data::text ~*
-  'example.test|privado marcador|privada marcador|arquivado marcador|"position_seconds"|"user_id"|"order_id"|"buyer_data"|ad320000-0000-4000-8000-000000000002'),
+  'example.test|privado marcador|privada marcador|arquivado marcador|"position_seconds"|"user_id"|"order_id"|"buyer_data"|ad320000-0000-4000-8000-000000000002|ad320000-0000-4000-8000-0000000000fe'),
   'resposta agregada não contém PII, posições, conteúdo privado ou identificador de membro');
 reset role;
 update public.lessons set status='archived' where id=pg_temp.id(131);

@@ -153,11 +153,10 @@ export function LessonEngagementTab({
       onClick={onOpen}
     >
       <Icon size={18} aria-hidden="true" />
-      <span>{label}</span>
-      {tab === "notes" && <>
-        <span className="stitch-dark-only">{label}</span>
-        <span className="stitch-lesson-mobile stitch-lesson-light-label">Anotações</span>
-      </>}
+      {tab === "notes" ? <>
+        <span className="stitch-lesson-wide">{label}</span>
+        <span className="stitch-lesson-mobile">Anotações</span>
+      </> : <span>{label}</span>}
       {showCount && (
         <span className="lesson-engagement-tab-count">{count}</span>
       )}

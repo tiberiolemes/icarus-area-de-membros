@@ -105,7 +105,7 @@ function ResumeCourse({ course }: { course: ShowcaseCourse }) {
   const seconds = Math.floor(target.position_seconds);
   const clock = seconds > 0 ? ` (${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')})` : '';
   return <section className="showcase-resume" aria-label="Continuar aprendendo">
-    <div className="showcase-art"><CourseCover course={course} hasCover={course.has_cover} featured /></div>
+    <div className="showcase-art"><Link to={outlinePath(course)} tabIndex={-1} aria-hidden="true"><CourseCover course={course} hasCover={course.has_cover} featured /></Link></div>
     <div className="showcase-resume-copy">
       <p className="showcase-eyebrow"><CirclePlay size={16} /> Em andamento · Retomada imediata</p>
       <p className="catalog-meta">{course.title} · {target.module_title}</p>
@@ -122,7 +122,9 @@ function ShowcaseCard({ course }: { course: ShowcaseCourse }) {
   const description = plainDescription(course.description);
   const ongoing = course.state === 'ongoing';
   return <article className="showcase-card">
-    <div className="showcase-art"><CourseCover course={course} hasCover={course.has_cover} />
+    <div className="showcase-art">
+      {/* A capa leva ao mesmo destino do título; o link do título já é a parada do teclado e do leitor de tela. */}
+      <Link to={outlinePath(course)} tabIndex={-1} aria-hidden="true"><CourseCover course={course} hasCover={course.has_cover} /></Link>
       <span className="showcase-badge">{course.can_access ? <Layers2 size={13} /> : <Lock size={13} />}{course.can_access && !target ? "Sem aula disponível" : statuses[course.state]}</span>
     </div>
     <div className="showcase-card-copy">

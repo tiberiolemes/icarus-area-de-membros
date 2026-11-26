@@ -556,7 +556,10 @@ export function LessonPage() {
       mediaUrl &&
       ["iframe.mediadelivery.net", "player.mediadelivery.net"].includes(
         new URL(mediaUrl).hostname,
-      );
+      ),
+    youtube =
+      !isAudio && media.data?.provider === "youtube" && mediaUrl &&
+      new URL(mediaUrl).hostname === "www.youtube-nocookie.com";
   const moduleLessons = module?.sections.flatMap((s) => s.lessons) ?? [];
   const moduleDone = moduleLessons.filter((lesson) => lesson.completed).length;
   const moduleProgress = moduleLessons.length
@@ -565,7 +568,7 @@ export function LessonPage() {
   const lessonNumber = moduleLessons.findIndex((lesson) => lesson.id === found?.id) + 1;
   const moduleNumber = (course.data?.modules.findIndex((item) => item.id === module?.id) ?? -1) + 1;
   const mediaLabel = isAudio ? "áudio" : "vídeo";
-  const currentVideo = !bunny && mediaUrl && video?.currentSrc === mediaUrl ? video : null;
+  const currentVideo = !bunny && !youtube && mediaUrl && video?.currentSrc === mediaUrl ? video : null;
   const readyBunnySeek = bunny && bunnySeek?.lessonId === lessonId && bunnySeek?.url === mediaUrl ? bunnySeek.seek : undefined;
   const seekTo = currentVideo && seekableVideo === currentVideo ? (seconds: number) => {
     if (!Number.isFinite(seconds) || seconds < 0) return;
@@ -715,6 +718,15 @@ export function LessonPage() {
                                 seek ? { lessonId: found.id, url: mediaUrl, seek }
                                   : current?.lessonId === found.id && current.url === mediaUrl ? null : current
                               )}
+                            />
+                          ) : youtube ? (
+                            <iframe
+                              key={found.id}
+                              src={mediaUrl}
+                              title={data.lesson.title}
+                              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                              allowFullScreen
+                              referrerPolicy="strict-origin-when-cross-origin"
                             />
                           ) : isAudio ? (
                             <><Headphones size={24} aria-hidden="true" /><audio key={mediaUrl} {...nativeMedia} /></>

@@ -24,7 +24,7 @@ const dark = "logo/dark-22222222-2222-4222-8222-222222222222.webp";
 const fallback = <strong className="installation-name">Academia</strong>;
 
 it("monta a URL pública só para caminhos de marca gerados pelo servidor", () => {
-  for (const path of ["icon/33333333-3333-4333-8333-333333333333.png", "signature/44444444-4444-4444-8444-444444444444.png"]) {
+  for (const path of ["icon/33333333-3333-4333-8333-333333333333.png", "signature/44444444-4444-4444-8444-444444444444.png", "icon/33333333-3333-4333-8333-333333333333.svg", "logo/light-11111111-1111-4111-8111-111111111111.svg"]) {
     expect(brandAssetUrl(path)).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${path}`);
   }
   for (const path of ["icon/33333333-3333-4333-8333-333333333333.webp", "signature/x.png", "avatar/33333333-3333-4333-8333-333333333333.png"]) {
@@ -32,7 +32,7 @@ it("monta a URL pública só para caminhos de marca gerados pelo servidor", () =
   }
   expect(brandAssetUrl(light)).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${light}`);
   expect(brandAssetUrl(dark)).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${dark}`);
-  for (const path of [null, undefined, "", "../icarus-private/x.png", "https://exemplo.test/logo.png", "logo/light-x.png", "logo/light-11111111-1111-4111-8111-111111111111.svg"]) {
+  for (const path of [null, undefined, "", "../icarus-private/x.png", "https://exemplo.test/logo.png", "logo/light-x.png", "signature/44444444-4444-4444-8444-444444444444.svg"]) {
     expect(brandAssetUrl(path)).toBeNull();
   }
 });
@@ -53,12 +53,14 @@ it("só com a colorida usa a mesma imagem nos dois temas", () => {
 });
 
 it("com as duas, cada imagem fica marcada com o tema em que aparece", () => {
-  render(<BrandLogo light="/a.png" dark="/b.png" name="Academia" fallback={fallback} />);
+  render(<BrandLogo light="/a.svg" dark="/b.svg" ratios={{ light: 4, dark: 1 }} name="Academia" fallback={fallback} />);
   const [first, second] = screen.getAllByRole("img", { name: "Academia" });
   expect(first).toHaveAttribute("data-brand-tone", "light");
-  expect(first).toHaveAttribute("src", "/a.png");
+  expect(first).toHaveAttribute("src", "/a.svg");
+  expect(first).toHaveAttribute("data-brand-shape", "wide");
   expect(second).toHaveAttribute("data-brand-tone", "dark");
-  expect(second).toHaveAttribute("src", "/b.png");
+  expect(second).toHaveAttribute("src", "/b.svg");
+  expect(second).toHaveAttribute("data-brand-shape", "compact");
 });
 
 it("só com a branca, o tema claro volta ao padrão", () => {
@@ -84,6 +86,10 @@ it("aplica o favicon da instalação nas abas e volta ao padrão do Icarus sem e
   await waitFor(() => expect(link("icon").getAttribute("href")).toBe(`http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${icon}`));
   expect(link("icon").type).toBe("image/png");
   expect(link("apple-touch-icon").getAttribute("href")).toBe(link("icon").getAttribute("href"));
+  context = { name: "Academia", icon: icon.replace(".png", ".svg") };
+  await cache.invalidateQueries();
+  await waitFor(() => expect(link("icon").type).toBe("image/svg+xml"));
+  expect(link("icon").href).toMatch(/\.svg$/);
   context = { name: "Academia", icon: null };
   await cache.invalidateQueries();
   await waitFor(() => expect(link("icon").getAttribute("href")).toBe(defaultIcon));

@@ -3,15 +3,15 @@ import { AppWindow, FileText, Globe, ImageUp, Palette } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cache, client, edge, rpc } from "../api";
 import { useAuth, useBootstrap } from "../auth";
-import { acceptOf, BrandLogo, brandAssetUrl, checkImageFile, defaultLogo, type AssetVariant } from "../brand";
+import { acceptOf, BrandImage, BrandLogo, brandAssetUrl, brandRatio, checkImageFile, defaultIcon, defaultLogo, type AssetPreview, type AssetVariant } from "../brand";
 import { Action, Field, Form, Notice, QueryState } from "../ui";
 import "./admin-brand.css";
 
 type NameDraft = { name: string; revision: number | null };
 type NameSave = { name: string; revision: number; saved: boolean };
-type Variant = "light" | "dark";
+type Variant = "light" | "dark" | "icon";
 
-const logoHint = "PNG ou WebP, até 500 KB. Mínimo de 240 × 60 px; recomendado 960 × 240 px (proporção 4:1), com fundo transparente.";
+const logoHint = "SVG, PNG ou WebP, até 500 KB. PNG e WebP precisam de pelo menos 240 × 60 px. Prefira fundo transparente.";
 const assetCopy: Record<AssetVariant, { title: string; noun: string; preview: string; current: string; use: string; empty: string; hint: string; confirm: string; saved: string; removed: string }> = {
   light: {
     title: "Logo colorida", noun: "logo colorida", preview: "Prévia da logo colorida", current: "Logo colorida atual",
@@ -30,7 +30,7 @@ const assetCopy: Record<AssetVariant, { title: string; noun: string; preview: st
   icon: {
     title: "Ícone (favicon)", noun: "ícone", preview: "Prévia do ícone", current: "Ícone atual",
     use: "Aparece na aba do navegador e no atalho da tela inicial do celular, em todas as telas, inclusive antes do login.",
-    empty: "Usando o ícone padrão do Icarus.", hint: "PNG quadrado, até 500 KB. Mínimo de 180 × 180 px; recomendado 512 × 512 px.",
+    empty: "Usando o ícone padrão do Icarus.", hint: "SVG ou PNG quadrado, até 500 KB. PNG precisa de pelo menos 180 × 180 px.",
     confirm: "Remover o ícone? As abas voltam ao ícone padrão do Icarus.",
     saved: "Ícone salvo.", removed: "Ícone removido.",
   },
@@ -58,34 +58,38 @@ export function AdminBrand() {
   const name = bootstrap.data?.settings.name;
   const revision = bootstrap.data?.settings.name_revision;
   const logos = { light: brandAssetUrl(bootstrap.data?.settings.logo_light), dark: brandAssetUrl(bootstrap.data?.settings.logo_dark), icon: brandAssetUrl(bootstrap.data?.settings.icon) };
+  const ratios = { light: brandRatio(bootstrap.data?.settings.logo_light_ratio), dark: brandRatio(bootstrap.data?.settings.logo_dark_ratio) };
   return (
     <QueryState query={bootstrap}>
       {bootstrap.data && session && (typeof name === "string" && typeof revision === "number" ? (
-        <BrandEditor key={session.access_token} actorId={session.user.id} token={session.access_token} name={name} revision={revision} logos={logos} />
+        <BrandEditor key={session.access_token} actorId={session.user.id} token={session.access_token} name={name} revision={revision} logos={logos} ratios={ratios} />
       ) : <Notice error>A edição da marca está indisponível nesta versão da instalação.</Notice>)}
     </QueryState>
   );
 }
 
 /** Imagem da marca ou assinatura do curso: prévia, salvar, trocar e remover pela Edge upload, em AJAX. */
-export function AssetCard({ variant, saved, draft: controlled, onDraft: setControlled, courseId, onChanged = refreshBrand }: {
+export function AssetCard({ variant, saved, savedRatio, draft: controlled, onDraft: setControlled, courseId, onChanged = refreshBrand }: {
   variant: AssetVariant;
   saved: string | null;
-  draft?: string;
-  onDraft?: (url?: string) => void;
+  savedRatio?: number;
+  draft?: AssetPreview;
+  onDraft?: (preview?: AssetPreview) => void;
   courseId?: string;
   onChanged?: () => Promise<unknown> | void;
 }) {
   const copy = assetCopy[variant];
-  const [own, setOwn] = useState<string>();
+  const [own, setOwn] = useState<AssetPreview>();
   const draft = setControlled ? controlled : own;
   const onDraft = setControlled ?? setOwn;
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
   const [removed, setRemoved] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
   const input = useRef<HTMLInputElement>(null);
   const latest = useRef(0);
-  useEffect(() => () => { if (draft) URL.revokeObjectURL(draft); }, [draft]);
+  useEffect(() => () => { if (draft) URL.revokeObjectURL(draft.url); }, [draft]);
+  useEffect(() => () => { latest.current++; }, []);
 
   async function choose(file?: File) {
     // Só a última escolha vale: a validação de um arquivo já trocado é descartada.
@@ -93,15 +97,18 @@ export function AssetCard({ variant, saved, draft: controlled, onDraft: setContr
     setError("");
     setRemoved(false);
     onDraft(undefined);
+    setChecking(Boolean(file));
     if (!file) return;
     try {
-      const url = await checkImageFile(file, variant);
-      if (pick === latest.current) onDraft(url);
-      else URL.revokeObjectURL(url);
+      const preview = await checkImageFile(file, variant);
+      if (pick === latest.current) onDraft(preview);
+      else URL.revokeObjectURL(preview.url);
     } catch (failure) {
       if (pick !== latest.current) return;
       if (input.current) input.current.value = "";
       setError(failure instanceof Error ? failure.message : "Não foi possível ler esta imagem.");
+    } finally {
+      if (pick === latest.current) setChecking(false);
     }
   }
 
@@ -111,9 +118,11 @@ export function AssetCard({ variant, saved, draft: controlled, onDraft: setContr
       <p>{copy.use}</p>
       <div className="brand-logo-stage" data-theme={variant === "dark" ? "dark" : "light"}>
         {draft || saved
-          ? <img className="brand-custom" src={draft ?? saved!} alt={draft ? copy.preview : copy.current} />
+          ? <BrandImage src={draft?.url ?? saved!} alt={draft ? copy.preview : copy.current} ratio={draft?.ratio ?? savedRatio} />
           : <span>{copy.empty}</span>}
       </div>
+      {checking && <p role="status">Preparando a prévia…</p>}
+      {draft?.warnings.map((warning) => <Notice key={warning}>{warning}</Notice>)}
       <Form
         key={formVersion}
         label={`Salvar ${copy.noun}`}
@@ -139,7 +148,7 @@ export function AssetCard({ variant, saved, draft: controlled, onDraft: setContr
         </Field>
         {error && <Notice error>{error}</Notice>}
       </Form>
-      {saved && !draft && (
+      {saved && !draft && !checking && (
         <Action confirm={copy.confirm} run={async () => {
           await edge("upload", { action: "brand-asset-remove", variant, ...(courseId ? { course_id: courseId } : {}) });
           await onChanged();
@@ -151,9 +160,14 @@ export function AssetCard({ variant, saved, draft: controlled, onDraft: setContr
   );
 }
 
-function BrandEditor({ actorId, token, name, revision, logos }: { actorId: string; token: string; name: string; revision: number; logos: Record<Variant | "icon", string | null> }) {
-  const [logoDrafts, setLogoDrafts] = useState<Partial<Record<Variant, string>>>({});
-  const shown = { light: logoDrafts.light ?? logos.light, dark: logoDrafts.dark ?? logos.dark };
+function BrandEditor({ actorId, token, name, revision, logos, ratios }: { actorId: string; token: string; name: string; revision: number; logos: Record<Variant, string | null>; ratios: { light?: number; dark?: number } }) {
+  const [logoDrafts, setLogoDrafts] = useState<Partial<Record<Variant, AssetPreview>>>({});
+  const shown = {
+    light: logoDrafts.light?.url ?? logos.light,
+    dark: logoDrafts.dark?.url ?? logos.dark,
+    ratios: { light: logoDrafts.light?.ratio ?? ratios.light, dark: logoDrafts.dark?.ratio ?? ratios.dark },
+  };
+  const shownIcon = logoDrafts.icon?.url ?? logos.icon ?? defaultIcon;
   const draftKey = `icarus:draft:${actorId}:installation-name`;
   const [draft, setDraft] = useState<NameDraft | null>(() => {
     try {
@@ -164,6 +178,7 @@ function BrandEditor({ actorId, token, name, revision, logos }: { actorId: strin
       return null;
     }
   });
+  const shownName = (draft && trimmedName(draft.name)) || name;
   const [formVersion, setFormVersion] = useState(0);
   const input = useRef<HTMLInputElement>(null);
 
@@ -256,7 +271,7 @@ function BrandEditor({ actorId, token, name, revision, logos }: { actorId: strin
             )}
             <div className="brand-logos">
               {(["light", "dark"] as const).map((variant) => (
-                <AssetCard key={variant} variant={variant} saved={logos[variant]} draft={logoDrafts[variant]}
+                <AssetCard key={variant} variant={variant} saved={logos[variant]} savedRatio={ratios[variant]} draft={logoDrafts[variant]}
                   onDraft={(url) => setLogoDrafts((current) => ({ ...current, [variant]: url }))} />
               ))}
             </div>
@@ -266,7 +281,8 @@ function BrandEditor({ actorId, token, name, revision, logos }: { actorId: strin
               <h2 id="brand-icon-title"><AppWindow size={20} aria-hidden="true" /> Ícone da plataforma</h2>
               <p>O favicon substitui o ícone do Icarus nas abas e nos atalhos. A assinatura do certificado fica em cada curso, em Conteúdo → Certificado.</p>
             </header>
-            <AssetCard variant="icon" saved={logos.icon} />
+            <AssetCard variant="icon" saved={logos.icon} savedRatio={1} draft={logoDrafts.icon}
+              onDraft={(preview) => setLogoDrafts((current) => ({ ...current, icon: preview }))} />
           </section>
           <section className="settings-panel brand-legal" aria-labelledby="brand-legal-title">
             <header>
@@ -279,19 +295,34 @@ function BrandEditor({ actorId, token, name, revision, logos }: { actorId: strin
         <section className="settings-panel brand-preview" aria-labelledby="brand-preview-title">
           <header>
             <h2 id="brand-preview-title">Prévia da identidade</h2>
-            <p>Confira o nome e a logo nos dois temas, antes e depois de salvar.</p>
+            <p>Confira a marca nos dois temas antes de salvar. O PNG e o PDF do certificado têm fundo claro.</p>
           </header>
           <div className="brand-samples">
             {(["light", "dark"] as const).map((tone) => (
               <div key={tone} className="brand-sample" data-theme={tone}>
                 <span>{tone === "light" ? "Tema claro" : "Tema escuro"}</span>
-                <BrandLogo {...shown} name={(draft && trimmedName(draft.name)) || name}
-                  fallback={<img src={defaultLogo} alt="Icarus" width="244" height="64" />} />
-                <strong dir="auto">{(draft && trimmedName(draft.name)) || name}</strong>
+                <strong dir="auto">{shownName}</strong>
+                <dl className="brand-preview-sizes">
+                  {[
+                    ["rail", "Menu lateral"], ["drawer", "Gaveta"], ["mobile", "Topo no celular"],
+                    ["public", "Telas públicas"], ["admin", "Topo do painel"], ["certificate", "Certificado na tela"],
+                    ...(tone === "light" ? [["export", "Certificado em PNG e PDF"]] : []),
+                  ].map(([slot, label]) => (
+                    <div key={slot} data-brand-slot={slot}>
+                      <dt>{label}</dt>
+                      <dd><BrandLogo {...shown} name={shownName}
+                        fallback={shownName === "Icarus" ? <img src={defaultLogo} alt="Icarus" width="244" height="64" />
+                          : <span className="installation-name" title={shownName}>{shownName}</span>} /></dd>
+                    </div>
+                  ))}
+                  <div data-brand-slot="icon">
+                    <dt>Aba do navegador</dt>
+                    <dd><BrandImage src={shownIcon} alt="Ícone da plataforma" ratio={1} /></dd>
+                  </div>
+                </dl>
               </div>
             ))}
           </div>
-          <p>O menu segue as seções da plataforma. Cada pessoa escolhe o tema no próprio perfil.</p>
         </section>
       </div>
     </>

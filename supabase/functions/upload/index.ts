@@ -33,7 +33,7 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   try { form = await new Request(req.url, { method: "POST", headers: { "content-type": req.headers.get("content-type") || "" }, body: raw }).formData(); }
   catch { throw new HttpError(422, "INVALID_INPUT", "Envie o arquivo com os metadados."); }
   const file = form.get("file"), kind = text(form.get("kind"), 32);
-  if (kind === "brand-asset") return await saveBrandLogo(a, form);
+  if (kind === "brand-asset" || kind === "brand-asset-preview") return await saveBrandLogo(a, form, kind === "brand-asset-preview");
   const resourceId = uuid(form.get("resource_id"));
   const screenshot = kind === "feedback-screenshot";
   if (!(file instanceof File) || !["course-cover", "lesson", "material", "post-image", "ticket-attachment", "avatar", "feedback-screenshot"].includes(kind)) throw new HttpError(422, "INVALID_INPUT", "Arquivo inválido.");

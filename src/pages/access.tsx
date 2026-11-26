@@ -16,7 +16,7 @@ import {
 import type { Profile } from "../api";
 import { useAuth, useBootstrap } from "../auth";
 import { Captcha, captchaToken, resetCaptcha } from "../captcha";
-import { BrandLogo, brandAssetUrl, defaultLogo } from "../brand";
+import { BrandLogo, brandAssetUrl, brandRatio, defaultLogo } from "../brand";
 import { readModules } from "../modules";
 import {
   Action,
@@ -37,6 +37,8 @@ type PublicContext = {
   modules?: unknown;
   logo_light?: string | null;
   logo_dark?: string | null;
+  logo_light_ratio?: number | null;
+  logo_dark_ratio?: number | null;
   registration_enabled: boolean;
   legal_ready: boolean;
   legal_versions: {
@@ -56,6 +58,7 @@ export function PublicFrame({ children }: { children: React.ReactNode }) {
       <header className="public-top">
         <Link to="/entrar" aria-label={`${name}, início`} className={name === "Icarus" ? undefined : "public-installation-name"}>
           <BrandLogo light={brandAssetUrl(context.data?.logo_light)} dark={brandAssetUrl(context.data?.logo_dark)} name={name}
+            ratios={{ light: brandRatio(context.data?.logo_light_ratio), dark: brandRatio(context.data?.logo_dark_ratio) }}
             fallback={name === "Icarus" ? <img src={defaultLogo} alt="Icarus" width="244" height="64" />
               : <strong className="installation-name" title={name}>{name}</strong>} />
         </Link>

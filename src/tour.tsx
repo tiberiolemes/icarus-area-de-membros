@@ -146,7 +146,7 @@ const steps = [
   {
     target: "admin-settings-brand",
     title: "Edite o nome, a logo e o ícone da plataforma",
-    body: "Use Salvar nome para publicar o nome. Se outra sessão tiver alterado o nome, revise o valor publicado antes de reenviar. Em Logo da plataforma, envie a versão colorida e a branca, confira a prévia nos dois temas e salve cada uma. Remover devolve o nome da instalação ou a logo do Icarus. Em Ícone da plataforma, envie o favicon em PNG quadrado.",
+    body: "Use Salvar nome para publicar o nome. Se outra sessão tiver alterado o nome, revise o valor publicado antes de reenviar. Envie a versão colorida e a branca em SVG, PNG ou WebP. Confira o encaixe nos menus, nas telas de entrada, no painel e no certificado, nos dois temas, antes de salvar. O favicon aceita SVG ou PNG quadrado.",
   },
   {
     target: "admin-settings-modules",

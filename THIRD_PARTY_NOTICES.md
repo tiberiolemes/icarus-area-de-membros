@@ -21,5 +21,7 @@ Exact versions and transitive dependencies are recorded in `package-lock.json`.
 | TipTap React, Starter Kit, Link | MIT |
 | DOMPurify | MPL-2.0 OR Apache-2.0 |
 | Lucide React | ISC |
+| [saxes](https://github.com/lddubeau/saxes/tree/v6.0.0) (upload Edge) | ISC |
+| [cf-wasm/resvg](https://github.com/fineshopdesign/cf-wasm/tree/main/packages/resvg) and [resvg-wasm](https://github.com/thx/resvg-js/tree/v2.6.2), unmodified npm packages (upload Edge) | MPL-2.0 |
 
 Installed packages include upstream license files. Development tooling and the independently installed Supabase/Docker runtime have their respective upstream licenses. No Frappe source or dependency is included in this release tree.

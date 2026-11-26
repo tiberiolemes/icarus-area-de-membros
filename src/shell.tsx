@@ -39,7 +39,7 @@ import { Action, AdminBadge, Empty, Field, Modal, Notice, RouteFocus } from "./u
 import { Tour } from "./tour";
 import { UpdateNotice } from "./update-notice";
 import { MemberSearch } from "./pages/member-search";
-import { BrandLogo, brandAssetUrl, defaultLogo } from "./brand";
+import { BrandLogo, brandAssetUrl, brandRatio, defaultLogo } from "./brand";
 import { ModuleUnavailable, moduleLabel, moduleOfPath, pathOpen, useModules } from "./modules";
 import "./member-shell-stitch.css";
 
@@ -260,9 +260,9 @@ export function Shell() {
   const name = boot.data?.settings?.name;
   const installationName = typeof name === "string" && name ? name : "Icarus";
   const logos = { light: brandAssetUrl(boot.data?.settings?.logo_light), dark: brandAssetUrl(boot.data?.settings?.logo_dark) };
-  // Sem logo própria, nada muda: logo do Icarus ou o nome personalizado em texto.
+  const ratios = { light: brandRatio(boot.data?.settings?.logo_light_ratio), dark: brandRatio(boot.data?.settings?.logo_dark_ratio) };
   const brandMark = (Text: "strong" | "span") => (
-    <BrandLogo {...logos} name={installationName} fallback={installationName === "Icarus" ? <img src={defaultLogo} alt="Icarus" />
+    <BrandLogo {...logos} ratios={ratios} name={installationName} fallback={installationName === "Icarus" ? <img src={defaultLogo} alt="Icarus" />
       : Text === "strong" ? <strong className="installation-name" title={installationName}>{installationName}</strong>
       : <span title={installationName}>{installationName}</span>} />
   );

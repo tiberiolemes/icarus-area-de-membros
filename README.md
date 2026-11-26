@@ -3,7 +3,7 @@
 ![Icarus · Área de membros e cursos online · Código aberto sob licença MIT](docs/assets/icarus-banner-github.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![Version](https://img.shields.io/badge/version-2.8.0-black)
+![Version](https://img.shields.io/badge/version-2.9.0-black)
 ![Stack](https://img.shields.io/badge/React%20%2B%20TypeScript-Supabase-black)
 
 **Português brasileiro** · [English](#english)
@@ -21,7 +21,7 @@ Aplicação nova em React, TypeScript, Vite e Supabase. A árvore desta versão 
 - Busca de cursos, módulos e aulas pelo acesso do membro. Aulas com apresentação editorial, favoritos, notas privadas, checklist e comentários moderados.
 - Notificações no aplicativo e anúncios de cursos e módulos, com aviso para inscritos na publicação conforme permissões do membro.
 - Tickets com conversa e anexos privados; administração de conteúdo, membros, planos, pedidos e documentos legais.
-- Nome, logo e ícone (favicon) da instalação em Plataforma e marca. A logo colorida e a branca, em PNG ou WebP de até 500 KB, substituem a do Icarus nos menus, nas telas de entrada, no checkout e no certificado, inclusive antes do login. A assinatura do certificado é um PNG enviado em cada curso.
+- Nome, logo e ícone (favicon) da instalação em Plataforma e marca. A logo colorida e a branca aceitam SVG, PNG ou WebP de até 500 KB. O favicon aceita SVG ou PNG quadrado. O Icarus limpa o SVG no servidor, recorta margens vazias e mantém a proporção nos menus, nas telas de entrada, no checkout e no certificado. A assinatura do certificado é um PNG enviado em cada curso.
 - Módulos da plataforma em Configurações → Módulos. O admin desliga o que a comunidade não usa (Comunidade, Materiais, Podcasts, Ranking, Encontros ao vivo, Suporte, Central de ajuda e Feedback dos alunos). Desligar esconde o recurso dos alunos e bloqueia no servidor, sem apagar dados; religar traz tudo de volta. Cursos e Certificados ficam sempre ativos, e nenhuma exportação depende dos módulos.
 - Checkout hospedado Asaas preparado para Sandbox e mídia Bunny configurável. Dados de cartão não passam pela aplicação.
 - Ajuda pública e guias dos fluxos, sem conceder acesso ou progresso acadêmico.
@@ -86,7 +86,7 @@ Banco e integrações nativas exigem instalação local e fixtures próprias. Pa
 
 O [modelo do GitHub Actions](docs/ci/README.md) descreve a automação. A execução da trilha nativa em Actions aguarda um runner com Docker dedicado.
 
-Na 2.8.0, o administrador configura Asaas e Bunny Stream no painel, com credenciais guardadas no servidor. A versão melhora a recuperação de acesso, o player em telas pequenas, a organização do aprendizado e os estados das telas. Para atualizar da 2.7.0, aplique as migrations novas e atualize as Edge Functions e o frontend da mesma versão. Veja o [Changelog](CHANGELOG.md) e o [guia de operação](docs/operations.md).
+Na 2.9.0, a administração pode enviar logos e ícone em SVG e conferir a prévia nos dois temas. Para atualizar da 2.8.0, aplique a migration nova, atualize a Edge Function `upload` e publique o frontend da mesma versão. Veja o [Changelog](CHANGELOG.md) e o [guia de operação](docs/operations.md).
 
 Desde a 2.6.0, o painel segue o padrão de Equipe e controle de acesso. Membros, pedidos e chamados têm filtros e indicadores calculados no servidor. Somente administradores recebem o e-mail do membro no diretório e na ficha. A moderação reúne comentários pendentes numa fila e a auditoria mostra nomes e ações em português. As exportações CSV feitas pela tela de Membros ou Pedidos são registradas na auditoria. Para atualizar da 2.5.1, aplique as migrations `202611250006` a `202611250008` antes de servir o novo frontend. Veja o [roteiro de atualização](docs/operations.md#atualizar-de-versão).
 

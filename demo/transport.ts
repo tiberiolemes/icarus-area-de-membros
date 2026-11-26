@@ -1,12 +1,12 @@
 import type { Certificate, Post, Profile, Ticket } from "../src/api";
 import { demoAccounts } from "./accounts";
 import roteiro from "./roteiro.txt?raw";
-import { date, demoId, futureDay, legalVersions, material, plans, seed, spaces, videoUrl, type Row } from "./fixtures";
+import { certificateModel, date, demoId, futureDay, legalVersions, material, plans, seed, spaces, videoUrl, type Row } from "./fixtures";
 export { demoAccounts } from "./accounts";
 
 export const url = "https://demo.icarus.invalid";
 export const key = "simulacao-local-sem-credencial";
-const stateKey = "icarus-static-demo-data-v3";
+const stateKey = "icarus-static-demo-data-v4";
 const state = (() => {
   try {
     const saved = sessionStorage.getItem(stateKey);
@@ -28,6 +28,15 @@ const store = () => sessionStorage.setItem(stateKey, JSON.stringify(state));
 const expires = () => new Date(Date.now() + 3_600_000).toISOString();
 let video: Promise<string> | undefined;
 let attachment: string | undefined;
+// Capa ilustrativa em SVG, com o título de um lado e formas do outro, para o recorte e o foco ficarem visíveis.
+const coverArt = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+<rect width="1600" height="900" fill="#18181b"/><circle cx="1300" cy="330" r="250" fill="#3f3f46"/>
+<rect x="1010" y="470" width="470" height="300" rx="28" fill="#f4f4f5"/><rect x="1060" y="530" width="260" height="26" rx="13" fill="#18181b"/>
+<rect x="1060" y="590" width="370" height="18" rx="9" fill="#a1a1aa"/><rect x="1060" y="630" width="310" height="18" rx="9" fill="#a1a1aa"/>
+<rect x="1060" y="690" width="150" height="44" rx="22" fill="#18181b"/>
+<text fill="#f4f4f5" font-family="Georgia,'Times New Roman',serif" font-size="118" font-weight="700"><tspan x="100" y="400">Estratégia de</tspan><tspan x="100" y="540">cursos digitais</tspan></text>
+<text x="104" y="640" fill="#a1a1aa" font-family="Arial,sans-serif" font-size="44">Capa de demonstração</text></svg>`;
+let cover: string | undefined;
 function getVideo() {
   return video ??= fetch(videoUrl).then(async (response) => {
     if (!response.ok) throw new Error("Vídeo de demonstração indisponível.");
@@ -61,7 +70,8 @@ function courseDetail(course: Row, profile: Profile) {
   const progress = progressOf(profile);
   const modules = state.records.modules.filter((module) => module.course_id === course.id && module.status === "published").map((module) => ({
     ...module, can_access: canAccess,
-    sections: state.records.sections.filter((section) => section.module_id === module.id).map((section) => ({
+    sections: state.records.sections.filter((section) => section.module_id === module.id)
+      .sort((left, right) => Number(left.order_index) - Number(right.order_index)).map((section) => ({
       ...section,
       lessons: state.records.lessons.filter((lesson) => lesson.section_id === section.id && lesson.status === "published")
         .map((lesson) => ({ ...lesson, can_access: canAccess || !!lesson.is_preview, completed: !!progress[lesson.id]?.completed,
@@ -71,7 +81,7 @@ function courseDetail(course: Row, profile: Profile) {
   const lessons = modules.flatMap((module) => module.sections.flatMap((section) => section.lessons));
   const done = lessons.filter((lesson) => lesson.completed).length;
   const dto = {
-    ...course, can_access: canAccess, cover_url: null, certificate_enabled: !!course.certificate_enabled, required_lessons: lessons.length,
+    ...course, can_access: canAccess, cover_url: course.cover_url ?? null, certificate_enabled: !!course.certificate_enabled, required_lessons: lessons.length,
     total_lessons: lessons.length, completed_lessons: done,
     progress_percent: lessons.length ? Math.floor(done * 100 / lessons.length) : 0,
     duration_seconds: lessons.reduce((total, lesson) => total + Number((lesson as Row).duration_seconds ?? 0), 0),
@@ -95,10 +105,13 @@ const findLesson = (id: unknown, profile: Profile) => {
   }
   return null;
 };
+// Estado salvo antes do modelo global de certificado ganha o modelo padrão.
+const model = () => state.installation.certificate ??= certificateModel();
 const certificate = (course: Row, profile: Profile): Certificate => ({
   id: course.id, code: profile.id.replaceAll("-", "") + course.id.replaceAll("-", "").slice(-16), student_name: profile.full_name,
   course_title: str(course.title), duration_minutes: Math.max(1, Math.ceil(Number(course.duration_seconds) / 60)),
-  issued_at: date, revoked_at: null, demo: true, signer_name: "Equipe de demonstração",
+  issued_at: date, revoked_at: null, demo: true,
+  signer_name: str(course.signer_name ?? model().signer_name), signer_title: str(course.signer_title ?? model().signer_title),
 });
 const earned = (profile: Profile) => publishedCourses().map((record) => courseDetail(record, profile).course)
   .filter((course) => course.certificate_enabled && course.progress_percent === 100)
@@ -384,6 +397,19 @@ function call(name: string, a: Args, profile: Profile) {
         return fail("Esta alteração exige uma instalação do Icarus.", 501);
       return saveRow(state.records[entity] ??= [], a.p_data as Args, id);
     }
+    case "app_admin_default_section": {
+      const module = state.records.modules.find((row) => row.id === a.p_module_id);
+      if (!module) return missing();
+      const existing = state.records.sections.find((row) => row.module_id === module.id && row.is_default);
+      return existing?.id ?? saveRow(state.records.sections, { module_id: module.id, title: "Aulas do módulo",
+        status: "published", order_index: -1, is_bonus: false, is_default: true }, crypto.randomUUID()).id;
+    }
+    case "app_admin_course_cover_focus": {
+      const course = state.records.courses.find((row) => row.id === id);
+      if (!course) return missing();
+      course.cover_focus = a.p_focus;
+      return { id, cover_focus: a.p_focus };
+    }
     case "app_admin_member_detail": {
       const member = state.profiles.find((row) => row.id === id);
       return member ? { profile: member, orders: page(), subscriptions: page(), tickets: page(state.tickets),
@@ -401,6 +427,13 @@ function call(name: string, a: Args, profile: Profile) {
       // Sessões salvas antes da 2.5.0 não têm o campo; ausente conta como ligado.
       (state.installation.modules ??= {})[str(a.p_key)] = a.p_enabled === true;
       return state.installation.modules;
+    case "app_admin_certificate_defaults": return model();
+    case "app_admin_save_certificate_defaults": {
+      const name = str(a.p_signer_name).trim(), title = str(a.p_signer_title).trim();
+      if (name.length < 3 || name.length > 160 || title.length < 2 || title.length > 160)
+        return fail("Informe o nome do responsável, com 3 a 160 caracteres, e o cargo, com 2 a 160.");
+      return Object.assign(model(), { signer_name: name, signer_title: title });
+    }
     case "app_admin_save_installation_name":
       state.installation.name = str(a.p_name);
       return { name: state.installation.name, revision: ++state.installation.name_revision, saved: true };
@@ -542,6 +575,9 @@ export const transport: typeof fetch = async (input, init) => {
       const media = lesson ? await getVideo() : attachment ??= URL.createObjectURL(new Blob([roteiro], { type: "text/plain" }));
       return Response.json({ url: media, expires_at: expires(), provider: "storage" });
     }
+    const covered = a.kind === "course-cover" && state.records.courses.find((row) => row.id === a.id && row.cover_url);
+    if (covered) return Response.json({ url: cover ??= URL.createObjectURL(new Blob([coverArt], { type: "image/svg+xml" })),
+      expires_at: expires(), provider: "storage", focus: covered.cover_focus ?? "50% 50%" });
     return fail("Arquivo indisponível nesta demonstração.", 404);
   }
   if (!path.startsWith("/rest/v1/rpc/") || request.method !== "POST") return fail("Esta operação exige uma instalação do Icarus.", 501);

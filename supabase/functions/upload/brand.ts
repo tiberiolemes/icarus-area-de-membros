@@ -22,9 +22,9 @@ function variantOf(value: unknown): Variant {
   if (!Object.hasOwn(rules, variant)) throw new HttpError(422, "INVALID_INPUT", "Escolha a logo, o ícone ou a assinatura.");
   return variant as Variant;
 }
-// Só a assinatura é de um curso.
+// Só a assinatura é de um curso; sem curso, é a do modelo global de certificado.
 function courseOf(variant: Variant, value: unknown) {
-  return variant === "signature" ? uuid(value) : null;
+  return variant === "signature" && value != null ? uuid(value) : null;
 }
 // O banco confere de novo papel e AAL2; aqui só evita gravar no Storage por quem nunca poderia.
 function requireAdmin(a: Actor) {

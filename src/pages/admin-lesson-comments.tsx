@@ -168,7 +168,7 @@ function ModerationCourse({ slug, lessonId }: { slug: string; lessonId?: string 
     <AdminSurface section="comentarios-curso"
       trail={["Administração", { label: "Cursos para moderação", to: root + (search || "?aba=cursos") }, ...(selected && course
         ? [{ label: "Aulas do curso", to: `${root}/${slug}${search}` }, title] : [title])]}
-      title={title} description={selected ? `${course?.title} · ${selected.module.title} · ${selected.section.title}` : "Selecione uma aula para revisar os comentários."}>
+      title={title} description={selected ? [course?.title, selected.module.title, !selected.section.is_default && selected.section.title].filter(Boolean).join(" · ") : "Selecione uma aula para revisar os comentários."}>
       <section className="settings-panel">
       <QueryState query={query}>
         {lessonId ? (
@@ -187,7 +187,7 @@ function ModerationCourse({ slug, lessonId }: { slug: string; lessonId?: string 
             >
               <div>
                 <strong>{lesson.title}</strong>
-                <p className="meta">{module.title} · {section.title}</p>
+                <p className="meta">{module.title}{!section.is_default && ` · ${section.title}`}</p>
               </div>
             </Link>
           )) : <Empty>Nenhuma aula disponível para moderação neste curso.</Empty>

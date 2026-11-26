@@ -171,6 +171,21 @@ describe("Vitrine de cursos", () => {
     expect(screen.getByText("1/3 aulas · 33%")).toBeVisible();
   });
 
+  it("lista as aulas soltas do módulo sem o cabeçalho da seção automática", async () => {
+    const lesson = (id: string) => ({id, title:"Aula "+id, duration_seconds:60, can_access:true, completed:false});
+    const modules = [{slug:"unico", id:"unico", title:"Módulo único", can_access:true, sections:[
+      {id:"auto",title:"Aulas do módulo",is_default:true,lessons:[lesson("a")]},
+      {id:"extra",title:"Material extra",is_default:false,lessons:[lesson("b")]},
+    ]}];
+    vi.stubGlobal("fetch", vi.fn(async () => json({course:course("soltas",{total_lessons:2}),modules})));
+    render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={["/app/cursos/soltas"]}>
+      <Routes><Route path="/app/cursos/:curso" element={<CoursePage />} /></Routes>
+    </MemoryRouter></QueryClientProvider>);
+    expect(await screen.findByRole("link", {name:/Aula a/})).toBeInTheDocument();
+    expect(screen.queryByText("Aulas do módulo")).toBeNull();
+    expect(screen.getByRole("heading", {name:"Material extra"})).toBeInTheDocument();
+  });
+
   it("oferece somente a consulta de acesso ao curso restrito", async () => {
     catalogFetch([course("negado", {can_access: false})]);
     mount();
@@ -212,6 +227,17 @@ describe("Vitrine de cursos", () => {
     await waitFor(() => expect(container.querySelector("img")).toHaveAttribute("src", "https://media.example.test/signed-cover"));
     expect(mediaCalls).toEqual([{ kind: "course-cover", id: "privado" }]);
     expect(container.innerHTML).not.toContain("javascript:raw-cover");
+    expect(container.querySelector("img")!.style.objectPosition).toBe("");
+  });
+
+  it("posiciona a capa pelo foco do corte que o servidor entrega", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes("/rest/v1/rpc/app_catalog")) return json({ items: [{ ...course("privado"), has_cover: true }], total: 1, page: 1, page_size: 20 });
+      if (String(input).endsWith("/rpc/app_course")) return json({ course: course("privado"), modules: [] });
+      return json({ url: "https://media.example.test/signed-cover", expires_at: "2030-01-01", focus: "20% 70%" });
+    }));
+    const { container } = mount();
+    await waitFor(() => expect(container.querySelector("img")).toHaveStyle({ objectPosition: "20% 70%" }));
   });
 
 });

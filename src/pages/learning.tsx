@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentProps, ReactNode, Ref } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -75,7 +75,7 @@ export function Curriculum({course, modules, preferredModule, modulePage}: Cours
       </summary>
       {!modulePage && <Link className="syllabus-module-link" to={`/app/cursos/${encodeURIComponent(course.slug)}/${encodeURIComponent(module.slug)}`}>Abrir módulo</Link>}
       {module.sections.map(section => <div key={section.id}>
-        <h3>{section.title}{section.is_bonus && <span className="badge">Bônus</span>}</h3>
+        {!section.is_default && <h3>{section.title}{section.is_bonus && <span className="badge">Bônus</span>}</h3>}
         <ol>{section.lessons.map(lesson => <li key={lesson.id}>
           <Link to={courseLessonPath(course.slug, module.slug, lesson.id)}>
             {lesson.completed ? <CheckCircle2 size={18} aria-label="Concluída" /> :
@@ -195,7 +195,7 @@ function PlayerCurriculum({ course, modules, current, hidden, playing, filterRef
     sections: module.sections.map((section) => ({
       ...section,
       lessons: section.lessons.filter((lesson) =>
-        matches(module.title) || matches(section.title) || matches(lesson.title),
+        matches(module.title) || (!section.is_default && matches(section.title)) || matches(lesson.title),
       ),
     })).filter((section) => !term || section.lessons.length > 0),
   })).filter(({ module, sections }) => !term || matches(module.title) || sections.length > 0);
@@ -320,6 +320,7 @@ function PlayerCurriculum({ course, modules, current, hidden, playing, filterRef
               {module.sections.length === 1
                 ? rows(sections[0]?.lessons ?? [])
                 : sections.map((section) => {
+                if (section.is_default) return <Fragment key={section.id}>{rows(section.lessons)}</Fragment>;
                 const all = module.sections.find((item) => item.id === section.id)?.lessons ?? [];
                 const completed = all.filter((lesson) => lesson.completed).length;
                 return (
@@ -365,6 +366,7 @@ function LessonVideoCover({ courseId }: { courseId: string }) {
   return (
     <div className="stitch-lesson-cover" hidden={loaded !== url} aria-hidden="true">
       <img src={url} alt="" referrerPolicy="no-referrer"
+        style={cover.data?.focus ? { objectPosition: cover.data.focus } : undefined}
         onLoad={() => setLoaded(url)} onError={() => setFailed(url)} />
     </div>
   );

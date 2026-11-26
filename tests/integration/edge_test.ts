@@ -313,6 +313,13 @@ Deno.test("storage URL uses private bucket, server path and short TTL", async ()
   const signed = requests.find((r) => r.url.includes("/storage/"))!;
   assert(signed.url.includes("icarus-private/synthetic/lesson.mp4")); equal(signed.body, { expiresIn: 120 });
 });
+Deno.test("capa do curso sai com o foco do corte, e os outros arquivos sem ele", async () => {
+  const gated = (focus: string | null) => deps((url) => url.pathname.endsWith("app_media_access") ? response({ can_access: true, storage_path: "course-cover/synthetic.jpg", provider: "supabase", focus }) : url.pathname.includes("/storage/v1/object/sign/") ? response({ signedURL: "/object/sign/icarus-private/course-cover/synthetic.jpg?token=test-only" }) : undefined).d;
+  const cover = await (await media(gated("20% 70%"))(request({ kind: "course-cover", id }))).json();
+  equal(cover.focus, "20% 70%"); assert(cover.url.includes("course-cover/synthetic.jpg")); equal(cover.provider, "supabase");
+  const lesson = await (await media(gated(null))(request({ kind: "lesson", id }))).json();
+  assert(lesson.url && !("focus" in lesson));
+});
 Deno.test("webhook token checked before parsing or persistence", async () => {
   for (const secret of [null, "wrong-token"]) {
     const { d, requests } = deps(() => undefined, billing);
@@ -462,6 +469,26 @@ Deno.test("avatar aceita só JPG ou PNG reais de até 500 KB", async () => {
     equal((await send(d, file)).status, 200);
     equal(requests.find((r) => r.url.includes("app_upload_access"))?.body, { p_actor_id: id, p_kind: "avatar", p_resource_id: id, p_file_name: file.name, p_content_type: file.type, p_size_bytes: file.size });
   }
+});
+Deno.test("capa do curso aceita imagem de até 500 KB", async () => {
+  const send = (d: Dependencies, file: File) => {
+    const form = new FormData(); form.set("kind", "course-cover"); form.set("resource_id", other); form.set("file", file);
+    return upload(d)(new Request("http://localhost/upload", { method: "POST", headers: { authorization: `Bearer ${jwt()}` }, body: form }));
+  };
+  const jpeg = (size: number) => { const bytes = new Uint8Array(size); bytes.set([255, 216, 255, 224]); return bytes; };
+  const big = deps();
+  const refused = await send(big.d, new File([jpeg(500 * 1024 + 1)], "capa.jpg", { type: "image/jpeg" }));
+  equal(refused.status, 422);
+  equal((await refused.json()).error, { code: "INVALID_FILE", message: "A capa precisa ser PNG, JPG ou WebP de até 500 KB." });
+  assert(!big.requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")));
+  const file = new File([jpeg(500 * 1024)], "capa.jpg", { type: "image/jpeg" });
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_upload_access") ? response({ id, bucket: "icarus-private", path: `course-cover/${other}/${id}.jpg` }) : url.pathname.includes("/storage/v1/object/icarus-private/") ? response({ Key: "icarus-private/course-cover" }) : url.pathname.endsWith("app_upload_finalize") ? response({ id, state: "ready" }) : undefined);
+  equal((await send(d, file)).status, 200);
+  equal(requests.find((r) => r.url.includes("app_upload_access"))?.body, { p_actor_id: id, p_kind: "course-cover", p_resource_id: other, p_file_name: "capa.jpg", p_content_type: "image/jpeg", p_size_bytes: 500 * 1024 });
+  // A reserva em JSON é só de vídeo e material. Por ela a capa escaparia do limite.
+  const reserve = deps();
+  equal((await upload(reserve.d)(request({ action: "reserve", kind: "course-cover", resource_id: other, file_name: "capa.jpg", content_type: "image/jpeg", size_bytes: 500 * 1024 }))).status, 422);
+  assert(!reserve.requests.some((r) => r.url.includes("app_upload_access")));
 });
 Deno.test("large upload reserves only metadata and rejects above 500MiB", async () => {
   const { d, requests } = deps((url) => url.pathname.endsWith("app_upload_access") ? response({ id, bucket: "icarus-private", path: `material/${other}/${id}.pdf`, expires_at: new Date(Date.now() + 900_000).toISOString() }) : undefined);
@@ -794,7 +821,7 @@ Deno.test("remover grava nulo e depois apaga a anterior, mesmo se o Storage falh
   assert(!requests.some((r) => r.url.includes("app_brand_asset_begin")));
 });
 
-Deno.test("favicon e assinatura seguem o mesmo caminho, com curso só na assinatura", async () => {
+Deno.test("favicon e assinatura seguem o mesmo caminho; assinatura sem curso é a do modelo global", async () => {
   const icon = `icon/${other}.png`, signature = `signature/${other}.png`;
   const { d, requests } = brandDeps((url, init) =>
     url.pathname.endsWith("app_brand_asset_begin") ? response(JSON.parse(String(init.body)).p_variant === "icon" ? icon : signature)
@@ -803,7 +830,8 @@ Deno.test("favicon e assinatura seguem o mesmo caminho, com curso só na assinat
     : undefined);
   const saved = await sendLogo(d, new File([pngLogo(512, 512)], "icone.png", { type: "image/png" }), "icon");
   equal(saved.status, 200); equal(await saved.json(), { logo_light: null, logo_dark: null, icon, logo_light_ratio: null, logo_dark_ratio: null });
-  equal((await sendLogo(d, new File([pngLogo(600, 200)], "assinatura.png", { type: "image/png" }), "signature")).status, 422);
+  const global = await sendLogo(d, new File([pngLogo(600, 200)], "assinatura.png", { type: "image/png" }), "signature");
+  equal(global.status, 200); equal(await global.json(), { signature_path: signature });
   for (const [file, variant, message] of [
     [new File([pngLogo(239, 60)], "logo.png", { type: "image/png" }), "light", "A logo precisa ter pelo menos 240 × 60 px e no máximo 4096 px de cada lado."],
     [new File([pngLogo(512, 500)], "icone.png", { type: "image/png" }), "icon", "O ícone precisa ser quadrado, com pelo menos 180 × 180 px e no máximo 4096 px."],
@@ -813,11 +841,15 @@ Deno.test("favicon e assinatura seguem o mesmo caminho, com curso só na assinat
   equal(signed.status, 200); equal(await signed.json(), { signature_path: signature });
   equal(requests.filter((r) => r.url.includes("app_brand_asset_commit")).map((r) => r.body), [
     { p_actor_id: id, p_variant: "icon", p_path: icon, p_course_id: null, p_ratio: 1 },
+    { p_actor_id: id, p_variant: "signature", p_path: signature, p_course_id: null },
     { p_actor_id: id, p_variant: "signature", p_path: signature, p_course_id: other },
   ]);
   const removed = await upload(d)(request({ action: "brand-asset-remove", variant: "signature", course_id: other }));
   equal(removed.status, 200);
   equal(requests.filter((r) => r.url.includes("app_brand_asset_commit")).at(-1)?.body, { p_actor_id: id, p_variant: "signature", p_path: null, p_course_id: other });
+  equal((await upload(d)(request({ action: "brand-asset-remove", variant: "signature" }))).status, 200);
+  equal(requests.filter((r) => r.url.includes("app_brand_asset_commit")).at(-1)?.body, { p_actor_id: id, p_variant: "signature", p_path: null, p_course_id: null });
+  equal((await sendLogo(d, new File([pngLogo(600, 200)], "assinatura.png", { type: "image/png" }), "signature", "curso-invalido")).status, 422);
 });
 
 Deno.test("SVG só é processado depois da autorização, prévia não grava e upload persiste o resultado sanitizado", async () => {

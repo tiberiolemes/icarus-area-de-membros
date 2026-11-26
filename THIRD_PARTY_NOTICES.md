@@ -8,6 +8,7 @@ Original Icarus application code is distributed under [MIT](LICENSE). Dependenci
 - **Player.js 0.1.0** — BSD-3-Clause. Vendored file, provenance and original license: [public/vendor/playerjs](public/vendor/playerjs/README.md). Used for the configurable Bunny embed; this does not certify a provider configuration.
 - **Material Symbols Outlined 2.985** — Copyright 2026 Google LLC. Apache-2.0. Google Fonts WOFF2 subsets for the lesson player and the mobile member frame. [Provenance and integrity](public/vendor/material-symbols/README.md) · [Original license](public/vendor/material-symbols/LICENSE-APACHE.txt).
 - **Icarus visual assets** — supplied as the official visual system. The code license does not grant trademark rights.
+- **Help Center screenshots** — `src/pages/help-images/` shows screens of the Asaas, Bunny Stream and Cloudflare dashboards, captured for instructional use, with keys, emails, domains, names, account numbers and metrics replaced by sample values. Product names, logos and interfaces belong to their respective owners. Their use does not imply affiliation, endorsement or a certified provider configuration, and the code license does not cover them.
 
 ## Direct runtime dependencies
 

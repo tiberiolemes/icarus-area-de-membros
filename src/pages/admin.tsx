@@ -49,6 +49,7 @@ import {
 } from "../api";
 import { buildAdminCsv, exportLimit } from "../admin-export";
 import { courseLessonPath } from "../course-paths";
+import { slugify } from "../slug";
 import { IntegrationCards, IntegrationTestMessage, integrationKey, useIntegrationTest, type IntegrationStatus } from "./admin-integrations";
 import type { Page, Plan, Course } from "../api";
 import {
@@ -71,9 +72,10 @@ import {
   value,
 } from "../ui";
 import { RichEditor } from "../rich";
-import { AdminBrand, AssetCard } from "./admin-brand";
-import { brandAssetUrl } from "../brand";
+import { AdminBrand } from "./admin-brand";
+import { CertificateDefaultsEditor, CourseCertificate } from "./admin-certificate";
 import { AdminCatalogLaunch } from "./admin-catalog-launch";
+import { CoverFocus } from "./admin-course-cover";
 import { Reauth } from "./settings";
 import { Moderate, statusName } from "./community";
 import { useBootstrap } from "../auth";
@@ -271,27 +273,46 @@ function AdminList({
     </Wrapper>
   );
 }
-function IdentityFields({ row }: { row?: Row }) {
+/** Título e endereço. O endereço nasce do título enquanto o item é novo e ninguém o editou, e o campo se corrige sozinho. */
+function IdentityFields({ row, label = "Título", name = "title", max = 200 }: {
+  row?: Row; label?: string; name?: string; max?: number;
+}) {
+  const slug = useRef<HTMLInputElement>(null), edited = useRef(false);
+  // Corrige o que foi digitado ou colado sem tirar o cursor do lugar.
+  const tidy = (input: HTMLInputElement) => {
+    const caret = slugify(input.value.slice(0, input.selectionStart ?? undefined), true).length;
+    input.value = slugify(input.value, true);
+    input.setSelectionRange(caret, caret);
+    edited.current = input.value !== "";
+  };
   return (
     <>
-      <Field label="Título">
+      <Field label={label}>
         <input
-          name="title"
+          name={name}
           required
-          defaultValue={text(row, "title")}
-          maxLength={200}
+          defaultValue={text(row, name)}
+          maxLength={max}
+          onChange={(event) => {
+            if (!row && !edited.current && slug.current) slug.current.value = slugify(event.currentTarget.value);
+          }}
         />
       </Field>
       <Field
         label="Endereço (slug)"
-        hint="Use letras minúsculas, números e hífens. O endereço compõe o link do conteúdo."
+        hint={row ? "Faz parte do link. Se você alterar, o sistema mantém só letras minúsculas, números e hífens."
+          : `Faz parte do link e nasce do ${label.toLowerCase()}. Para usar outro, digite aqui. O sistema mantém só letras minúsculas, números e hífens.`}
       >
         <input
+          ref={slug}
           name="slug"
           required
-          pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
           defaultValue={text(row, "slug")}
           maxLength={120}
+          // Com tecla morta, o acento chega antes da letra. Mexer no valor no meio cancelaria a composição.
+          onChange={(event) => { if (!(event.nativeEvent as InputEvent).isComposing) tidy(event.currentTarget); }}
+          onCompositionEnd={(event) => tidy(event.currentTarget)}
+          onBlur={(event) => { event.currentTarget.value = slugify(event.currentTarget.value); }}
         />
       </Field>
     </>
@@ -535,7 +556,7 @@ export function CourseEditor() {
                     onSave={async (data) => {
                       const saved = await save("courses", isNew ? null : id!, {
                         title: value(data, "title"),
-                        slug: value(data, "slug"),
+                        slug: slugify(value(data, "slug")),
                         description: value(data, "description"),
                         status: value(data, "status"),
                         ...accessData(data),
@@ -559,6 +580,7 @@ export function CourseEditor() {
                       <AdminCatalogLaunch entity="courses" id={course.id} />
                     )}
                     <SectionHeading title="Capa do curso" />
+                    <CoverFocus course={course} onSaved={() => courses.refetch()} />
                     <Upload
                       kind="course-cover"
                       resourceId={course.id}
@@ -571,55 +593,7 @@ export function CourseEditor() {
             )}
             {tab === "structure" && course && <Structure course={course} />}
             {tab === "certificate" && course && (
-              <div className="reading content-panel">
-                <Form
-                  submitInHeading
-                  label="Salvar configuração do certificado"
-                  onSave={(data) =>
-                    save("courses", course.id, {
-                      certificate_enabled: check(data, "certificate_enabled"),
-                      signer_name: value(data, "signer_name"),
-                      signer_title: value(data, "signer_title"),
-                    })
-                  }
-                >
-                  <label className="check">
-                    <input
-                      type="checkbox"
-                      name="certificate_enabled"
-                      defaultChecked={!!course.certificate_enabled}
-                    />
-                    Emitir certificado após as aulas obrigatórias
-                  </label>
-                  <Field label="Nome do responsável">
-                    <input
-                      name="signer_name"
-                      defaultValue={text(course, "signer_name")}
-                      maxLength={160}
-                    />
-                  </Field>
-                  <Field label="Cargo do responsável">
-                    <input
-                      name="signer_title"
-                      defaultValue={text(course, "signer_title")}
-                      maxLength={160}
-                    />
-                  </Field>
-                  <Notice>
-                    O certificado usa o nome do aluno, o curso e a carga horária
-                    do currículo obrigatório. Alterações não reescrevem
-                    documentos já emitidos. Cadastre dados reais ou identifique
-                    expressamente uma demonstração.
-                  </Notice>
-                </Form>
-                {admin ? (
-                  <AssetCard key={course.id} variant="signature" courseId={course.id}
-                    saved={brandAssetUrl(course.signature_path)}
-                    onChanged={() => courses.refetch()} />
-                ) : (
-                  <Notice>A assinatura do certificado é enviada por um administrador.</Notice>
-                )}
-              </div>
+              <CourseCertificate key={course.id} course={course} admin={admin} save={(data) => save("courses", course.id, data)} />
             )}
           </>
         )}
@@ -639,6 +613,8 @@ type StructureSelection = {
   entity: keyof typeof structureLabels;
   row?: Row;
   parent: string;
+  /** Aula nova direto no módulo: parent é o módulo e a seção automática vem do servidor ao salvar. */
+  inModule?: boolean;
 };
 
 function StructureActions({
@@ -717,6 +693,56 @@ function Structure({ course }: { course: Row }) {
   const lessonModule =
     lessonSection &&
     ownModules.find((row) => row.id === lessonSection.module_id);
+  const lessonRows = (section: Row) => {
+    const ownLessons = courseLessons
+      .filter((lesson) => lesson.section_id === section.id)
+      .sort((a, b) => Number(a.order_index) - Number(b.order_index));
+    return ownLessons.map((lesson) => {
+      const editing =
+        selected?.entity === "lessons" && selected.row?.id === lesson.id;
+      return (
+        <article
+          className="lesson-editor-row"
+          data-selected={editing || undefined}
+          key={lesson.id}
+        >
+          <div className="lesson-editor-title">
+            <span className="content-icon">
+              {lesson.type === "video" ? (
+                <Video size={16} aria-hidden="true" />
+              ) : (
+                <FileText size={16} aria-hidden="true" />
+              )}
+            </span>
+            <div>
+              <strong>{text(lesson, "title")}</strong>{" "}
+              {lesson.is_preview ? <span className="badge">Prévia</span> : null}{" "}
+              {editing && (
+                <span className="badge content-editing">Editando</span>
+              )}
+              <p>
+                {statusName(text(lesson, "status"))} ·{" "}
+                {lesson.type === "video" ? "Vídeo" : "Texto"} ·{" "}
+                {Math.ceil(Number(lesson.duration_seconds ?? 0) / 60)} min
+                {lesson.is_required ? " · Obrigatória" : ""}
+              </p>
+            </div>
+          </div>
+          <StructureActions
+            entity="lessons"
+            row={lesson}
+            siblings={reordering ? ownLessons : undefined}
+            current={editing}
+            onEdit={openEditor({
+              entity: "lessons",
+              row: lesson,
+              parent: section.id,
+            })}
+          />
+        </article>
+      );
+    });
+  };
 
   return (
     <div className={`content-workbench${selected ? " has-editor" : ""}`}>
@@ -743,7 +769,7 @@ function Structure({ course }: { course: Row }) {
         />
         <p className="content-hint">
           {reordering && "Use Subir e Descer para mudar a ordem dos itens. "}
-          <Link className="text-action" to="/ajuda/administracao">
+          <Link className="text-action" to="/ajuda/criar-curso">
             Ajuda sobre conteúdo
           </Link>
         </p>
@@ -764,6 +790,9 @@ function Structure({ course }: { course: Row }) {
                     .sort(
                       (a, b) => Number(a.order_index) - Number(b.order_index),
                     );
+                  // A seção automática guarda as aulas postas direto no módulo e não aparece na tela.
+                  const loose = ownSections.find((section) => section.is_default);
+                  const named = ownSections.filter((section) => !section.is_default);
                   return (
                     <section
                       className="content-panel content-module"
@@ -796,118 +825,63 @@ function Structure({ course }: { course: Row }) {
                           />
                         }
                       />
-                      {ownSections.map((section) => {
-                        const ownLessons = courseLessons
-                          .filter((lesson) => lesson.section_id === section.id)
-                          .sort(
-                            (a, b) =>
-                              Number(a.order_index) - Number(b.order_index),
-                          );
-                        return (
-                          <div className="section-block" key={section.id}>
-                            <SectionHeading
-                              level={4}
-                              title={
-                                <>
-                                  {text(section, "title")}{" "}
-                                  {section.status === "archived" && (
-                                    <span className="badge">Arquivado</span>
-                                  )}{" "}
-                                  {!!section.is_bonus && (
-                                    <span className="badge">Bônus</span>
-                                  )}
-                                </>
-                              }
-                              actions={
-                                <StructureActions
-                                  entity="sections"
-                                  row={section}
-                                  siblings={reordering ? ownSections : undefined}
-                                  current={selected?.row?.id === section.id}
-                                  onEdit={openEditor({
-                                    entity: "sections",
-                                    row: section,
-                                    parent: module.id,
-                                  })}
-                                />
-                              }
-                            />
-                            {ownLessons.map((lesson) => {
-                              const editing =
-                                selected?.entity === "lessons" &&
-                                selected.row?.id === lesson.id;
-                              return (
-                                <article
-                                  className="lesson-editor-row"
-                                  data-selected={editing || undefined}
-                                  key={lesson.id}
-                                >
-                                  <div className="lesson-editor-title">
-                                    <span className="content-icon">
-                                      {lesson.type === "video" ? (
-                                        <Video size={16} aria-hidden="true" />
-                                      ) : (
-                                        <FileText
-                                          size={16}
-                                          aria-hidden="true"
-                                        />
-                                      )}
-                                    </span>
-                                    <div>
-                                      <strong>{text(lesson, "title")}</strong>{" "}
-                                      {lesson.is_preview ? (
-                                        <span className="badge">Prévia</span>
-                                      ) : null}{" "}
-                                      {editing && (
-                                        <span className="badge content-editing">
-                                          Editando
-                                        </span>
-                                      )}
-                                      <p>
-                                        {statusName(text(lesson, "status"))} ·{" "}
-                                        {lesson.type === "video"
-                                          ? "Vídeo"
-                                          : "Texto"}{" "}
-                                        ·{" "}
-                                        {Math.ceil(
-                                          Number(lesson.duration_seconds ?? 0) /
-                                            60,
-                                        )}{" "}
-                                        min
-                                        {lesson.is_required
-                                          ? " · Obrigatória"
-                                          : ""}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <StructureActions
-                                    entity="lessons"
-                                    row={lesson}
-                                    siblings={reordering ? ownLessons : undefined}
-                                    current={editing}
-                                    onEdit={openEditor({
-                                      entity: "lessons",
-                                      row: lesson,
-                                      parent: section.id,
-                                    })}
-                                  />
-                                </article>
-                              );
+                      {loose && lessonRows(loose)}
+                      <button
+                        className="content-append"
+                        type="button"
+                        onClick={openEditor({
+                          entity: "lessons",
+                          parent: module.id,
+                          inModule: true,
+                        })}
+                      >
+                        <Plus size={18} aria-hidden="true" />
+                        Adicionar aula
+                      </button>
+                      {named.map((section) => (
+                        <div className="section-block" key={section.id}>
+                          <SectionHeading
+                            level={4}
+                            title={
+                              <>
+                                {text(section, "title")}{" "}
+                                {section.status === "archived" && (
+                                  <span className="badge">Arquivado</span>
+                                )}{" "}
+                                {!!section.is_bonus && (
+                                  <span className="badge">Bônus</span>
+                                )}
+                              </>
+                            }
+                            actions={
+                              <StructureActions
+                                entity="sections"
+                                row={section}
+                                siblings={reordering ? named : undefined}
+                                current={selected?.row?.id === section.id}
+                                onEdit={openEditor({
+                                  entity: "sections",
+                                  row: section,
+                                  parent: module.id,
+                                })}
+                              />
+                            }
+                          />
+                          {lessonRows(section)}
+                          <button
+                            className="content-append"
+                            type="button"
+                            aria-label={`Adicionar aula em ${text(section, "title")}`}
+                            onClick={openEditor({
+                              entity: "lessons",
+                              parent: section.id,
                             })}
-                            <button
-                              className="content-append"
-                              type="button"
-                              onClick={openEditor({
-                                entity: "lessons",
-                                parent: section.id,
-                              })}
-                            >
-                              <Plus size={18} aria-hidden="true" />
-                              Adicionar aula
-                            </button>
-                          </div>
-                        );
-                      })}
+                          >
+                            <Plus size={18} aria-hidden="true" />
+                            Adicionar aula
+                          </button>
+                        </div>
+                      ))}
                       <button
                         className="content-append"
                         type="button"
@@ -981,6 +955,7 @@ function Structure({ course }: { course: Row }) {
             entity={selected.entity}
             row={currentRow}
             parent={selected.parent}
+            inModule={selected.inModule}
             after={async () => {
               await Promise.all([
                 modules.refetch(),
@@ -1000,11 +975,13 @@ function StructureForm({
   entity,
   row,
   parent,
+  inModule,
   after,
 }: {
   entity: "modules" | "sections" | "lessons";
   row?: Row;
   parent: string;
+  inModule?: boolean;
   after: () => Promise<void>;
 }) {
   const [uploading, setUploading] = useState(false);
@@ -1022,7 +999,7 @@ function StructureForm({
           if (entity === "modules")
             fields = {
               ...fields,
-              slug: value(data, "slug"),
+              slug: slugify(value(data, "slug")),
               ...accessData(data),
               ...(!row ? { course_id: parent } : {}),
             };
@@ -1035,14 +1012,20 @@ function StructureForm({
           if (entity === "lessons")
             fields = {
               ...fields,
-              slug: value(data, "slug"),
+              slug: slugify(value(data, "slug")),
               body: value(data, "body"),
               type: value(data, "type"),
               duration_seconds: num(data, "duration_seconds"),
               video_id: nullable(data, "video_id"),
               is_preview: check(data, "is_preview"),
               is_required: check(data, "is_required"),
-              ...(!row ? { section_id: parent } : {}),
+              ...(!row
+                ? {
+                    section_id: inModule
+                      ? await rpc<string>("app_admin_default_section", { p_module_id: parent })
+                      : parent,
+                  }
+                : {}),
             };
           await save(entity, row?.id ?? null, fields);
           await after();
@@ -1992,7 +1975,7 @@ export function AdminPlans() {
             onSave={async (data) => {
               await save("plans", editing?.id ?? null, {
                 name: value(data, "name"),
-                slug: value(data, "slug"),
+                slug: slugify(value(data, "slug")),
                 price_cents: Math.round(num(data, "price") * 100),
                 access_months: num(data, "access_months"),
                 benefits: value(data, "benefits")
@@ -2003,21 +1986,7 @@ export function AdminPlans() {
               });
             }}
           >
-            <Field label="Nome">
-              <input
-                name="name"
-                required
-                defaultValue={text(editing ?? undefined, "name")}
-              />
-            </Field>
-            <Field label="Endereço (slug)">
-              <input
-                name="slug"
-                required
-                defaultValue={text(editing ?? undefined, "slug")}
-                pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-              />
-            </Field>
+            <IdentityFields row={editing ?? undefined} label="Nome" name="name" max={120} />
             <Field
               label="Preço em reais"
             >
@@ -2489,6 +2458,7 @@ const communityTabs = [
 const settingsTabs = [
   ["onboarding", "Onboarding"],
   ["marca", "Plataforma e marca"],
+  ["certificado", "Certificado"],
   ["modulos", "Módulos"],
   ["integracoes", "Integrações"],
   ["legal", "Documentos legais"],
@@ -2795,6 +2765,15 @@ export function AdminSettings() {
       description="Gerencie o nome e a logo da plataforma e os documentos legais."
     >
       <AdminBrand />
+    </SettingsSurface>
+  );
+  if (tab === "certificado") return (
+    <SettingsSurface
+      tab="certificado"
+      title="Modelo de certificado"
+      description="Defina o responsável e a assinatura que os cursos usam por padrão."
+    >
+      <CertificateDefaultsEditor />
     </SettingsSurface>
   );
   if (tab === "modulos") return <AdminModules />;

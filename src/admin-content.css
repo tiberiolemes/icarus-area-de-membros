@@ -448,3 +448,69 @@
 }
 .admin-courses-index .admin-row > div:first-child { flex: 1 1 16rem; }
 .admin-courses-index .admin-row .actions { flex-wrap: wrap; gap: var(--stitch-space-sm); }
+
+/* Capa do curso: prévias nas proporções em que ela aparece e ponto de foco do corte. */
+.admin-content .cover-focus {
+  display: grid;
+  gap: var(--stitch-space-md);
+  min-inline-size: 0;
+  margin-block-start: var(--stitch-space-md);
+}
+.admin-content .cover-focus :is(h3, p, figure) { margin: 0; }
+.admin-content .cover-focus h3 {
+  color: var(--stitch-text-heading);
+  font-size: var(--stitch-type-body-lg-size);
+  font-weight: 600;
+}
+.admin-content :is(.cover-focus > p, .cover-focus-empty) { color: var(--stitch-text-secondary); }
+.admin-content .cover-previews {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--stitch-space-md);
+}
+.admin-content .cover-previews figure {
+  display: grid;
+  gap: var(--stitch-space-xs);
+  min-inline-size: 0;
+}
+.admin-content .cover-previews figcaption {
+  color: var(--stitch-text-secondary);
+  font-size: var(--stitch-type-body-md-size);
+}
+.admin-content .cover-preview {
+  display: block;
+  inline-size: 100%;
+  object-fit: cover;
+  border-radius: var(--stitch-radius-md);
+  background: var(--stitch-surface-raised-strong);
+}
+/* Proporções da vitrine (16:9), do destaque da página do curso em notebook, que corta as laterais,
+   e da faixa larga do tablet, que corta em cima e embaixo. */
+.admin-content .cover-preview-wide { aspect-ratio: 16 / 9; }
+.admin-content .cover-preview-page { aspect-ratio: 11 / 10; }
+.admin-content .cover-preview-strip { aspect-ratio: 5 / 2; }
+.admin-content .cover-previews figure:has(.cover-preview-strip) { grid-column: 1 / -1; }
+.admin-content .cover-focus-picker {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--stitch-radius-md);
+  background: var(--stitch-surface-raised-strong);
+  cursor: crosshair;
+}
+.admin-content .cover-focus-picker img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+/* Anel claro com contorno escuro: aparece sobre qualquer imagem. */
+.admin-content .cover-focus-point {
+  position: absolute;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  margin: -0.875rem 0 0 -0.875rem;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgb(0 0 0 / .65), inset 0 0 0 2px rgb(0 0 0 / .65);
+  pointer-events: none;
+}

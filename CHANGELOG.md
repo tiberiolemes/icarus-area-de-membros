@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.10.0 · 2026-11-26
+
+- A Central de ajuda foi reescrita. São 45 artigos em 11 assuntos, com passos numerados, o nome exato de cada botão, dicas, alertas e uma lista de saídas para quando algo não funciona. A página inicial mostra os assuntos em cartões, e a busca passa a ler o texto inteiro de cada artigo.
+- Os artigos de Integrações mostram telas reais do Asaas, do Bunny Stream e do Cloudflare Turnstile, com números marcando onde pegar cada chave e token. Chaves, e-mails, domínios, nomes, números de conta e métricas das imagens são de exemplo.
+- A equipe ganha artigos por tarefa, como criar um curso do zero, colocar vídeo em uma aula, publicar materiais, moderar a comunidade e atender chamados. Os artigos de um módulo desligado continuam visíveis para a equipe, que segue preparando o conteúdo no painel.
+- Os links Ajuda da administração e Ajuda completa abrem o artigo da tela em que a pessoa está. Os endereços dos artigos antigos foram mantidos.
+- A Central de ajuda é carregada sob demanda. O primeiro acesso de quem só assiste às aulas fica mais leve.
+- Quem abre sem sessão o endereço de um artigo da equipe vê um convite para entrar e volta ao mesmo artigo depois do login. O conteúdo não aparece antes disso.
+- O endereço (slug) de curso, módulo, aula e plano é montado sozinho a partir do título. O campo corrige o que for digitado ou colado, mantendo só letras minúsculas, números e hífens, e deixa de recusar o envio por formato. Em item já salvo, trocar o título não muda o endereço.
+- A capa do curso aceita PNG, JPG ou WebP de até 500 KB. O navegador avisa antes do envio e o servidor recusa arquivos maiores. Os demais envios de imagem mantêm o limite de 5 MiB.
+- O editor do curso mostra a capa como ela aparece na lista de cursos, na página do curso e no tablet, e permite escolher o foco do corte com um clique na imagem ou pelos controles. O ponto escolhido continua visível na vitrine, na página do curso e no início da aula.
+- Seções passam a ser opcionais. O botão **Adicionar aula** aparece direto no módulo, e a aula entra numa seção automática que não aparece para o aluno nem para a equipe. Quem quiser agrupar continua usando **Adicionar seção**. Cursos existentes não mudam.
+- Configurações ganha a aba Certificado, com o modelo global de responsável, cargo e assinatura. Cada curso escolhe entre **Usar o modelo global** e **Personalizar só este curso**. Curso novo começa no modelo, e quem já tinha responsável preenchido continua personalizado. Mudar o modelo vale para os próximos certificados; os já emitidos mantêm o que foi gravado na emissão.
+- Para atualizar da 2.9.0, aplique as migrations `202611260014_course_cover_focus.sql`, `202611260015_default_sections.sql` e `202611260016_certificate_defaults.sql`, publique as Edge Functions `upload` e `media` desta versão e então publique o frontend. As capas já enviadas continuam valendo e nascem com o foco no centro. Veja o [guia de operação](docs/operations.md) e o [guia da ajuda](docs/help/README.md).
+
 ## 2.9.0 · 2026-11-26
 
 - A logo colorida, a logo branca e o ícone da instalação aceitam SVG de até 500 KB. O servidor mantém apenas desenho com referências internas, remove margens vazias, centraliza o favicon e guarda a proporção das logos.

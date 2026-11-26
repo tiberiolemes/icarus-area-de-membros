@@ -16,7 +16,7 @@ const lessonRoot = "/app/cursos/curso/modulo";
 const material = { id: "material", name: "Material de teste", description: "", file_type: "application/pdf", size_bytes: 700, can_access: true };
 
 function mount({ type = "text", allowed = true, cover = false, coverResponse = true, provider = "supabase",
-  path = lessonRoot + "/atual", collision = false, nextAllowed = true, otherModule = false,
+  path = lessonRoot + "/atual", collision = false, nextAllowed = true, otherModule = false, loose = false,
   progressFailure = Promise.resolve(false), mediaError = false } = {}) {
   if (type === "video" && provider === "supabase") {
     const tracks = Object.assign(new EventTarget(), { length: 0 }) as TextTrackList;
@@ -36,7 +36,7 @@ function mount({ type = "text", allowed = true, cover = false, coverResponse = t
       completed_lessons: completed ? 1 : 0, required_lessons: 0, progress_percent: 0,
     };
     const mod = { id: "module", slug: "modulo", title: "Módulo de teste", can_access: true, sections: [
-      { id: "section", title: "Seção de teste", lessons: collision ? [{ ...lesson, completed }] : [{ ...lesson, completed }, following] },
+      { id: "section", title: loose ? "Aulas do módulo" : "Seção de teste", is_default: loose, lessons: collision ? [{ ...lesson, completed }] : [{ ...lesson, completed }, following] },
       ...(collision ? [{ id: "other-section", title: "Outra seção", lessons: [following] }] : []),
     ] };
     let body;
@@ -59,7 +59,7 @@ function mount({ type = "text", allowed = true, cover = false, coverResponse = t
       case "media":
         if (args.kind === "course-cover") {
           if (!coverResponse) return new Response(JSON.stringify({ error: "Indisponível" }), { status: 404 });
-          body = { url: "https://example.test/private/authorized-cover.jpg" };
+          body = { url: "https://example.test/private/authorized-cover.jpg", focus: "20% 70%" };
         } else if (mediaError) {
           return new Response(JSON.stringify({ error: { code: "CONFIGURATION_REQUIRED", message: "Endereço público do arquivo não configurado." } }), { status: 503 });
         } else {
@@ -120,6 +120,17 @@ it.each([true, false])("reabre por URL direta a segunda aula e usa o gate do ser
     .toEqual([{ p_id: nextLesson.id }]);
 });
 
+it("mostra as aulas soltas do módulo sem o cabeçalho da seção automática", async () => {
+  mount({ collision: true, loose: true });
+  await screen.findByText("Leitura autorizada de teste");
+  const aside = screen.getByRole("complementary", { name: "Conteúdo do curso" });
+  expect(within(aside).queryByText(/Aulas do módulo/)).toBeNull();
+  expect(within(aside).getByRole("link", { current: "page" })).toBeVisible();
+  expect(within(aside).getByText("Outra seção")).toBeInTheDocument();
+  fireEvent.change(within(aside).getByRole("searchbox"), { target: { value: "Aulas do módulo" } });
+  expect(within(aside).getByRole("status")).toHaveTextContent("Nenhum tópico ou aula encontrado.");
+});
+
 it("rejeita o ID de uma aula em outro módulo", async () => {
   const requests = mount({ path: "/app/cursos/curso/outro-modulo/~" + nextLesson.id, otherModule: true });
   await screen.findByRole("heading", { name: "Aula indisponível" });
@@ -177,6 +188,7 @@ it("pede a capa pelo ID do curso após autorizar vídeo Storage e a retira no pr
     { kind: "course-cover", id: "course" },
   ]);
   expect(image).toHaveAttribute("src", "https://example.test/private/authorized-cover.jpg");
+  expect(image).toHaveStyle({ objectPosition: "20% 70%" });
   expect(image.parentElement).toHaveAttribute("hidden");
   fireEvent.load(image);
   expect(image.parentElement).not.toHaveAttribute("hidden");

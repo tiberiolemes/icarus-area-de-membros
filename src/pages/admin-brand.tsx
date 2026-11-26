@@ -279,7 +279,7 @@ function BrandEditor({ actorId, token, name, revision, logos, ratios }: { actorI
           <section className="settings-panel" aria-labelledby="brand-icon-title">
             <header>
               <h2 id="brand-icon-title"><AppWindow size={20} aria-hidden="true" /> Ícone da plataforma</h2>
-              <p>O favicon substitui o ícone do Icarus nas abas e nos atalhos. A assinatura do certificado fica em cada curso, em Conteúdo → Certificado.</p>
+              <p>O favicon substitui o ícone do Icarus nas abas e nos atalhos. A assinatura do certificado fica em Configurações → Certificado.</p>
             </header>
             <AssetCard variant="icon" saved={logos.icon} savedRatio={1} draft={logoDrafts.icon}
               onDraft={(preview) => setLogoDrafts((current) => ({ ...current, icon: preview }))} />

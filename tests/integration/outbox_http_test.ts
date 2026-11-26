@@ -1,4 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.119.2";
+import { createHandler } from "../../supabase/functions/asaas-webhook/index.ts";
+import { defaults } from "../../supabase/functions/_shared/client.ts";
+import { asaasEndpoints } from "../../supabase/functions/_shared/integrations.ts";
 import { deliverPaidInvite } from "../../supabase/functions/_shared/payment.ts";
 function assert(value: unknown, message: string): asserts value { if (!value) throw Error(message); }
 const url = Deno.env.get("SUPABASE_URL")!, service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -33,12 +36,32 @@ async function waitMail(email: string) { for (let i = 0; i < 40; i++) { if (awai
 Deno.test("HTTP paid webhook automatically invites; failed send retries durably without charging", async () => {
   const emailA = `auto-${crypto.randomUUID()}@example.test`, emailB = `retry-${crypto.randomUUID()}@example.test`;
   const a = await fixture(emailA), b = await fixture(emailB);
+  const tasks: Promise<unknown>[] = [];
+  const apiKey = "chave-sandbox-apenas-para-o-teste-local";
+  let confirmations = 0;
+  const handler = createHandler({
+    ...defaults,
+    env: (name) => name === "ASAAS_API_KEY" ? apiKey : name === "ASAAS_ENV" ? "sandbox" : defaults.env(name),
+    fetch: async (input, init) => {
+      const request = new Request(input, init);
+      const target = new URL(request.url);
+      if (target.origin === url) return fetch(request);
+      assert(target.origin + target.pathname === `${asaasEndpoints.sandbox.api}/payments` &&
+        request.method === "GET" && request.headers.get("access_token") === apiKey &&
+        target.searchParams.get("checkoutSession") === a.gateway_id, "Consulta fora da fixture do Asaas.");
+      confirmations++;
+      return Response.json({ hasMore: false, data: [{ billingType: a.method, value: a.value, status: "CONFIRMED" }] });
+    },
+    waitUntil: (task) => tasks.push(task),
+  });
+  const server = Deno.serve({ hostname: "127.0.0.1", port: 0, onListen() {} }, handler);
   try {
     const event = { id: `evt_local_${crypto.randomUUID()}`, event: "CHECKOUT_PAID", checkout: { id: a.gateway_id, externalReference: a.order_id, billingTypes: [a.method], items: [{ value: a.value, quantity: 1 }] } };
-    const post = () => fetch(`${url}/functions/v1/asaas-webhook`, { method: "POST", headers: { "asaas-access-token": secret!, "content-type": "application/json" }, body: JSON.stringify(event) });
+    const post = () => fetch(`http://127.0.0.1:${server.addr.port}/asaas-webhook`, { method: "POST", headers: { "asaas-access-token": secret!, "content-type": "application/json" }, body: JSON.stringify(event) });
     const accepted = await post(); assert(accepted.status === 200, "HTTP webhook normal não persistiu."); await accepted.body?.cancel();
     await waitMail(emailA); const sent = await waitState(a.order_id, "sent"); assert(sent.status === "sent", "Convite automático não gravou sent.");
     const duplicate = await post(); assert(duplicate.status === 200, "Duplicata não foi idempotente."); await duplicate.body?.cancel();
+    assert(confirmations === 2, "O webhook precisa confirmar ambos os recebimentos na fixture da API.");
     assert(await mailboxCount(emailA) === 1 && (await state(a.order_id)).attempts === 1, "Duplicata reenviou convite.");
     assert(!(await admin.rpc("app_process_payment", { p_event: { id: `evt_local_${crypto.randomUUID()}`, type: "paid", order_id: b.order_id, gateway_id: b.gateway_id, amount_cents: b.amount_cents, method: b.method } })).error, "Pagamento sintético B não persistiu.");
     const failing = createClient(url, service, { ...options, global: { fetch: (async (input: string | URL | Request, init?: RequestInit) => String(input).includes("/auth/v1/invite") ? new Response(JSON.stringify({ msg: "Synthetic definitive send rejection" }), { status: 429, headers: { "content-type": "application/json" } }) : await fetch(input, init)) as typeof fetch } });
@@ -48,6 +71,11 @@ Deno.test("HTTP paid webhook automatically invites; failed send retries durably 
     const retry = await fetch(`${url}/functions/v1/process-invites`, { method: "POST", headers: { authorization: `Bearer ${service}`, "content-type": "application/json" }, body: "{}" }); assert(retry.status === 200, "Worker de serviço não reprocessou lote devido."); await retry.body?.cancel();
     await waitMail(emailB); const recovered = await waitState(b.order_id, "sent"); assert(recovered.status === "sent" && recovered.attempts === 2 && await mailboxCount(emailB) === 1, "Retry não enviou exatamente o convite esperado.");
     const orders = await admin.from("orders").select("status").in("id", [a.order_id, b.order_id]); assert(!orders.error && orders.data?.every((o) => o.status === "paid"), "Retry alterou pagamento.");
-    await Deno.writeTextFile(`${destination}/.local/http-outbox-evidence.json`, JSON.stringify({ passed: true, native_http_paid_to_mailpit: true, webhook_duplicate_no_resend: true, failure_injection: "Auth invite transport429 only; DB/Auth create real", durable_retry_native_worker: true, retry_attempts: 2, no_extra_charge: true, checked_at: new Date().toISOString() }, null, 2), { mode: 0o600 });
-  } finally { await cleanup(a.order_id); await cleanup(b.order_id); }
+    await Deno.writeTextFile(`${destination}/.local/http-outbox-evidence.json`, JSON.stringify({ passed: true, native_http_paid_to_mailpit: true, asaas_api_fixture: true, webhook_duplicate_no_resend: true, failure_injection: "Auth invite transport429 only; DB/Auth create real", durable_retry_native_worker: true, retry_attempts: 2, no_extra_charge: true, checked_at: new Date().toISOString() }, null, 2), { mode: 0o600 });
+  } finally {
+    await server.shutdown();
+    await Promise.all(tasks);
+    await cleanup(a.order_id);
+    await cleanup(b.order_id);
+  }
 });

@@ -86,6 +86,8 @@ Banco e integrações nativas exigem instalação local e fixtures próprias. Pa
 
 O [modelo do GitHub Actions](docs/ci/README.md) descreve a automação. A execução da trilha nativa em Actions aguarda um runner com Docker dedicado.
 
+Na 2.12.0, imagens e PDFs são otimizados no navegador antes do envio, e o servidor recusa imagem acima de 500 KB e PDF acima de 5 MB. Para atualizar da 2.11.0, aplique a migration `202611270001`, atualize a Edge Function `upload`, acrescente `'wasm-unsafe-eval'` à CSP e publique o frontend.
+
 Na 2.11.0, a aula passa a aceitar vídeo do YouTube, e as telas do painel seguem um padrão só. Para atualizar da 2.10.1, aplique a migration `202611260018`, atualize a Edge Function `media` e publique o frontend.
 
 Na 2.10.0, a Central de ajuda foi reescrita em 45 artigos por assunto, com passo a passo para alunos e equipe e telas reais do Asaas, do Bunny Stream e do Cloudflare Turnstile nos artigos de Integrações. O endereço (slug) passa a ser montado sozinho, a capa do curso ganha limite de 500 KB, prévia e foco do corte, as seções viram opcionais e o certificado ganha um modelo global em Configurações. Para atualizar da 2.9.0, aplique as três migrations novas, atualize as Edge Functions `upload` e `media` e publique o frontend da mesma versão. Veja o [Changelog](CHANGELOG.md), o [guia de operação](docs/operations.md) e o [guia da ajuda](docs/help/README.md).

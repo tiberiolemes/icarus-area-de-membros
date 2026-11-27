@@ -92,7 +92,8 @@ export function Upload({
     controller.current = new AbortController();
     const before = selected.size;
     try {
-      if (kind !== "avatar" && kind !== "lesson") {
+      // Material de imagem é baixado pelo aluno: segue no formato que o admin escolheu.
+      if (kind !== "avatar" && kind !== "lesson" && (kind !== "material" || selected.type === "application/pdf")) {
         setState("Otimizando arquivo…");
         selected = await optimizeFile(selected);
         if (controller.current.signal.aborted) throw new Error("Envio cancelado.");
@@ -258,7 +259,7 @@ export function Upload({
             : kind === "lesson"
             ? "MP4 de até 500 MiB no armazenamento da plataforma."
             : kind === "material"
-            ? "PDF até 5 MB e imagem até 500 KB, otimizados automaticamente. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual."
+            ? "PDF até 5 MB, otimizado automaticamente. Imagem até 500 KB. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual."
             : kind === "course-cover"
             ? "PNG, JPG ou WebP de até 500 KB, otimizado automaticamente. O ideal é 1600\u00a0×\u00a0900\u00a0px."
             : "Imagem PNG, JPG ou WebP até 500 KB e PDF até 5 MB, otimizados automaticamente. Outros anexos até 20 MiB."

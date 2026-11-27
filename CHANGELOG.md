@@ -3,7 +3,7 @@
 ## 2.12.0 · 2026-11-27
 
 - Imagens e PDFs são otimizados no navegador antes do envio, sem o admin fazer nada além de escolher o arquivo. A imagem é regravada em WebP de alta qualidade, com as mesmas dimensões e a transparência preservada. O PDF passa por compressão sem perda, que não toca texto, links nem imagens. Se o resultado não ficar menor, ou se algo falhar, vai o arquivo original. Imagem animada, PDF assinado e PDF criptografado seguem como estão. A tela mostra quanto o arquivo diminuiu.
-- Vale para capa de curso, imagem de publicação, anexo de suporte, material e print do feedback. Vídeo da aula e foto de perfil não mudam.
+- Vale para capa de curso, imagem de publicação, anexo de suporte, PDF de material e print do feedback. Imagem de material segue no formato enviado, para o aluno baixar o mesmo arquivo. Vídeo da aula e foto de perfil não mudam.
 - Os limites ficaram rígidos: imagem até 500 KB e PDF até 5 MB, recusados no navegador, na Edge Function `upload` e no banco. O print do feedback continua aceitando até 5 MB. ZIP, TXT, MP4 e MP3 mantêm os limites anteriores. Os arquivos já enviados não mudam.
 - Para atualizar da 2.11.0, aplique a migration `202611270001_upload_limits.sql`, publique a Edge Function `upload` e então publique o frontend. Acrescente `'wasm-unsafe-eval'` ao `script-src` da CSP, como no [guia de operação](docs/operations.md); sem isso, os PDFs sobem sem otimizar.
 

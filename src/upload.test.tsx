@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Upload } from "./upload";
 
-const { invoke, optimize } = vi.hoisted(() => ({ invoke: vi.fn(), optimize: vi.fn() }));
+const { invoke, optimize, edge, storageUpload } = vi.hoisted(() => ({ invoke: vi.fn(), optimize: vi.fn(), edge: vi.fn(), storageUpload: vi.fn() }));
 vi.mock("./optimize", async (importOriginal) => ({
   ...await importOriginal<typeof import("./optimize")>(),
   optimizeFile: optimize,
@@ -10,6 +10,8 @@ vi.mock("./optimize", async (importOriginal) => ({
 vi.mock("./api", async (importOriginal) => ({
   ...await importOriginal<typeof import("./api")>(),
   client: () => ({ functions: { invoke } }),
+  edge,
+  uploadStorage: () => ({ from: () => ({ upload: storageUpload }) }),
 }));
 
 const jpeg = (size: number) => {
@@ -21,6 +23,8 @@ const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13]);
 
 beforeEach(() => {
   optimize.mockImplementation((file: File) => Promise.resolve(file));
+  edge.mockReset();
+  storageUpload.mockReset();
   // O jsdom não tem Blob.arrayBuffer, que os navegadores suportam.
   Blob.prototype.arrayBuffer ??= function (this: Blob) {
     return new Promise<ArrayBuffer>((resolve) => {
@@ -98,7 +102,7 @@ it("imagem de post acima de 500 KB é recusada antes do envio, com a dica geral"
 it("recusa PDF de material acima de 5 MB antes de enviar", async () => {
   render(<Upload kind="material" resourceId="material-1" />);
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  expect(input).toHaveAccessibleDescription("PDF até 5 MB e imagem até 500 KB, otimizados automaticamente. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual.");
+  expect(input).toHaveAccessibleDescription("PDF até 5 MB, otimizado automaticamente. Imagem até 500 KB. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual.");
   fireEvent.change(input, { target: { files: [new File([new Uint8Array(5242881)], "apostila.pdf", { type: "application/pdf" })] } });
   expect(await screen.findByText("O PDF passa de 5 MB. Escolha um arquivo menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");
@@ -132,6 +136,28 @@ it("cancelar durante a otimização não envia nada", async () => {
   finish(original);
   expect(await screen.findByText(/Envio cancelado/)).toBeInTheDocument();
   expect(invoke).not.toHaveBeenCalled();
+});
+
+it("PDF de material reserva e envia o arquivo otimizado; imagem de material segue no formato original", async () => {
+  optimize.mockResolvedValue(new File([new Uint8Array(1024)], "apostila.pdf", { type: "application/pdf" }));
+  edge.mockImplementation((_name: string, body: { action: string }) =>
+    Promise.resolve(body.action === "reserve" ? { upload_id: "u1", bucket: "icarus-private", path: "material/m/u1.pdf", expires_at: "" } : {}));
+  storageUpload.mockResolvedValue({ error: null });
+  const { unmount } = render(<Upload kind="material" resourceId="material-1" />);
+  const pick = (file: File) => fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), { target: { files: [file] } });
+  pick(new File([new Uint8Array(4096)], "apostila.pdf", { type: "application/pdf" }));
+  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
+  expect(await screen.findByText("Arquivo otimizado de 4 KB para 1 KB e enviado.")).toBeInTheDocument();
+  expect(edge.mock.calls[0][1]).toMatchObject({ action: "reserve", file_name: "apostila.pdf", content_type: "application/pdf", size_bytes: 1024 });
+  expect((storageUpload.mock.calls[0][1] as File).size).toBe(1024);
+  unmount();
+  optimize.mockClear();
+  render(<Upload kind="material" resourceId="material-1" />);
+  pick(new File([png], "mapa.png", { type: "image/png" }));
+  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
+  expect(await screen.findByText("Arquivo enviado e associado ao registro.")).toBeInTheDocument();
+  expect(optimize).not.toHaveBeenCalled();
+  expect(edge.mock.calls.at(-2)?.[1]).toMatchObject({ file_name: "mapa.png", content_type: "image/png" });
 });
 
 it("vídeo da aula não passa pela otimização", async () => {

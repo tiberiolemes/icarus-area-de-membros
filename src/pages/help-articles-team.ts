@@ -576,7 +576,7 @@ export const teamArticles: HelpArticle[] = [
           "PDF de até 5 MB.",
           "PNG, JPG e WebP de até 500 KB.",
           "ZIP, TXT, MP4 e MP3 de até 500 MB.",
-          "PDFs e imagens são otimizados automaticamente no envio, sem perda de qualidade. A tela mostra quanto o arquivo diminuiu.",
+          "PDFs e capas são otimizados automaticamente no envio, sem perda visível. A tela mostra quanto o arquivo diminuiu. Imagens de material seguem no formato enviado, para o aluno baixar o mesmo arquivo.",
           "O envio precisa terminar em até 15 minutos. Em conexão lenta, um arquivo grande não chega a tempo e aparece o aviso de prazo expirado. Nesse caso, reduza o arquivo.",
           "Word, Excel e PowerPoint não são aceitos. Exporte em PDF antes de enviar.",
         ],

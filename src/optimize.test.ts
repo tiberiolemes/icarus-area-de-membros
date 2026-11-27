@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from "vitest";
-import { optimizeFile, overLimit } from "./optimize";
+import { finalLimit, limits, optimizeFile, overLimit } from "./optimize";
 
 const qpdf = vi.hoisted(() => ({
   load: vi.fn(),
@@ -32,6 +32,8 @@ const png = (size: number, extra = "") => sized(new Uint8Array([137, 80, 78, 71,
 const jpeg = (size: number) => sized(new Uint8Array([255, 216, 255, 224]), size);
 const pdf = (size: number, body = "") => sized(ascii("%PDF-1.7\n" + body), size);
 let encoded: Blob | null;
+let sizes: Record<string, number> | null;
+const canvases: { width: number; height: number; quality: number }[] = [];
 const bitmap = vi.fn();
 
 beforeEach(() => {
@@ -44,12 +46,15 @@ beforeEach(() => {
     });
   };
   encoded = null;
+  sizes = null;
+  canvases.length = 0;
   bitmap.mockReset().mockResolvedValue({ width: 1600, height: 900, close: vi.fn() });
   vi.stubGlobal("createImageBitmap", bitmap);
   HTMLCanvasElement.prototype.getContext = vi.fn(() => ({ drawImage: vi.fn() })) as never;
-  HTMLCanvasElement.prototype.toBlob = vi.fn(function (callback: BlobCallback) {
-    callback(encoded);
-  });
+  HTMLCanvasElement.prototype.toBlob = vi.fn(function (this: HTMLCanvasElement, callback: BlobCallback, _type?: string, quality?: number) {
+    canvases.push({ width: this.width, height: this.height, quality: quality! });
+    callback(sizes ? new Blob([new Uint8Array(sizes[String(quality)])], { type: "image/webp" }) : encoded);
+  }) as never;
   qpdf.load.mockReset();
   qpdf.callMain.mockReset().mockReturnValue(0);
 });
@@ -120,11 +125,49 @@ it("outros tipos passam direto", async () => {
   expect(await optimizeFile(original)).toBe(original);
 });
 
-it("overLimit aplica 500 KB para imagem e 5 MB para PDF", () => {
+it("reduz o lado maior a 2560 px mantendo a proporção", async () => {
+  bitmap.mockResolvedValue({ width: 4000, height: 3000, close: vi.fn() });
+  encoded = new Blob([new Uint8Array(300 * 1024)], { type: "image/webp" });
+  const result = await optimizeFile(new File([jpeg(6 * 1024 * 1024)], "foto.jpg", { type: "image/jpeg" }));
+  expect(canvases[0]).toMatchObject({ width: 2560, height: 1920 });
+  expect(result.size).toBe(300 * 1024);
+});
+
+it("baixa a qualidade em degraus até caber em 500 KB", async () => {
+  sizes = { "0.9": 700 * 1024, "0.85": 560 * 1024, "0.8": 450 * 1024 };
+  const result = await optimizeFile(new File([jpeg(3 * 1024 * 1024)], "foto.jpg", { type: "image/jpeg" }));
+  expect(canvases.map((c) => c.quality)).toEqual([0.9, 0.85, 0.8]);
+  expect(result.size).toBe(450 * 1024);
+});
+
+it("fica com o menor resultado quando nenhum degrau cabe", async () => {
+  sizes = { "0.9": 900 * 1024, "0.85": 800 * 1024, "0.8": 700 * 1024 };
+  const result = await optimizeFile(new File([jpeg(3 * 1024 * 1024)], "foto.jpg", { type: "image/jpeg" }));
+  expect(result.size).toBe(700 * 1024);
+});
+
+it("com o teto do print, para no primeiro degrau que cabe em 5 MB", async () => {
+  sizes = { "0.9": 2 * 1024 * 1024, "0.85": 1024, "0.8": 1024 };
+  const result = await optimizeFile(new File([jpeg(4 * 1024 * 1024)], "tela.png", { type: "image/png" }), limits.screenshot);
+  expect(canvases.map((c) => c.quality)).toEqual([0.9]);
+  expect(result.size).toBe(2 * 1024 * 1024);
+});
+
+it("overLimit recusa só original acima de 20 MB", () => {
   const file = (size: number, name: string, type: string) => new File([new Uint8Array(size)], name, { type });
-  expect(overLimit(file(512000, "a.png", "image/png"))).toBeNull();
-  expect(overLimit(file(512001, "a.webp", "image/webp"))).toBe("A imagem passa de 500 KB. Escolha uma menor, em PNG, JPG ou WebP.");
-  expect(overLimit(file(5242880, "a.pdf", "application/pdf"))).toBeNull();
-  expect(overLimit(file(5242881, "a.pdf", "application/pdf"))).toBe("O PDF passa de 5 MB. Escolha um arquivo menor.");
-  expect(overLimit(file(100 * 1024 * 1024, "a.zip", "application/zip"))).toBeNull();
+  expect(overLimit(file(20971520, "a.png", "image/png"))).toBeNull();
+  expect(overLimit(file(20971521, "a.jpg", "image/jpeg"))).toBe("O arquivo passa de 20 MB. Escolha um menor.");
+  expect(overLimit(file(20971521, "a.pdf", "application/pdf"))).toBe("O arquivo passa de 20 MB. Escolha um menor.");
+  expect(overLimit(file(30 * 1024 * 1024, "a.zip", "application/zip"))).toBeNull();
+});
+
+it("finalLimit aplica 500 KB à imagem e 5 MB ao PDF e ao print depois de otimizar", () => {
+  const file = (size: number, name: string, type: string) => new File([new Uint8Array(size)], name, { type });
+  expect(finalLimit(file(512000, "a.webp", "image/webp"))).toBeNull();
+  expect(finalLimit(file(700 * 1024, "a.webp", "image/webp"))).toBe("Mesmo otimizada, a imagem ficou com 700 KB. O limite é 500 KB.");
+  expect(finalLimit(file(5242880, "a.pdf", "application/pdf"))).toBeNull();
+  expect(finalLimit(file(6.2 * 1024 * 1024, "a.pdf", "application/pdf"))).toBe("Mesmo otimizado, o PDF ficou com 6,2 MB. O limite é 5 MB.");
+  expect(finalLimit(file(4 * 1024 * 1024, "a.webp", "image/webp"), true)).toBeNull();
+  expect(finalLimit(file(5.5 * 1024 * 1024, "a.webp", "image/webp"), true)).toBe("Mesmo otimizado, o print ficou com 5,5 MB. O limite é 5 MB.");
+  expect(finalLimit(file(30 * 1024 * 1024, "a.zip", "application/zip"))).toBeNull();
 });

@@ -471,7 +471,7 @@ export const memberArticles: HelpArticle[] = [
         title: "Incluir uma imagem",
         intro: "A imagem entra depois do texto. Assim que você envia a publicação, o campo **Enviar arquivo** aparece logo abaixo do formulário.",
         steps: [
-          "Clique em **Escolher arquivo** e selecione um PNG, JPG ou WebP de até 5 MB.",
+          "Clique em **Escolher arquivo** e selecione um PNG, JPG ou WebP de até 500 KB. A imagem é otimizada automaticamente no envio.",
           "Clique em **Enviar arquivo**.",
         ],
         note: "Tenha a imagem à mão antes de enviar o texto, porque o campo só aparece nesse momento.",
@@ -892,7 +892,7 @@ export const memberArticles: HelpArticle[] = [
           "Em **Anexar arquivo à conversa**, clique em **Escolher arquivo**.",
           "Clique em **Enviar arquivo**.",
         ],
-        note: "São aceitos PDF, ZIP, TXT, PNG, JPG, WebP, MP4 e MP3. Imagens de até 5 MB e os demais arquivos de até 20 MB.",
+        note: "São aceitos PDF, ZIP, TXT, PNG, JPG, WebP, MP4 e MP3. Imagens de até 500 KB, PDF de até 5 MB e os demais arquivos de até 20 MB. Imagens e PDFs são otimizados automaticamente no envio.",
       },
       {
         title: "Acompanhar e responder",
@@ -938,7 +938,7 @@ export const memberArticles: HelpArticle[] = [
           "Clique em **Enviar feedback**, o ícone de balão com um sinal de mais no topo da tela.",
           "Em **Tipo**, escolha **Sugestão**, **Bug/Problema** ou **Outro**.",
           "Conte em **Descrição** o que você pensou ou o que aconteceu.",
-          "Se ajudar, anexe uma imagem em **Print (opcional)**. Vale PNG, JPG ou WebP de até 5 MB.",
+          "Se ajudar, anexe uma imagem em **Print (opcional)**. Vale PNG, JPG ou WebP de até 5 MB. A imagem é otimizada automaticamente no envio.",
           "Clique em **Enviar feedback**.",
         ],
         warn: "Antes de anexar um print, confira se ele não mostra senha, dado pessoal ou informação de pagamento.",

@@ -23,6 +23,7 @@ Exact versions and transitive dependencies are recorded in `package-lock.json`.
 | DOMPurify | MPL-2.0 OR Apache-2.0 |
 | Lucide React | ISC |
 | [saxes](https://github.com/lddubeau/saxes/tree/v6.0.0) (upload Edge) | ISC |
+| [qpdf-wasm 0.3.1](https://github.com/neslinesli93/qpdf-wasm) (wrapper, ISC), unmodified npm package, loaded only when a PDF is uploaded. Its `qpdf.wasm` bundles [qpdf](https://github.com/qpdf/qpdf) (Copyright (c) 2005-2025 Jay Berkenbilt and Manfred Holger, Apache-2.0), [libjpeg-turbo 2.1.1](https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/LICENSE.md) (IJG License, BSD-3-Clause and zlib; this software is based in part on the work of the Independent JPEG Group) and [zlib](https://zlib.net/zlib_license.html) (zlib License) | ISC, Apache-2.0, IJG, BSD-3-Clause and zlib |
 | [cf-wasm/resvg](https://github.com/fineshopdesign/cf-wasm/tree/main/packages/resvg) and [resvg-wasm](https://github.com/thx/resvg-js/tree/v2.6.2), unmodified npm packages (upload Edge) | MPL-2.0 |
 
 Installed packages include upstream license files. Development tooling and the independently installed Supabase/Docker runtime have their respective upstream licenses. No Frappe source or dependency is included in this release tree.

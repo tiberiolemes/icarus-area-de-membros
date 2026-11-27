@@ -8,9 +8,10 @@ Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHA
 
 | Versão instalada | Histórico esperado | Migrations a aplicar |
 | --- | --- | --- |
-| 2.10.1 | Até `202611260017` | `202611260018` |
-| 2.10.0 | Até `202611260016` | `202611260017` e `202611260018` |
-| 2.9.0 | Até `202611260013` | `202611260014` a `202611260018` |
+| 2.11.0 | Até `202611260018` | `202611270001` |
+| 2.10.1 | Até `202611260017` | `202611260018` e `202611270001` |
+| 2.10.0 | Até `202611260016` | `202611260017`, `202611260018` e `202611270001` |
+| 2.9.0 | Até `202611260013` | `202611260014` a `202611260018` e `202611270001` |
 | 2.8.0 | Até `202611260012` | `202611260013` |
 | 2.7.0 | `202611230001` a `202611250009` | `202611260001` e `202611260010` a `202611260012` |
 | 2.5.1 | `202611230001` a `202611250005` | `202611250006` a `202611250008` |
@@ -23,6 +24,8 @@ Cada versão nova sai como Release no GitHub, com as notas no [CHANGELOG](../CHA
 | 0.1.6 | `202611230001` a `202611230020` | `202611230021` a `202611230040` e `202611250001` a `202611250008` |
 
 A `202611250004` cria os módulos da plataforma com todos ligados; depois da atualização, nada muda até um admin desligar um módulo em Configurações → Módulos. A `202611250005` cria três RPCs de leitura e registro do painel (denúncias e pedidos LGPD) e reserva a identidade de quem denunciou para administradores, inclusive na listagem genérica. A migration não cria tabelas nem altera dados. A `202611250006` adiciona as RPCs do painel e permite arquivar episódios, preservando os registros existentes. A `202611250007` ajusta as permissões da fila de comentários, registra as exportações CSV feitas pela tela de Membros ou Pedidos e pagina os eventos de auditoria antes de montar os rótulos quando a busca está vazia. A `202611250008` registra somente se a busca foi preenchida e limita a 10 exportações por minuto por administrador, somando as duas telas. O painel gera o arquivo após a confirmação do registro na auditoria.
+
+Na atualização da 2.11.0 para a 2.12.0, aplique a migration `202611270001_upload_limits.sql`, publique a Edge `upload` desta revisão, acrescente `'wasm-unsafe-eval'` ao `script-src` da CSP (veja Cabeçalhos do frontend hospedado) e então publique o frontend. A migration passa a recusar imagem acima de 500 KB e PDF acima de 5 MB em qualquer envio reservado pelo servidor; o print do feedback segue com 5 MB por outra função. Os arquivos já enviados não mudam.
 
 Na atualização da 2.10.1 para a 2.11.0, aplique a migration `202611260018_lesson_youtube.sql`, publique a Edge `media` desta revisão e então publique o frontend. A migration aceita no campo de vídeo da aula o ID do Bunny ou o do YouTube e recusa outros valores; antes de aplicar, confira que nenhuma aula tem valor fora desses formatos (`select count(*) from public.lessons where video_id is not null and not (video_id ~ '^[0-9a-fA-F-]{36}$' or video_id ~ '^[A-Za-z0-9_-]{11}$')`). A Edge `media` da 2.10.1 não reconhece o YouTube, então publique a Edge antes de usar vídeos de lá.
 
@@ -147,7 +150,7 @@ Ensaie primeiro numa cópia desligada da internet pública, sem webhooks, SMTP e
 
 ### Migrations e fluxos da árvore atual
 
-Aplique todas as migrations do repositório em ordem até `202611260018` antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, o bucket público de marca `icarus-brand`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
+Aplique todas as migrations do repositório em ordem até `202611270001` antes de servir este frontend. A `026` prepara as notificações usadas pela `029`, e a `025` reaproveita validação da `024`. Preserve o bucket privado `icarus-private`, o bucket público de marca `icarus-brand`, as policies RLS e os `GRANT`/`REVOKE` da fonte. A aplicação autentica pelas autoridades do Supabase e os papéis continuam separados dos direitos por plano.
 
 | Migration | O que configurar ou validar |
 | --- | --- |
@@ -179,6 +182,7 @@ Aplique todas as migrations do repositório em ordem até `202611260018` antes d
 | `202611260016` | Em Configurações → Certificado, salvar responsável e cargo e enviar a assinatura em PNG. Num curso em Usar o modelo global, conferir o modelo em leitura e emitir um certificado com ele; trocar o modelo e conferir que o certificado já emitido não muda. Personalizar um curso e conferir que ele usa os próprios dados. Conferir que cursos com responsável preenchido antes da atualização continuam personalizados. |
 | `202611260017` | Abrir Configurações → Certificado como admin e conferir que o modelo carrega sem erro. |
 | `202611260018` | Colar um link do YouTube numa aula, salvar, reabrir e conferir o link. Abrir a aula como aluno e ver o vídeo tocar. Conferir a recusa de um link do Vimeo. |
+| `202611270001` | Enviar uma capa PNG de até 500 KB e um PDF de material de até 5 MB, conferir a mensagem com a redução e, no Storage, o objeto menor (a capa em `.webp`). Abrir a capa e baixar o PDF. Conferir a recusa de imagem acima de 500 KB e de PDF acima de 5 MB na tela e por chamada direta à Edge. |
 | `202611250003` | Em Configurações → Plataforma e marca, enviar a logo colorida e a branca em PNG ou WebP de até 500 KB e o ícone em PNG quadrado; trocar e remover cada um. Conferir a logo nas telas de entrada antes do login, no menu do aluno e do admin, no checkout e no certificado, nos dois temas, e o ícone na aba. Na aba Certificado de um curso, enviar a assinatura em PNG, emitir um certificado e conferir a assinatura e o "Emitido por" com o nome da instalação na tela, em `/verificar` e no PNG e PDF. Conferir que um arquivo renomeado, maior que 500 KB ou fora das dimensões é recusado e que um membro recebe 403. Publicar a `upload` da mesma tag. |
 
 **Logo, ícone e assinatura** ficam no bucket público `icarus-brand`, com limite de 500 KB por arquivo. Em Configurações → Plataforma e marca, logos aceitam SVG, PNG e WebP. O favicon aceita SVG e PNG quadrado. A assinatura do curso continua em PNG e o certificado preserva a assinatura da emissão. O arquivo anterior de marca sai do Storage após a gravação do novo caminho. Cópias em cache podem ficar acessíveis por até um ano, então envie somente imagens que possam ser públicas.
@@ -215,7 +219,7 @@ Envie os cabeçalhos pelo servidor que entrega o `index.html` e o fallback da ap
 
 ```caddyfile
 header {
-    Content-Security-Policy "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://projeto.supabase.co https://api.github.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://player.mediadelivery.net https://iframe.mediadelivery.net https://www.youtube-nocookie.com https://open.spotify.com; img-src 'self' data: blob: https://projeto.supabase.co https://i.ytimg.com; media-src 'self' blob: https://projeto.supabase.co; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'"
+    Content-Security-Policy "default-src 'none'; script-src 'self' 'wasm-unsafe-eval' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://projeto.supabase.co https://api.github.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://player.mediadelivery.net https://iframe.mediadelivery.net https://www.youtube-nocookie.com https://open.spotify.com; img-src 'self' data: blob: https://projeto.supabase.co https://i.ytimg.com; media-src 'self' blob: https://projeto.supabase.co; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'"
     Strict-Transport-Security "max-age=31536000"
     X-Content-Type-Options "nosniff"
     Referrer-Policy "strict-origin-when-cross-origin"
@@ -224,7 +228,7 @@ header {
 }
 ```
 
-`style-src 'unsafe-inline'` permite os estilos aplicados pelos componentes React, como a posição do vídeo. O JavaScript usa apenas arquivos próprios e o Turnstile. A consulta de atualizações usa `api.github.com`. Site com domínio próprio para o player deve acrescentar a origem exata à lista de frames. Aplique HSTS no HTTPS depois de verificar o certificado e o redirecionamento HTTP. Use `caddy validate` antes de recarregar a configuração. Confira os cabeçalhos no login e em uma rota interna e teste os frames de Turnstile, Bunny, YouTube e Spotify, a marca do Storage, a ajuda e o checkout em uma instalação de ensaio. Consulte a [referência do Caddy](https://caddyserver.com/docs/caddyfile/directives/header) e as [diretrizes do Turnstile](https://developers.cloudflare.com/turnstile/reference/content-security-policy/).
+`style-src 'unsafe-inline'` permite os estilos aplicados pelos componentes React, como a posição do vídeo. `'wasm-unsafe-eval'` libera só a compilação de WebAssembly, sem liberar `eval` de JavaScript. O qpdf, carregado do próprio site quando alguém envia um PDF, usa esse recurso para comprimir o arquivo sem perda antes do envio. Sem ele, o PDF sobe sem otimizar, dentro do limite de 5 MB. O JavaScript usa apenas arquivos próprios e o Turnstile. A consulta de atualizações usa `api.github.com`. Site com domínio próprio para o player deve acrescentar a origem exata à lista de frames. Aplique HSTS no HTTPS depois de verificar o certificado e o redirecionamento HTTP. Use `caddy validate` antes de recarregar a configuração. Confira os cabeçalhos no login e em uma rota interna e teste os frames de Turnstile, Bunny, YouTube e Spotify, a marca do Storage, a ajuda e o checkout em uma instalação de ensaio. Consulte a [referência do Caddy](https://caddyserver.com/docs/caddyfile/directives/header) e as [diretrizes do Turnstile](https://developers.cloudflare.com/turnstile/reference/content-security-policy/).
 
 ## Edge Functions e secrets
 

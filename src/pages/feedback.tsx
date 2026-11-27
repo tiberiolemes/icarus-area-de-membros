@@ -2,6 +2,7 @@ import { MessageSquarePlus } from "lucide-react";
 import { useRef, useState } from "react";
 import { matchPath, useLocation } from "react-router-dom";
 import { client, errorMessage, rpc } from "../api";
+import { optimizeFile } from "../optimize";
 import { Field, Form, Modal, Unsaved, value } from "../ui";
 
 export const feedbackTypes = { suggestion: "Sugestão", bug: "Bug/Problema", other: "Outro" };
@@ -27,6 +28,8 @@ type Attempt = {
   kind: string;
   description: string;
   file: File | null;
+  // Otimizado uma vez: a nova tentativa manda os mesmos bytes que a reserva do print já conhece.
+  upload?: File;
   fileKey: string | null;
   printId: string | null;
   pagePath: string | null;
@@ -59,7 +62,8 @@ function FeedbackForm({ pagePath }: { pagePath: string | null }) {
           const upload = new FormData();
           upload.set("kind", "feedback-screenshot");
           upload.set("resource_id", original.fileKey);
-          upload.set("file", original.file);
+          original.upload ??= await optimizeFile(original.file);
+          upload.set("file", original.upload);
           const { data: uploaded, error } = await client().functions.invoke<{ id: string }>("upload", { body: upload });
           if (error) {
             const response = error.context instanceof Response ? await error.context.json().catch(() => null) : null;

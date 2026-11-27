@@ -201,7 +201,7 @@ export const teamArticles: HelpArticle[] = [
         intro: "A capa aparece na lista de cursos, na página do curso e no início da aula em vídeo. Cada lugar tem um formato, então a mesma imagem é recortada de jeitos diferentes.",
         steps: [
           "Na aba **Curso**, encontre **Capa do curso**.",
-          "Clique em **Escolher arquivo** e selecione uma imagem PNG, JPG ou WebP de até 500 KB. O ideal é uma imagem deitada, de 1600\u00a0×\u00a0900\u00a0px.",
+          "Clique em **Escolher arquivo** e selecione uma imagem PNG, JPG ou WebP de até 500 KB. O ideal é uma imagem deitada, de 1600\u00a0×\u00a0900\u00a0px. A plataforma otimiza a imagem no envio, sem perda visível.",
           "Clique em **Enviar arquivo** e espere a mensagem **Arquivo enviado e associado ao registro**.",
           "Role até **Como a capa aparece** e confira as três prévias. **Lista de cursos e aula** mostra a imagem quase inteira. **Página do curso** corta as laterais. **Página do curso no tablet** corta o topo e a base.",
           "Se uma prévia cortar algo importante, vá até **Foco do corte** e clique na imagem, no ponto que precisa aparecer sempre. As prévias mudam na hora.",
@@ -274,7 +274,7 @@ export const teamArticles: HelpArticle[] = [
     trouble: [
       ["Aparece o aviso de que já existe um registro com esses dados", "O **Endereço (slug)** já está em uso. Escreva outro no campo e salve de novo."],
       ["As aulas aparecem fora de ordem", "Os itens ficaram com a mesma **Posição na lista**. Clique em **Reordenar** e arrume com as setas."],
-      ["Aparece o aviso de que a imagem passa de 500 KB", "A capa aceita PNG, JPG ou WebP de até 500 KB. Exporte a arte de novo em JPG ou WebP, com 1600\u00a0×\u00a0900\u00a0px, e envie outra vez."],
+      ["Aparece o aviso de que a imagem passa de 500 KB", "A capa aceita PNG, JPG ou WebP de até 500 KB. A otimização do envio não aceita originais maiores que isso. Exporte a arte de novo em JPG ou WebP, com 1600\u00a0×\u00a0900\u00a0px, até ficar abaixo de 500 KB, e envie outra vez."],
       ["A capa aparece cortada na página do curso", "No computador, a página do curso mostra a capa em um quadro quase quadrado, que corta as laterais. No tablet, ela vira uma faixa larga, que corta o topo e a base. Em **Capa do curso**, clique na imagem, no ponto que precisa aparecer, e depois em **Salvar foco**."],
       ["O curso não publica e cita o certificado", "Com o certificado ligado, o curso precisa do responsável preenchido e de pelo menos uma aula obrigatória publicada, com duração e que não seja de prévia. Veja [Configurar o certificado do curso](/ajuda/certificado-do-curso)."],
       ["Perdi o que estava digitando", "Trocar de aba ou fechar o editor descarta o que não foi salvo. Clique em **Salvar conteúdo** antes de sair."],
@@ -573,8 +573,10 @@ export const teamArticles: HelpArticle[] = [
       {
         title: "Limites de arquivo",
         list: [
-          "PDF, ZIP, TXT, MP4 e MP3 de até 500 MB.",
-          "PNG e JPG de até 5 MB.",
+          "PDF de até 5 MB.",
+          "PNG, JPG e WebP de até 500 KB.",
+          "ZIP, TXT, MP4 e MP3 de até 500 MB.",
+          "PDFs e capas são otimizados automaticamente no envio, sem perda visível. A tela mostra quanto o arquivo diminuiu. Imagens de material seguem no formato enviado, para o aluno baixar o mesmo arquivo.",
           "O envio precisa terminar em até 15 minutos. Em conexão lenta, um arquivo grande não chega a tempo e aparece o aviso de prazo expirado. Nesse caso, reduza o arquivo.",
           "Word, Excel e PowerPoint não são aceitos. Exporte em PDF antes de enviar.",
         ],
@@ -1005,8 +1007,8 @@ export const teamArticles: HelpArticle[] = [
           "Clique em **Escolher arquivo** e depois em **Enviar arquivo**.",
         ],
         list: [
-          "PDF, ZIP, TXT, MP4 e MP3 de até 20 MB.",
-          "PNG, JPG e WebP de até 5 MB.",
+          "PDF de até 5 MB e PNG, JPG ou WebP de até 500 KB, otimizados automaticamente no envio.",
+          "ZIP, TXT, MP4 e MP3 de até 20 MB.",
         ],
       },
       {

@@ -2,7 +2,7 @@ import { MessageSquarePlus } from "lucide-react";
 import { useRef, useState } from "react";
 import { matchPath, useLocation } from "react-router-dom";
 import { client, errorMessage, rpc } from "../api";
-import { optimizeFile } from "../optimize";
+import { finalLimit, limits, optimizeFile } from "../optimize";
 import { Field, Form, Modal, Unsaved, value } from "../ui";
 
 export const feedbackTypes = { suggestion: "Sugestão", bug: "Bug/Problema", other: "Outro" };
@@ -50,8 +50,8 @@ function FeedbackForm({ pagePath }: { pagePath: string | null }) {
       const file = fileInput.current?.files?.[0] ?? null;
       if (!attempt.current) {
         if (!description.trim()) throw new Error("Escreva uma descrição para o feedback.");
-        if (file && (!/^.+\.(png|jpe?g|webp)$/i.test(file.name) || !["image/png", "image/jpeg", "image/webp"].includes(file.type) || !file.size || file.size > 5 * 1024 ** 2)) {
-          throw new Error("Escolha um print PNG, JPG ou WebP de até 5 MiB.");
+        if (file && (!/^.+\.(png|jpe?g|webp)$/i.test(file.name) || !["image/png", "image/jpeg", "image/webp"].includes(file.type) || !file.size || file.size > limits.original)) {
+          throw new Error("Escolha um print PNG, JPG ou WebP de até 20 MB.");
         }
         attempt.current = { key: crypto.randomUUID(), kind, description, file,
           fileKey: file ? crypto.randomUUID() : null, printId: null, pagePath, browser: browserFamily(navigator.userAgent) };
@@ -62,7 +62,10 @@ function FeedbackForm({ pagePath }: { pagePath: string | null }) {
           const upload = new FormData();
           upload.set("kind", "feedback-screenshot");
           upload.set("resource_id", original.fileKey);
-          original.upload ??= await optimizeFile(original.file);
+          original.upload ??= await optimizeFile(original.file, limits.screenshot);
+          const refused = finalLimit(original.upload, true);
+          // Nada foi reservado: a próxima tentativa pode trazer outro print.
+          if (refused) { attempt.current = null; throw new Error(refused); }
           upload.set("file", original.upload);
           const { data: uploaded, error } = await client().functions.invoke<{ id: string }>("upload", { body: upload });
           if (error) {
@@ -97,7 +100,7 @@ function FeedbackForm({ pagePath }: { pagePath: string | null }) {
         </select>
       </Field>
       <Field label="Descrição"><textarea name="description" rows={5} required={!pending} maxLength={4000} /></Field>
-      <Field label="Print (opcional)" hint="PNG, JPG ou WebP de até 5 MiB. Confira se o print contém dados pessoais antes de enviar.">
+      <Field label="Print (opcional)" hint="PNG, JPG ou WebP de até 20 MB, otimizado no envio para até 5 MB. Confira se o print contém dados pessoais antes de enviar.">
         <input ref={fileInput} name="screenshot" type="file" accept="image/png,image/jpeg,image/webp" />
       </Field>
     </Form>

@@ -160,8 +160,9 @@ it.each([
   expect(submissions).toEqual([expect.objectContaining({ p_kind: "suggestion", p_body: "Relato revisto", p_screenshot_id: "print-válido" })]);
 });
 
-it("otimiza o print uma vez, reenvia os mesmos bytes e mantém o limite de 5 MiB", async () => {
+it("aceita print original até 20 MB, otimiza uma vez, reenvia os mesmos bytes e exige até 5 MB depois de otimizar", async () => {
   const sent: File[] = [];
+  optimize.mockImplementationOnce(() => Promise.resolve(new File([new Uint8Array(6 * 1024 ** 2)], "pesado.webp", { type: "image/webp" })));
   optimize.mockImplementationOnce(() => Promise.resolve(new File(["menor"], "tela.webp", { type: "image/webp" })));
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     if (String(input).endsWith("/upload")) {
@@ -176,18 +177,24 @@ it("otimiza o print uma vez, reenvia os mesmos bytes e mantém o limite de 5 MiB
   fireEvent.change(dialog.getByLabelText("Tipo"), { target: { value: "bug" } });
   fireEvent.input(dialog.getByLabelText("Descrição"), { target: { value: "Relato" } });
   const print = dialog.getByLabelText("Print (opcional)");
-  fireEvent.change(print, { target: { files: [new File([new Uint8Array(5 * 1024 ** 2 + 1)], "grande.png", { type: "image/png" })] } });
+  expect(print).toHaveAccessibleDescription("PNG, JPG ou WebP de até 20 MB, otimizado no envio para até 5 MB. Confira se o print contém dados pessoais antes de enviar.");
+  fireEvent.change(print, { target: { files: [new File([new Uint8Array(20 * 1024 ** 2 + 1)], "enorme.png", { type: "image/png" })] } });
   fireEvent.click(dialog.getByRole("button", { name: "Enviar feedback" }));
-  expect(await dialog.findByText("Escolha um print PNG, JPG ou WebP de até 5 MiB.")).toBeVisible();
+  expect(await dialog.findByText("Escolha um print PNG, JPG ou WebP de até 20 MB.")).toBeVisible();
   expect(optimize).not.toHaveBeenCalled();
-  fireEvent.change(print, { target: { files: [new File([new Uint8Array(5 * 1024 ** 2)], "tela.png", { type: "image/png" })] } });
+  fireEvent.change(print, { target: { files: [new File([new Uint8Array(8 * 1024 ** 2)], "pesado.png", { type: "image/png" })] } });
+  fireEvent.click(dialog.getByRole("button", { name: "Enviar feedback" }));
+  expect(await dialog.findByText("Mesmo otimizado, o print ficou com 6 MB. O limite é 5 MB.")).toBeVisible();
+  expect(sent).toHaveLength(0);
+  fireEvent.change(print, { target: { files: [new File([new Uint8Array(8 * 1024 ** 2)], "tela.png", { type: "image/png" })] } });
   fireEvent.click(dialog.getByRole("button", { name: "Enviar feedback" }));
   await dialog.findByText("Resposta do upload perdida.");
   fireEvent.click(dialog.getByRole("button", { name: "Confirmar envio anterior" }));
   expect(await dialog.findByText("Feedback enviado.")).toBeVisible();
   expect(sent.map((file) => file.name)).toEqual(["tela.webp", "tela.webp"]);
   expect(sent[1]).toBe(sent[0]);
-  expect(optimize).toHaveBeenCalledTimes(1);
+  expect(optimize).toHaveBeenCalledTimes(2);
+  expect(optimize).toHaveBeenLastCalledWith(expect.any(File), 5242880);
 });
 
 it("filtra a fila no servidor e atualiza a situação confirmada com revisão", async () => {

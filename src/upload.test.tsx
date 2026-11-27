@@ -45,10 +45,10 @@ function choose(file: File) {
   return input;
 }
 
-it("o seletor da foto aceita só JPG e PNG de até 500 KB", () => {
+it("o seletor da foto aceita só JPG e PNG de até 20 MB", () => {
   render(<Upload kind="avatar" resourceId="pessoa-1" />);
   expect(screen.getByLabelText("Foto do perfil")).toHaveAttribute("accept", "image/jpeg,image/png");
-  expect(screen.getByText("JPG ou PNG de até 500 KB.")).toBeInTheDocument();
+  expect(screen.getByText("JPG ou PNG de até 20 MB.")).toBeInTheDocument();
 });
 
 it("a capa mostra um seletor em português com o nome do arquivo e habilita o envio após a escolha", () => {
@@ -58,7 +58,7 @@ it("a capa mostra um seletor em português com o nome do arquivo e habilita o en
   expect(screen.getByText("Escolher arquivo")).toBeInTheDocument();
   expect(screen.getByText("Nenhum arquivo selecionado")).toBeInTheDocument();
   expect(input).toHaveAttribute("accept", "image/png,image/jpeg,image/webp");
-  expect(input).toHaveAccessibleDescription("PNG, JPG ou WebP de até 500 KB, otimizado automaticamente. O ideal é 1600\u00a0×\u00a0900\u00a0px.");
+  expect(input).toHaveAccessibleDescription("PNG, JPG ou WebP de até 20 MB, otimizada no envio para até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px.");
   expect(submit).toBeDisabled();
   fireEvent.change(input, { target: { files: [new File([png], "capa.png", { type: "image/png" })] } });
   expect(screen.getByText("capa.png")).toBeInTheDocument();
@@ -66,47 +66,64 @@ it("a capa mostra um seletor em português com o nome do arquivo e habilita o en
   expect(invoke).not.toHaveBeenCalled();
 });
 
-it("recusa capa acima de 500 KB antes de enviar e diz o motivo", async () => {
+it("recusa capa original acima de 20 MB antes de enviar e diz o motivo", async () => {
   render(<Upload kind="course-cover" resourceId="curso-1" />);
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  fireEvent.change(input, { target: { files: [new File([jpeg(500 * 1024 + 1)], "capa.jpg", { type: "image/jpeg" })] } });
-  expect(await screen.findByText("A imagem passa de 500 KB. Escolha uma menor, em PNG, JPG ou WebP.")).toBeInTheDocument();
+  fireEvent.change(input, { target: { files: [new File([jpeg(20971521)], "capa.jpg", { type: "image/jpeg" })] } });
+  expect(await screen.findByText("O arquivo passa de 20 MB. Escolha um menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");
   expect(screen.getByText("Nenhum arquivo selecionado")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Enviar arquivo" })).toBeDisabled();
   expect(invoke).not.toHaveBeenCalled();
 });
 
-it("capa de exatamente 500 KB segue para o envio", async () => {
+it("capa de 1 MB é aceita, otimizada e enviada já dentro de 500 KB", async () => {
+  optimize.mockResolvedValue(new File([new Uint8Array(100 * 1024)], "capa.webp", { type: "image/webp" }));
   invoke.mockResolvedValue({ data: { uploaded: true }, error: null });
   render(<Upload kind="course-cover" resourceId="curso-1" />);
   fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), {
-    target: { files: [new File([jpeg(500 * 1024)], "capa.jpg", { type: "image/jpeg" })] },
+    target: { files: [new File([jpeg(1024 * 1024)], "capa.jpg", { type: "image/jpeg" })] },
   });
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
-  expect(await screen.findByText("Arquivo enviado e associado ao registro.")).toBeInTheDocument();
-  expect(invoke).toHaveBeenCalledTimes(1);
+  expect(await screen.findByText("Arquivo otimizado de 1024 KB para 100 KB e enviado.")).toBeInTheDocument();
+  expect((invoke.mock.calls[0][1].body.get("file") as File).size).toBe(100 * 1024);
 });
 
-it("imagem de post acima de 500 KB é recusada antes do envio, com a dica geral", async () => {
+it("imagem que continua acima de 500 KB depois de otimizar é recusada sem envio", async () => {
+  optimize.mockResolvedValue(new File([new Uint8Array(700 * 1024)], "capa.webp", { type: "image/webp" }));
+  render(<Upload kind="course-cover" resourceId="curso-1" />);
+  fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), {
+    target: { files: [new File([jpeg(3 * 1024 * 1024)], "capa.jpg", { type: "image/jpeg" })] },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
+  expect(await screen.findByText("Mesmo otimizada, a imagem ficou com 700 KB. O limite é 500 KB.")).toBeInTheDocument();
+  expect(invoke).not.toHaveBeenCalled();
+});
+
+it("imagem de post original acima de 20 MB é recusada antes do envio, com a dica geral", async () => {
   render(<Upload kind="post-image" resourceId="post-1" />);
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  expect(input).toHaveAccessibleDescription("Imagem PNG, JPG ou WebP até 500 KB e PDF até 5 MB, otimizados automaticamente. Outros anexos até 20 MiB.");
-  fireEvent.change(input, { target: { files: [new File([jpeg(512001)], "foto.jpg", { type: "image/jpeg" })] } });
-  expect(await screen.findByText("A imagem passa de 500 KB. Escolha uma menor, em PNG, JPG ou WebP.")).toBeInTheDocument();
+  expect(input).toHaveAccessibleDescription("Imagem e PDF de até 20 MB, otimizados no envio para até 500 KB e 5 MB. Outros anexos até 20 MiB.");
+  fireEvent.change(input, { target: { files: [new File([jpeg(20971521)], "foto.jpg", { type: "image/jpeg" })] } });
+  expect(await screen.findByText("O arquivo passa de 20 MB. Escolha um menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");
   expect(screen.getByRole("button", { name: "Enviar arquivo" })).toBeDisabled();
   expect(invoke).not.toHaveBeenCalled();
 });
 
-it("recusa PDF de material acima de 5 MB antes de enviar", async () => {
+it("PDF de material: original acima de 20 MB é recusado na escolha; acima de 5 MB depois de otimizar, no envio", async () => {
+  optimize.mockResolvedValue(new File([new Uint8Array(6 * 1024 * 1024)], "apostila.pdf", { type: "application/pdf" }));
   render(<Upload kind="material" resourceId="material-1" />);
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  expect(input).toHaveAccessibleDescription("PDF até 5 MB, otimizado automaticamente. Imagem até 500 KB. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual.");
-  fireEvent.change(input, { target: { files: [new File([new Uint8Array(5242881)], "apostila.pdf", { type: "application/pdf" })] } });
-  expect(await screen.findByText("O PDF passa de 5 MB. Escolha um arquivo menor.")).toBeInTheDocument();
+  expect(input).toHaveAccessibleDescription("PDF e imagem de até 20 MB, otimizados no envio para até 5 MB e 500 KB. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual.");
+  fireEvent.change(input, { target: { files: [new File([new Uint8Array(20971521)], "apostila.pdf", { type: "application/pdf" })] } });
+  expect(await screen.findByText("O arquivo passa de 20 MB. Escolha um menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");
-  expect(screen.getByRole("button", { name: "Enviar arquivo" })).toBeDisabled();
+  fireEvent.change(input, { target: { files: [new File([new Uint8Array(8 * 1024 * 1024)], "apostila.pdf", { type: "application/pdf" })] } });
+  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
+  expect(await screen.findByText("Mesmo otimizado, o PDF ficou com 6 MB. O limite é 5 MB.")).toBeInTheDocument();
+  expect(edge).not.toHaveBeenCalled();
 });
 
 it("capa é otimizada antes do envio e mostra quanto diminuiu", async () => {
@@ -138,26 +155,25 @@ it("cancelar durante a otimização não envia nada", async () => {
   expect(invoke).not.toHaveBeenCalled();
 });
 
-it("PDF de material reserva e envia o arquivo otimizado; imagem de material segue no formato original", async () => {
-  optimize.mockResolvedValue(new File([new Uint8Array(1024)], "apostila.pdf", { type: "application/pdf" }));
+it("material reserva e envia o PDF e a imagem já otimizados", async () => {
+  optimize.mockResolvedValueOnce(new File([new Uint8Array(1024)], "apostila.pdf", { type: "application/pdf" }));
   edge.mockImplementation((_name: string, body: { action: string }) =>
     Promise.resolve(body.action === "reserve" ? { upload_id: "u1", bucket: "icarus-private", path: "material/m/u1.pdf", expires_at: "" } : {}));
   storageUpload.mockResolvedValue({ error: null });
   const { unmount } = render(<Upload kind="material" resourceId="material-1" />);
   const pick = (file: File) => fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), { target: { files: [file] } });
-  pick(new File([new Uint8Array(4096)], "apostila.pdf", { type: "application/pdf" }));
+  pick(new File([new Uint8Array(6 * 1024 * 1024)], "apostila.pdf", { type: "application/pdf" }));
   fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
-  expect(await screen.findByText("Arquivo otimizado de 4 KB para 1 KB e enviado.")).toBeInTheDocument();
+  expect(await screen.findByText("Arquivo otimizado de 6144 KB para 1 KB e enviado.")).toBeInTheDocument();
   expect(edge.mock.calls[0][1]).toMatchObject({ action: "reserve", file_name: "apostila.pdf", content_type: "application/pdf", size_bytes: 1024 });
   expect((storageUpload.mock.calls[0][1] as File).size).toBe(1024);
   unmount();
-  optimize.mockClear();
+  optimize.mockResolvedValueOnce(new File([new Uint8Array(2048)], "mapa.webp", { type: "image/webp" }));
   render(<Upload kind="material" resourceId="material-1" />);
-  pick(new File([png], "mapa.png", { type: "image/png" }));
+  pick(new File([jpeg(2 * 1024 * 1024)], "mapa.png", { type: "image/png" }));
   fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
-  expect(await screen.findByText("Arquivo enviado e associado ao registro.")).toBeInTheDocument();
-  expect(optimize).not.toHaveBeenCalled();
-  expect(edge.mock.calls.at(-2)?.[1]).toMatchObject({ file_name: "mapa.png", content_type: "image/png" });
+  expect(await screen.findByText("Arquivo otimizado de 2048 KB para 2 KB e enviado.")).toBeInTheDocument();
+  expect(edge.mock.calls.at(-2)?.[1]).toMatchObject({ file_name: "mapa.webp", content_type: "image/webp", size_bytes: 2048 });
 });
 
 it("vídeo da aula não passa pela otimização", async () => {
@@ -170,9 +186,9 @@ it("vídeo da aula não passa pela otimização", async () => {
   expect(optimize).not.toHaveBeenCalled();
 });
 
-it("recusa foto acima de 500 KB dizendo que o problema é o tamanho", async () => {
-  const input = choose(new File([jpeg(500 * 1024 + 1)], "grande.jpg", { type: "image/jpeg" }));
-  expect(await screen.findByText("Esta foto passa de 500 KB. Escolha uma menor, em JPG ou PNG.")).toBeInTheDocument();
+it("recusa foto acima de 20 MB dizendo que o problema é o tamanho", async () => {
+  const input = choose(new File([jpeg(20971521)], "grande.jpg", { type: "image/jpeg" }));
+  expect(await screen.findByText("Esta foto passa de 20 MB. Escolha uma menor, em JPG ou PNG.")).toBeInTheDocument();
   expect(input).toHaveValue("");
   expect(screen.queryByLabelText("Prévia do recorte quadrado da foto")).not.toBeInTheDocument();
   expect(invoke).not.toHaveBeenCalled();
@@ -184,14 +200,14 @@ it.each([
   ["texto renomeado para .jpg", new File([new TextEncoder().encode("isto não é uma imagem")], "falsa.jpg", { type: "image/jpeg" })],
 ])("recusa foto %s sem prévia nem envio", async (_, file) => {
   const input = choose(file);
-  expect(await screen.findByText("Escolha uma foto JPG ou PNG de até 500 KB.")).toBeInTheDocument();
+  expect(await screen.findByText("Escolha uma foto JPG ou PNG de até 20 MB.")).toBeInTheDocument();
   expect(input).toHaveValue("");
   expect(screen.queryByLabelText("Prévia do recorte quadrado da foto")).not.toBeInTheDocument();
   expect(invoke).not.toHaveBeenCalled();
 });
 
 it.each([
-  ["JPG de 500 KB", new File([jpeg(500 * 1024)], "foto.jpg", { type: "image/jpeg" })],
+  ["JPG de 1 MB", new File([jpeg(1024 * 1024)], "foto.jpg", { type: "image/jpeg" })],
   ["PNG", new File([png], "foto.png", { type: "image/png" })],
 ])("%s mostra a prévia, avisa que falta salvar e protege a saída da tela", async (_, file) => {
   choose(file);

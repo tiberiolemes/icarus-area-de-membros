@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { client, edge, errorMessage, uploadStorage } from "./api";
+import { optimizeFile, overLimit } from "./optimize";
 import { Field, Notice, Unsaved } from "./ui";
 
 // O recorte reencoda em JPEG, então só aqui dá para conferir o conteúdo real do arquivo escolhido.
@@ -88,9 +89,15 @@ export function Upload({
     setBusy(true);
     onBusyChange?.(true);
     setError("");
-    setState("Enviando arquivo…");
     controller.current = new AbortController();
+    const before = selected.size;
     try {
+      if (kind !== "avatar" && kind !== "lesson") {
+        setState("Otimizando arquivo…");
+        selected = await optimizeFile(selected);
+        if (controller.current.signal.aborted) throw new Error("Envio cancelado.");
+      }
+      setState("Enviando arquivo…");
       if (kind === "avatar" && cropCanvas.current) {
         const blob = await new Promise<Blob>((resolve, reject) =>
           cropCanvas.current!.toBlob(
@@ -154,8 +161,13 @@ export function Upload({
         });
         if (error) throw error;
       }
+      const kb = (bytes: number) => Math.round(bytes / 1024);
       setState(
-        kind === "avatar" ? "Foto salva." : "Arquivo enviado e associado ao registro.",
+        kind === "avatar"
+          ? "Foto salva."
+          : kind !== "lesson" && kb(selected.size) < kb(before)
+            ? `Arquivo otimizado de ${kb(before)} KB para ${kb(selected.size)} KB e enviado.`
+            : "Arquivo enviado e associado ao registro.",
       );
       if (file.current) file.current.value = "";
       setFileName("");
@@ -195,8 +207,9 @@ export function Upload({
         setFileName(selected?.name ?? "");
         setError("");
         setState("");
-        if (kind === "course-cover" && selected && selected.size > 500 * 1024) {
-          setError("Esta imagem passa de 500 KB. Escolha uma menor, em PNG, JPG ou WebP.");
+        const refused = kind !== "avatar" && selected ? overLimit(selected) : null;
+        if (refused) {
+          setError(refused);
           input.value = "";
           setFileName("");
           return;
@@ -245,10 +258,10 @@ export function Upload({
             : kind === "lesson"
             ? "MP4 de até 500 MiB no armazenamento da plataforma."
             : kind === "material"
-            ? "Até 500 MiB, conforme o tipo permitido pelo servidor. O andamento abaixo não estima percentual."
+            ? "PDF até 5 MB, otimizado automaticamente. ZIP, MP3 e TXT até 500 MiB. O andamento abaixo não estima percentual."
             : kind === "course-cover"
-            ? "PNG, JPG ou WebP de até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px."
-            : "Imagem raster até 5 MiB; anexos até 20 MiB, conforme o tipo permitido."
+            ? "PNG, JPG ou WebP de até 500 KB, otimizado automaticamente. O ideal é 1600\u00a0×\u00a0900\u00a0px."
+            : "Imagem PNG, JPG ou WebP até 500 KB e PDF até 5 MB, otimizados automaticamente. Outros anexos até 20 MiB."
         }
       >
         {input}

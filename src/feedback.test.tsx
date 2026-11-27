@@ -8,6 +8,9 @@ vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
 
+const { optimize } = vi.hoisted(() => ({ optimize: vi.fn((file: File) => Promise.resolve(file)) }));
+vi.mock("./optimize", async (importOriginal) => ({ ...await importOriginal<typeof import("./optimize")>(), optimizeFile: optimize }));
+
 import { cache } from "./api";
 import { AdminFeedbacks } from "./pages/admin-feedbacks";
 import { FeedbackButton } from "./pages/feedback";
@@ -155,6 +158,36 @@ it.each([
   expect(uploads.map(({ name }) => name)).toEqual(lost ? ["invalido.png", "invalido.png", "valido.png"] : ["invalido.png", "valido.png"]);
   expect(uploads.at(-1)?.key).not.toBe(uploads[0].key);
   expect(submissions).toEqual([expect.objectContaining({ p_kind: "suggestion", p_body: "Relato revisto", p_screenshot_id: "print-válido" })]);
+});
+
+it("otimiza o print uma vez, reenvia os mesmos bytes e mantém o limite de 5 MiB", async () => {
+  const sent: File[] = [];
+  optimize.mockImplementationOnce(() => Promise.resolve(new File(["menor"], "tela.webp", { type: "image/webp" })));
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (String(input).endsWith("/upload")) {
+      sent.push((init?.body as FormData).get("file") as File);
+      return sent.length === 1 ? Response.json({ error: { message: "Resposta do upload perdida." } }, { status: 503 }) : Response.json({ id: "print" });
+    }
+    return Response.json({ id: "feedback" });
+  }));
+  render(<MemoryRouter><FeedbackButton /></MemoryRouter>);
+  fireEvent.click(screen.getByRole("button", { name: "Enviar feedback" }));
+  const dialog = within(screen.getByRole("dialog", { name: "Envie seu feedback" }));
+  fireEvent.change(dialog.getByLabelText("Tipo"), { target: { value: "bug" } });
+  fireEvent.input(dialog.getByLabelText("Descrição"), { target: { value: "Relato" } });
+  const print = dialog.getByLabelText("Print (opcional)");
+  fireEvent.change(print, { target: { files: [new File([new Uint8Array(5 * 1024 ** 2 + 1)], "grande.png", { type: "image/png" })] } });
+  fireEvent.click(dialog.getByRole("button", { name: "Enviar feedback" }));
+  expect(await dialog.findByText("Escolha um print PNG, JPG ou WebP de até 5 MiB.")).toBeVisible();
+  expect(optimize).not.toHaveBeenCalled();
+  fireEvent.change(print, { target: { files: [new File([new Uint8Array(5 * 1024 ** 2)], "tela.png", { type: "image/png" })] } });
+  fireEvent.click(dialog.getByRole("button", { name: "Enviar feedback" }));
+  await dialog.findByText("Resposta do upload perdida.");
+  fireEvent.click(dialog.getByRole("button", { name: "Confirmar envio anterior" }));
+  expect(await dialog.findByText("Feedback enviado.")).toBeVisible();
+  expect(sent.map((file) => file.name)).toEqual(["tela.webp", "tela.webp"]);
+  expect(sent[1]).toBe(sent[0]);
+  expect(optimize).toHaveBeenCalledTimes(1);
 });
 
 it("filtra a fila no servidor e atualiza a situação confirmada com revisão", async () => {

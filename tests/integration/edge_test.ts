@@ -498,14 +498,42 @@ Deno.test("capa do curso aceita imagem de até 500 KB", async () => {
   equal((await upload(reserve.d)(request({ action: "reserve", kind: "course-cover", resource_id: other, file_name: "capa.jpg", content_type: "image/jpeg", size_bytes: 500 * 1024 }))).status, 422);
   assert(!reserve.requests.some((r) => r.url.includes("app_upload_access")));
 });
-Deno.test("large upload reserves only metadata and rejects above 500MiB", async () => {
+Deno.test("reserva de material aceita PDF até 5 MB e ZIP até 500 MiB", async () => {
   const { d, requests } = deps((url) => url.pathname.endsWith("app_upload_access") ? response({ id, bucket: "icarus-private", path: `material/${other}/${id}.pdf`, expires_at: new Date(Date.now() + 900_000).toISOString() }) : undefined);
-  const body = { action: "reserve", kind: "material", resource_id: other, file_name: "demo.pdf", content_type: "application/pdf", size_bytes: 500 * 1024 * 1024 };
-  const result = await upload(d)(request(body)); equal(result.status, 200); equal((await result.json()).method, "storage");
+  const pdf = { action: "reserve", kind: "material", resource_id: other, file_name: "demo.pdf", content_type: "application/pdf", size_bytes: 5242880 };
+  const result = await upload(d)(request(pdf)); equal(result.status, 200); equal((await result.json()).method, "storage");
   assert(!requests.some((r) => r.url.includes("/storage/")));
   const count = requests.filter((r) => r.url.includes("app_upload_access")).length;
-  equal((await upload(d)(request({ ...body, size_bytes: body.size_bytes + 1 }))).status, 422);
+  const refused = await upload(d)(request({ ...pdf, size_bytes: 5242881 }));
+  equal(refused.status, 422);
+  equal((await refused.json()).error.message, "Imagens aceitam até 500 KB e PDFs até 5 MB.");
   equal(requests.filter((r) => r.url.includes("app_upload_access")).length, count);
+  const zip = { ...pdf, file_name: "demo.zip", content_type: "application/zip", size_bytes: 500 * 1024 * 1024 };
+  equal((await upload(d)(request(zip))).status, 200);
+  equal((await upload(d)(request({ ...zip, size_bytes: zip.size_bytes + 1 }))).status, 422);
+});
+Deno.test("multipart recusa imagem acima de 500 KB e PDF acima de 5 MB antes da reserva", async () => {
+  const send = (d: Dependencies, kind: string, file: File) => {
+    const form = new FormData(); form.set("kind", kind); form.set("resource_id", other); form.set("file", file);
+    return upload(d)(new Request("http://localhost/upload", { method: "POST", headers: { authorization: `Bearer ${jwt()}` }, body: form }));
+  };
+  const sized = (head: number[], size: number) => { const bytes = new Uint8Array(size); bytes.set(head); return bytes; };
+  const png = (size: number) => sized([137, 80, 78, 71, 13, 10, 26, 10], size);
+  const pdf = (size: number) => sized([...new TextEncoder().encode("%PDF-1.7")], size);
+  for (const [kind, file] of [
+    ["post-image", new File([png(512001)], "foto.png", { type: "image/png" })],
+    ["ticket-attachment", new File([png(512001)], "foto.png", { type: "image/png" })],
+    ["ticket-attachment", new File([pdf(5242881)], "doc.pdf", { type: "application/pdf" })],
+  ] as const) {
+    const { d, requests } = deps();
+    const refused = await send(d, kind, file);
+    equal(refused.status, 422);
+    equal((await refused.json()).error.message, "Imagens aceitam até 500 KB e PDFs até 5 MB.");
+    assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")), `${kind} ${file.name}`);
+  }
+  const { d, requests } = deps((url) => url.pathname.endsWith("app_upload_access") ? response({ id, bucket: "icarus-private", path: `ticket-attachment/${other}/${id}.pdf` }) : url.pathname.includes("/storage/v1/object/icarus-private/") ? response({ Key: "icarus-private/ticket" }) : url.pathname.endsWith("app_upload_finalize") ? response({ id, state: "ready" }) : undefined);
+  equal((await send(d, "ticket-attachment", new File([pdf(5242880)], "doc.pdf", { type: "application/pdf" }))).status, 200);
+  equal((requests.find((r) => r.url.includes("app_upload_access"))?.body as { p_size_bytes: number }).p_size_bytes, 5242880);
 });
 Deno.test("native finalize inspects ranged object bytes before ready", async () => {
   const { d, requests } = deps((url, init) => url.pathname.endsWith("app_upload_context") ? response({ bucket: "icarus-private", path: "material/demo.pdf", content_type: "application/pdf", size_bytes: 64, expires_at: new Date(Date.now() + 900_000).toISOString() }) : url.pathname.includes("/object/sign/") && init.method === "POST" ? response({ signedURL: "/object/sign/icarus-private/material/demo.pdf?token=test" }) : url.searchParams.has("token") ? new Response("%PDF-1.4\nfixture", { status: 206 }) : url.pathname.endsWith("app_upload_finalize") ? response({ id, state: "ready" }) : undefined);

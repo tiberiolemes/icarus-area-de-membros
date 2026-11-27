@@ -31,11 +31,13 @@ function fixture() {
   return { handler: createHandler(d), calls };
 }
 
-function multipart(name: string) {
+function multipart(name: string, size = 8) {
   const body = new FormData();
   body.set("kind", "feedback-screenshot");
   body.set("resource_id", id);
-  body.set("file", new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])], name, { type: "image/png" }));
+  const bytes = new Uint8Array(size);
+  bytes.set([137, 80, 78, 71, 13, 10, 26, 10]);
+  body.set("file", new File([bytes], name, { type: "image/png" }));
   return new Request("http://local.invalid/upload", { method: "POST", headers: { authorization: "Bearer fixture" }, body });
 }
 
@@ -52,6 +54,14 @@ Deno.test("multipart de print exige nome e extensão reais antes de reservar", a
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { id, uploaded: true });
   assert.deepEqual(calls.slice(-3), ["app_feedback_screenshot_reserve", "storage.upload", "app_upload_finalize"]);
+});
+
+Deno.test("print de feedback segue aceitando até 5 MB, acima dos 500 KB das outras imagens", async () => {
+  const { handler, calls } = fixture();
+  assert.equal((await handler(multipart("tela.png", 5242881))).status, 422);
+  assert(!calls.includes("app_feedback_screenshot_reserve"));
+  assert.equal((await handler(multipart("tela.png", 5242880))).status, 200);
+  assert(calls.includes("app_feedback_screenshot_reserve"));
 });
 
 Deno.test("finalização JSON recusa print próprio pelo namespace antes de assinar ou retornar path", async () => {

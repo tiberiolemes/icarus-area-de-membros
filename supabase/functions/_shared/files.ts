@@ -1,7 +1,8 @@
 export const formats: Record<string, { mime: string; max: number }> = {
-  pdf: { mime: "application/pdf", max: 500 * 1024 * 1024 }, zip: { mime: "application/zip", max: 500 * 1024 * 1024 },
+  // Imagem até 500 KB e PDF até 5 MB, que o navegador otimiza antes do envio; o print do feedback tem teto próprio.
+  pdf: { mime: "application/pdf", max: 5 * 1024 * 1024 }, zip: { mime: "application/zip", max: 500 * 1024 * 1024 },
   txt: { mime: "text/plain", max: 500 * 1024 * 1024 }, md: { mime: "text/plain", max: 500 * 1024 * 1024 }, skill: { mime: "text/plain", max: 500 * 1024 * 1024 },
-  png: { mime: "image/png", max: 5 * 1024 * 1024 }, jpg: { mime: "image/jpeg", max: 5 * 1024 * 1024 }, jpeg: { mime: "image/jpeg", max: 5 * 1024 * 1024 }, webp: { mime: "image/webp", max: 5 * 1024 * 1024 },
+  png: { mime: "image/png", max: 500 * 1024 }, jpg: { mime: "image/jpeg", max: 500 * 1024 }, jpeg: { mime: "image/jpeg", max: 500 * 1024 }, webp: { mime: "image/webp", max: 500 * 1024 },
   mp4: { mime: "video/mp4", max: 500 * 1024 * 1024 }, mp3: { mime: "audio/mpeg", max: 500 * 1024 * 1024 },
 };
 export function matchesSignature(mime: string, bytes: Uint8Array) {

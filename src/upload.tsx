@@ -258,7 +258,7 @@ export function Upload({
             : kind === "lesson"
             ? "MP4 de até 500 MiB no armazenamento da plataforma."
             : kind === "material"
-            ? "PDF até 5 MB, otimizado automaticamente. ZIP, MP3 e TXT até 500 MiB. O andamento abaixo não estima percentual."
+            ? "PDF até 5 MB e imagem até 500 KB, otimizados automaticamente. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual."
             : kind === "course-cover"
             ? "PNG, JPG ou WebP de até 500 KB, otimizado automaticamente. O ideal é 1600\u00a0×\u00a0900\u00a0px."
             : "Imagem PNG, JPG ou WebP até 500 KB e PDF até 5 MB, otimizados automaticamente. Outros anexos até 20 MiB."

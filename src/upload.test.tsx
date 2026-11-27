@@ -98,7 +98,7 @@ it("imagem de post acima de 500 KB é recusada antes do envio, com a dica geral"
 it("recusa PDF de material acima de 5 MB antes de enviar", async () => {
   render(<Upload kind="material" resourceId="material-1" />);
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  expect(input).toHaveAccessibleDescription("PDF até 5 MB, otimizado automaticamente. ZIP, MP3 e TXT até 500 MiB. O andamento abaixo não estima percentual.");
+  expect(input).toHaveAccessibleDescription("PDF até 5 MB e imagem até 500 KB, otimizados automaticamente. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual.");
   fireEvent.change(input, { target: { files: [new File([new Uint8Array(5242881)], "apostila.pdf", { type: "application/pdf" })] } });
   expect(await screen.findByText("O PDF passa de 5 MB. Escolha um arquivo menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");

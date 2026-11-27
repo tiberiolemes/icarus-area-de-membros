@@ -215,7 +215,7 @@ Envie os cabeçalhos pelo servidor que entrega o `index.html` e o fallback da ap
 
 ```caddyfile
 header {
-    Content-Security-Policy "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://projeto.supabase.co https://api.github.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://player.mediadelivery.net https://iframe.mediadelivery.net https://www.youtube-nocookie.com https://open.spotify.com; img-src 'self' data: blob: https://projeto.supabase.co https://i.ytimg.com; media-src 'self' blob: https://projeto.supabase.co; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'"
+    Content-Security-Policy "default-src 'none'; script-src 'self' 'wasm-unsafe-eval' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://projeto.supabase.co https://api.github.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://player.mediadelivery.net https://iframe.mediadelivery.net https://www.youtube-nocookie.com https://open.spotify.com; img-src 'self' data: blob: https://projeto.supabase.co https://i.ytimg.com; media-src 'self' blob: https://projeto.supabase.co; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'"
     Strict-Transport-Security "max-age=31536000"
     X-Content-Type-Options "nosniff"
     Referrer-Policy "strict-origin-when-cross-origin"
@@ -224,7 +224,7 @@ header {
 }
 ```
 
-`style-src 'unsafe-inline'` permite os estilos aplicados pelos componentes React, como a posição do vídeo. O JavaScript usa apenas arquivos próprios e o Turnstile. A consulta de atualizações usa `api.github.com`. Site com domínio próprio para o player deve acrescentar a origem exata à lista de frames. Aplique HSTS no HTTPS depois de verificar o certificado e o redirecionamento HTTP. Use `caddy validate` antes de recarregar a configuração. Confira os cabeçalhos no login e em uma rota interna e teste os frames de Turnstile, Bunny, YouTube e Spotify, a marca do Storage, a ajuda e o checkout em uma instalação de ensaio. Consulte a [referência do Caddy](https://caddyserver.com/docs/caddyfile/directives/header) e as [diretrizes do Turnstile](https://developers.cloudflare.com/turnstile/reference/content-security-policy/).
+`style-src 'unsafe-inline'` permite os estilos aplicados pelos componentes React, como a posição do vídeo. `'wasm-unsafe-eval'` libera só a compilação de WebAssembly, sem liberar `eval` de JavaScript. O qpdf, carregado do próprio site quando alguém envia um PDF, usa esse recurso para comprimir o arquivo sem perda antes do envio. Sem ele, o PDF sobe sem otimizar, dentro do limite de 5 MB. O JavaScript usa apenas arquivos próprios e o Turnstile. A consulta de atualizações usa `api.github.com`. Site com domínio próprio para o player deve acrescentar a origem exata à lista de frames. Aplique HSTS no HTTPS depois de verificar o certificado e o redirecionamento HTTP. Use `caddy validate` antes de recarregar a configuração. Confira os cabeçalhos no login e em uma rota interna e teste os frames de Turnstile, Bunny, YouTube e Spotify, a marca do Storage, a ajuda e o checkout em uma instalação de ensaio. Consulte a [referência do Caddy](https://caddyserver.com/docs/caddyfile/directives/header) e as [diretrizes do Turnstile](https://developers.cloudflare.com/turnstile/reference/content-security-policy/).
 
 ## Edge Functions e secrets
 

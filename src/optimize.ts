@@ -1,7 +1,8 @@
 // Tetos do arquivo otimizado, repetidos de propósito na função upload e em app_upload_access: o servidor não confia na tela.
 // O original pode ter até 20 MB, o máximo que a função upload recebe; só o otimizado sobe.
 export const limits = { image: 512000, pdf: 5242880, screenshot: 5242880, original: 20971520 };
-const maxSide = 2560;
+// Área máxima em pixels, tentada em ordem até caber: 2560², 1920² e 1600². Pela área, print alto não perde legibilidade.
+const areas = [2560 * 2560, 1920 * 1920, 1600 * 1600];
 const qualities = [0.9, 0.85, 0.8];
 const images = ["image/png", "image/jpeg", "image/webp"];
 const pdfArgs = ["--object-streams=generate", "--compress-streams=y", "--recompress-flate", "--compression-level=9", "/in.pdf", "/out.pdf"];
@@ -12,9 +13,10 @@ export function overLimit(file: File): string | null {
 
 /** Confere o arquivo já otimizado, que é o que o servidor guarda. */
 export function finalLimit(file: File, screenshot = false): string | null {
-  const mb = (bytes: number) => (Math.round((bytes / 1048576) * 10) / 10).toLocaleString("pt-BR");
+  // Arredonda para cima: 512.001 bytes não podem aparecer como "500 KB" ao lado do limite de 500 KB.
+  const mb = (bytes: number) => (Math.ceil((bytes / 1048576) * 10) / 10).toLocaleString("pt-BR");
   if (screenshot) return file.size > limits.screenshot ? `Mesmo otimizado, o print ficou com ${mb(file.size)} MB. O limite é 5 MB.` : null;
-  if (images.includes(file.type) && file.size > limits.image) return `Mesmo otimizada, a imagem ficou com ${Math.round(file.size / 1024)} KB. O limite é 500 KB.`;
+  if (images.includes(file.type) && file.size > limits.image) return `Mesmo otimizada, a imagem ficou com ${Math.ceil(file.size / 1024)} KB. O limite é 500 KB.`;
   if (file.type === "application/pdf" && file.size > limits.pdf) return `Mesmo otimizado, o PDF ficou com ${mb(file.size)} MB. O limite é 5 MB.`;
   return null;
 }
@@ -34,23 +36,42 @@ async function image(file: File, max: number) {
   // Canvas guarda só o primeiro quadro: APNG e WebP animado seguem como estão.
   if (head.includes("acTL") || head.includes("ANIM")) return null;
   const bitmap = await createImageBitmap(file);
-  // Acima de 2560 px o excesso não aparece nem em tela retina; reduzir é o que faz foto de celular caber sem perda visível.
-  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  let best: Blob | null = null;
-  for (const quality of qualities) {
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", quality));
-    // Navegador sem codificador WebP devolve PNG.
-    if (blob?.type !== "image/webp") return null;
-    if (!best || blob.size < best.size) best = blob;
-    if (blob.size <= max) break;
+  try {
+    // Safari não gera WebP no canvas: lá a saída é JPEG.
+    const mime = (await encode(Object.assign(document.createElement("canvas"), { width: 1, height: 1 }), "image/webp", 0.9))?.type === "image/webp" ? "image/webp" : "image/jpeg";
+    let best: Blob | null = null, last = 0;
+    for (const area of areas) {
+      const scale = Math.min(1, Math.sqrt(area / (bitmap.width * bitmap.height)));
+      if (scale === last) continue;
+      last = scale;
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      const ctx = canvas.getContext("2d")!;
+      // JPEG não guarda transparência: sem fundo, ela viraria preto.
+      if (mime === "image/jpeg") {
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      for (const quality of qualities) {
+        const blob = await encode(canvas, mime, quality);
+        if (blob?.type !== mime) return null;
+        if (!best || blob.size < best.size) best = blob;
+        if (blob.size <= max) return named(blob, file.name, mime);
+      }
+    }
+    return best && named(best, file.name, mime);
+  } finally {
+    bitmap.close();
   }
-  return new File([best!], file.name.replace(/\.[^.]+$/, "") + ".webp", { type: "image/webp" });
 }
+
+const encode = (canvas: HTMLCanvasElement, mime: string, quality: number) =>
+  new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, mime, quality));
+// A Edge recusa nome acima de 180 caracteres; a extensão nova pode ser mais longa que a original.
+const named = (blob: Blob, name: string, mime: string) =>
+  new File([blob], name.replace(/\.[^.]+$/, "").slice(0, 175) + (mime === "image/webp" ? ".webp" : ".jpg"), { type: mime });
 
 async function pdf(file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer());

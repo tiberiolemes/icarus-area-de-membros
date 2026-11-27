@@ -58,7 +58,7 @@ it("a capa mostra um seletor em português com o nome do arquivo e habilita o en
   expect(screen.getByText("Escolher arquivo")).toBeInTheDocument();
   expect(screen.getByText("Nenhum arquivo selecionado")).toBeInTheDocument();
   expect(input).toHaveAttribute("accept", "image/png,image/jpeg,image/webp");
-  expect(input).toHaveAccessibleDescription("PNG, JPG ou WebP de até 20 MB, otimizada no envio para até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px.");
+  expect(input).toHaveAccessibleDescription("PNG, JPG ou WebP de até 20 MB. Depois de otimizada, a imagem precisa ficar com até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px.");
   expect(submit).toBeDisabled();
   fireEvent.change(input, { target: { files: [new File([png], "capa.png", { type: "image/png" })] } });
   expect(screen.getByText("capa.png")).toBeInTheDocument();
@@ -99,12 +99,15 @@ it("imagem que continua acima de 500 KB depois de otimizar é recusada sem envio
   fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
   expect(await screen.findByText("Mesmo otimizada, a imagem ficou com 700 KB. O limite é 500 KB.")).toBeInTheDocument();
   expect(invoke).not.toHaveBeenCalled();
+  // O arquivo recusado sai do campo: um novo clique não repete a mesma recusa.
+  expect(screen.getByText("Nenhum arquivo selecionado")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Enviar arquivo" })).toBeDisabled();
 });
 
 it("imagem de post original acima de 20 MB é recusada antes do envio, com a dica geral", async () => {
   render(<Upload kind="post-image" resourceId="post-1" />);
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  expect(input).toHaveAccessibleDescription("Imagem e PDF de até 20 MB, otimizados no envio para até 500 KB e 5 MB. Outros anexos até 20 MiB.");
+  expect(input).toHaveAccessibleDescription("Imagem e PDF de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 500 KB (imagem) ou 5 MB (PDF). Outros anexos até 20 MiB.");
   fireEvent.change(input, { target: { files: [new File([jpeg(20971521)], "foto.jpg", { type: "image/jpeg" })] } });
   expect(await screen.findByText("O arquivo passa de 20 MB. Escolha um menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");
@@ -116,7 +119,7 @@ it("PDF de material: original acima de 20 MB é recusado na escolha; acima de 5 
   optimize.mockResolvedValue(new File([new Uint8Array(6 * 1024 * 1024)], "apostila.pdf", { type: "application/pdf" }));
   render(<Upload kind="material" resourceId="material-1" />);
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  expect(input).toHaveAccessibleDescription("PDF e imagem de até 20 MB, otimizados no envio para até 5 MB e 500 KB. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual.");
+  expect(input).toHaveAccessibleDescription("PDF e imagem de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual.");
   fireEvent.change(input, { target: { files: [new File([new Uint8Array(20971521)], "apostila.pdf", { type: "application/pdf" })] } });
   expect(await screen.findByText("O arquivo passa de 20 MB. Escolha um menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");
@@ -160,13 +163,16 @@ it("material reserva e envia o PDF e a imagem já otimizados", async () => {
   edge.mockImplementation((_name: string, body: { action: string }) =>
     Promise.resolve(body.action === "reserve" ? { upload_id: "u1", bucket: "icarus-private", path: "material/m/u1.pdf", expires_at: "" } : {}));
   storageUpload.mockResolvedValue({ error: null });
-  const { unmount } = render(<Upload kind="material" resourceId="material-1" />);
+  const uploaded = vi.fn();
+  const { unmount } = render(<Upload kind="material" resourceId="material-1" onUploaded={uploaded} />);
   const pick = (file: File) => fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), { target: { files: [file] } });
   pick(new File([new Uint8Array(6 * 1024 * 1024)], "apostila.pdf", { type: "application/pdf" }));
   fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
   expect(await screen.findByText("Arquivo otimizado de 6144 KB para 1 KB e enviado.")).toBeInTheDocument();
   expect(edge.mock.calls[0][1]).toMatchObject({ action: "reserve", file_name: "apostila.pdf", content_type: "application/pdf", size_bytes: 1024 });
   expect((storageUpload.mock.calls[0][1] as File).size).toBe(1024);
+  // O editor de material usa o arquivo final para atualizar o tipo exibido.
+  expect(uploaded).toHaveBeenCalledWith(expect.objectContaining({ name: "apostila.pdf", size: 1024 }));
   unmount();
   optimize.mockResolvedValueOnce(new File([new Uint8Array(2048)], "mapa.webp", { type: "image/webp" }));
   render(<Upload kind="material" resourceId="material-1" />);

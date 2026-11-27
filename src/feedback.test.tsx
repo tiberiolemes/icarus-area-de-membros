@@ -177,7 +177,7 @@ it("aceita print original até 20 MB, otimiza uma vez, reenvia os mesmos bytes e
   fireEvent.change(dialog.getByLabelText("Tipo"), { target: { value: "bug" } });
   fireEvent.input(dialog.getByLabelText("Descrição"), { target: { value: "Relato" } });
   const print = dialog.getByLabelText("Print (opcional)");
-  expect(print).toHaveAccessibleDescription("PNG, JPG ou WebP de até 20 MB, otimizado no envio para até 5 MB. Confira se o print contém dados pessoais antes de enviar.");
+  expect(print).toHaveAccessibleDescription("PNG, JPG ou WebP de até 20 MB. Depois de otimizado, o print precisa ficar com até 5 MB. Confira se o print contém dados pessoais antes de enviar.");
   fireEvent.change(print, { target: { files: [new File([new Uint8Array(20 * 1024 ** 2 + 1)], "enorme.png", { type: "image/png" })] } });
   fireEvent.click(dialog.getByRole("button", { name: "Enviar feedback" }));
   expect(await dialog.findByText("Escolha um print PNG, JPG ou WebP de até 20 MB.")).toBeVisible();

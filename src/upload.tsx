@@ -33,7 +33,7 @@ export function Upload({
     | "ticket-attachment"
     | "avatar";
   resourceId: string;
-  onUploaded?: () => void;
+  onUploaded?: (file: File) => void;
   onBusyChange?: (busy: boolean) => void;
 }) {
   const [state, setState] = useState(""),
@@ -98,7 +98,12 @@ export function Upload({
         selected = await optimizeFile(selected);
         if (controller.current.signal.aborted) throw new Error("Envio cancelado.");
         const refused = finalLimit(selected);
-        if (refused) throw new Error(refused);
+        if (refused) {
+          // Tira o arquivo do campo: clicar de novo repetiria a mesma recusa.
+          if (file.current) file.current.value = "";
+          setFileName("");
+          throw new Error(refused);
+        }
       }
       setState("Enviando arquivo…");
       if (kind === "avatar" && cropCanvas.current) {
@@ -175,7 +180,7 @@ export function Upload({
       if (file.current) file.current.value = "";
       setFileName("");
       setPreview("");
-      onUploaded?.();
+      onUploaded?.(selected);
     } catch (err) {
       setState("");
       setError(
@@ -261,10 +266,10 @@ export function Upload({
             : kind === "lesson"
             ? "MP4 de até 500 MiB no armazenamento da plataforma."
             : kind === "material"
-            ? "PDF e imagem de até 20 MB, otimizados no envio para até 5 MB e 500 KB. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual."
+            ? "PDF e imagem de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual."
             : kind === "course-cover"
-            ? "PNG, JPG ou WebP de até 20 MB, otimizada no envio para até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px."
-            : "Imagem e PDF de até 20 MB, otimizados no envio para até 500 KB e 5 MB. Outros anexos até 20 MiB."
+            ? "PNG, JPG ou WebP de até 20 MB. Depois de otimizada, a imagem precisa ficar com até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px."
+            : "Imagem e PDF de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 500 KB (imagem) ou 5 MB (PDF). Outros anexos até 20 MiB."
         }
       >
         {input}

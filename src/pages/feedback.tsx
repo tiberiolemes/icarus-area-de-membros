@@ -100,7 +100,7 @@ function FeedbackForm({ pagePath }: { pagePath: string | null }) {
         </select>
       </Field>
       <Field label="Descrição"><textarea name="description" rows={5} required={!pending} maxLength={4000} /></Field>
-      <Field label="Print (opcional)" hint="PNG, JPG ou WebP de até 20 MB, otimizado no envio para até 5 MB. Confira se o print contém dados pessoais antes de enviar.">
+      <Field label="Print (opcional)" hint="PNG, JPG ou WebP de até 20 MB. Depois de otimizado, o print precisa ficar com até 5 MB. Confira se o print contém dados pessoais antes de enviar.">
         <input ref={fileInput} name="screenshot" type="file" accept="image/png,image/jpeg,image/webp" />
       </Field>
     </Form>

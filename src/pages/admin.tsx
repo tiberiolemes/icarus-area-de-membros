@@ -1332,7 +1332,9 @@ export function AdminMaterials() {
                 </select>
               </Field>
               <Field label="Tipo">
+                {/* A chave remonta o campo quando o envio grava o tipo real do arquivo (a imagem vira WebP). */}
                 <select
+                  key={text(editing ?? undefined, "file_type", "")}
                   name="file_type"
                   defaultValue={text(
                     editing ?? undefined,
@@ -1351,7 +1353,7 @@ export function AdminMaterials() {
             </FormHeadingTarget.Provider>
             {editing && (
               <>
-                <Upload kind="material" resourceId={editing.id} />
+                <Upload kind="material" resourceId={editing.id} onUploaded={(file) => setEditing({ ...editing, file_type: file.type })} />
                 <Archive entity="materials" row={editing} />
               </>
             )}

@@ -33,7 +33,10 @@ const jpeg = (size: number) => sized(new Uint8Array([255, 216, 255, 224]), size)
 const pdf = (size: number, body = "") => sized(ascii("%PDF-1.7\n" + body), size);
 let encoded: Blob | null;
 let sizes: Record<string, number> | null;
-const canvases: { width: number; height: number; quality: number }[] = [];
+let sizeOf: ((width: number, quality: number) => number) | null;
+let noWebp: boolean;
+const fills: string[] = [];
+const canvases: { width: number; height: number; quality: number; type: string }[] = [];
 const bitmap = vi.fn();
 
 beforeEach(() => {
@@ -47,13 +50,24 @@ beforeEach(() => {
   };
   encoded = null;
   sizes = null;
+  sizeOf = null;
+  noWebp = false;
+  fills.length = 0;
   canvases.length = 0;
   bitmap.mockReset().mockResolvedValue({ width: 1600, height: 900, close: vi.fn() });
   vi.stubGlobal("createImageBitmap", bitmap);
-  HTMLCanvasElement.prototype.getContext = vi.fn(() => ({ drawImage: vi.fn() })) as never;
-  HTMLCanvasElement.prototype.toBlob = vi.fn(function (this: HTMLCanvasElement, callback: BlobCallback, _type?: string, quality?: number) {
-    canvases.push({ width: this.width, height: this.height, quality: quality! });
-    callback(sizes ? new Blob([new Uint8Array(sizes[String(quality)])], { type: "image/webp" }) : encoded);
+  HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+    drawImage: vi.fn(),
+    fillRect: vi.fn(),
+    set fillStyle(color: string) { fills.push(color); },
+  })) as never;
+  HTMLCanvasElement.prototype.toBlob = vi.fn(function (this: HTMLCanvasElement, callback: BlobCallback, type = "image/png", quality?: number) {
+    // Canvas de 1 px: a sondagem de suporte a WebP.
+    if (this.width === 1 && this.height === 1) return callback(new Blob([], { type: noWebp ? "image/png" : "image/webp" }));
+    canvases.push({ width: this.width, height: this.height, quality: quality!, type });
+    const made = noWebp && type === "image/webp" ? "image/png" : type;
+    if (sizeOf) return callback(new Blob([new Uint8Array(sizeOf(this.width, quality!))], { type: made }));
+    callback(sizes ? new Blob([new Uint8Array(sizes[String(quality)])], { type: made }) : encoded);
   }) as never;
   qpdf.load.mockReset();
   qpdf.callMain.mockReset().mockReturnValue(0);
@@ -75,7 +89,8 @@ it("mantém o original quando o WebP fica maior", async () => {
   expect(await optimizeFile(original)).toBe(original);
 });
 
-it("mantém o original quando o navegador não gera WebP", async () => {
+it("mantém o original quando o navegador não gera WebP nem JPEG", async () => {
+  noWebp = true;
   encoded = new Blob([new Uint8Array(10)], { type: "image/png" });
   const original = new File([png(400 * 1024)], "capa.png", { type: "image/png" });
   expect(await optimizeFile(original)).toBe(original);
@@ -125,12 +140,43 @@ it("outros tipos passam direto", async () => {
   expect(await optimizeFile(original)).toBe(original);
 });
 
-it("reduz o lado maior a 2560 px mantendo a proporção", async () => {
+it("reduz pela área até 2560 × 2560 px, mantendo a proporção", async () => {
   bitmap.mockResolvedValue({ width: 4000, height: 3000, close: vi.fn() });
   encoded = new Blob([new Uint8Array(300 * 1024)], { type: "image/webp" });
   const result = await optimizeFile(new File([jpeg(6 * 1024 * 1024)], "foto.jpg", { type: "image/jpeg" }));
-  expect(canvases[0]).toMatchObject({ width: 2560, height: 1920 });
+  expect(canvases[0]).toMatchObject({ width: 2956, height: 2217 });
   expect(result.size).toBe(300 * 1024);
+});
+
+it("print alto de 1080 × 6000 não é reduzido, para o texto continuar legível", async () => {
+  bitmap.mockResolvedValue({ width: 1080, height: 6000, close: vi.fn() });
+  encoded = new Blob([new Uint8Array(300 * 1024)], { type: "image/webp" });
+  await optimizeFile(new File([png(3 * 1024 * 1024)], "rolagem.png", { type: "image/png" }), limits.screenshot);
+  expect(canvases[0]).toMatchObject({ width: 1080, height: 6000 });
+});
+
+it("desce para 1920 e 1600 px quando nenhuma qualidade cabe no tamanho anterior", async () => {
+  bitmap.mockResolvedValue({ width: 4032, height: 3024, close: vi.fn() });
+  sizeOf = (width) => (width > 2500 ? 600 : width > 2000 ? 520 : 400) * 1024;
+  const result = await optimizeFile(new File([jpeg(5 * 1024 * 1024)], "celular.jpg", { type: "image/jpeg" }));
+  expect([...new Set(canvases.map((c) => c.width))]).toEqual([2956, 2217, 1848]);
+  expect(result.size).toBe(400 * 1024);
+  expect(canvases.at(-1)?.quality).toBe(0.9);
+});
+
+it("sem codificador WebP (Safari), usa JPEG com fundo branco e extensão .jpg", async () => {
+  noWebp = true;
+  sizeOf = () => 200 * 1024;
+  const result = await optimizeFile(new File([png(2 * 1024 * 1024)], "capa.png", { type: "image/png" }));
+  expect([result.name, result.type, result.size]).toEqual(["capa.jpg", "image/jpeg", 200 * 1024]);
+  expect(canvases.every((c) => c.type === "image/jpeg")).toBe(true);
+  expect(fills).toContain("#fff");
+});
+
+it("corta o nome para caber em 180 caracteres com a extensão nova", async () => {
+  encoded = new Blob([new Uint8Array(1024)], { type: "image/webp" });
+  const result = await optimizeFile(new File([png(400 * 1024)], "a".repeat(176) + ".png", { type: "image/png" }));
+  expect(result.name).toBe("a".repeat(175) + ".webp");
 });
 
 it("baixa a qualidade em degraus até caber em 500 KB", async () => {
@@ -138,12 +184,14 @@ it("baixa a qualidade em degraus até caber em 500 KB", async () => {
   const result = await optimizeFile(new File([jpeg(3 * 1024 * 1024)], "foto.jpg", { type: "image/jpeg" }));
   expect(canvases.map((c) => c.quality)).toEqual([0.9, 0.85, 0.8]);
   expect(result.size).toBe(450 * 1024);
+  expect(fills).toEqual([]);
 });
 
-it("fica com o menor resultado quando nenhum degrau cabe", async () => {
+it("fica com o menor resultado quando nenhum degrau cabe (imagem já pequena não é ampliada nem repetida)", async () => {
   sizes = { "0.9": 900 * 1024, "0.85": 800 * 1024, "0.8": 700 * 1024 };
   const result = await optimizeFile(new File([jpeg(3 * 1024 * 1024)], "foto.jpg", { type: "image/jpeg" }));
   expect(result.size).toBe(700 * 1024);
+  expect(canvases).toHaveLength(3);
 });
 
 it("com o teto do print, para no primeiro degrau que cabe em 5 MB", async () => {
@@ -165,6 +213,8 @@ it("finalLimit aplica 500 KB à imagem e 5 MB ao PDF e ao print depois de otimiz
   const file = (size: number, name: string, type: string) => new File([new Uint8Array(size)], name, { type });
   expect(finalLimit(file(512000, "a.webp", "image/webp"))).toBeNull();
   expect(finalLimit(file(700 * 1024, "a.webp", "image/webp"))).toBe("Mesmo otimizada, a imagem ficou com 700 KB. O limite é 500 KB.");
+  expect(finalLimit(file(512001, "a.webp", "image/webp"))).toBe("Mesmo otimizada, a imagem ficou com 501 KB. O limite é 500 KB.");
+  expect(finalLimit(file(5242881, "a.pdf", "application/pdf"))).toBe("Mesmo otimizado, o PDF ficou com 5,1 MB. O limite é 5 MB.");
   expect(finalLimit(file(5242880, "a.pdf", "application/pdf"))).toBeNull();
   expect(finalLimit(file(6.2 * 1024 * 1024, "a.pdf", "application/pdf"))).toBe("Mesmo otimizado, o PDF ficou com 6,2 MB. O limite é 5 MB.");
   expect(finalLimit(file(4 * 1024 * 1024, "a.webp", "image/webp"), true)).toBeNull();

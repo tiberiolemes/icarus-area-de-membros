@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { client, edge, errorMessage, uploadStorage } from "./api";
-import { optimizeFile, overLimit } from "./optimize";
+import { finalLimit, limits, optimizeFile, overLimit } from "./optimize";
 import { Field, Notice, Unsaved } from "./ui";
 
 // O recorte reencoda em JPEG, então só aqui dá para conferir o conteúdo real do arquivo escolhido.
@@ -33,7 +33,7 @@ export function Upload({
     | "ticket-attachment"
     | "avatar";
   resourceId: string;
-  onUploaded?: () => void;
+  onUploaded?: (file: File) => void;
   onBusyChange?: (busy: boolean) => void;
 }) {
   const [state, setState] = useState(""),
@@ -92,11 +92,18 @@ export function Upload({
     controller.current = new AbortController();
     const before = selected.size;
     try {
-      // Material de imagem é baixado pelo aluno: segue no formato que o admin escolheu.
-      if (kind !== "avatar" && kind !== "lesson" && (kind !== "material" || selected.type === "application/pdf")) {
+      // Só o arquivo otimizado sobe, e é nele que o limite de 500 KB ou 5 MB é conferido.
+      if (kind !== "avatar" && kind !== "lesson") {
         setState("Otimizando arquivo…");
         selected = await optimizeFile(selected);
         if (controller.current.signal.aborted) throw new Error("Envio cancelado.");
+        const refused = finalLimit(selected);
+        if (refused) {
+          // Tira o arquivo do campo: clicar de novo repetiria a mesma recusa.
+          if (file.current) file.current.value = "";
+          setFileName("");
+          throw new Error(refused);
+        }
       }
       setState("Enviando arquivo…");
       if (kind === "avatar" && cropCanvas.current) {
@@ -173,7 +180,7 @@ export function Upload({
       if (file.current) file.current.value = "";
       setFileName("");
       setPreview("");
-      onUploaded?.();
+      onUploaded?.(selected);
     } catch (err) {
       setState("");
       setError(
@@ -223,12 +230,12 @@ export function Upload({
         );
         // Outra escolha chegou durante a leitura: ela decide a prévia.
         if (input.files?.[0] !== selected) return;
-        const tooBig = selected.size > 500 * 1024;
+        const tooBig = selected.size > limits.original;
         if (tooBig || !avatarSignatures[selected.type]?.every((byte, i) => head[i] === byte)) {
           setError(
             tooBig
-              ? "Esta foto passa de 500 KB. Escolha uma menor, em JPG ou PNG."
-              : "Escolha uma foto JPG ou PNG de até 500 KB.",
+              ? "Esta foto passa de 20 MB. Escolha uma menor, em JPG ou PNG."
+              : "Escolha uma foto JPG ou PNG de até 20 MB.",
           );
           input.value = "";
           setFileName("");
@@ -255,14 +262,14 @@ export function Upload({
         }
         hint={
           kind === "avatar"
-            ? "JPG ou PNG de até 500 KB."
+            ? "JPG ou PNG de até 20 MB."
             : kind === "lesson"
             ? "MP4 de até 500 MiB no armazenamento da plataforma."
             : kind === "material"
-            ? "PDF até 5 MB, otimizado automaticamente. Imagem até 500 KB. ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual."
+            ? "PDF e imagem de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual."
             : kind === "course-cover"
-            ? "PNG, JPG ou WebP de até 500 KB, otimizado automaticamente. O ideal é 1600\u00a0×\u00a0900\u00a0px."
-            : "Imagem PNG, JPG ou WebP até 500 KB e PDF até 5 MB, otimizados automaticamente. Outros anexos até 20 MiB."
+            ? "PNG, JPG ou WebP de até 20 MB. Depois de otimizada, a imagem precisa ficar com até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px."
+            : "Imagem e PDF de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 500 KB (imagem) ou 5 MB (PDF). Outros anexos até 20 MiB."
         }
       >
         {input}

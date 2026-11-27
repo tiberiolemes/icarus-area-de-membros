@@ -471,7 +471,7 @@ export const memberArticles: HelpArticle[] = [
         title: "Incluir uma imagem",
         intro: "A imagem entra depois do texto. Assim que você envia a publicação, o campo **Enviar arquivo** aparece logo abaixo do formulário.",
         steps: [
-          "Clique em **Escolher arquivo** e selecione um PNG, JPG ou WebP de até 500 KB. A imagem é otimizada automaticamente no envio.",
+          "Clique em **Escolher arquivo** e selecione um PNG, JPG ou WebP de até 20 MB. A imagem é otimizada no envio e precisa ficar com até 500 KB.",
           "Clique em **Enviar arquivo**.",
         ],
         note: "Tenha a imagem à mão antes de enviar o texto, porque o campo só aparece nesse momento.",
@@ -698,7 +698,7 @@ export const memberArticles: HelpArticle[] = [
         title: "Trocar a foto",
         steps: [
           "Na aba **Meu perfil**, clique em **Alterar foto**.",
-          "Clique em **Escolher arquivo** e selecione uma imagem JPG ou PNG de até 500 KB.",
+          "Clique em **Escolher arquivo** e selecione uma imagem JPG ou PNG de até 20 MB.",
           "Arraste o controle **Posição do recorte** até o enquadramento ficar bom.",
           "Clique em **Salvar foto**.",
         ],
@@ -742,7 +742,7 @@ export const memberArticles: HelpArticle[] = [
       },
     ],
     trouble: [
-      ["A foto foi recusada", "A imagem passa de 500 KB ou não é JPG nem PNG. O limite vale para o arquivo original, antes do recorte. Diminua a imagem em um editor de fotos, ou escolha outra, e envie de novo."],
+      ["A foto foi recusada", "A imagem passa de 20 MB ou não é JPG nem PNG. Escolha outra foto, ou salve esta em JPG, e envie de novo."],
       ["Mudei o e-mail e continua o antigo", "A troca só acontece depois que você abre os links de confirmação enviados aos endereços envolvidos."],
     ],
     related: ["verificacao-em-duas-etapas", "notificacoes", "privacidade"],
@@ -892,7 +892,7 @@ export const memberArticles: HelpArticle[] = [
           "Em **Anexar arquivo à conversa**, clique em **Escolher arquivo**.",
           "Clique em **Enviar arquivo**.",
         ],
-        note: "São aceitos PDF, ZIP, TXT, PNG, JPG, WebP, MP4 e MP3. Imagens de até 500 KB, PDF de até 5 MB e os demais arquivos de até 20 MB. Imagens e PDFs são otimizados automaticamente no envio.",
+        note: "São aceitos PDF, ZIP, TXT, PNG, JPG, WebP, MP4 e MP3. Imagens e PDFs de até 20 MB são otimizados no envio e precisam ficar com até 500 KB (imagem) ou 5 MB (PDF). Os demais arquivos vão até 20 MB.",
       },
       {
         title: "Acompanhar e responder",
@@ -938,7 +938,7 @@ export const memberArticles: HelpArticle[] = [
           "Clique em **Enviar feedback**, o ícone de balão com um sinal de mais no topo da tela.",
           "Em **Tipo**, escolha **Sugestão**, **Bug/Problema** ou **Outro**.",
           "Conte em **Descrição** o que você pensou ou o que aconteceu.",
-          "Se ajudar, anexe uma imagem em **Print (opcional)**. Vale PNG, JPG ou WebP de até 5 MB. A imagem é otimizada automaticamente no envio.",
+          "Se ajudar, anexe uma imagem em **Print (opcional)**. Vale PNG, JPG ou WebP de até 20 MB. A imagem é otimizada no envio e precisa ficar com até 5 MB.",
           "Clique em **Enviar feedback**.",
         ],
         warn: "Antes de anexar um print, confira se ele não mostra senha, dado pessoal ou informação de pagamento.",

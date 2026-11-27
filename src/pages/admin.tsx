@@ -1160,7 +1160,7 @@ function StructureForm({
 }
 const materialTypes: Record<string, string> = {
   "application/pdf": "PDF", "application/zip": "ZIP", "video/mp4": "Vídeo MP4",
-  "image/png": "Imagem PNG", "image/jpeg": "Imagem JPEG", "text/plain": "Texto", "audio/mpeg": "Áudio MP3",
+  "image/png": "Imagem PNG", "image/jpeg": "Imagem JPEG", "image/webp": "Imagem WebP", "text/plain": "Texto", "audio/mpeg": "Áudio MP3",
 };
 const fileNumber = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
 function materialSize(size: number) {
@@ -1332,7 +1332,9 @@ export function AdminMaterials() {
                 </select>
               </Field>
               <Field label="Tipo">
+                {/* A chave remonta o campo quando o envio grava o tipo real do arquivo (a imagem vira WebP). */}
                 <select
+                  key={text(editing ?? undefined, "file_type", "")}
                   name="file_type"
                   defaultValue={text(
                     editing ?? undefined,
@@ -1351,7 +1353,7 @@ export function AdminMaterials() {
             </FormHeadingTarget.Provider>
             {editing && (
               <>
-                <Upload kind="material" resourceId={editing.id} />
+                <Upload kind="material" resourceId={editing.id} onUploaded={(file) => setEditing({ ...editing, file_type: file.type })} />
                 <Archive entity="materials" row={editing} />
               </>
             )}

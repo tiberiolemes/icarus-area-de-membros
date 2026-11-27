@@ -57,3 +57,14 @@ Toda imagem e todo PDF enviados pela plataforma chegam ao Storage no menor taman
 - Teste do banco para os novos tetos em `supabase/tests`.
 - Navegador real: enviar capa PNG e PDF de material, conferir tamanho antes e depois no Storage e a capa e o PDF abrindo normalmente, em 360 px e nos dois temas.
 - Ajuda e tour das telas de envio atualizados com os novos limites.
+
+## Revisão de 27/nov/2026: o limite vale depois da otimização
+
+Tibério: "Os 500 KB é depois da otimização e o servidor não salva o arquivo grande, só o otimizado". Aprovado em seguida:
+
+- A tela aceita o original até 20 MB (teto que a Edge já recebe no multipart), otimiza e só então confere o limite: imagem 500 KB, PDF 5 MB, print 5 MB. Acima disso, recusa dizendo o tamanho obtido ("Mesmo otimizada, a imagem ficou com X KB. O limite é 500 KB.").
+- Imagem: lado maior reduzido a até 2560 px; WebP em 0,9, e, se passar do limite, 0,85 e 0,8. Usa o menor resultado.
+- PDF segue sem perda. Se mesmo otimizado passar de 5 MB, a tela recusa.
+- Imagem de material também é otimizada; o tipo "Imagem WebP" entra na lista de tipos de material.
+- Foto de perfil: original até 20 MB; o recorte de 512 px em JPEG é o que sobe.
+- Servidor e banco não mudam: já recusam o que chega acima de 500 KB e 5 MB. Entra na 2.12.0, ainda sem Release.

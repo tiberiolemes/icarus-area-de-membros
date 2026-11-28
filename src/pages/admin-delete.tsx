@@ -42,10 +42,12 @@ function summary(entity: DeletableEntity, p: Preview) {
 }
 
 export function Archive({ entity, row }: { entity: string; row: Row }) {
-  // O editor de materiais guarda uma cópia da linha; o estado local acompanha o que o servidor confirmou.
-  const [archived, setArchived] = useState(row.status === "archived"),
+  // O editor de materiais guarda uma cópia da linha: o que o servidor confirmou vale até chegar outra linha ou outro estado.
+  const current = `${row.id}:${String(row.status)}`,
+    [confirmed, setConfirmed] = useState<{ current: string; archived: boolean }>(),
     [open, setOpen] = useState(false),
-    [done, setDone] = useState("");
+    [done, setDone] = useState<{ id: string; text: string }>();
+  const archived = confirmed?.current === current ? confirmed.archived : row.status === "archived";
   const explanation = archived
     ? "O estado anterior será restaurado."
     : "O conteúdo deixa de ser publicado; histórico, progresso e certificados são preservados.";
@@ -67,15 +69,15 @@ export function Archive({ entity, row }: { entity: string; row: Row }) {
           onSave={async () => {
             await rpc("app_admin_archive", { p_entity: entity, p_id: row.id, p_archived: !archived });
             await cache.invalidateQueries({ queryKey: ["app_admin_list"] });
-            setArchived(!archived);
-            setDone(archived ? "Registro restaurado." : "Registro arquivado.");
+            setConfirmed({ current, archived: !archived });
+            setDone({ id: row.id, text: archived ? "Registro restaurado." : "Registro arquivado." });
             setOpen(false);
           }}
         >
           {null}
         </Form>
       </Modal>
-      {done && <p role="status">{done}</p>}
+      {done?.id === row.id && <p role="status">{done.text}</p>}
     </details>
   );
 }

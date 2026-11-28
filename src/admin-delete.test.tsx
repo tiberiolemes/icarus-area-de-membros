@@ -169,3 +169,22 @@ it("arquivar confirma no modal e chama app_admin_archive sem token", async () =>
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(screen.getByText("Restaurar registro", { selector: "summary" })).toBeInTheDocument();
 });
+
+it("arquivar acompanha a linha recebida ao trocar de registro ou de estado", async () => {
+  const { rerender } = render(<QueryClientProvider client={cache}><Archive entity="courses" row={{ id: "um", status: "archived" }} /></QueryClientProvider>);
+  expect(screen.getByText("Restaurar registro", { selector: "summary" })).toBeInTheDocument();
+  rerender(<QueryClientProvider client={cache}><Archive entity="courses" row={{ id: "dois", status: "published" }} /></QueryClientProvider>);
+  expect(screen.getByText("Arquivar registro", { selector: "summary" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Arquivar" }));
+  fireEvent.click(within(await screen.findByRole("dialog", { name: "Arquivar este registro?" })).getByRole("button", { name: "Confirmar arquivamento" }));
+  expect(await screen.findByText("Registro arquivado.")).toBeInTheDocument();
+  expect(calls.filter(({ name }) => name === "app_admin_archive").map(({ body }) => body))
+    .toEqual([{ p_entity: "courses", p_id: "dois", p_archived: true }]);
+  // A lista recarregada confirma o arquivamento: a mensagem fica e a ação segue sendo restaurar.
+  rerender(<QueryClientProvider client={cache}><Archive entity="courses" row={{ id: "dois", status: "archived" }} /></QueryClientProvider>);
+  expect(screen.getByText("Restaurar registro", { selector: "summary" })).toBeInTheDocument();
+  expect(screen.getByText("Registro arquivado.")).toBeInTheDocument();
+  rerender(<QueryClientProvider client={cache}><Archive entity="courses" row={{ id: "tres", status: "published" }} /></QueryClientProvider>);
+  expect(screen.getByText("Arquivar registro", { selector: "summary" })).toBeInTheDocument();
+  expect(screen.queryByText("Registro arquivado.")).toBeNull();
+});

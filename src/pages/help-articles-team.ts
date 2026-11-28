@@ -249,7 +249,7 @@ export const teamArticles: HelpArticle[] = [
           "**Obrigatória para o certificado** coloca a aula na lista exigida para o certificado. Ela já vem marcada em aulas novas.",
           "**Seção bônus**, no editor da seção, tira as aulas dela da exigência do certificado. Para ter aulas bônus, crie uma seção só para elas.",
         ],
-        note: "Para anexar um arquivo a uma aula, cadastre o material em [Publicar materiais para download](/ajuda/publicar-materiais) e escolha a **Aula vinculada**.",
+        note: "Para anexar um arquivo a uma aula, cadastre o material em [Publicar materiais para download](/ajuda/publicar-materiais) e marque a aula em **Aulas vinculadas**.",
       },
       {
         title: "Mudar a ordem",
@@ -540,7 +540,7 @@ export const teamArticles: HelpArticle[] = [
         steps: [
           "Clique em **Novo material**.",
           "Preencha **Nome** e **Descrição**.",
-          "Escolha a **Pasta** e o **Tipo**. Se o arquivo pertence a uma aula específica, escolha a **Aula vinculada**.",
+          "Escolha a **Pasta** e o **Tipo**. Se o arquivo é de uma ou mais aulas, marque cada uma em **Aulas vinculadas**.",
           "Escolha a **Regra de acesso** e deixe o **Estado** em **Rascunho**.",
           "Clique em **Salvar material**.",
           "Em **Enviar arquivo**, arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**. O envio começa assim que você escolhe o arquivo.",
@@ -553,7 +553,21 @@ export const teamArticles: HelpArticle[] = [
           "Na lista **Arquivos**, clique em **Editar material**.",
           "Mude o **Estado** para **Publicado** e clique em **Salvar material**.",
         ],
-        warn: "Feche o editor antes de publicar, como no passo anterior. Depois do primeiro salvamento, o formulário volta a mostrar os valores padrão. Os dados foram gravados. Não salve de novo sem fechar o editor, porque o segundo salvamento pode trocar a pasta, o tipo e a regra de acesso pelos valores padrão.",
+      },
+      {
+        title: "Vincular o material a várias aulas",
+        intro: "Um material pode ficar em até 200 aulas. Elas aparecem agrupadas por curso e módulo, na ordem do curso.",
+        steps: [
+          "Na lista **Arquivos**, clique em **Editar material**.",
+          "Em **Aulas vinculadas**, marque as aulas que devem mostrar o material e desmarque as que não devem mais.",
+          "Para achar uma aula numa lista longa, digite em **Filtrar aulas** parte do nome da aula, do módulo ou do curso.",
+          "Confira a contagem de aulas selecionadas logo abaixo do filtro e clique em **Salvar material**.",
+        ],
+        list: [
+          "O filtro só esconde aulas da lista. A aula marcada continua vinculada mesmo quando o filtro a esconde.",
+          "Aula arquivada só aparece se já estiver vinculada, com o selo **Arquivado**. Desmarque para tirar o material dela.",
+          "Na lista **Arquivos**, o material vinculado mostra em quantas aulas está, como **Em 2 aulas**.",
+        ],
       },
       {
         title: "Limites de arquivo",
@@ -572,13 +586,14 @@ export const teamArticles: HelpArticle[] = [
           "O material está em **Publicado** e o arquivo foi enviado.",
           "A pasta e as pastas acima dela estão em **Publicado**.",
           "O plano do aluno atende à **Regra de acesso** do material e de cada pasta do caminho.",
-          "Se houver **Aula vinculada**, o aluno tem acesso a essa aula.",
+          "Se o material estiver vinculado a aulas, o aluno tem acesso a pelo menos uma delas.",
         ],
         warn: "Um material publicado aparece na lista mesmo sem arquivo ou sem o plano certo. Nesses casos, o aluno vê o nome, mas não consegue baixar.",
       },
     ],
     trouble: [
-      ["A aula vinculada não pode ser trocada", "O vínculo com a aula e a pasta superior são definidos na criação e não mudam depois. Crie um material novo se precisar de outro vínculo."],
+      ["Aparece o aviso para vincular no máximo 200 aulas", "Um material fica em até 200 aulas. Desmarque as aulas que não precisam dele ou cadastre um segundo material para as demais."],
+      ["A pasta superior de uma pasta não pode ser trocada", "A pasta superior é definida na criação da pasta e não muda depois. Crie a pasta de novo no lugar certo e mova os materiais para ela."],
       ["Aparece o aviso de prazo do upload expirado", "O envio passou de 15 minutos, e o arquivo não foi associado ao material. Reduza o arquivo e envie de novo."],
     ],
     related: ["criar-curso", "arquivar-conteudo"],

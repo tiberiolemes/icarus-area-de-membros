@@ -96,9 +96,10 @@ import { moduleLabel, modules, readModules, type ModuleKey } from "../modules";
 import { Upload } from "../upload";
 import "./admin-commercial.css";
 import { AdminSurface } from "./admin-surface";
+import { materialSize, save, text, useAll, type Row } from "./admin-data";
+import { LessonLinks } from "./admin-material-lessons";
 import "../admin-content.css";
 
-type Row = { id: string; [key: string]: unknown };
 type MemberDetail = {
   profile: Row;
   subscriptions: Page<Row>;
@@ -106,8 +107,6 @@ type MemberDetail = {
   orders: Page<Row>;
   tickets: Page<Row>;
 };
-const text = (row: Row | undefined, key: string, fallback = "") =>
-  String(row?.[key] ?? fallback);
 const memberName = (member: Row) =>
   text(member, "full_name").trim() || `Membro sem nome · ${member.id.slice(0, 8)}`;
 function focusEditor(node: HTMLElement | null) {
@@ -125,43 +124,6 @@ function focusEditor(node: HTMLElement | null) {
 }
 const num = (data: FormData, key: string) => Number(value(data, key) || 0);
 const check = (data: FormData, key: string) => data.has(key);
-async function save(
-  entity: string,
-  id: string | null,
-  data: Record<string, unknown>,
-) {
-  const result = await rpc<{ id: string }>("app_admin_save", {
-    p_entity: entity,
-    p_id: id,
-    p_data: data,
-  });
-  await cache.invalidateQueries({ queryKey: ["app_admin_list"] });
-  if (entity === "plans") await cache.invalidateQueries({ queryKey: ["app_admin_commercial"] });
-  return result;
-}
-function useAll(entity: string) {
-  return useQuery({
-    queryKey: ["app_admin_list", entity, "all"],
-    queryFn: async () => {
-      const first = await rpc<Page<Row>>("app_admin_list", {
-        p_entity: entity,
-        p_page: 1,
-        p_query: "",
-      });
-      const items = [...first.items];
-      for (let page = 2; items.length < first.total; page++) {
-        const next = await rpc<Page<Row>>("app_admin_list", {
-          p_entity: entity,
-          p_page: page,
-          p_query: "",
-        });
-        if (!next.items.length) break;
-        items.push(...next.items);
-      }
-      return items;
-    },
-  });
-}
 function orderedSettings(rows: Row[] | undefined) {
   return [...(rows ?? [])].sort((a, b) => Number(a.order_index) - Number(b.order_index) || a.id.localeCompare(b.id));
 }
@@ -1155,18 +1117,27 @@ const materialTypes: Record<string, string> = {
   "application/pdf": "PDF", "application/zip": "ZIP", "video/mp4": "Vídeo MP4",
   "image/png": "Imagem PNG", "image/jpeg": "Imagem JPEG", "image/webp": "Imagem WebP", "text/plain": "Texto", "audio/mpeg": "Áudio MP3",
 };
-const fileNumber = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
-function materialSize(size: number) {
-  if (size >= 1_048_576) return `${fileNumber.format(size / 1_048_576)} MB`;
-  if (size >= 1024) return `${fileNumber.format(size / 1024)} KB`;
-  return `${fileNumber.format(size)} B`;
+
+const inLessons = (row: Row) => {
+  const count = (row.lesson_ids as string[] | undefined)?.length ?? 0;
+  return count ? ` · Em ${count} ${count === 1 ? "aula" : "aulas"}` : "";
+};
+/** Abre o editor pelo endereço (?editar=<id>), destino de "Editar em Materiais". */
+function MaterialFromUrl({ id, open }: { id: string; open: (row: Row) => void }) {
+  const row = useAll("materials").data?.find((item) => item.id === id);
+  // Só a chegada da linha dispara: open muda a cada render de quem chama.
+  useEffect(() => {
+    if (row) open(row);
+  }, [row]);
+  return null;
 }
 
 export function AdminMaterials() {
   const folders = useAll("material_folders"),
-    lessons = useAll("lessons"),
+    [params, setParams] = useSearchParams(),
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
     [folder, setFolder] = useState<Row | null | undefined>(undefined);
+  const target = params.get("editar");
   const [folderSubmit, setFolderSubmit] = useState<HTMLDivElement | null>(null);
   const [materialSubmit, setMaterialSubmit] = useState<HTMLDivElement | null>(null);
   return (
@@ -1191,7 +1162,7 @@ export function AdminMaterials() {
               <h3>{text(item, "name")}</h3>
               <p>
                 {statusName(text(item, "status"))} · {materialTypes[text(item, "file_type")] ?? "Arquivo"} ·{" "}
-                {materialSize(Number(item.size_bytes))}
+                {materialSize(Number(item.size_bytes))}{inLessons(item)}
               </p>
             </div>
             <button onClick={() => setEditing(item)}>Editar material</button>
@@ -1257,6 +1228,17 @@ export function AdminMaterials() {
           </div>
         </section>
       )}
+      {target && (
+        <MaterialFromUrl id={target} open={(row) => {
+          setEditing(row);
+          // Sem o parâmetro, fechar o editor não o reabre quando a lista recarrega.
+          setParams((current) => {
+            const next = new URLSearchParams(current);
+            next.delete("editar");
+            return next;
+          }, { replace: true });
+        }} />
+      )}
       {editing !== undefined && (
         <section className="settings-panel">
           <div className="reading inline-editor" ref={focusEditor} key={editing?.id ?? "new-material"}>
@@ -1267,22 +1249,18 @@ export function AdminMaterials() {
               label="Salvar material"
               secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
               onSave={async (data) => {
-                const result = await save("materials", editing?.id ?? null, {
+                const saved = {
                   name: value(data, "name"),
                   description: value(data, "description"),
                   folder_id: nullable(data, "folder_id"),
-                  lesson_id: nullable(data, "lesson_id"),
+                  lesson_ids: data.getAll("lesson_ids").map(String),
                   file_type: value(data, "file_type"),
                   status: value(data, "status"),
                   ...accessData(data),
-                });
-                setEditing({
-                  ...editing,
-                  id: result.id,
-                  name: value(data, "name"),
-                  description: value(data, "description"),
-                  status: value(data, "status"),
-                });
+                };
+                const result = await save("materials", editing?.id ?? null, saved);
+                // O material novo remonta o editor com a chave do id; sem tudo o que foi salvo, os campos voltariam ao padrão.
+                setEditing({ ...editing, id: result.id, ...saved });
               }}
             >
               <Field label="Nome">
@@ -1311,19 +1289,7 @@ export function AdminMaterials() {
                   ))}
                 </select>
               </Field>
-              <Field label="Aula vinculada">
-                <select
-                  name="lesson_id"
-                  defaultValue={text(editing ?? undefined, "lesson_id")}
-                >
-                  <option value="">Sem vínculo</option>
-                  {lessons.data?.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {text(l, "title")}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+              <LessonLinks selected={(editing?.lesson_ids as string[] | undefined) ?? []} />
               <Field label="Tipo">
                 {/* A chave remonta o campo quando o envio grava o tipo real do arquivo (a imagem vira WebP). */}
                 <select

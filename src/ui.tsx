@@ -147,7 +147,7 @@ export function QueryState({
     return (
       <div className="query-error">
         <Notice error>{errorMessage(query.error)}</Notice>
-        <button onClick={() => query.refetch()}>Tentar novamente</button>
+        <button type="button" onClick={() => query.refetch()}>Tentar novamente</button>
       </div>
     );
   return <>{children}</>;

@@ -1,0 +1,49 @@
+/* Aulas vinculadas do material: lista longa rola dentro da caixa para o resto do formulário continuar à vista. */
+.lesson-links {
+  margin-block: var(--stitch-space-md);
+}
+
+.lesson-links [hidden] {
+  display: none;
+}
+
+/* Título do grupo acima do rótulo do filtro, para os dois não parecerem campos vizinhos. */
+.lesson-links > legend {
+  color: var(--stitch-text-heading);
+  font-weight: 600;
+}
+
+.lesson-links-count {
+  margin-block: 0 var(--stitch-space-sm);
+  color: var(--stitch-text-secondary);
+}
+
+.lesson-links-list {
+  max-block-size: min(24rem, 60dvh);
+  overflow-y: auto;
+  /* Folga para o anel de foco (2 px afastado 3 px) não ser cortado pela rolagem. */
+  padding: var(--stitch-space-sm) var(--stitch-space-md);
+  border: var(--stitch-border-width) solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-base);
+  background: var(--stitch-surface-panel);
+}
+
+.lesson-links-list fieldset + fieldset {
+  margin-block-start: var(--stitch-space-sm);
+}
+
+.lesson-links-list legend {
+  margin: 0;
+  padding-block-start: var(--stitch-space-sm);
+  color: var(--stitch-text-heading);
+  font-weight: 600;
+}
+
+.lesson-links-list fieldset fieldset legend {
+  color: var(--stitch-text-secondary);
+  font-weight: 500;
+}
+
+.lesson-links-list .check {
+  margin: 0;
+}

@@ -260,6 +260,7 @@ export type Profile = {
   suspended: boolean;
   onboarding_complete: boolean;
   auto_advance?: boolean;
+  gravatar_checked_at?: string | null;
 };
 export type Plan = {
   id: string;

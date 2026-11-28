@@ -1018,6 +1018,7 @@ RLS ativada.
 | `avatar_id` | `uuid` | Sim | — |
 | `password_setup_required` | `boolean` | Não | `false` |
 | `auto_advance` | `boolean` | Não | `false` |
+| `gravatar_checked_at` | `timestamp with time zone` | Sim | — |
 
 **Chaves e restrições**
 

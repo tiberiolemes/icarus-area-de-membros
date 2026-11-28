@@ -1056,3 +1056,61 @@ Deno.test("entidade fora da lista é recusada antes da RPC", async () => {
   }
   assert(!requests.some((r) => r.url.includes("app_admin_delete") || r.url.includes("/storage/")));
 });
+const gravatarUrl = "https://gravatar.com/avatar/31b21a3f2c939fc175200c7c917baaa96d0cf27843d5eb11bc3cfd19777eee03?s=160&d=404";
+const gravatarPng = (size = 64) => { const bytes = new Uint8Array(size); bytes.set([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13]); return bytes; };
+function gravatar(photo: (init: RequestInit) => Response | Promise<Response>, check = true) {
+  return deps((url, init) => url.pathname.endsWith("app_gravatar_context") ? response({ check, email: check ? " Membro@Demo.Icarus.Invalid " : null })
+    : url.hostname === "gravatar.com" ? photo(init)
+    : url.pathname.endsWith("app_upload_access") ? response({ id: other, bucket: "icarus-private", path: `avatar/${id}/${other}.png` })
+    : url.pathname.includes("/storage/v1/object/icarus-private/") ? response({ Key: "icarus-private/avatar" })
+    : url.pathname.endsWith("app_gravatar_done") ? response({ avatar_id: JSON.parse(String(init.body)).p_upload_id })
+    : undefined);
+}
+const askGravatar = (d: Dependencies) => upload(d)(request({ action: "gravatar" }));
+Deno.test("gravatar guarda a foto de 160 px de quem não tem avatar", async () => {
+  let lookup: RequestInit = {};
+  const photo = gravatarPng();
+  const { d, requests } = gravatar((init) => { lookup = init; return new Response(photo, { headers: { "content-type": "image/png" } }); });
+  const result = await askGravatar(d);
+  equal(result.status, 200); equal(await result.json(), { avatar: true });
+  equal(requests.filter((r) => new URL(r.url).hostname === "gravatar.com").map((r) => r.url), [gravatarUrl]);
+  equal(lookup.redirect, "error"); assert(lookup.signal instanceof AbortSignal, "tempo limite");
+  equal(requests.find((r) => r.url.endsWith("app_upload_access"))?.body, { p_actor_id: id, p_kind: "avatar", p_resource_id: id, p_file_name: "gravatar.png", p_content_type: "image/png", p_size_bytes: photo.length });
+  assert(requests.some((r) => r.method === "POST" && r.url.includes(`/storage/v1/object/icarus-private/avatar/${id}/${other}.png`)), "foto guardada no Storage");
+  equal(requests.find((r) => r.url.endsWith("app_gravatar_done"))?.body, { p_actor_id: id, p_upload_id: other });
+  assert(!requests.some((r) => r.url.endsWith("app_upload_finalize")), "a finalização fica dentro de app_gravatar_done");
+});
+Deno.test("404 do Gravatar marca como conferido", async () => {
+  const { d, requests } = gravatar(() => new Response("", { status: 404 }));
+  const result = await askGravatar(d);
+  equal(await result.json(), { avatar: false });
+  equal(requests.find((r) => r.url.endsWith("app_gravatar_done"))?.body, { p_actor_id: id, p_upload_id: null });
+  assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")));
+});
+Deno.test("erro de rede não marca e responde avatar false", async () => {
+  for (const photo of [() => { throw new TypeError("rede indisponível"); }, () => new Response("", { status: 503 })]) {
+    const { d, requests } = gravatar(photo);
+    const result = await askGravatar(d);
+    equal(result.status, 200); equal(await result.json(), { avatar: false });
+    assert(!requests.some((r) => r.url.includes("app_gravatar_done") || r.url.includes("app_upload_access") || r.url.includes("/storage/")));
+  }
+});
+Deno.test("quem já tem foto não consulta o Gravatar", async () => {
+  const { d, requests } = gravatar(() => { throw Error("não devia consultar"); }, false);
+  equal(await (await askGravatar(d)).json(), { avatar: false });
+  equal(requests.find((r) => r.url.endsWith("app_gravatar_context"))?.body, { p_actor_id: id });
+  assert(!requests.some((r) => new URL(r.url).hostname === "gravatar.com" || r.url.includes("app_gravatar_done")));
+});
+Deno.test("arquivo acima de 100 KB ou que não é imagem é descartado", async () => {
+  for (const photo of [
+    () => new Response(gravatarPng(100 * 1024 + 1), { headers: { "content-type": "image/png" } }),
+    () => new Response("<html>não é foto</html>", { headers: { "content-type": "text/html" } }),
+    () => new Response(new TextEncoder().encode("não é png"), { headers: { "content-type": "image/png" } }),
+    () => new Response(new TextEncoder().encode("GIF89a"), { headers: { "content-type": "image/gif" } }),
+  ]) {
+    const { d, requests } = gravatar(photo);
+    equal(await (await askGravatar(d)).json(), { avatar: false });
+    assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")), "nada guardado");
+    equal(requests.find((r) => r.url.endsWith("app_gravatar_done"))?.body, { p_actor_id: id, p_upload_id: null });
+  }
+});

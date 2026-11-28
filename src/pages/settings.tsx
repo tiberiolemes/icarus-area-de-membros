@@ -17,6 +17,7 @@ import {
 } from "../ui";
 import { Upload } from "../upload";
 import { PrivateImage } from "../media";
+import { FallbackAvatar } from "../avatar-fallback";
 import { installmentOffer } from "../plan-price";
 import { CompanyFields, companyData, companyKeys } from "./access";
 import type { OnboardingQuestion } from "./access";
@@ -213,7 +214,7 @@ export function Settings() {
                   />
                 ) : (
                   <span className="student-account-avatar" aria-hidden="true">
-                    <UserRound size={28} />
+                    <FallbackAvatar seed={p.id} size={80} />
                   </span>
                 )}
                 <div>

@@ -713,6 +713,16 @@ export const memberArticles: HelpArticle[] = [
           "Arraste o controle **Posição do recorte** até o enquadramento ficar bom.",
           "Clique em **Salvar foto**.",
         ],
+        note: "A foto enviada por você sempre vale mais que qualquer outra e troca a do Gravatar, se houver.",
+      },
+      {
+        title: "De onde vem a imagem do seu perfil",
+        intro: "A imagem aparece no topo, no seu perfil e nas suas publicações da comunidade.",
+        list: [
+          "Se você enviou uma foto, é ela que aparece.",
+          "Sem foto enviada, na primeira entrada a plataforma procura uma foto ligada ao seu e-mail no Gravatar. Se encontrar, guarda uma cópia e passa a mostrar essa foto.",
+          "Sem foto nenhuma, aparece uma imagem gerada em preto, cinza e branco. Ela é sempre a mesma para a sua conta.",
+        ],
       },
       {
         title: "Escolher tema claro ou escuro",
@@ -880,6 +890,15 @@ export const memberArticles: HelpArticle[] = [
           "Clique em **Enviar solicitação**.",
         ],
         warn: "O pedido não apaga a conta na hora. A equipe analisa antes, porque alguns registros precisam ser mantidos por obrigação legal.",
+      },
+      {
+        title: "Foto do Gravatar",
+        intro: "Quem ainda não tem foto recebe uma busca no Gravatar, o serviço de fotos de perfil da Automattic, na primeira entrada.",
+        list: [
+          "A plataforma envia ao Gravatar só um código calculado a partir do seu e-mail, e não o e-mail em si.",
+          "A consulta é feita pelo servidor da plataforma. Quem vê a sua foto não acessa o Gravatar.",
+          "Se houver foto, uma cópia fica guardada na plataforma, como uma foto que você enviasse. Para trocar, envie outra em **Configurações**, aba **Meu perfil**.",
+        ],
       },
       {
         title: "Ler a política de privacidade",

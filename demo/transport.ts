@@ -639,6 +639,8 @@ export const transport: typeof fetch = async (input, init) => {
       expires_at: expires(), provider: "storage", focus: covered.cover_focus ?? "50% 50%" });
     return fail("Arquivo indisponível nesta demonstração.", 404);
   }
+  // A demo não fala com o Gravatar: a imagem padrão gerada continua no lugar.
+  if (path === "/functions/v1/upload" && a.action === "gravatar") return Response.json({ avatar: false });
   if (path === "/functions/v1/upload" && a.action === "delete") {
     if (profile.role !== "admin") return fail("Você não tem permissão para esta ação.", 403, "42501");
     const scope = deleteScope(str(a.entity), str(a.id));

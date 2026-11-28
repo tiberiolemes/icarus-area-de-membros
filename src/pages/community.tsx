@@ -42,6 +42,7 @@ import {
   value,
 } from "../ui";
 import { PrivateImage } from "../media";
+import { FallbackAvatar } from "../avatar-fallback";
 import { Upload } from "../upload";
 import "./community.css";
 
@@ -69,16 +70,6 @@ export const statusName = (status: string) =>
     published: "Publicado",
     archived: "Arquivado",
   })[status] ?? status;
-function initials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) => Array.from(word)[0])
-    .join("")
-    .toLocaleUpperCase("pt-BR");
-}
-
 function PostMeta({ post }: { post: Post & { avatar_id?: string | null } }) {
   const role = {
     instructor: "Instrutor",
@@ -88,7 +79,7 @@ function PostMeta({ post }: { post: Post & { avatar_id?: string | null } }) {
   return (
     <div className="community-author">
       <span className="community-avatar" aria-hidden="true">
-        {initials(post.author_name)}
+        <FallbackAvatar seed={post.author_id} size={36} />
       </span>
       {post.avatar_id && (
         <PrivateImage

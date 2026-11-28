@@ -1,4 +1,5 @@
 import { AdminSurface } from "./admin-surface";
+import { HelpLink } from "../help-link";
 import { useCallback, useRef, useState } from "react";
 import {
   Link,
@@ -25,6 +26,7 @@ import {
 import { cache, date, errorMessage, rpc, useRpc } from "../api";
 import type { Page, Post, Space } from "../api";
 import { useAuth } from "../auth";
+import { clearDraft, draftStorageKey } from "../draft";
 import { useModules } from "../modules";
 import {
   Action,
@@ -38,10 +40,11 @@ import {
   Notice,
   QueryState,
   Search,
-  Unsaved,
+  useDraftKey,
   value,
 } from "../ui";
 import { PrivateImage } from "../media";
+import { FallbackAvatar } from "../avatar-fallback";
 import { Upload } from "../upload";
 import "./community.css";
 
@@ -69,16 +72,6 @@ export const statusName = (status: string) =>
     published: "Publicado",
     archived: "Arquivado",
   })[status] ?? status;
-function initials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) => Array.from(word)[0])
-    .join("")
-    .toLocaleUpperCase("pt-BR");
-}
-
 function PostMeta({ post }: { post: Post & { avatar_id?: string | null } }) {
   const role = {
     instructor: "Instrutor",
@@ -88,7 +81,7 @@ function PostMeta({ post }: { post: Post & { avatar_id?: string | null } }) {
   return (
     <div className="community-author">
       <span className="community-avatar" aria-hidden="true">
-        {initials(post.author_name)}
+        <FallbackAvatar seed={post.author_id} size={36} />
       </span>
       {post.avatar_id && (
         <PrivateImage
@@ -124,9 +117,9 @@ function ReviewInfo({ guide = false }: { guide?: boolean }) {
       </p>
       <p>Denúncias são analisadas pela equipe de moderação.</p>
       {guide && modules.help && (
-        <Link className="community-context-link" to="/ajuda/comunidade">
+        <HelpLink className="community-context-link" to="/ajuda/comunidade">
           Como publicar na comunidade <ArrowRight size={16} aria-hidden="true" />
-        </Link>
+        </HelpLink>
       )}
     </section>
   );
@@ -218,6 +211,7 @@ export function Report({ id, type }: { id: string; type: "post" | "reply" }) {
       description="A equipe vai analisar esta denúncia. Ela não remove o conteúdo automaticamente."
     >
       <Form
+        draft={false}
         label="Enviar denúncia"
         onSave={async (data) => {
           await rpc("app_report", {
@@ -455,11 +449,13 @@ export function Community() {
 export function Composer() {
   const { post: id } = useParams();
   const { session } = useAuth();
-  const draftKey = `icarus:draft:${session?.user.id}:post:${id ?? "new"}`;
-  return <PostComposer key={draftKey} id={id} draftKey={draftKey} />;
+  const legacyKey = draftStorageKey(session?.user.id ?? "", `post:${id ?? "new"}`);
+  return <PostComposer key={legacyKey} id={id} legacyKey={legacyKey} />;
 }
 
-function PostComposer({ id, draftKey }: { id?: string; draftKey: string }) {
+function PostComposer({ id, legacyKey }: { id?: string; legacyKey: string }) {
+  const label = "Enviar para revisão";
+  const draftKey = useDraftKey(label, id);
   const [params] = useSearchParams(),
     navigate = useNavigate(),
     query = useRpc<{ post: Post; replies: Post[] }>(
@@ -468,7 +464,6 @@ function PostComposer({ id, draftKey }: { id?: string; draftKey: string }) {
       !!id,
     ),
     spaces = useRpc<CommunityFeed>("app_feed"),
-    [dirty, setDirty] = useState(false),
     [created, setCreated] = useState<string | null>(null),
     [chosenSpace, setChosenSpace] = useState<string | null>(null),
     [draft] = useState<{
@@ -477,7 +472,7 @@ function PostComposer({ id, draftKey }: { id?: string; draftKey: string }) {
       space?: string;
     } | null>(() => {
       try {
-        return JSON.parse(sessionStorage.getItem(draftKey) ?? "null");
+        return JSON.parse(sessionStorage.getItem(legacyKey) ?? "null");
       } catch {
         return null;
       }
@@ -494,24 +489,6 @@ function PostComposer({ id, draftKey }: { id?: string; draftKey: string }) {
   const selectedSpace = postableSpaces?.some((space) => space.id === requestedSpace)
     ? requestedSpace
     : "";
-  function preserve(form: HTMLFormElement) {
-    const f = new FormData(form);
-    setDirty(true);
-    try {
-      sessionStorage.setItem(
-        draftKey,
-        JSON.stringify({
-          title: value(f, "title"),
-          body: value(f, "body"),
-          space: postableSpaces
-            ? value(f, "space")
-            : chosenSpace ?? draft?.space ?? data?.space_id,
-        }),
-      );
-    } catch {
-      /* Keep the active form in memory if storage is full. */
-    }
-  }
   return (
     <>
       <Back to="/app/comunidade" />
@@ -529,21 +506,17 @@ function PostComposer({ id, draftKey }: { id?: string; draftKey: string }) {
       ) : data && !data.can_edit ? (
         <Notice error>Você não pode editar esta publicação.</Notice>
       ) : (
-        <div
-          className="reading"
-          onInput={(e) => {
-            const form = (e.target as HTMLElement).closest("form");
-            if (form) preserve(form);
-          }}
-        >
+        <div className="reading">
           <Form
-            label="Enviar para revisão"
+            label={label}
+            draft={id}
+            draftReady={!spaces.isPending}
             secondaryAction={
               <button
                 type="button"
                 onClick={() => {
-                  sessionStorage.removeItem(draftKey);
-                  setDirty(false);
+                  if (draftKey) clearDraft(draftKey);
+                  clearDraft(legacyKey);
                   navigate("/app/comunidade");
                 }}
               >
@@ -561,8 +534,7 @@ function PostComposer({ id, draftKey }: { id?: string; draftKey: string }) {
                   p_image_path: null,
                 },
               );
-              setDirty(false);
-              sessionStorage.removeItem(draftKey);
+              clearDraft(legacyKey);
               setCreated(result.id);
               await cache.invalidateQueries({ queryKey: ["app_feed"] });
             }}
@@ -579,6 +551,7 @@ function PostComposer({ id, draftKey }: { id?: string; draftKey: string }) {
               <select
                 name="space"
                 required
+                data-no-draft={spaces.isPending || undefined}
                 value={selectedSpace}
                 onChange={(event) => setChosenSpace(event.currentTarget.value)}
               >
@@ -920,7 +893,7 @@ export function Moderate({ id, type, status, after, direct = true }: {
   }
   if (!direct) return <details className="moderate">
     <summary>Moderação manual</summary>
-    <Form label="Confirmar decisão" onSave={async (data) => {
+    <Form draft={false} label="Confirmar decisão" onSave={async (data) => {
       if (!window.confirm("Confirmar esta decisão de moderação?")) throw new Error("Decisão cancelada.");
       await apply(value(data, "decision"), value(data, "reason"));
     }}>
@@ -946,7 +919,7 @@ export function Moderate({ id, type, status, after, direct = true }: {
       ).map((choice) => <Modal key={choice} title={labels[choice] + (type === "post" ? " publicação" : " resposta")}
         open={decision === choice} onOpenChange={(open) => setDecision(open ? choice : undefined)}
         trigger={<button>{labels[choice]}</button>}>
-        <Form label={labels[choice]} onDone={() => setDecision(undefined)}
+        <Form draft={false} label={labels[choice]} onDone={() => setDecision(undefined)}
           onSave={(data) => apply(choice, value(data, "reason"))}>
           <Field label="Motivo da decisão">
             <textarea name="reason" required minLength={3} maxLength={2000} />

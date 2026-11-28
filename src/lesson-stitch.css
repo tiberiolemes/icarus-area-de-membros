@@ -243,6 +243,45 @@
 
 .stitch-curriculum-toggle[hidden] { display: none; }
 
+/* Linha própria abaixo das ações; base 0 para o texto quebrar sem alargar o bloco nem estreitar o título. */
+.stitch-auto-advance {
+  flex: 0 0 0;
+  min-width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  color: var(--lesson-text);
+  font: 500 14px / 20px var(--ic-font-family);
+}
+
+.stitch-auto-advance .notification-switch:hover { background: transparent; }
+.stitch-auto-advance label { margin-inline-start: 4px; cursor: pointer; }
+.stitch-auto-advance [role="alert"] { grid-column: 1 / -1; color: var(--stitch-error); }
+
+.stitch-auto-advance-countdown {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--lesson-strong);
+  border-radius: 16px;
+  background: var(--lesson-card);
+  color: var(--lesson-text);
+}
+
+.stitch-auto-advance-countdown p {
+  flex: 1 1 12rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.lesson-stitch .stitch-auto-advance-countdown .primary {
+  border-color: var(--lesson-action);
+  background: var(--lesson-action);
+  color: var(--lesson-on-action);
+}
+
 @container lesson (min-width: 768px) {
   .stitch-lesson-context {
     gap: 12px;
@@ -836,8 +875,8 @@
 }
 
 .stitch-curriculum-filter:focus-within {
-  outline: 2px solid var(--ic-focus);
-  outline-offset: 3px;
+  outline: var(--stitch-focus-width) solid var(--stitch-focus);
+  outline-offset: var(--stitch-focus-offset);
 }
 
 .stitch-curriculum-field {
@@ -869,18 +908,6 @@
 }
 
 @media (min-width: 1024px) and (pointer: fine) {
-  [data-theme="light"] .stitch-curriculum-field::before {
-    content: "";
-    position: absolute;
-    inset: 4px 0;
-    border: 1px solid #6b7280;
-    pointer-events: none;
-  }
-
-  [data-theme="light"] .lesson-stitch .stitch-curriculum-filter input[type="search"] {
-    padding-inline: 12px;
-  }
-
   [data-theme="dark"] .stitch-curriculum-filter {
     position: relative;
     isolation: isolate;
@@ -1040,7 +1067,6 @@
 
 [data-theme="light"] .stitch-module[data-locked="true"] :is(.stitch-module-index, .stitch-module-restriction) {
   background: #f7f7f8;
-  border-color: #ececee;
 }
 
 [data-theme="dark"] .stitch-module[data-locked="true"] :is(.stitch-module-index, .stitch-module-restriction) {

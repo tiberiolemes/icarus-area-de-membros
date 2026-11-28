@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { Briefcase, Check, ListChecks, TrendingUp, Users } from "lucide-react";
+import { Briefcase, Check, ListChecks, MailCheck, TrendingUp, Users } from "lucide-react";
 import "./onboarding.css";
 import {
   cache,
@@ -83,6 +83,7 @@ export function PasswordSetup() {
           Conclua o convite para acessar a área de membros.
         </Heading>
         <Form
+          draft={false}
           label="Definir senha e continuar"
           onSave={async (data, form) => {
             try {
@@ -210,6 +211,7 @@ function Login({ target }: { target: string }) {
         </Notice>}
         {failure && <Notice error>{failure}</Notice>}
         <Form
+          draft={false}
           label={factors.length ? "Verificar e entrar" : "Entrar"}
           successMessage=""
           disabled={loading || checking || (!!session && !factors.length)}
@@ -361,23 +363,60 @@ function Login({ target }: { target: string }) {
   );
 }
 
+type EmailAccessMode = "register" | "forgot" | "confirm";
+
 export function Access({
   mode,
 }: {
-  mode: "login" | "register" | "forgot" | "reset" | "confirm";
+  mode: "login" | "reset" | EmailAccessMode;
 }) {
-  const { session, loading } = useAuth();
-  const [params] = useSearchParams(),
-    navigate = useNavigate(),
-    [message, setMessage] = useState("");
-  const target = internalPath(params.get("returnTo")),
-    context = useRpc<PublicContext>("app_public_context");
+  const [params] = useSearchParams();
+  const target = internalPath(params.get("returnTo"));
   if (mode === "login") return <Login target={target} />;
+  return <AccessForm key={mode} mode={mode} target={target} />;
+}
+
+function AccessForm({ mode, target }: { mode: "reset" | EmailAccessMode; target: string }) {
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+  const [message, setMessage] = useState("");
+  const [sent, setSent] = useState<{ mode: EmailAccessMode; email: string } | null>(null);
+  const context = useRpc<PublicContext>("app_public_context");
+  const returnTo = encodeURIComponent(target);
+  const loginPath = `/entrar?returnTo=${returnTo}`;
+
+  if (sent) {
+    const email = <strong style={{ overflowWrap: "anywhere" }}>{sent.email}</strong>;
+    return (
+      <PublicFrame>
+        <div className="access">
+          <MailCheck
+            size={28}
+            aria-hidden="true"
+            style={{ display: "block", marginBlockEnd: "var(--stitch-space-sm)" }}
+          />
+          <Heading title="Confira seu email">
+            {sent.mode === "register" && <>
+              Se o endereço puder ser cadastrado, você vai receber um link de confirmação em {email}. Abra a mensagem e clique no link para ativar sua conta.
+            </>}
+            {sent.mode === "forgot" && <>Se houver uma conta com {email}, você vai receber um link para criar uma nova senha.</>}
+            {sent.mode === "confirm" && <>Se houver uma confirmação pendente para {email}, enviamos um novo link.</>}
+          </Heading>
+          {sent.mode === "register" && <p>Não chegou em alguns minutos? Confira a pasta de spam ou reenvie a confirmação.</p>}
+          <div className="actions">
+            <Link className="button primary" to={loginPath}>Voltar para entrar</Link>
+            {sent.mode === "register" && <Link className="button" to={`/confirmar-email?returnTo=${returnTo}`}>Reenviar confirmação</Link>}
+            {sent.mode === "forgot" && <button type="button" onClick={() => setSent(null)}>Enviar de novo</button>}
+          </div>
+        </div>
+      </PublicFrame>
+    );
+  }
+
   // Os dois indicadores vêm da mesma regra no banco; fechado, o cadastro mostra só o aviso e a saída.
   const registerClosed = !context.data?.registration_enabled || !context.data?.legal_ready;
   const resetUnavailable = mode === "reset" && !session;
   const titles = {
-    login: "Entre na sua área de membros",
     register: "Crie sua conta",
     forgot: "Recupere seu acesso",
     reset: "Defina uma nova senha",
@@ -404,15 +443,16 @@ export function Access({
           </QueryState>
         )}
         {!resetUnavailable && (mode !== "register" || (context.data && !registerClosed)) && <Form
+          draft={false}
           label={
             {
-              login: "Entrar",
               register: "Criar conta",
               forgot: "Solicitar recuperação",
               reset: "Salvar nova senha",
               confirm: "Reenviar confirmação",
             }[mode]
           }
+          successMessage={mode === "reset" ? undefined : ""}
           onSave={async (data, form) => {
             const email = value(data, "email"),
               password = value(data, "password");
@@ -446,9 +486,6 @@ export function Access({
                   },
                 });
                 if (error) throw error;
-                setMessage(
-                  "Se o cadastro puder ser realizado, você receberá as instruções no email informado. Confira também a pasta de spam.",
-                );
               }
               if (mode === "forgot") {
                 const { error } = await auth.resetPasswordForEmail(email, {
@@ -458,9 +495,6 @@ export function Access({
                     "/auth/callback?returnTo=/app/configuracoes?aba=seguranca",
                 });
                 if (error) throw error;
-                setMessage(
-                  "Se houver uma conta para esse email, você receberá as instruções de recuperação.",
-                );
               }
               if (mode === "reset") {
                 if (password !== value(data, "password_confirm"))
@@ -483,9 +517,6 @@ export function Access({
                   },
                 });
                 if (error) throw error;
-                setMessage(
-                  "Se houver uma confirmação pendente, as instruções serão enviadas ao email informado.",
-                );
               }
             } finally {
               if (mode !== "reset") resetCaptcha();
@@ -495,6 +526,7 @@ export function Access({
                 )
                 .forEach((input) => (input.value = ""));
             }
+            if (mode !== "reset") setSent({ mode, email });
           }}
         >
           {mode === "register" && (
@@ -567,7 +599,7 @@ export function Access({
           {mode !== "reset" && <Captcha />}
         </Form>}
         <nav className="access-links">
-          <Link to={"/entrar?returnTo=" + encodeURIComponent(target)}>Voltar para entrar</Link>
+          <Link to={loginPath}>Voltar para entrar</Link>
         </nav>
       </div>
     </PublicFrame>

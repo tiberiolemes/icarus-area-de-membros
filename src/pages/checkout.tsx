@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { edge, money, useRpc } from "../api";
 import type { Plan } from "../api";
 import { useAuth } from "../auth";
+import { HelpLink } from "../help-link";
 import { readModules } from "../modules";
 import {
   loadReceipt,
@@ -114,6 +115,7 @@ export function Checkout() {
                     </Notice>
                   ) : (
                     <Form
+                      draft={false}
                       className="icarus-checkout-form"
                       label={
                         method === "PIX"
@@ -328,9 +330,11 @@ export function Checkout() {
               ) : (
                 <Notice>
                   Nenhum plano ativo foi publicado.{" "}
-                  <Link className="text-action" to={help ? "/ajuda" : "/entrar"}>
-                    {help ? "Central de ajuda" : "Voltar ao início"}
-                  </Link>
+                  {help ? (
+                    <HelpLink className="text-action" to="/ajuda">Central de ajuda</HelpLink>
+                  ) : (
+                    <Link className="text-action" to="/entrar">Voltar ao início</Link>
+                  )}
                 </Notice>
               )}
             </>

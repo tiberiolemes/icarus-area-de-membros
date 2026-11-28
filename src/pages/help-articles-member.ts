@@ -27,6 +27,7 @@ export const memberArticles: HelpArticle[] = [
           "Crie uma **Senha** com pelo menos 12 caracteres, com letra maiúscula, minúscula, número e símbolo.",
           "Marque **Li e aceito os Termos de uso e a Política de privacidade**. A caixa de comunicações de marketing é opcional.",
           "Clique em **Criar conta**.",
+          "A tela **Confira seu email** mostra o endereço informado. Se o endereço puder ser cadastrado, você vai receber um link de confirmação.",
           {
             text: "Abra a mensagem de confirmação no seu e-mail e clique no link. Ele confirma o cadastro e abre a plataforma na tela **Complete seu perfil**.",
             note: "Se o link abrir a tela de entrada, entre com o e-mail e a senha que você criou.",
@@ -39,11 +40,12 @@ export const memberArticles: HelpArticle[] = [
         steps: [
           "Na tela de entrada, clique em **Esqueci minha senha**.",
           "Digite o **Email** da conta e clique em **Solicitar recuperação**.",
+          "Na tela **Confira seu email**, verifique o endereço informado. Para solicitar outro link, clique em **Enviar de novo** e preencha o formulário.",
           "Abra a mensagem mais recente que chegar e clique no link.",
           "Na tela **Defina uma nova senha**, preencha **Senha** e **Confirme a nova senha**. Use pelo menos 12 caracteres, com letra maiúscula, minúscula, número e símbolo.",
           "Clique em **Salvar nova senha**. Você já entra na plataforma com a senha nova.",
         ],
-        note: "Por segurança, a tela mostra o mesmo aviso exista ou não uma conta com aquele e-mail. Se nada chegar, confira se o endereço foi digitado certo.",
+        note: "Por segurança, a tela **Confira seu email** tem a mesma mensagem para todos os endereços. Se nada chegar, confira se o endereço foi digitado certo.",
       },
       {
         title: "Primeiro acesso por convite ou compra",
@@ -77,9 +79,9 @@ export const memberArticles: HelpArticle[] = [
     ],
     trouble: [
       ["A tela diz que o e-mail ou a senha são inválidos", "Confira se o e-mail é o mesmo do cadastro ou da compra e se a tecla de maiúsculas não ficou ligada. Se a dúvida for a senha, use **Esqueci minha senha**."],
-      ["Aparece um aviso pedindo para confirmar o e-mail", "Clique em **Reenviar confirmação de email**, logo abaixo do formulário. Na tela **Confirme seu email**, digite o **Email** e clique em **Reenviar confirmação**. Depois abra o link da mensagem mais recente, porque o anterior deixa de valer."],
+      ["Aparece um aviso pedindo para confirmar o e-mail", "Clique em **Reenviar confirmação de email**, logo abaixo do formulário. Na tela **Confirme seu email**, digite o **Email** e clique em **Reenviar confirmação**. A tela **Confira seu email** mostra o endereço informado. Se houver uma confirmação pendente, abra o link da mensagem mais recente."],
       ["O link do e-mail abriu uma tela dizendo que expirou", "Os links valem por tempo limitado e funcionam uma única vez. Na própria tela, clique em **Reenviar confirmação** ou em **Solicitar recuperação** e informe o seu e-mail para receber um link novo."],
-      ["A mensagem não chegou", "Espere alguns minutos e olhe a caixa de spam e a de promoções. Para a confirmação do cadastro, tente entrar e use o link **Reenviar confirmação de email**. Para a recuperação, repita **Esqueci minha senha**. O convite e o acesso de uma compra não têm reenvio na tela de entrada. Nesse caso, fale com a equipe e informe o e-mail usado."],
+      ["A mensagem não chegou", "Espere alguns minutos e olhe a caixa de spam e a de promoções. Depois de criar a conta, use **Reenviar confirmação** na tela **Confira seu email**. Na recuperação da senha, use **Enviar de novo**. Para reenviar um convite ou o acesso de uma compra, fale com a equipe e informe o e-mail usado."],
       ["Apareceu um aviso de muitas tentativas", "A plataforma pausa novas tentativas por alguns minutos para proteger a conta. Aguarde e tente de novo com calma."],
       ["A verificação de segurança não aparece ou não termina", "Recarregue a página. Se você usa bloqueador de anúncios, libere este site e tente outra vez."],
       ["Apareceu a tela Acesso indisponível", "A conta está suspensa ou sem acesso à área de membros. Fale com a equipe responsável pela plataforma para entender o motivo. O botão **Sair e usar outra conta** leva de volta à tela de entrada."],
@@ -109,6 +111,14 @@ export const memberArticles: HelpArticle[] = [
         note: "O seu menu pode ser mais curto. A equipe escolhe quais recursos ficam ativos em cada plataforma.",
       },
       {
+        title: "Recolher o menu no computador",
+        steps: [
+          "Clique em **Recolher menu**, no topo da barra lateral. Passe o mouse sobre um ícone ou chegue a ele com **Tab** para ver seu nome.",
+          "Clique em **Expandir menu** para voltar a ver todos os nomes. O navegador guarda sua escolha para a área do aluno.",
+        ],
+        note: "**Configurações**, o controle do tema e **Sair** ficam no rodapé do menu, mesmo ao rolar a lista de áreas. Isso também vale no celular.",
+      },
+      {
         title: "O que fica no topo da tela",
         list: [
           "O campo **Busca rápida em aulas e módulos** encontra cursos, módulos e aulas pelo título. Digite pelo menos duas letras.",
@@ -131,14 +141,14 @@ export const memberArticles: HelpArticle[] = [
       {
         title: "Trocar entre tema claro e escuro",
         steps: [
-          "Abra o menu e vá até o fim da lista.",
+          "Abra o menu e procure o controle no rodapé.",
           "Clique no botão do tema, que mostra **Tema claro** ou **Tema escuro**.",
         ],
         note: "A troca vale na hora e fica salva na sua conta, em qualquer aparelho.",
       },
       {
         title: "Sair da conta",
-        steps: ["Abra o menu e clique em **Sair**, no fim da lista."],
+        steps: ["Abra o menu e clique em **Sair**, no rodapé."],
         note: "Sair encerra a sua sessão em todos os aparelhos. Em computador compartilhado, saia sempre que terminar.",
       },
     ],
@@ -300,6 +310,17 @@ export const memberArticles: HelpArticle[] = [
           "**Comentários** é o espaço de dúvidas e reflexões.",
           "**Anotações pessoais** guarda o que você escrever, só para você.",
         ],
+      },
+      {
+        title: "Avançar para a próxima aula automaticamente",
+        intro: "Abaixo de **Marcar como concluída** fica o interruptor **Avançar para a próxima aula automaticamente**. Ele começa desligado e vale para todas as aulas da sua conta.",
+        list: [
+          "Com ele ligado, **Marcar como concluída** leva direto para a próxima aula assim que a plataforma confirma a conclusão.",
+          "Com ele ligado, quando o vídeo ou o áudio chega ao fim, a aula é marcada como concluída e aparece **Próxima aula em 5 segundos**. Clique em **Ir agora** para seguir na hora ou em **Cancelar** para ficar na aula.",
+          "Ele não avança na última aula, quando a próxima aula não está liberada para o seu plano ou quando a conclusão emite o seu certificado, para você ver o aviso. Com o certificado já emitido, as aulas seguintes, como as de bônus, voltam a avançar.",
+          "Com ele desligado, o fim do vídeo não marca nada. A conclusão continua sendo pelo botão.",
+        ],
+        warn: "Com o interruptor ligado, chegar ao fim do vídeo conta como conclusão, e a conclusão não pode ser desfeita.",
       },
       {
         title: "Pular para um capítulo",
@@ -471,8 +492,8 @@ export const memberArticles: HelpArticle[] = [
         title: "Incluir uma imagem",
         intro: "A imagem entra depois do texto. Assim que você envia a publicação, o campo **Enviar arquivo** aparece logo abaixo do formulário.",
         steps: [
-          "Clique em **Escolher arquivo** e selecione um PNG, JPG ou WebP de até 20 MB. A imagem é otimizada no envio e precisa ficar com até 500 KB.",
-          "Clique em **Enviar arquivo**.",
+          "Arraste a imagem até a área de envio ou clique em **Selecionar arquivo**. Vale PNG, JPG ou WebP de até 20 MB. A imagem é otimizada no envio e precisa ficar com até 500 KB.",
+          "O envio começa assim que você escolhe a imagem. Espere a mensagem de arquivo enviado.",
         ],
         note: "Tenha a imagem à mão antes de enviar o texto, porque o campo só aparece nesse momento.",
       },
@@ -698,9 +719,19 @@ export const memberArticles: HelpArticle[] = [
         title: "Trocar a foto",
         steps: [
           "Na aba **Meu perfil**, clique em **Alterar foto**.",
-          "Clique em **Escolher arquivo** e selecione uma imagem JPG ou PNG de até 20 MB.",
+          "Clique em **Selecionar arquivo** e escolha uma imagem JPG ou PNG de até 20 MB. No computador, você também pode arrastar a foto até a área de envio.",
           "Arraste o controle **Posição do recorte** até o enquadramento ficar bom.",
           "Clique em **Salvar foto**.",
+        ],
+        note: "A foto enviada por você sempre vale mais que qualquer outra e troca a do Gravatar, se houver.",
+      },
+      {
+        title: "De onde vem a imagem do seu perfil",
+        intro: "A imagem aparece no topo, no seu perfil e nas suas publicações da comunidade.",
+        list: [
+          "Se você enviou uma foto, é ela que aparece.",
+          "Sem foto enviada, na primeira entrada a plataforma procura uma foto ligada ao seu e-mail no Gravatar. Se encontrar, guarda uma cópia e passa a mostrar essa foto.",
+          "Sem foto nenhuma, aparece uma imagem gerada em preto, cinza e branco. Ela é sempre a mesma para a sua conta.",
         ],
       },
       {
@@ -797,7 +828,18 @@ export const memberArticles: HelpArticle[] = [
           "Abra **Configurações** e entre na aba **Assinatura**.",
           "Em **Plano atual**, confira o nome do plano e a validade.",
         ],
-        note: "A compra vale pelo período do plano, indicado em meses ao lado do preço. Quando ele termina, o acesso só continua com uma nova compra.",
+        note: "A compra vale pelo período do plano, indicado em meses logo abaixo do nome. Quando ele termina, o acesso só continua com uma nova compra.",
+      },
+      {
+        title: "Entender o preço de cada plano",
+        intro: "Em **Planos disponíveis**, cada plano aparece em um cartão com o nome, o tempo de acesso, a parcela em destaque e os benefícios.",
+        list: [
+          "A parcela em destaque é o preço dividido em 12 vezes no cartão, arredondado para cima no centavo. Logo abaixo vem o valor à vista.",
+          "Quando o cartão diz **sem juros**, o parcelamento no cartão não tem acréscimo.",
+          "Quando o cartão diz **em até 12x no cartão**, o parcelamento pode ter juros. O valor final da parcela aparece na hora do pagamento.",
+          "Plano gratuito aparece como **Gratuito**, sem parcela.",
+          "O plano que você já tem mostra **Seu plano atual** no lugar do botão **Assinar**.",
+        ],
       },
       {
         title: "Assinar",
@@ -860,6 +902,15 @@ export const memberArticles: HelpArticle[] = [
         warn: "O pedido não apaga a conta na hora. A equipe analisa antes, porque alguns registros precisam ser mantidos por obrigação legal.",
       },
       {
+        title: "Foto do Gravatar",
+        intro: "Quem ainda não tem foto recebe uma busca no Gravatar, o serviço de fotos de perfil da Automattic, na primeira entrada.",
+        list: [
+          "A plataforma envia ao Gravatar só um código calculado a partir do seu e-mail, e não o e-mail em si.",
+          "A consulta é feita pelo servidor da plataforma. Quem vê a sua foto não acessa o Gravatar.",
+          "Se houver foto, uma cópia fica guardada na plataforma, como uma foto que você enviasse. Para trocar, envie outra em **Configurações**, aba **Meu perfil**.",
+        ],
+      },
+      {
         title: "Ler a política de privacidade",
         steps: ["Na mesma aba, clique em **Consultar a política de privacidade**."],
       },
@@ -889,10 +940,10 @@ export const memberArticles: HelpArticle[] = [
         title: "Anexar um print ou arquivo",
         steps: [
           "Abra o chamado enviado.",
-          "Em **Anexar arquivo à conversa**, clique em **Escolher arquivo**.",
-          "Clique em **Enviar arquivo**.",
+          "Em **Anexar arquivo à conversa**, arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**.",
+          "O envio começa assim que você escolhe o arquivo.",
         ],
-        note: "São aceitos PDF, ZIP, TXT, PNG, JPG, WebP, MP4 e MP3. Imagens e PDFs de até 20 MB são otimizados no envio e precisam ficar com até 500 KB (imagem) ou 5 MB (PDF). Os demais arquivos vão até 20 MB.",
+        note: "São aceitos PDF, ZIP, TXT, PNG, JPG, WebP e MP3. Vídeo não é aceito; para mostrar o que aparece na tela, envie um print. Imagens e PDFs de até 20 MB são otimizados no envio e precisam ficar com até 500 KB (imagem) ou 5 MB (PDF). Os demais arquivos vão até 20 MB.",
       },
       {
         title: "Acompanhar e responder",
@@ -938,7 +989,7 @@ export const memberArticles: HelpArticle[] = [
           "Clique em **Enviar feedback**, o ícone de balão com um sinal de mais no topo da tela.",
           "Em **Tipo**, escolha **Sugestão**, **Bug/Problema** ou **Outro**.",
           "Conte em **Descrição** o que você pensou ou o que aconteceu.",
-          "Se ajudar, anexe uma imagem em **Print (opcional)**. Vale PNG, JPG ou WebP de até 20 MB. A imagem é otimizada no envio e precisa ficar com até 5 MB.",
+          "Se ajudar, anexe uma imagem em **Print (opcional)**. Arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**. Vale PNG, JPG ou WebP de até 20 MB. A imagem é otimizada no envio e precisa ficar com até 5 MB.",
           "Clique em **Enviar feedback**.",
         ],
         warn: "Antes de anexar um print, confira se ele não mostra senha, dado pessoal ou informação de pagamento.",

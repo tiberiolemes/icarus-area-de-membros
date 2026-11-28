@@ -79,7 +79,7 @@ it.each(["upload", "feedback"])("recupera a versão original após perda da resp
   const dialog = within(screen.getByRole("dialog", { name: "Envie seu feedback" }));
   const type = dialog.getByLabelText("Tipo");
   const description = dialog.getByLabelText("Descrição");
-  const file = dialog.getByLabelText("Print (opcional)") as HTMLInputElement;
+  const file = dialog.getByLabelText("Print (opcional)", { selector: "input" }) as HTMLInputElement;
   const original = new File(["original"], "original.png", { type: "image/png" });
   const revised = new File(["revisado"], "revisado.png", { type: "image/png" });
   fireEvent.change(type, { target: { value: "bug" } });
@@ -136,7 +136,7 @@ it.each([
   const dialog = within(screen.getByRole("dialog", { name: "Envie seu feedback" }));
   const type = dialog.getByLabelText("Tipo");
   const description = dialog.getByLabelText("Descrição");
-  const print = dialog.getByLabelText("Print (opcional)") as HTMLInputElement;
+  const print = dialog.getByLabelText("Print (opcional)", { selector: "input" }) as HTMLInputElement;
   fireEvent.change(type, { target: { value: "bug" } });
   fireEvent.input(description, { target: { value: "Relato inicial" } });
   fireEvent.change(print, { target: { files: [new File(["inválido"], "invalido.png", { type: "image/png" })] } });
@@ -176,8 +176,8 @@ it("aceita print original até 20 MB, otimiza uma vez, reenvia os mesmos bytes e
   const dialog = within(screen.getByRole("dialog", { name: "Envie seu feedback" }));
   fireEvent.change(dialog.getByLabelText("Tipo"), { target: { value: "bug" } });
   fireEvent.input(dialog.getByLabelText("Descrição"), { target: { value: "Relato" } });
-  const print = dialog.getByLabelText("Print (opcional)");
-  expect(print).toHaveAccessibleDescription("PNG, JPG ou WebP de até 20 MB. Depois de otimizado, o print precisa ficar com até 5 MB. Confira se o print contém dados pessoais antes de enviar.");
+  const print = dialog.getByLabelText("Print (opcional)", { selector: "input" });
+  expect(dialog.getByRole("button", { name: "Selecionar arquivo" })).toHaveAccessibleDescription("PNG, JPG ou WebP · até 20 MB, e até 5 MB depois de otimizado · confira se o print contém dados pessoais antes de enviar");
   fireEvent.change(print, { target: { files: [new File([new Uint8Array(20 * 1024 ** 2 + 1)], "enorme.png", { type: "image/png" })] } });
   fireEvent.click(dialog.getByRole("button", { name: "Enviar feedback" }));
   expect(await dialog.findByText("Escolha um print PNG, JPG ou WebP de até 20 MB.")).toBeVisible();
@@ -187,10 +187,15 @@ it("aceita print original até 20 MB, otimiza uma vez, reenvia os mesmos bytes e
   expect(await dialog.findByText("Mesmo otimizado, o print ficou com 6 MB. O limite é 5 MB.")).toBeVisible();
   expect(sent).toHaveLength(0);
   fireEvent.change(print, { target: { files: [new File([new Uint8Array(8 * 1024 ** 2)], "tela.png", { type: "image/png" })] } });
+  // O print escolhido aparece na área de arraste e só sobe com o formulário.
+  expect(dialog.getByText("tela.png").parentElement).toHaveTextContent("tela.png · 8 MB");
+  expect(dialog.getByRole("button", { name: "Trocar arquivo" })).toBeEnabled();
   fireEvent.click(dialog.getByRole("button", { name: "Enviar feedback" }));
   await dialog.findByText("Resposta do upload perdida.");
   fireEvent.click(dialog.getByRole("button", { name: "Confirmar envio anterior" }));
   expect(await dialog.findByText("Feedback enviado.")).toBeVisible();
+  expect(dialog.queryByText("tela.png")).not.toBeInTheDocument();
+  expect(dialog.getByRole("button", { name: "Selecionar arquivo" })).toBeEnabled();
   expect(sent.map((file) => file.name)).toEqual(["tela.webp", "tela.webp"]);
   expect(sent[1]).toBe(sent[0]);
   expect(optimize).toHaveBeenCalledTimes(2);

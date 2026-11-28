@@ -117,7 +117,7 @@
 }
 
 button.lesson-presentation-chapter:hover {
-  border-color: #a1a1aa;
+  border-color: var(--ic-border-control);
   background: var(--editorial-card);
 }
 
@@ -228,22 +228,22 @@ button.lesson-presentation-chapter:hover span:first-child { text-decoration: und
   width: 16px;
   height: 16px;
   margin-top: 4px;
-  border: 1px solid #8a8a8a;
+  border: 1px solid var(--ic-border-control);
   border-radius: 4px;
-  background: #fff;
+  background: var(--ic-white);
   cursor: inherit;
 }
 
 .lesson-presentation-checklist input[type="checkbox"]:checked {
-  border-color: #000;
-  background: #000;
+  border-color: var(--ic-black);
+  background: var(--ic-black);
 }
 
 .lesson-presentation-checklist input[type="checkbox"]:checked::before {
   content: "";
   width: 7px;
   height: 4px;
-  border: solid #fff;
+  border: solid var(--ic-white);
   border-width: 0 0 2px 2px;
   transform: translateY(-1px) rotate(-45deg);
 }
@@ -278,10 +278,10 @@ button.lesson-presentation-chapter:hover span:first-child { text-decoration: und
 
 .lesson-presentation-cta-context > .lesson-presentation-cta-label {
   padding: 2px 8px;
-  border: 1px solid #a7f3d0;
+  border: 1px solid color-mix(in hsl, var(--stitch-status-success) 20%, var(--stitch-status-success-surface));
   border-radius: 999px;
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--stitch-status-success-surface);
+  color: var(--stitch-status-success);
   font-size: 11px;
   font-weight: 600;
   line-height: 20px;
@@ -298,10 +298,10 @@ button.lesson-presentation-chapter:hover span:first-child { text-decoration: und
   gap: 4px;
   min-height: 44px;
   padding: 12px 24px;
-  border: 1px solid #000;
+  border: 1px solid var(--ic-action);
   border-radius: 12px;
-  background: #000;
-  color: #fff;
+  background: var(--ic-action);
+  color: var(--ic-on-action);
   font-size: 13px;
   font-weight: 600;
   line-height: 18px;
@@ -309,7 +309,7 @@ button.lesson-presentation-chapter:hover span:first-child { text-decoration: und
   box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
 }
 
-.lesson-presentation-cta > a:hover { background: #27272a; }
+.lesson-presentation-cta > a:hover { background: var(--stitch-action-hover); }
 
 .lesson-presentation-cta svg {
   flex: none;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation, useMatch } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -29,17 +29,20 @@ import {
   Search,
   Sun,
   UserRound,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
-import { roleLabel, rpc, safeUrl, signOut, type Profile } from "./api";
+import { edge, roleLabel, rpc, safeUrl, signOut, type Profile } from "./api";
+import { FallbackAvatar } from "./avatar-fallback";
 import { useBootstrap } from "./auth";
 import { usePrivateImageQuery } from "./media";
 import { NotificationBell } from "./pages/notifications";
 import { FeedbackButton } from "./pages/feedback";
-import { Action, AdminBadge, Empty, Field, Modal, Notice, RouteFocus } from "./ui";
+import { Action, AdminBadge, DraftOwner, Empty, Field, Modal, Notice, RouteFocus } from "./ui";
 import { Tour } from "./tour";
 import { UpdateNotice } from "./update-notice";
 import { MemberSearch } from "./pages/member-search";
-import { BrandLogo, brandAssetUrl, brandRatio, defaultLogo } from "./brand";
+import { BrandLogo, brandAssetUrl, brandRatio, defaultIcon, defaultLogo } from "./brand";
 import { ModuleUnavailable, moduleLabel, moduleOfPath, pathOpen, useModules } from "./modules";
 import "./member-shell-stitch.css";
 
@@ -119,6 +122,8 @@ const staffEntryLabels: Readonly<Record<string, string | undefined>> = {
   support: "Atendimento",
 };
 
+const gravatarAsked = new Set<string>();
+
 function AccountPhoto({ avatarId }: { avatarId: string }) {
   const { data } = usePrivateImageQuery("avatar", avatarId);
   const url = safeUrl(data?.url);
@@ -130,11 +135,12 @@ function AccountPhoto({ avatarId }: { avatarId: string }) {
   ) : null;
 }
 
-function AccountAvatar({ profile, initials, admin = false }: { profile: Profile; initials: string; admin?: boolean }) {
+// Foto enviada (ou guardada do Gravatar) por cima da imagem padrão, no aluno e no painel.
+function AccountAvatar({ profile }: { profile: Profile }) {
   return (
     <span className="avatar" aria-hidden="true">
-      {admin ? <UserRound size={18} /> : initials}
-      {!admin && profile.avatar_id && (
+      <FallbackAvatar seed={profile.id} size={40} />
+      {profile.avatar_id && (
         <AccountPhoto key={JSON.stringify([profile.id, profile.avatar_id])} avatarId={profile.avatar_id} />
       )}
     </span>
@@ -147,7 +153,28 @@ function threadInitials(fullName?: string) {
   return (([...first][0] ?? "I") + ([...last][0] ?? "")).toLocaleUpperCase("pt-BR");
 }
 
-function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNavigate, drawerInitials }: {
+export function useSidebarCollapsed(area: "admin" | "member"): [boolean, (next: boolean) => void] {
+  const [choices, setChoices] = useState(() => {
+    try {
+      return {
+        admin: localStorage.getItem("icarus:sidebar:admin") === "1",
+        member: localStorage.getItem("icarus:sidebar:member") === "1",
+      };
+    } catch {
+      return { admin: false, member: false };
+    }
+  });
+  return [choices[area], (next) => {
+    setChoices((current) => ({ ...current, [area]: next }));
+    try {
+      localStorage.setItem(`icarus:sidebar:${area}`, next ? "1" : "0");
+    } catch {
+      // A escolha continua valendo enquanto o painel estiver aberto.
+    }
+  }];
+}
+
+function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNavigate, drawerInitials, collapseToggle }: {
   admin: boolean;
   profile: Profile;
   brand: ReactNode;
@@ -155,19 +182,21 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
   onToggleTheme: () => Promise<void>;
   onNavigate?: () => void;
   drawerInitials?: string;
+  collapseToggle?: ReactNode;
 }) {
   const dark = profile.theme === "dark";
   const modules = useModules();
   const staffGroups = staffNavigation(profile.role);
   const staffEntry = staffGroups[0]?.routes[0];
+  const staffLabel = staffEntry && (staffEntryLabels[profile.role] ?? staffEntry[0]);
+  const themeLabel = dark ? "Tema escuro" : "Tema claro";
   const help = (admin || modules.help) && (
-    <NavLink to={admin ? "/ajuda" : "/app/ajuda"} onClick={onNavigate}>
+    <NavLink to={admin ? "/ajuda" : "/app/ajuda"} onClick={onNavigate} data-label="Central de ajuda">
       <HelpCircle size={20} aria-hidden="true" />
-      Central de ajuda
+      <span className="rail-label">Central de ajuda</span>
     </NavLink>
   );
-  return (
-    <>
+  const brandLink = (
       <Link className="rail-brand" to={admin && staffEntry ? `/admin/${staffEntry[1]}` : "/app/cursos"} onClick={onNavigate}>
         {admin ? (
           <>
@@ -179,9 +208,13 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
           </>
         ) : brand}
       </Link>
+  );
+  return (
+    <>
+      {collapseToggle ? <div className="rail-head">{brandLink}{collapseToggle}</div> : brandLink}
       {drawerInitials && (
         <div className="mobile-drawer-account">
-          <AccountAvatar profile={profile} initials={drawerInitials} />
+          <AccountAvatar profile={profile} />
           <div>
             <strong>{profile.full_name || "Membro"}</strong>
             <small>{profile.role === "admin" ? <AdminBadge /> : profile.plan_name || "Sem plano ativo"}</small>
@@ -198,46 +231,48 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
             {label !== "Configurações" && <span aria-hidden="true">{label}</span>}
             {routes.map(([title, path, Icon]) => {
               const to = `/admin/${path}`;
-              return <NavLink key={path} to={to} onClick={onNavigate}>
+              return <NavLink key={path} to={to} onClick={onNavigate} data-label={title}>
                 <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
-                {title}
+                <span className="rail-label">{title}</span>
                 {!pathOpen(modules, to) && <> <small className="badge module-off-badge">Desativado</small></>}
               </NavLink>;
             })}
           </div>
         )) : memberNav.map(([title, path, Icon]) => {
           const to = "/app/" + path;
-          return pathOpen(modules, to) && <NavLink key={path} to={to} onClick={onNavigate}>
-            <Icon size={20} strokeWidth={1.75} aria-hidden="true" /> {title}
+          return pathOpen(modules, to) && <NavLink key={path} to={to} onClick={onNavigate} data-label={title}>
+            <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
+            <span className="rail-label">{title}</span>
           </NavLink>;
         })}
         {!admin && help}
       </nav>
       <div className="rail-bottom">
         {!admin && (
-          <NavLink to="/app/configuracoes" onClick={onNavigate}>
+          <NavLink to="/app/configuracoes" onClick={onNavigate} data-label="Configurações">
             <Settings size={20} aria-hidden="true" />
-            Configurações
+            <span className="rail-label">Configurações</span>
           </NavLink>
         )}
         {!admin && staffEntry && (
-          <Link to={`/admin/${staffEntry[1]}`} onClick={onNavigate}>
+          <Link to={`/admin/${staffEntry[1]}`} onClick={onNavigate} data-label={staffLabel}>
             <ArrowUpRight size={20} aria-hidden="true" />
-            {staffEntryLabels[profile.role] ?? staffEntry[0]}
+            <span className="rail-label">{staffLabel}</span>
           </Link>
         )}
         {!admin && (
           <Action run={onToggleTheme}>
             <Sun size={20} aria-hidden="true" />
-            Tema {dark ? "escuro" : "claro"}
+            <span className="rail-label">{themeLabel}</span>
             <small className="member-theme-state" aria-hidden="true">Ativo</small>
             <span className="sr-only">. Mudar para tema {dark ? "claro" : "escuro"}</span>
+            <span className="rail-hint" data-label={themeLabel} aria-hidden="true" />
           </Action>
         )}
         {admin && staffEntry && (
-          <Link to="/app/cursos" onClick={onNavigate}>
+          <Link to="/app/cursos" onClick={onNavigate} data-label="Área do aluno">
             <ArrowUpRight size={20} aria-hidden="true" />
-            Área do aluno
+            <span className="rail-label">Área do aluno</span>
           </Link>
         )}
         {admin && help}
@@ -247,7 +282,8 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
           }}
         >
           <LogOut size={20} aria-hidden="true" />
-          Sair
+          <span className="rail-label">Sair</span>
+          <span className="rail-hint" data-label="Sair" aria-hidden="true" />
         </Action>
       </div>
     </>
@@ -269,6 +305,11 @@ export function Shell() {
   const brandIcon = installationName !== "Icarus" && !logos.light && !logos.dark;
   const { pathname, search } = useLocation();
   const admin = pathname.startsWith("/admin");
+  const [collapsed, setCollapsed] = useSidebarCollapsed(admin ? "admin" : "member");
+  const sidebarId = useId();
+  const collapseLabel = collapsed ? "Expandir menu" : "Recolher menu";
+  const CollapseIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
+  const sidebarIcon = brandAssetUrl(boot.data?.settings?.icon);
   const modules = useModules();
   const offModule = pathOpen(modules, pathname) ? undefined : moduleOfPath(pathname);
   const adminOrders = useMatch("/admin/pedidos/*");
@@ -292,6 +333,14 @@ export function Shell() {
     document.documentElement.dataset.theme = profile.theme ?? "light";
   }, [profile.theme, profile.id]);
   useEffect(() => setOpen(false), [pathname]);
+  // Uma vez por sessão e em segundo plano: o servidor busca e guarda a foto do Gravatar de quem ainda não tem.
+  useEffect(() => {
+    if (profile.avatar_id || profile.gravatar_checked_at || gravatarAsked.has(profile.id)) return;
+    gravatarAsked.add(profile.id);
+    void edge<{ avatar: boolean }>("upload", { action: "gravatar" })
+      .then((result) => { if (result.avatar) void boot.refetch(); })
+      .catch(() => {});
+  }, [profile.id, profile.avatar_id, profile.gravatar_checked_at]);
 
   async function toggleTheme() {
     await rpc("app_profile", { p_data: { theme: profile.theme === "dark" ? "light" : "dark" } });
@@ -299,9 +348,12 @@ export function Shell() {
   }
 
   return (
+    // O dono do rascunho cobre também a barra do topo, onde fica o formulário de feedback.
+    <DraftOwner.Provider value={profile.id}>
     <div
       className={`app-shell stitch-shell ${admin ? "admin-shell-stitch" : "member-shell-stitch"}`}
       data-admin-view={adminView}
+      data-sidebar={collapsed ? "collapsed" : undefined}
     >
       <a className="skip" href="#main" onClick={(event) => {
         event.preventDefault();
@@ -309,8 +361,14 @@ export function Shell() {
       }}>
         Pular para o conteúdo
       </a>
-      <aside className="sidebar">
-        <ShellNavigation admin={admin} profile={profile} brand={brandMark("strong")} brandIcon={brandIcon} onToggleTheme={toggleTheme} />
+      <aside className="sidebar" id={sidebarId}>
+        <ShellNavigation admin={admin} profile={profile} brand={collapsed
+          ? <img className={sidebarIcon ? "rail-mark rail-mark-custom" : "rail-mark"} src={sidebarIcon ?? defaultIcon} alt={installationName} referrerPolicy="no-referrer" />
+          : brandMark("strong")} brandIcon={!collapsed && brandIcon} onToggleTheme={toggleTheme}
+          collapseToggle={<button type="button" className="icon-button rail-toggle" aria-label={collapseLabel}
+            title={collapseLabel} aria-expanded={!collapsed} aria-controls={sidebarId} onClick={() => setCollapsed(!collapsed)}>
+            <CollapseIcon size={20} aria-hidden="true" />
+          </button>} />
       </aside>
       <div className="workspace">
         <header className="topbar">
@@ -359,7 +417,7 @@ export function Shell() {
             {!admin && modules.feedback && <FeedbackButton key={JSON.stringify([profile.id, pathname])} />}
             {!admin && <NotificationBell key={profile.id} memberId={profile.id} />}
             <Link className="account-link" to="/app/configuracoes" aria-label={`Sua conta: ${profile.full_name || "Membro"}`}>
-              <AccountAvatar profile={profile} initials={accountInitials} admin={admin} />
+              <AccountAvatar profile={profile} />
               <span className="account-details">
                 {profile.full_name}
                 <small>{profile.role === "admin" ? <AdminBadge /> : admin ? roleLabel(profile.role) : profile.plan_name || "Sem plano ativo"}</small>
@@ -388,5 +446,6 @@ export function Shell() {
         </nav>
       )}
     </div>
+    </DraftOwner.Provider>
   );
 }

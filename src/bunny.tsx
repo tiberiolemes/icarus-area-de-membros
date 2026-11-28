@@ -71,6 +71,7 @@ export function BunnyPlayer({
   onPosition,
   onPause,
   onSeekReady,
+  onEnded,
 }: {
   url: string;
   title: string;
@@ -78,12 +79,13 @@ export function BunnyPlayer({
   onPosition: (seconds: number) => void;
   onPause: () => void;
   onSeekReady?: (seek: ((seconds: number) => void) | null) => void;
+  onEnded?: () => void;
 }) {
   const frame = useRef<HTMLIFrameElement>(null),
     [ready, setReady] = useState(false),
     [error, setError] = useState(""),
-    callbacks = useRef({ onPosition, onPause, onSeekReady });
-  callbacks.current = { onPosition, onPause, onSeekReady };
+    callbacks = useRef({ onPosition, onPause, onSeekReady, onEnded });
+  callbacks.current = { onPosition, onPause, onSeekReady, onEnded };
   const origin = new URL(url).origin;
   useEffect(() => {
     let active = true;
@@ -131,15 +133,20 @@ export function BunnyPlayer({
             if (position !== null) callbacks.current.onPosition(position);
             callbacks.current.onPause();
           });
+      },
+      onFinished = () => {
+        if (active) callbacks.current.onEnded?.();
       };
     player.on("ready", onReady);
     player.on("timeupdate", onTime);
     player.on("pause", onPaused);
+    player.on("ended", onFinished);
     return () => {
       active = false;
       player.off("ready", onReady);
       player.off("timeupdate", onTime);
       player.off("pause", onPaused);
+      player.off("ended", onFinished);
       player.receive = () => false;
       iframe.onload = null;
       player.elem = null;

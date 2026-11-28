@@ -4,6 +4,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
 import { cache, type Space } from "./api";
 import { Composer } from "./pages/community";
+import { draftStorageKey, readDraft } from "./draft";
+import { DraftOwner } from "./ui";
 
 vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:58621");
@@ -25,6 +27,7 @@ const listed = (spaces: Space[]) => Response.json(page(spaces));
 afterEach(() => {
   cleanup();
   cache.clear();
+  localStorage.clear();
   sessionStorage.removeItem(draftPrefix + "new");
   sessionStorage.removeItem(draftPrefix + post.id);
   vi.unstubAllGlobals();
@@ -44,10 +47,12 @@ function mount(
   render(
     <QueryClientProvider client={cache}>
       <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route path="/app/comunidade/novo" element={<Composer />} />
-          <Route path="/app/comunidade/:post/editar" element={<Composer />} />
-        </Routes>
+        <DraftOwner.Provider value="autor-qa">
+          <Routes>
+            <Route path="/app/comunidade/novo" element={<Composer />} />
+            <Route path="/app/comunidade/:post/editar" element={<Composer />} />
+          </Routes>
+        </DraftOwner.Provider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -152,13 +157,14 @@ it.each([
   expect(title).toHaveValue("Título em rascunho");
   expect(bodyField()).toHaveValue("Texto em rascunho.");
   fireEvent.input(title, { target: { value: "Rascunho atualizado" } });
-  expect(JSON.parse(sessionStorage.getItem(draftPrefix + id)!)).toEqual({
-    title: "Rascunho atualizado", body: "Texto em rascunho.", space: general.id,
-  });
   delayed.resolve();
   await screen.findByRole("option", { name: general.name });
   expect(spaceField()).toHaveValue(general.id);
   expect(title).toHaveValue("Rascunho atualizado");
+  const key = draftStorageKey("autor-qa", `${path}|Enviar para revisão|${id === "new" ? "" : id}`);
+  await waitFor(() => expect(readDraft(key)?.fields).toEqual(
+    [["title", "Rascunho atualizado"], ["space", general.id], ["body", "Texto em rascunho."]],
+  ));
 });
 
 it("edição sem rascunho usa o espaço salvo e reenvia a mesma publicação em revisão", async () => {

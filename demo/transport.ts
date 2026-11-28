@@ -100,7 +100,7 @@ const findLesson = (id: unknown, profile: Profile) => {
       return { course, module, lesson, can_access: lesson.can_access, reason: lesson.can_access ? null : "Acesso restrito",
         previous_id: lessons[index - 1]?.id ?? null, next_id: lessons[index + 1]?.id ?? null,
         position_seconds: progressOf(profile)[lesson.id]?.position_seconds ?? 0, completed: lesson.completed,
-        materials: lesson.id === material.lesson_id ? [material] : [] };
+        materials: material.lesson_ids?.includes(lesson.id) ? [material] : [] };
     }
   }
   return null;
@@ -131,6 +131,22 @@ function countByStatus(rows: readonly (Row | Ticket)[]) {
   const counts: Record<string, number> = {};
   for (const row of rows) counts[str(row.status)] = (counts[str(row.status)] ?? 0) + 1;
   return counts;
+}
+const deletable = ["lessons", "sections", "modules", "materials", "material_folders"];
+const lessonLinks = (row: Row) => Array.isArray(row.lesson_ids) ? row.lesson_ids.map(String) : [];
+// Mesmo alcance de app_private.delete_scope: a pasta leva as subpastas; órfão é o material cujas aulas caem todas.
+function deleteScope(entity: string, id: string) {
+  if (!deletable.includes(entity)) return fail("Esta entidade não pode ser excluída.");
+  if (!recordsFor(entity).some((row) => row.id === id)) return fail("Registro indisponível.");
+  const folders = entity === "material_folders" ? [id] : [];
+  for (const folder of folders) folders.push(...recordsFor("material_folders").filter((row) => row.parent_id === folder).map((row) => row.id));
+  const sections = recordsFor("sections").filter((row) => (entity === "sections" && row.id === id) || (entity === "modules" && row.module_id === id)).map((row) => row.id);
+  const lessons = recordsFor("lessons").filter((row) => (entity === "lessons" && row.id === id) || sections.includes(str(row.section_id))).map((row) => row.id);
+  return {
+    sections, lessons, folders,
+    materials: recordsFor("materials").filter((row) => (entity === "materials" && row.id === id) || folders.includes(str(row.folder_id))).map((row) => row.id),
+    orphans: recordsFor("materials").filter((row) => lessonLinks(row).length > 0 && lessonLinks(row).every((lesson) => lessons.includes(lesson))).length,
+  };
 }
 const saveRow = (rows: Row[], values: Args, id: string) => {
   const row = rows.find((item) => item.id === id);
@@ -397,6 +413,38 @@ function call(name: string, a: Args, profile: Profile) {
         return fail("Esta alteração exige uma instalação do Icarus.", 501);
       return saveRow(state.records[entity] ??= [], a.p_data as Args, id);
     }
+    case "app_admin_unlink_material": {
+      const row = state.records.materials.find((item) => item.id === a.p_material_id);
+      const links = Array.isArray(row?.lesson_ids) ? row.lesson_ids.map(String) : [];
+      if (!row || !links.includes(lessonId)) return fail("Registro indisponível.");
+      const rest = links.filter((item) => item !== lessonId);
+      row.lesson_ids = rest;
+      // Sem nenhuma aula, o material volta para rascunho, como no servidor.
+      if (!rest.length && row.status !== "archived") row.status = "draft";
+      return { id: row.id, status: row.status ?? "published" };
+    }
+    case "app_admin_archive": {
+      const row = recordsFor(str(a.p_entity)).find((item) => item.id === id);
+      if (!row) return fail("Registro indisponível.");
+      // Como no servidor, sem senha: arquivar guarda o estado anterior e restaurar volta a ele.
+      if (a.p_archived === true && row.status !== "archived") Object.assign(row, { previous_status: row.status, status: "archived" });
+      if (a.p_archived === false && row.status === "archived") row.status = row.previous_status ?? "draft";
+      return { id, archived: a.p_archived === true };
+    }
+    case "app_admin_delete_preview": {
+      const scope = deleteScope(str(a.p_entity), id);
+      if (scope instanceof Response) return scope;
+      return {
+        // Como no banco: a seção automática sai com o módulo, mas não entra no resumo.
+        sections: recordsFor("sections").filter((row) => scope.sections.includes(row.id) && !row.is_default).length,
+        lessons: scope.lessons.length, materials: scope.materials.length,
+        folders: scope.folders.filter((folder) => folder !== id).length,
+        students: Object.values(state.progress).filter((rows) => scope.lessons.some((lesson) => lesson in rows)).length,
+        comments: state.lessonComments.filter((row) => scope.lessons.includes(str(row.lesson_id))).length,
+        linked_materials: recordsFor("materials").filter((row) => scope.materials.includes(row.id) && lessonLinks(row).length).length,
+        orphaned_materials: scope.orphans,
+      };
+    }
     case "app_admin_default_section": {
       const module = state.records.modules.find((row) => row.id === a.p_module_id);
       if (!module) return missing();
@@ -538,19 +586,19 @@ export const transport: typeof fetch = async (input, init) => {
   if (request.signal.aborted) throw new DOMException("Cancelado", "AbortError");
   const endpoint = new URL(request.url);
   if (endpoint.origin !== url) return fail("Destinos externos estão indisponíveis na demonstração.", 403);
+  const path = endpoint.pathname;
+  if (path === "/auth/v1/logout") return new Response(null, { status: 204 });
   const session = request.headers.get("authorization")?.split(" ")[1]?.split(".")[1];
   let sub: string | undefined;
   try { sub = session && JSON.parse(atob(session.replaceAll("-", "+").replaceAll("_", "/"))).sub; } catch { /* Sem sessão. */ }
   const profile = state.profiles.find((item) => item.id === sub);
   const a: Args = request.headers.get("content-type")?.includes("application/json") ? await request.json() : {};
-  const path = endpoint.pathname;
   if (path === "/auth/v1/token") {
     const account = demoAccounts.findIndex((item) => item.email === a.email && item.password === a.password);
     const actor = account >= 0 ? state.profiles[account] : state.profiles.find((item) => item.id === a.refresh_token);
     if (!actor) return fail("Invalid login credentials", 400, "invalid_credentials");
     return Response.json(token(actor));
   }
-  if (path === "/auth/v1/logout") return new Response(null, { status: 204 });
   if (path === "/auth/v1/user" && request.method === "GET" && profile) return Response.json(user(profile));
   if (path === "/rest/v1/rpc/app_public_context")
     return Response.json({ name: state.installation.name, modules: state.installation.modules ?? {}, plans, legal_versions: legalVersions, legal_ready: true, registration_enabled: false });
@@ -560,9 +608,17 @@ export const transport: typeof fetch = async (input, init) => {
   }
   if (path === "/functions/v1/capabilities") {
     const services = { storage: true, email: "local", mode: "local" };
-    if (a.action === undefined) return Response.json({ asaas: false, bunny: false, storage: true });
+    if (a.action === undefined) return Response.json({ asaas: false, bunny: false, bunny_search: false, storage: true });
     if (a.action === "integration-status" && profile?.role === "admin") {
       return Response.json({ ...services, demo: true, configured: false, can_write: false, test_ready: false, fields: {} });
+    }
+    if (a.action === "bunny-videos" && (profile?.role === "admin" || profile?.role === "instructor")) {
+      const items = [
+        { id: demoId(901), title: "DEMONSTRAÇÃO Boas-vindas", length: 95, ready: true },
+        { id: demoId(902), title: "DEMONSTRAÇÃO Módulo 1", length: 754, ready: true },
+        { id: demoId(903), title: "DEMONSTRAÇÃO Em processamento", length: 0, ready: false },
+      ].filter((video) => matches(str(a.query), video.title));
+      return Response.json({ items, total: items.length, page: 1 });
     }
     return fail("A configuração exige uma instalação do Icarus.", 403);
   }
@@ -573,7 +629,7 @@ export const transport: typeof fetch = async (input, init) => {
     if (lesson && !lesson.can_access) return fail("Aula indisponível.", 403);
     const youtube = lesson && str((lesson.lesson as Row | undefined)?.video_id);
     if (youtube && /^[A-Za-z0-9_-]{11}$/.test(youtube))
-      return Response.json({ url: `https://www.youtube-nocookie.com/embed/${youtube}?rel=0`, expires_at: expires(), provider: "youtube" });
+      return Response.json({ url: `https://www.youtube-nocookie.com/embed/${youtube}?rel=0&enablejsapi=1`, expires_at: expires(), provider: "youtube" });
     if (lesson || file) {
       const media = lesson ? await getVideo() : attachment ??= URL.createObjectURL(new Blob([roteiro], { type: "text/plain" }));
       return Response.json({ url: media, expires_at: expires(), provider: "storage" });
@@ -582,6 +638,24 @@ export const transport: typeof fetch = async (input, init) => {
     if (covered) return Response.json({ url: cover ??= URL.createObjectURL(new Blob([coverArt], { type: "image/svg+xml" })),
       expires_at: expires(), provider: "storage", focus: covered.cover_focus ?? "50% 50%" });
     return fail("Arquivo indisponível nesta demonstração.", 404);
+  }
+  // A demo não fala com o Gravatar: a imagem padrão gerada continua no lugar.
+  if (path === "/functions/v1/upload" && a.action === "gravatar") return Response.json({ avatar: false });
+  if (path === "/functions/v1/upload" && a.action === "delete") {
+    if (profile.role !== "admin") return fail("Você não tem permissão para esta ação.", 403, "42501");
+    const scope = deleteScope(str(a.entity), str(a.id));
+    if (scope instanceof Response) return scope;
+    const gone = new Set([str(a.id), ...scope.sections, ...scope.lessons, ...scope.folders, ...scope.materials]);
+    for (const entity of deletable) state.records[entity] = recordsFor(entity).filter((row) => !gone.has(row.id));
+    for (const row of recordsFor("materials")) {
+      const links = lessonLinks(row), rest = links.filter((lesson) => !gone.has(lesson));
+      if (rest.length === links.length) continue;
+      row.lesson_ids = rest;
+      // Como no servidor: sem nenhuma aula, o material volta para rascunho.
+      if (!rest.length && row.status !== "archived") row.status = "draft";
+    }
+    store();
+    return Response.json({ deleted: true, files_removed: 0 });
   }
   if (!path.startsWith("/rest/v1/rpc/") || request.method !== "POST") return fail("Esta operação exige uma instalação do Icarus.", 501);
   const result = call(path.split("/").at(-1)!, a, profile);

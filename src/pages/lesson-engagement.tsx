@@ -262,6 +262,7 @@ function NotesPanel({
     <div className="lesson-engagement-panel">
       <Form
         key={formRevision}
+        draft={editor.note?.id}
         className="lesson-engagement-form lesson-engagement-note-form"
         label={editor.note ? "Salvar alterações" : "Salvar anotação"}
         successMessage="Anotação salva."
@@ -420,6 +421,7 @@ function CommentsPanel({ lessonId, active = true, authorName }: Parameters<typeo
         </span>
         <Form
           key={formRevision}
+          draft={parent?.id}
           className={parent ? "lesson-engagement-form" : "lesson-engagement-form lesson-engagement-comment-form"}
           label={parent ? "Enviar resposta" : "Publicar comentário"}
           disabled={!query.data || !!query.error}
@@ -518,6 +520,7 @@ function ModerationPanel({ lessonId }: LessonProps) {
                   <p className="lesson-engagement-body">{comment.body}</p>
                   {comment.status === "pending" && (
                     <Form
+                      draft={false}
                       className="lesson-engagement-form"
                       label="Registrar decisão" disabled={mutation.isPending} successMessage=""
                       onSave={async (data) => {

@@ -40,30 +40,75 @@ beforeEach(() => {
 
 function choose(file: File) {
   render(<Upload kind="avatar" resourceId="pessoa-1" />);
-  const input = screen.getByLabelText("Foto do perfil");
+  const input = screen.getByLabelText("Foto do perfil", { selector: "input" });
   fireEvent.change(input, { target: { files: [file] } });
   return input;
 }
 
 it("o seletor da foto aceita só JPG e PNG de até 20 MB", () => {
   render(<Upload kind="avatar" resourceId="pessoa-1" />);
-  expect(screen.getByLabelText("Foto do perfil")).toHaveAttribute("accept", "image/jpeg,image/png");
-  expect(screen.getByText("JPG ou PNG de até 20 MB.")).toBeInTheDocument();
+  expect(screen.getByLabelText("Foto do perfil", { selector: "input" })).toHaveAttribute("accept", "image/jpeg,image/png");
+  expect(screen.getByRole("button", { name: "Selecionar arquivo" })).toHaveAccessibleDescription("JPG ou PNG · até 20 MB");
 });
 
-it("a capa mostra um seletor em português com o nome do arquivo e habilita o envio após a escolha", () => {
+it.each([
+  ["course-cover", "PNG, JPG ou WebP · até 500 KB depois de otimizada · ideal 1600\u00a0×\u00a0900\u00a0px"],
+  ["material", "PDF, imagem, ZIP, TXT ou MP3 · PDF até 5 MB e imagem até 500 KB depois de otimizados · ZIP, TXT e MP3 até 500 MB"],
+  ["post-image", "PNG, JPG ou WebP · até 500 KB depois de otimizada"],
+  ["ticket-attachment", "Imagem, PDF, ZIP, TXT ou MP3 · imagem até 500 KB e PDF até 5 MB depois de otimizados · demais até 20 MB"],
+] as const)("%s mostra a área de arraste com a dica de tipos e limite", (kind, hint) => {
+  render(<Upload kind={kind} resourceId="registro-1" />);
+  expect(screen.getByText("Arraste o arquivo aqui")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Selecionar arquivo" })).toHaveAccessibleDescription(hint);
+});
+
+it("a capa aceita só imagem no seletor", () => {
   render(<Upload kind="course-cover" resourceId="curso-1" />);
+  expect(screen.getByLabelText("Enviar arquivo", { selector: "input" })).toHaveAttribute("accept", "image/png,image/jpeg,image/webp");
+});
+
+it("material começa o envio ao escolher o arquivo, sem botão Enviar arquivo", async () => {
+  let finish!: (file: File) => void;
+  optimize.mockReturnValue(new Promise<File>((resolve) => { finish = resolve; }));
+  edge.mockImplementation((_name: string, body: { action: string }) =>
+    Promise.resolve(body.action === "reserve" ? { upload_id: "u1", bucket: "icarus-private", path: "material/m/u1.pdf", expires_at: "" } : {}));
+  storageUpload.mockResolvedValue({ error: null });
+  render(<Upload kind="material" resourceId="material-1" />);
+  expect(screen.queryByRole("button", { name: "Enviar arquivo" })).not.toBeInTheDocument();
+  const pdf = new File([new Uint8Array(1024)], "apostila.pdf", { type: "application/pdf" });
+  fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), { target: { files: [pdf] } });
+  expect(await screen.findByText("Otimizando arquivo…")).toBeInTheDocument();
+  expect(screen.getByText("apostila.pdf").parentElement).toHaveTextContent("apostila.pdf · 1 KB");
+  expect(screen.getByRole("button", { name: "Trocar arquivo" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Cancelar envio" })).toBeInTheDocument();
+  expect(screen.getByLabelText("Envio em andamento, sem estimativa percentual")).toBeInTheDocument();
+  finish(pdf);
+  expect(await screen.findByText("Arquivo enviado e associado ao registro.")).toBeInTheDocument();
+  expect(edge.mock.calls.map(([, body]) => body.action)).toEqual(["reserve", "finalize"]);
+  expect(screen.getByRole("button", { name: "Selecionar arquivo" })).toBeEnabled();
+});
+
+it("vídeo escolhido é recusado na tela com a frase do vídeo", async () => {
+  render(<Upload kind="material" resourceId="material-1" />);
+  const video = new File([new Uint8Array(64)], "aula.mp4", { type: "video/mp4" });
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  const submit = screen.getByRole("button", { name: "Enviar arquivo" });
-  expect(screen.getByText("Escolher arquivo")).toBeInTheDocument();
-  expect(screen.getByText("Nenhum arquivo selecionado")).toBeInTheDocument();
-  expect(input).toHaveAttribute("accept", "image/png,image/jpeg,image/webp");
-  expect(input).toHaveAccessibleDescription("PNG, JPG ou WebP de até 20 MB. Depois de otimizada, a imagem precisa ficar com até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px.");
-  expect(submit).toBeDisabled();
-  fireEvent.change(input, { target: { files: [new File([png], "capa.png", { type: "image/png" })] } });
-  expect(screen.getByText("capa.png")).toBeInTheDocument();
-  expect(submit).toBeEnabled();
+  fireEvent.change(input, { target: { files: [video] } });
+  expect(await screen.findByRole("alert")).toHaveTextContent("A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube.");
+  expect(input).toHaveValue("");
+  fireEvent.drop(screen.getByRole("group", { name: "Enviar arquivo" }), { dataTransfer: { files: [video] } });
+  expect(screen.getByRole("alert")).toHaveTextContent("A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube.");
+  expect(optimize).not.toHaveBeenCalled();
+  expect(edge).not.toHaveBeenCalled();
   expect(invoke).not.toHaveBeenCalled();
+});
+
+it("soltar a capa na área começa o envio", async () => {
+  invoke.mockResolvedValue({ data: { uploaded: true }, error: null });
+  render(<Upload kind="course-cover" resourceId="curso-1" />);
+  const capa = new File([png], "capa.png", { type: "image/png" });
+  fireEvent.drop(screen.getByRole("group", { name: "Enviar arquivo" }), { dataTransfer: { files: [capa] } });
+  expect(await screen.findByText("Arquivo enviado e associado ao registro.")).toBeInTheDocument();
+  expect(invoke.mock.calls[0][1].body.get("file")).toBe(capa);
 });
 
 it("recusa capa original acima de 20 MB antes de enviar e diz o motivo", async () => {
@@ -72,8 +117,7 @@ it("recusa capa original acima de 20 MB antes de enviar e diz o motivo", async (
   fireEvent.change(input, { target: { files: [new File([jpeg(20971521)], "capa.jpg", { type: "image/jpeg" })] } });
   expect(await screen.findByText("O arquivo passa de 20 MB. Escolha um menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");
-  expect(screen.getByText("Nenhum arquivo selecionado")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Enviar arquivo" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Selecionar arquivo" })).toBeEnabled();
   expect(invoke).not.toHaveBeenCalled();
 });
 
@@ -84,9 +128,8 @@ it("capa de 1 MB é aceita, otimizada e enviada já dentro de 500 KB", async () 
   fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), {
     target: { files: [new File([jpeg(1024 * 1024)], "capa.jpg", { type: "image/jpeg" })] },
   });
-  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
   expect(await screen.findByText("Arquivo otimizado de 1024 KB para 100 KB e enviado.")).toBeInTheDocument();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   expect((invoke.mock.calls[0][1].body.get("file") as File).size).toBe(100 * 1024);
 });
 
@@ -96,22 +139,19 @@ it("imagem que continua acima de 500 KB depois de otimizar é recusada sem envio
   fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), {
     target: { files: [new File([jpeg(3 * 1024 * 1024)], "capa.jpg", { type: "image/jpeg" })] },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
   expect(await screen.findByText("Mesmo otimizada, a imagem ficou com 700 KB. O limite é 500 KB.")).toBeInTheDocument();
   expect(invoke).not.toHaveBeenCalled();
-  // O arquivo recusado sai do campo: um novo clique não repete a mesma recusa.
-  expect(screen.getByText("Nenhum arquivo selecionado")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Enviar arquivo" })).toBeDisabled();
+  // O arquivo recusado sai do campo: escolher o mesmo arquivo de novo volta a disparar a escolha.
+  expect(screen.getByLabelText("Enviar arquivo", { selector: "input" })).toHaveValue("");
+  expect(screen.getByRole("button", { name: "Selecionar arquivo" })).toBeEnabled();
 });
 
-it("imagem de post original acima de 20 MB é recusada antes do envio, com a dica geral", async () => {
+it("imagem de post original acima de 20 MB é recusada antes do envio", async () => {
   render(<Upload kind="post-image" resourceId="post-1" />);
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  expect(input).toHaveAccessibleDescription("Imagem e PDF de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 500 KB (imagem) ou 5 MB (PDF). Outros anexos até 20 MiB.");
   fireEvent.change(input, { target: { files: [new File([jpeg(20971521)], "foto.jpg", { type: "image/jpeg" })] } });
   expect(await screen.findByText("O arquivo passa de 20 MB. Escolha um menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");
-  expect(screen.getByRole("button", { name: "Enviar arquivo" })).toBeDisabled();
   expect(invoke).not.toHaveBeenCalled();
 });
 
@@ -119,12 +159,11 @@ it("PDF de material: original acima de 20 MB é recusado na escolha; acima de 5 
   optimize.mockResolvedValue(new File([new Uint8Array(6 * 1024 * 1024)], "apostila.pdf", { type: "application/pdf" }));
   render(<Upload kind="material" resourceId="material-1" />);
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  expect(input).toHaveAccessibleDescription("PDF e imagem de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual.");
   fireEvent.change(input, { target: { files: [new File([new Uint8Array(20971521)], "apostila.pdf", { type: "application/pdf" })] } });
   expect(await screen.findByText("O arquivo passa de 20 MB. Escolha um menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");
+  expect(optimize).not.toHaveBeenCalled();
   fireEvent.change(input, { target: { files: [new File([new Uint8Array(8 * 1024 * 1024)], "apostila.pdf", { type: "application/pdf" })] } });
-  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
   expect(await screen.findByText("Mesmo otimizado, o PDF ficou com 6 MB. O limite é 5 MB.")).toBeInTheDocument();
   expect(edge).not.toHaveBeenCalled();
 });
@@ -137,7 +176,6 @@ it("capa é otimizada antes do envio e mostra quanto diminuiu", async () => {
   fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), {
     target: { files: [new File([jpeg(400 * 1024)], "capa.png", { type: "image/png" })] },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
   expect(await screen.findByText("Otimizando arquivo…")).toBeInTheDocument();
   finish(new File([new Uint8Array(100 * 1024)], "capa.webp", { type: "image/webp" }));
   expect(await screen.findByText("Arquivo otimizado de 400 KB para 100 KB e enviado.")).toBeInTheDocument();
@@ -151,11 +189,31 @@ it("cancelar durante a otimização não envia nada", async () => {
   render(<Upload kind="course-cover" resourceId="curso-1" />);
   const original = new File([jpeg(1024)], "capa.jpg", { type: "image/jpeg" });
   fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), { target: { files: [original] } });
-  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
   fireEvent.click(await screen.findByRole("button", { name: "Cancelar envio" }));
   finish(original);
   expect(await screen.findByText(/Envio cancelado/)).toBeInTheDocument();
   expect(invoke).not.toHaveBeenCalled();
+});
+
+it.each(["cancelar", "fechar"] as const)("%s durante a confirmação do servidor não avisa conclusão a quem usa o envio", async (mode) => {
+  let confirm!: (value: unknown) => void;
+  edge.mockImplementation((_name: string, body: { action: string }) => body.action === "reserve"
+    ? Promise.resolve({ upload_id: "u1", bucket: "icarus-private", path: "material/m/u1.zip", expires_at: "" })
+    : new Promise((resolve) => { confirm = resolve; }));
+  storageUpload.mockResolvedValue({ error: null });
+  const uploaded = vi.fn();
+  const { unmount } = render(<Upload kind="material" resourceId="material-1" onUploaded={uploaded} />);
+  fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), {
+    target: { files: [new File(["PK"], "mapa.zip", { type: "application/zip" })] },
+  });
+  expect(await screen.findByText("Confirmando o arquivo no servidor…")).toBeInTheDocument();
+  if (mode === "cancelar") fireEvent.click(screen.getByRole("button", { name: "Cancelar envio" }));
+  else unmount();
+  confirm({});
+  // Quem usa o envio (o editor da aula publica ao concluir) não pode agir sobre um envio cancelado.
+  if (mode === "cancelar") expect(await screen.findByText(/Envio cancelado/)).toBeInTheDocument();
+  else await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(uploaded).not.toHaveBeenCalled();
 });
 
 it("material reserva e envia o PDF e a imagem já otimizados", async () => {
@@ -167,7 +225,6 @@ it("material reserva e envia o PDF e a imagem já otimizados", async () => {
   const { unmount } = render(<Upload kind="material" resourceId="material-1" onUploaded={uploaded} />);
   const pick = (file: File) => fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), { target: { files: [file] } });
   pick(new File([new Uint8Array(6 * 1024 * 1024)], "apostila.pdf", { type: "application/pdf" }));
-  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
   expect(await screen.findByText("Arquivo otimizado de 6144 KB para 1 KB e enviado.")).toBeInTheDocument();
   expect(edge.mock.calls[0][1]).toMatchObject({ action: "reserve", file_name: "apostila.pdf", content_type: "application/pdf", size_bytes: 1024 });
   expect((storageUpload.mock.calls[0][1] as File).size).toBe(1024);
@@ -177,18 +234,23 @@ it("material reserva e envia o PDF e a imagem já otimizados", async () => {
   optimize.mockResolvedValueOnce(new File([new Uint8Array(2048)], "mapa.webp", { type: "image/webp" }));
   render(<Upload kind="material" resourceId="material-1" />);
   pick(new File([jpeg(2 * 1024 * 1024)], "mapa.png", { type: "image/png" }));
-  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
   expect(await screen.findByText("Arquivo otimizado de 2048 KB para 2 KB e enviado.")).toBeInTheDocument();
   expect(edge.mock.calls.at(-2)?.[1]).toMatchObject({ file_name: "mapa.webp", content_type: "image/webp", size_bytes: 2048 });
 });
 
-it("vídeo da aula não passa pela otimização", async () => {
-  render(<Upload kind="lesson" resourceId="aula-1" />);
-  fireEvent.change(screen.getByLabelText("Arquivo de vídeo", { selector: "input" }), {
-    target: { files: [new File([new Uint8Array(1024)], "aula.mp4", { type: "video/mp4" })] },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
-  await screen.findByRole("alert");
+it("o campo de material não lista MP4 na dica", () => {
+  render(<Upload kind="material" resourceId="material-1" />);
+  expect(screen.getByRole("button", { name: "Selecionar arquivo" })).not.toHaveAccessibleDescription(/MP4|vídeo/i);
+});
+
+it("foto de perfil espera o recorte e o Salvar foto", async () => {
+  choose(new File([png], "foto.png", { type: "image/png" }));
+  await screen.findByLabelText("Prévia do recorte quadrado da foto");
+  expect(screen.getByRole("button", { name: "Salvar foto" })).toBeEnabled();
+  expect(screen.getByText("foto.png").parentElement).toHaveTextContent("foto.png · 12 B");
+  expect(screen.getByRole("button", { name: "Trocar arquivo" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Cancelar envio" })).not.toBeInTheDocument();
+  expect(invoke).not.toHaveBeenCalled();
   expect(optimize).not.toHaveBeenCalled();
 });
 
@@ -250,7 +312,7 @@ it("Salvar foto envia o recorte em JPEG com fundo branco, confirma e encerra a p
   const onUploaded = vi.fn();
   render(<Upload kind="avatar" resourceId="pessoa-1" onUploaded={onUploaded} />);
   expect(screen.getByRole("button", { name: "Salvar foto" })).toBeDisabled();
-  fireEvent.change(screen.getByLabelText("Foto do perfil"), { target: { files: [new File([png], "foto.png", { type: "image/png" })] } });
+  fireEvent.change(screen.getByLabelText("Foto do perfil", { selector: "input" }), { target: { files: [new File([png], "foto.png", { type: "image/png" })] } });
   await screen.findByLabelText("Prévia do recorte quadrado da foto");
   loads.forEach((load) => load());
   expect(fills).toEqual(["#fff"]);

@@ -14,23 +14,56 @@ async function testConnection(d: Dependencies, url: string, headers: HeadersInit
 }
 
 export const createHandler = (d: Dependencies = defaults) => {
-  const flags = minuteCache<{ asaas: boolean; bunny: boolean; storage: boolean }>();
+  const flags = minuteCache<{ asaas: boolean; bunny: boolean; bunny_search: boolean; storage: boolean }>();
   return endpoint(async (req) => {
     const body = req.method === "POST" && req.body ? await json(req) : {};
     if (body.action === undefined) {
       return flags.get(async () => {
         const { admin } = clients(d);
-        const [asaas, bunny] = await Promise.all([asaasConfig(d, admin), bunnyConfig(d, admin)]);
+        // Sem a chave da API no ambiente, a busca depende da chave salva no cofre.
+        const [asaas, bunny] = await Promise.all([asaasConfig(d, admin), bunnyConfig(d, admin, d.env("BUNNY_STREAM_API_KEY") === undefined)]);
         return {
           asaas: asaas.configured && asaas.checkoutAllowed &&
             (d.env("ICARUS_MODE") !== "production" || Boolean(d.env("TURNSTILE_SECRET_KEY"))),
           bunny: bunny.playbackReady,
+          bunny_search: bunny.playbackReady && Boolean(bunny.fields.api_key.value),
           storage: true,
         };
       });
     }
 
     const a = (await actor(req, d))!;
+    if (body.action === "bunny-videos") {
+      if (!["admin", "instructor"].includes(a.profile.role) || a.profile.password_setup_required || a.profile.demo) {
+        throw new HttpError(403, "FORBIDDEN", "Somente administradores e instrutores podem buscar vídeos do Bunny.");
+      }
+      const { query, page } = body;
+      if (typeof query !== "string" || query.length > 100 || typeof page !== "number" || !Number.isInteger(page) || page < 1 || page > 1000) {
+        throw new HttpError(422, "INVALID_INPUT", "Confira a busca e a página.");
+      }
+      await rpc(a.admin, "app_staff_bunny_search_throttle", { p_actor_id: a.userInfo.id });
+      const { fields } = await bunnyConfig(d, a.admin, true);
+      if (!validLibrary(fields.library_id.value) || !fields.api_key.value) {
+        throw new HttpError(409, "BUNNY_NOT_CONFIGURED", "Configure o Bunny Stream em Configurações > Integrações.");
+      }
+      const response = await d.fetch(
+        `https://video.bunnycdn.com/library/${fields.library_id.value}/videos?page=${page}&itemsPerPage=20&orderBy=date&search=${encodeURIComponent(query.trim())}`,
+        { headers: { AccessKey: fields.api_key.value }, redirect: "error", signal: AbortSignal.timeout(8_000) },
+      ).catch(() => null);
+      if (!response?.ok) await response?.body?.cancel().catch(() => {});
+      if (response?.status === 401 || response?.status === 403) {
+        throw new HttpError(502, "BUNNY_REJECTED", "A API do Bunny Stream recusou a chave. Confira as credenciais salvas.");
+      }
+      const data = response?.ok ? await response.json().catch(() => null) : null;
+      if (!Array.isArray(data?.items)) throw new HttpError(502, "BUNNY_UNAVAILABLE", "A API do Bunny Stream está indisponível. Tente novamente.");
+      return {
+        items: data.items.map((video: Record<string, unknown>) => ({
+          id: String(video.guid), title: String(video.title ?? ""), length: Number(video.length) || 0, ready: video.status === 4,
+        })),
+        total: Number(data.totalItems) || 0,
+        page,
+      };
+    }
     if (a.profile.role !== "admin" || a.profile.password_setup_required || a.profile.demo) {
       throw new HttpError(403, "FORBIDDEN", "Somente administradores podem consultar as integrações.");
     }

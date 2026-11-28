@@ -136,14 +136,10 @@ update auth.sessions set not_after=null where id=pg_temp.sid(1);
 select pg_temp.login(3);
 set local role authenticated;
 select pg_temp.assert(public.app_post(pg_temp.id(22))->'post'->>'status'='archived','staff historical read');
-select pg_temp.denied('select public.app_admin_archive(''posts'',pg_temp.id(22),true,null)','admin still requires reauth');
+select pg_temp.denied('select public.app_admin_member(pg_temp.id(1),''{}'',''Conferência da reautenticação'',null)','admin member change still requires reauth');
 select pg_temp.assert(public.app_archive_post(pg_temp.id(29),true)->>'archived'='true','admin author own archive');
-reset role;
-insert into public.reauth_nonces(token_hash,actor_id,session_id,expires_at)
- select encode(extensions.digest('archive-test-'||n,'sha256'),'hex'),pg_temp.id(3),pg_temp.sid(3),now()+interval '5 minutes' from generate_series(1,3)n;
-set local role authenticated;
-select pg_temp.assert(public.app_admin_archive('posts',pg_temp.id(22),true,'archive-test-1')->>'archived'='true','admin overlap archive');
-select pg_temp.assert(public.app_admin_archive('posts',pg_temp.id(29),true,'archive-test-2')->>'archived'='true','admin author administrative overlap');
+select pg_temp.assert(public.app_admin_archive('posts',pg_temp.id(22),true)->>'archived'='true','admin overlap archive');
+select pg_temp.assert(public.app_admin_archive('posts',pg_temp.id(29),true)->>'archived'='true','admin author administrative overlap');
 select pg_temp.denied('select public.app_archive_post(pg_temp.id(29),false)','admin author cannot own restore admin operation');
 reset role;
 select pg_temp.assert((select archived_by=pg_temp.id(3) and archive_source='admin' and previous_status='approved' from public.posts where id=pg_temp.id(22)),'admin marker durable prior state preserved');
@@ -154,7 +150,7 @@ select pg_temp.assert(public.app_post(pg_temp.id(22))->'post'->>'can_restore'='f
 reset role;
 select pg_temp.login(3);
 set local role authenticated;
-select pg_temp.assert(public.app_admin_archive('posts',pg_temp.id(22),false,'archive-test-3')->>'archived'='false','admin restore unchanged');
+select pg_temp.assert(public.app_admin_archive('posts',pg_temp.id(22),false)->>'archived'='false','admin restore unchanged');
 reset role;
 select pg_temp.assert((select status='approved' and archived_by is null and archive_source is null from public.posts where id=pg_temp.id(22)),'admin restores prior state clears marker');
 

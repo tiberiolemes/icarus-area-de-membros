@@ -1,6 +1,7 @@
 import { Fragment, useState, type ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { HelpLink } from "../help-link";
 import { FormHeadingTarget, Heading } from "../ui";
 import { helpPathFor } from "./help-paths";
 import "./admin-settings.css";
@@ -32,7 +33,7 @@ export function AdminSurface({ section, trail, title, description, action, tabs,
       <Heading title={title} action={formAction ? <div className="editor-actions">{action}<div className="heading-submit" ref={setTarget} /></div> : action}>{description}</Heading>
       {tabs}
       <FormHeadingTarget.Provider value={target}>{children}</FormHeadingTarget.Provider>
-      <Link className="button settings-help" to={helpPathFor(pathname, search)}>Ajuda da administração</Link>
+      <HelpLink className="button settings-help" to={helpPathFor(pathname, search)}>Ajuda da administração</HelpLink>
     </div>
   );
 }

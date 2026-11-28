@@ -383,3 +383,49 @@
 
   .admin-settings .admin-metrics > div { padding: var(--stitch-gutter-mobile); }
 }
+
+/* Zona de perigo abaixo de Arquivar registro: borda, ícone e botões na cor de erro do tema. */
+.danger-zone {
+  display: grid;
+  justify-items: start;
+  gap: var(--stitch-space-sm);
+  margin-block: var(--stitch-space-lg);
+  padding: var(--stitch-space-md);
+  border: var(--stitch-border-width) solid var(--stitch-error);
+  border-radius: var(--stitch-radius-base);
+}
+
+.danger-zone h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--stitch-space-sm);
+  margin: 0;
+  color: var(--stitch-error);
+  font: var(--stitch-type-headline-sm-weight) var(--stitch-type-headline-sm-size) /
+    var(--stitch-type-headline-sm-line) var(--stitch-font-family);
+}
+
+.danger-zone p { margin: 0; color: var(--stitch-text-secondary); }
+
+.admin-settings .danger-zone > button {
+  border-color: var(--stitch-error);
+  background: transparent;
+  color: var(--stitch-error);
+}
+
+.admin-settings .danger-zone > button:hover:not(:disabled) {
+  background: var(--stitch-error-surface);
+  color: var(--stitch-on-error-surface);
+}
+
+.dialog .danger-confirm .primary {
+  border-color: var(--stitch-error);
+  background: var(--stitch-error);
+  color: var(--stitch-on-error);
+}
+
+.dialog .danger-confirm .primary:hover:not(:disabled) {
+  border-color: var(--stitch-on-error-surface);
+  background: var(--stitch-on-error-surface);
+  color: var(--stitch-error-surface);
+}

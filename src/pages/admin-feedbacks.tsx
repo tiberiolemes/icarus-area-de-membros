@@ -53,7 +53,7 @@ function FeedbackDetail({ id, onChange }: { id: string; onChange: () => void }) 
           <summary>Ver print</summary>
           {printOpen && <PrivateImage kind="feedback-screenshot" id={item.screenshot_id} alt="Print enviado com o feedback" className="feedback-print" />}
         </details>}
-        <Form submitInHeading label="Salvar situação" submitDisabled={selected === item.status} onSave={async (data) => {
+        <Form submitInHeading draft={id} label="Salvar situação" submitDisabled={selected === item.status} onSave={async (data) => {
           try {
             const updated = await rpc<Pick<Detail, "status" | "revision">>("app_admin_feedback_status", {
               ...args, p_status: value(data, "status"), p_revision: item.revision,

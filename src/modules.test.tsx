@@ -17,7 +17,7 @@ vi.hoisted(() => {
 });
 
 const { profile, settings, plans, refetch, rpc } = vi.hoisted(() => ({
-  profile: { id: "member-1", full_name: "Pessoa Teste", plan_name: "Plano ativo", current_plan_id: null as string | null, role: "member", theme: undefined as string | undefined },
+  profile: { id: "member-1", full_name: "Pessoa Teste", plan_name: "Plano ativo", current_plan_id: null as string | null, role: "member", theme: undefined as string | undefined, gravatar_checked_at: "2026-11-01T00:00:00Z" },
   settings: { name: "Icarus", modules: {} as Record<string, boolean> },
   plans: [] as { id: string; slug: string; name: string; active: boolean; price_cents: number; access_months: number; benefits: string[] }[],
   refetch: vi.fn(),

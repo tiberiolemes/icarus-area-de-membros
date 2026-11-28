@@ -264,6 +264,65 @@
   inline-size: 100%;
 }
 
+/* Alça de arrastar da estrutura: alvo de 44 px, como as setas ao lado. */
+.admin-content .drag-handle {
+  display: inline-grid;
+  place-items: center;
+  inline-size: var(--stitch-control-min-size);
+  block-size: var(--stitch-control-min-size);
+  border-radius: var(--stitch-radius-base);
+  color: var(--stitch-text-secondary);
+  cursor: grab;
+}
+
+.admin-content .drag-handle:hover {
+  background: var(--stitch-surface-hover);
+  color: var(--stitch-text-primary);
+}
+
+.admin-content .drag-handle:active {
+  cursor: grabbing;
+}
+
+.admin-content .drag-handle[aria-disabled] {
+  cursor: progress;
+  opacity: 0.5;
+}
+
+.admin-content [data-dragging] {
+  opacity: 0.5;
+}
+
+/* Linha que mostra onde o item vai cair, na cor de ação do DS. */
+.admin-content [data-drop] {
+  position: relative;
+}
+
+.admin-content [data-drop]::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  block-size: 3px;
+  border-radius: var(--stitch-radius-full);
+  background: var(--stitch-action);
+  pointer-events: none;
+}
+
+.admin-content [data-drop="before"]::after {
+  inset-block-start: -3px;
+}
+
+.admin-content [data-drop="after"]::after {
+  inset-block-end: -3px;
+}
+
+/* Em tela de toque o arraste nativo não funciona: ficam as setas. */
+@media (pointer: coarse) {
+  .admin-content .drag-handle {
+    display: none;
+  }
+}
+
 .admin-content .inline-editor {
   margin: 0;
   padding: var(--stitch-space-lg);
@@ -425,6 +484,11 @@
     align-items: center;
   }
 
+  /* Reordenando, lápis, setas e alça não cabem ao lado do título: descem para a linha de baixo. */
+  .admin-content .lesson-editor-row[data-drag-row] .lesson-editor-title {
+    flex-basis: 100%;
+  }
+
   .content:has(> .admin-content) {
     padding-inline: var(--stitch-gutter-mobile);
   }
@@ -454,6 +518,65 @@
 }
 .admin-courses-index .admin-row > div:first-child { flex: 1 1 16rem; }
 .admin-courses-index .admin-row .actions { flex-wrap: wrap; gap: var(--stitch-space-sm); }
+
+/* Modal "Escolha a aula" da lista de cursos. Fica no portal, fora de .admin-content. */
+.presentation-picker {
+  display: grid;
+  gap: var(--stitch-space-md);
+  margin-block-start: var(--stitch-space-md);
+}
+
+.presentation-picker h3 {
+  margin: 0 0 var(--stitch-space-xs);
+  color: var(--stitch-text-secondary);
+  font: var(--stitch-type-label-uppercase-weight) var(--stitch-type-label-uppercase-size) /
+    var(--stitch-type-label-uppercase-line) var(--stitch-font-family);
+  letter-spacing: var(--stitch-tracking-wider);
+  text-transform: uppercase;
+}
+
+.presentation-picker ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.presentation-picker li + li {
+  border-top: var(--stitch-border-width) solid var(--stitch-border-subtle);
+}
+
+.presentation-picker li > a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stitch-space-sm);
+  min-block-size: var(--stitch-control-min-size);
+  padding: var(--stitch-space-xs) var(--stitch-space-sm);
+  border-radius: var(--stitch-radius-base);
+  color: var(--stitch-text-primary);
+  font-weight: 500;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.presentation-picker li > a:hover {
+  background: var(--stitch-surface-hover);
+}
+
+.presentation-picker li > a > svg {
+  flex: none;
+  color: var(--stitch-text-secondary);
+}
+
+.presentation-picker > .button {
+  justify-self: start;
+}
+
+/* O vazio padrão tem folga de página; no modal, o atalho fica logo abaixo dele. */
+.presentation-picker > .empty {
+  margin: 0;
+  padding-block: var(--stitch-space-sm) 0;
+}
 
 /* Capa do curso: prévias nas proporções em que ela aparece e ponto de foco do corte. */
 .admin-content .cover-focus {

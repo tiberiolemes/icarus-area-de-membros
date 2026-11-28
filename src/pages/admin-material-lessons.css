@@ -1,0 +1,125 @@
+/* Aulas vinculadas do material: lista longa rola dentro da caixa para o resto do formulário continuar à vista. */
+.lesson-links {
+  margin-block: var(--stitch-space-md);
+}
+
+.lesson-links [hidden] {
+  display: none;
+}
+
+/* Título do grupo acima do rótulo do filtro, para os dois não parecerem campos vizinhos. */
+.lesson-links > legend {
+  color: var(--stitch-text-heading);
+  font-weight: 600;
+}
+
+.lesson-links-count {
+  margin-block: 0 var(--stitch-space-sm);
+  color: var(--stitch-text-secondary);
+}
+
+.lesson-links-list {
+  max-block-size: min(24rem, 60dvh);
+  overflow-y: auto;
+  /* Folga para o anel de foco (2 px afastado 3 px) não ser cortado pela rolagem. */
+  padding: var(--stitch-space-sm) var(--stitch-space-md);
+  border: var(--stitch-border-width) solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-base);
+  background: var(--stitch-surface-panel);
+}
+
+.lesson-links-list fieldset + fieldset {
+  margin-block-start: var(--stitch-space-sm);
+}
+
+.lesson-links-list legend {
+  margin: 0;
+  padding-block-start: var(--stitch-space-sm);
+  color: var(--stitch-text-heading);
+  font-weight: 600;
+}
+
+.lesson-links-list fieldset fieldset legend {
+  color: var(--stitch-text-secondary);
+  font-weight: 500;
+}
+
+.lesson-links-list .check {
+  margin: 0;
+}
+
+/* Materiais da aula: caixa como a de Mídia da aula, entre o formulário e Arquivar registro. */
+.lesson-materials {
+  margin-block: var(--stitch-space-md);
+  padding: var(--stitch-space-md);
+  border: var(--stitch-border-width) solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-base);
+}
+
+.lesson-materials h3 {
+  margin: 0 0 var(--stitch-space-sm);
+  color: var(--stitch-text-heading);
+  font: var(--stitch-type-headline-sm-weight) var(--stitch-type-headline-sm-size) /
+    var(--stitch-type-headline-sm-line) var(--stitch-font-family);
+}
+
+.lesson-materials p {
+  margin: 0;
+}
+
+.lesson-materials .empty {
+  margin: 0;
+  padding-block: var(--stitch-space-sm);
+}
+
+.lesson-materials-list {
+  margin: 0 0 var(--stitch-space-md);
+  padding: 0;
+  list-style: none;
+}
+
+.lesson-materials-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stitch-space-sm) var(--stitch-space-md);
+  padding-block: var(--stitch-space-sm);
+  border-bottom: var(--stitch-border-width) solid var(--stitch-border-subtle);
+}
+
+.lesson-materials-list li > div:first-child {
+  flex: 1 1 14rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lesson-materials-list li > div:first-child > * {
+  display: block;
+}
+
+.lesson-materials-list li > div:first-child > span {
+  color: var(--stitch-text-secondary);
+}
+
+/* Reenviar abre o envio na largura da linha, sem a borda de seção do componente. */
+.lesson-materials-list li > .upload {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.lesson-materials-list .upload > .actions:empty {
+  display: none;
+}
+
+.lesson-materials > progress {
+  display: block;
+  inline-size: 100%;
+  margin-block-start: var(--stitch-space-sm);
+}
+
+.lesson-materials-status:not(:empty) {
+  margin-block-start: var(--stitch-space-sm);
+}

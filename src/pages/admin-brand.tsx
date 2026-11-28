@@ -1,17 +1,22 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppWindow, FileText, Globe, ImageUp, Palette } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cache, client, edge, rpc } from "../api";
 import { useAuth, useBootstrap } from "../auth";
+import { clearDraft, draftStorageKey, type SavedDraft } from "../draft";
+import { Dropzone } from "../dropzone";
 import { acceptOf, BrandImage, BrandLogo, brandAssetUrl, brandRatio, checkImageFile, defaultIcon, defaultLogo, type AssetPreview, type AssetVariant } from "../brand";
-import { Action, Field, Form, Notice, QueryState } from "../ui";
+import { Action, DraftNotice, Field, Form, Notice, QueryState, useDraft } from "../ui";
 import "./admin-brand.css";
 
 type NameDraft = { name: string; revision: number | null };
+const nameFields = (draft: NameDraft): SavedDraft["fields"] => [
+  ["installation_name", draft.name], ["revision", String(draft.revision ?? "")],
+];
 type NameSave = { name: string; revision: number; saved: boolean };
 type Variant = "light" | "dark" | "icon";
 
-const logoHint = "SVG, PNG ou WebP, até 500 KB. PNG e WebP precisam de pelo menos 240 × 60 px. Prefira fundo transparente.";
+const logoHint = "SVG, PNG ou WebP · até 500 KB · PNG e WebP com pelo menos 240 × 60 px, de preferência com fundo transparente";
 const assetCopy: Record<AssetVariant, { title: string; noun: string; preview: string; current: string; use: string; empty: string; hint: string; confirm: string; saved: string; removed: string }> = {
   light: {
     title: "Logo colorida", noun: "logo colorida", preview: "Prévia da logo colorida", current: "Logo colorida atual",
@@ -30,14 +35,14 @@ const assetCopy: Record<AssetVariant, { title: string; noun: string; preview: st
   icon: {
     title: "Ícone (favicon)", noun: "ícone", preview: "Prévia do ícone", current: "Ícone atual",
     use: "Aparece na aba do navegador e no atalho da tela inicial do celular, em todas as telas, inclusive antes do login.",
-    empty: "Usando o ícone padrão do Icarus.", hint: "SVG ou PNG quadrado, até 500 KB. PNG precisa de pelo menos 180 × 180 px.",
+    empty: "Usando o ícone padrão do Icarus.", hint: "SVG ou PNG quadrado · até 500 KB · PNG com pelo menos 180 × 180 px",
     confirm: "Remover o ícone? As abas voltam ao ícone padrão do Icarus.",
     saved: "Ícone salvo.", removed: "Ícone removido.",
   },
   signature: {
     title: "Assinatura", noun: "assinatura", preview: "Prévia da assinatura", current: "Assinatura atual",
     use: "Aparece acima do nome do responsável no certificado: na tela, na verificação pública e no PNG e PDF. Certificados já emitidos mantêm a assinatura da emissão. A imagem fica pública: envie uma rubrica feita para certificados, não a assinatura de contratos.",
-    empty: "Nenhuma assinatura enviada.", hint: "PNG com fundo transparente, até 500 KB. Mínimo de 200 × 60 px e máximo de 2000 px de cada lado; recomendado 600 × 200 px.",
+    empty: "Nenhuma assinatura enviada.", hint: "PNG com fundo transparente · até 500 KB · mínimo de 200 × 60 px e máximo de 2000 px de cada lado, recomendado 600 × 200 px",
     confirm: "Remover a assinatura? Os próximos certificados saem sem a imagem; os já emitidos mantêm a deles.",
     saved: "Assinatura salva.", removed: "Assinatura removida.",
   },
@@ -84,6 +89,7 @@ export function AssetCard({ variant, saved, savedRatio, draft: controlled, onDra
   const onDraft = setControlled ?? setOwn;
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
+  const [chosen, setChosen] = useState<File>();
   const [removed, setRemoved] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
   const input = useRef<HTMLInputElement>(null);
@@ -94,6 +100,7 @@ export function AssetCard({ variant, saved, savedRatio, draft: controlled, onDra
   async function choose(file?: File) {
     // Só a última escolha vale: a validação de um arquivo já trocado é descartada.
     const pick = ++latest.current;
+    setChosen(file);
     setError("");
     setRemoved(false);
     onDraft(undefined);
@@ -143,9 +150,9 @@ export function AssetCard({ variant, saved, savedRatio, draft: controlled, onDra
           await onChanged();
         }}
       >
-        <Field label={`${saved ? "Trocar" : "Escolher"} ${copy.noun}`} hint={copy.hint}>
-          <input ref={input} name="file" type="file" accept={acceptOf(variant)} onChange={(event) => void choose(event.currentTarget.files?.[0])} />
-        </Field>
+        <Dropzone label={`${saved ? "Trocar" : "Escolher"} ${copy.noun}`} hint={copy.hint} name="file" accept={acceptOf(variant)}
+          inputRef={input} fileName={draft || checking ? chosen?.name : undefined} fileSize={draft || checking ? chosen?.size : undefined}
+          onFile={(file) => void choose(file)} />
         {error && <Notice error>{error}</Notice>}
       </Form>
       {saved && !draft && !checking && (
@@ -168,10 +175,13 @@ function BrandEditor({ actorId, token, name, revision, logos, ratios }: { actorI
     ratios: { light: logoDrafts.light?.ratio ?? ratios.light, dark: logoDrafts.dark?.ratio ?? ratios.dark },
   };
   const shownIcon = logoDrafts.icon?.url ?? logos.icon ?? defaultIcon;
-  const draftKey = `icarus:draft:${actorId}:installation-name`;
+  const label = "Salvar nome";
+  const legacyKey = draftStorageKey(actorId, "installation-name");
+  const readPublished = useCallback(() => nameFields({ name, revision }), [name, revision]);
+  const localDraft = useDraft(label, undefined, readPublished);
   const [draft, setDraft] = useState<NameDraft | null>(() => {
     try {
-      const stored = JSON.parse(sessionStorage.getItem(draftKey) ?? "null");
+      const stored = JSON.parse(sessionStorage.getItem(legacyKey) ?? "null");
       if (typeof stored?.name !== "string") return null;
       return { name: stored.name, revision: Number.isInteger(stored.revision) ? stored.revision : null };
     } catch {
@@ -190,11 +200,10 @@ function BrandEditor({ actorId, token, name, revision, logos, ratios }: { actorI
 
   function preserve(next: NameDraft | null) {
     setDraft(next);
-    try {
-      if (next) sessionStorage.setItem(draftKey, JSON.stringify(next));
-      else sessionStorage.removeItem(draftKey);
-    } catch {
-      /* The editor continues to hold the draft when browser storage is unavailable. */
+    if (next) localDraft.schedule(() => nameFields(next));
+    else {
+      localDraft.discard();
+      clearDraft(legacyKey);
     }
   }
 
@@ -215,7 +224,8 @@ function BrandEditor({ actorId, token, name, revision, logos, ratios }: { actorI
             </header>
             <Form
               key={formVersion}
-              label="Salvar nome"
+              label={label}
+              draft={false}
               successMessage="Nome da instalação salvo."
               onDone={restoreFocus}
               secondaryAction={draft && (
@@ -249,6 +259,20 @@ function BrandEditor({ actorId, token, name, revision, logos, ratios }: { actorI
                 preserve(null);
               }}
             >
+              {localDraft.pending && <DraftNotice draft={localDraft.pending} onDiscard={() => preserve(null)} onRecover={() => {
+                const stored = Object.fromEntries(localDraft.pending?.fields ?? []);
+                const revision = Number(stored.revision);
+                if (typeof stored.installation_name !== "string") {
+                  localDraft.discard();
+                  return;
+                }
+                setDraft({
+                  name: stored.installation_name,
+                  revision: stored.revision && Number.isSafeInteger(revision) ? revision : null,
+                });
+                input.current?.dispatchEvent(new Event("input", { bubbles: true }));
+                localDraft.hide();
+              }} />}
               <Field label="Nome da instalação" hint="Até 80 caracteres. O nome fica visível ao público após salvar.">
                 <input
                   ref={input}

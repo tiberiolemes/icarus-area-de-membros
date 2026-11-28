@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { HelpCircle } from "lucide-react";
 import { rpc } from "./api";
 import { useAuth, useBootstrap } from "./auth";
 import { readModules, type Modules } from "./modules";
+import { HelpLink } from "./help-link";
 import { helpPathFor } from "./pages/help-paths";
 import { Action } from "./ui";
 
@@ -127,7 +128,7 @@ const steps = [
   {
     target: "course-editor",
     title: "Publique seu conteúdo",
-    body: "Em Estrutura e aulas, use Reordenar para revelar as setas. Abra uma aula para editar a mídia e acessar Editar apresentação. Em um curso ou módulo salvo como rascunho, use Anúncio de lançamento para editar o que os alunos verão antes da publicação.",
+    body: "Em Estrutura e aulas, use Reordenar para arrastar os itens pela alça ou mudar a ordem com as setas. Abra uma aula para editar a mídia e acessar Editar apresentação. Em um curso ou módulo salvo como rascunho, use Anúncio de lançamento para editar o que os alunos verão antes da publicação.",
   },
   {
     target: "ranking",
@@ -202,7 +203,7 @@ const steps = [
   {
     target: "lesson-presentation-editor",
     title: "Monte a apresentação da aula",
-    body: "Cadastre capítulos, destaques, fórmulas, checklist e CTA conforme o conteúdo. Ao remover um item já salvo, confirme a exclusão das marcações associadas.",
+    body: "Cadastre capítulos, destaques, fórmulas, checklist e CTA. Ao reabrir a edição, use Recuperar rascunho para retomar alterações deste navegador. Ao remover um item já salvo, confirme a exclusão das marcações associadas.",
   },
 ];
 // O passo do menu cita só os módulos ligados nesta plataforma.
@@ -212,6 +213,7 @@ function navigationBody(state: Modules) {
   const listed = sections.length > 1 ? `${sections.slice(0, -1).join(", ")} e ${sections.at(-1)}` : sections[0];
   return [
     `O menu reúne ${listed}. No celular, abra o menu pelo topo.`,
+    "No computador, use Recolher menu para ver só os ícones e Expandir menu para voltar a ver os nomes. Os atalhos do rodapé continuam visíveis enquanto você rola a lista.",
     "Contas administradoras têm o atalho Administração logo abaixo de Configurações, no fim do menu da área de membros. Instrutores, moderadores e suporte têm, no mesmo lugar, atalhos para suas ferramentas.",
     state.ranking && "A barra inferior do celular também dá acesso ao Ranking.",
     state.materials && "Materiais tem um atalho na barra inferior do celular.",
@@ -350,7 +352,10 @@ export function Tour() {
     <>
     {active && step && <div className="tour-shade" aria-hidden="true"><div className="tour-spotlight" ref={spotlight} /></div>}
     <aside className="tour-panel" aria-label="Guia desta tela" ref={panel} tabIndex={-1} onKeyDown={(event) => {
-      if (event.key === "Escape") { event.stopPropagation(); close(); }
+      if (event.key === "Escape" && event.currentTarget.contains(event.target as Node)) {
+        event.stopPropagation();
+        close();
+      }
     }}>
       <h2>{done ? "O guia ajudou?" : (step?.title ?? "Conheça esta tela")}</h2>
       {done ? (
@@ -376,7 +381,7 @@ export function Tour() {
         <>
           <p>
             {step?.target === "navigation" ? navigationBody(modules) : step?.body ?? (helpOpen
-              ? "Consulte a central de ajuda para ver os passos completos deste fluxo."
+              ? "Abra Ajuda completa para ver os passos deste fluxo sem sair da tela."
               : "Esta tela ainda não tem um guia próprio.")}
           </p>
           {step && <p className="meta">
@@ -415,9 +420,9 @@ export function Tour() {
         </>
       )}
       {helpOpen && (
-        <Link className="text-action" to={helpPathFor(pathname, search)}>
+        <HelpLink className="text-action" to={helpPathFor(pathname, search)}>
           Ajuda completa
-        </Link>
+        </HelpLink>
       )}
     </aside>
     </>,

@@ -21,11 +21,11 @@ const names = [
 const profiles: Profile[] = demoAccounts.map((account, index) => ({
   id: demoId(index + 1), full_name: account.name, email: account.email,
   role: account.role, theme: "light", phone: "", bio: "", company: {},
-  plan_name: "Membro Pro · Demonstração", current_plan_id: demoId(21), access_ends_at: null, suspended: false, onboarding_complete: true,
+  plan_name: "Membro Pro · Demonstração", current_plan_id: demoId(21), access_ends_at: null, suspended: false, onboarding_complete: true, auto_advance: false,
 }));
 export const plans: Plan[] = [
   { id: demoId(21), name: "Membro Pro · Demonstração", slug: "pro-demo", price_cents: 0, access_months: 12,
-    benefits: ["Cursos, materiais e comunidade de demonstração"], active: true },
+    benefits: ["Cursos, materiais e comunidade de demonstração"], active: true, interest_free: false },
 ];
 export const spaces = [
   { id: demoId(31), name: "Geral", description: "Conversas e apresentações da comunidade de demonstração.", can_post: true },
@@ -51,7 +51,7 @@ const tickets: Ticket[] = [{
 }];
 const folder = { id: demoId(61), name: "Roteiros de curso", count: 1 };
 export const material: Material = {
-  id: demoId(62), folder_id: folder.id, lesson_id: demoId(301), name: "Roteiro de curso",
+  id: demoId(62), folder_id: folder.id, lesson_ids: [demoId(301)], name: "Roteiro de curso",
   description: "Modelo para planejar aulas, materiais e atividades.",
   file_type: "text/plain", size_bytes: 160, can_access: true,
 };
@@ -88,7 +88,9 @@ export function seed() {
   })));
   return {
     profiles: structuredClone(profiles), posts: structuredClone(posts), tickets: structuredClone(tickets),
-    records: { courses, modules, sections, lessons, material_folders: [folder], materials: [material], events: [{ ...event }], spaces, plans,
+    records: { courses, modules, sections, lessons, material_folders: [folder],
+      // O editor da aula mostra o estado e se o arquivo já subiu: sem storage_path, o roteiro apareceria como Sem arquivo.
+      materials: [{ ...material, status: "published", access_mode: "members", plan_ids: [], storage_path: "simulacao/roteiro.txt" }], events: [{ ...event }], spaces, plans,
       orders: [{ id: demoId(71), user_id: demoId(1), amount_cents: 9900, method: "PIX", status: "paid", created_at: date, paid_at: date, finalized_at: date }],
       podcast_episodes: [{ id: demoId(78), youtube_id: "qaOpExample", kind: "podcast", title: "Episódio de demonstração",
         description: "Episódio fictício para testar o editor.", published_at: date, status: "draft", is_featured: false,

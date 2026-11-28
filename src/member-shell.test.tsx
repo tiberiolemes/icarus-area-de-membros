@@ -13,7 +13,7 @@ const logoLight = "logo/light-11111111-1111-4111-8111-111111111111.png";
 const logoDark = "logo/dark-22222222-2222-4222-8222-222222222222.webp";
 
 const { profile, settings, refetch, rpc, edge, signOut } = vi.hoisted(() => ({
-  profile: { id: "member-1", full_name: "Pessoa Teste", plan_name: "Plano ativo", role: "member", theme: undefined as string | undefined, avatar_id: undefined as string | undefined },
+  profile: { id: "member-1", full_name: "Pessoa Teste", plan_name: "Plano ativo", role: "member", theme: undefined as string | undefined, avatar_id: undefined as string | undefined, gravatar_checked_at: "2026-11-01T00:00:00Z" },
   settings: { name: "Icarus", logo_light: null as string | null, logo_dark: null as string | null, modules: {} as Record<string, boolean> },
   refetch: vi.fn(),
   rpc: vi.fn(),
@@ -71,22 +71,24 @@ afterEach(() => {
 });
 
 it.each([
-  ["/app/comunidade/post", " Alex  de Vance ", "AV"],
-  ["/app/comunidade/post", "élodie", "É"],
-  ["/app/comunidade/post", "", "I"],
-  ["/app/comunidade", "Alex Vance", "AV"],
-  ["/app/comunidade/novo", "Alex Vance", "AV"],
-  ["/app/comunidade/post/editar", "Alex Vance", "AV"],
-])("mantém o nome acessível e o fallback de %s para %s", (path, fullName, initials) => {
+  ["/app/comunidade/post", " Alex  de Vance "],
+  ["/app/comunidade/post", "élodie"],
+  ["/app/comunidade/post", ""],
+  ["/app/comunidade", "Alex Vance"],
+  ["/app/comunidade/novo", "Alex Vance"],
+  ["/app/comunidade/post/editar", "Alex Vance"],
+])("mantém o nome acessível e a imagem padrão de %s para %s", (path, fullName) => {
   profile.full_name = fullName;
   mount(path);
   const name = fullName.trim().replace(/\s+/g, " ") || "Membro";
   const account = screen.getByRole("link", { name: `Sua conta: ${name}` });
-  expect(within(account).getByText(initials)).toHaveAttribute("aria-hidden", "true");
+  const avatar = account.querySelector(".avatar")!;
+  expect(avatar).toHaveAttribute("aria-hidden", "true");
+  expect(avatar.querySelector("svg.fallback-avatar")).not.toBeNull();
   expect(edge).not.toHaveBeenCalled();
 });
 
-it("mantém a foto privada da conta no thread e volta às iniciais quando ela falha", async () => {
+it("mantém a foto privada da conta no thread e volta à imagem padrão quando ela falha", async () => {
   profile.full_name = "Alex Vance";
   profile.avatar_id = "avatar-1";
   edge.mockResolvedValue({ url: "https://media.example.test/signed-avatar", expires_at: "2030-01-01" });
@@ -101,7 +103,7 @@ it("mantém a foto privada da conta no thread e volta às iniciais quando ela fa
   expect(photo).toBeVisible();
   fireEvent.error(photo);
   expect(photo).not.toBeVisible();
-  expect(within(account).getByText("AV")).toBeVisible();
+  expect(account.querySelector(".avatar svg.fallback-avatar")).toBeVisible();
 });
 
 it("monta a busca no player e preserva o termo ao abrir o catálogo pela SPA", async () => {
@@ -387,4 +389,18 @@ it.each([
   expect(within(screen.getByRole("link", { name: "Sua conta: Pessoa Teste" })).getByText(shown)).toBeInTheDocument();
   expect(container.querySelector(".admin-badge")).toBeNull();
   expect(screen.queryByText("Admin")).not.toBeInTheDocument();
+});
+
+it("o formulário de feedback da barra do topo oferece o rascunho guardado", async () => {
+  settings.modules = { feedback: true };
+  localStorage.setItem(`icarus:draft:${profile.id}:/app/suporte|Enviar feedback|`,
+    JSON.stringify({ savedAt: Date.now(), fields: [["kind", "bug"], ["description", "Texto que ficou no rascunho"]] }));
+  try {
+    mount("/app/suporte");
+    fireEvent.click(screen.getByRole("button", { name: "Enviar feedback" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Envie seu feedback" }));
+    fireEvent.click(await dialog.findByRole("button", { name: "Recuperar rascunho" }));
+    expect(dialog.getByLabelText("Descrição")).toHaveValue("Texto que ficou no rascunho");
+    expect(dialog.getByLabelText("Tipo")).toHaveValue("bug");
+  } finally { localStorage.clear(); }
 });

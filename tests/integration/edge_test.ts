@@ -31,7 +31,7 @@ function deps(route: Route = () => undefined, config: Record<string, string> = {
     if (url.pathname.endsWith("/app_touch_session")) return response({ expires_at: "2026-11-23T01:00:00Z" });
     if (url.pathname.endsWith("/app_bootstrap")) return response({ profile: { role: "member" } });
     if (url.pathname.endsWith("/app_integration_credentials")) return response({});
-    if (["app_checkout_throttle", "app_reauth_throttle", "app_admin_integration_test_throttle"].includes(url.pathname.split("/").at(-1) ?? "")) return response(null);
+    if (["app_checkout_throttle", "app_reauth_throttle", "app_admin_integration_test_throttle", "app_staff_bunny_search_throttle"].includes(url.pathname.split("/").at(-1) ?? "")) return response(null);
     throw Error(`Unexpected fake transport request: ${url.pathname}`);
   }) as typeof fetch };
   return { d, requests };
@@ -46,7 +46,7 @@ const paidPayments = (value: number, status = "RECEIVED") => response({ hasMore:
 
 Deno.test("capabilities exposes only public capability flags", async () => {
   const { d, requests } = deps(); const result = await capabilities(d)(new Request("http://localhost/test"));
-  equal(await result.json(), { asaas: false, bunny: false, storage: true });
+  equal(await result.json(), { asaas: false, bunny: false, bunny_search: false, storage: true });
   assert(requests.every((r) => r.url.endsWith("app_integration_credentials") && r.headers.get("apikey") === "local-test-secret"));
 });
 Deno.test("public capabilities coalesces Vault reads and recalculates provider flags after one minute", async () => {
@@ -208,6 +208,91 @@ Deno.test("member cannot inspect integrations and missing Bunny or webhook stays
   equal((await media(d)(request({ kind: "lesson", id }))).status, 503);
   equal((await webhook(d)(request({}, { token: null }))).status, 503);
 });
+const bunnyVault = { library_id: "42", api_key: "synthetic-stream-key", token_key: "synthetic-player-key", cdn_host: "vz-fixture.b-cdn.net" };
+Deno.test("busca no Bunny só aparece pronta com a reprodução e a chave da API", async () => {
+  const flags = async (stored: Record<string, string>, config: Record<string, string> = {}) => {
+    const { d } = deps((url) => url.pathname.endsWith("app_integration_credentials") ? response(stored) : undefined, config);
+    return await (await capabilities(d)(new Request("http://localhost/test"))).json();
+  };
+  const { api_key: _key, ...playback } = bunnyVault;
+  equal(await flags(bunnyVault), { asaas: false, bunny: true, bunny_search: true, storage: true });
+  equal(await flags(playback), { asaas: false, bunny: true, bunny_search: false, storage: true });
+  const environment = { BUNNY_LIBRARY_ID: "42", BUNNY_TOKEN_KEY: "synthetic-player-key", BUNNY_CDN_HOST: "vz-fixture.b-cdn.net" };
+  equal((await flags({ api_key: "synthetic-stream-key" }, environment)).bunny_search, true);
+  equal((await flags({}, environment)).bunny_search, false);
+  const answer = JSON.stringify(await flags(bunnyVault));
+  assert(!["synthetic-stream-key", "synthetic-player-key", "vz-fixture"].some((secret) => answer.includes(secret)), "segredo na resposta pública");
+});
+function bunnySearch(profile: Record<string, unknown>, bunny: Route = () => undefined, stored: Record<string, string> = bunnyVault) {
+  const found = deps((url, init) => {
+    if (url.pathname.endsWith("app_bootstrap")) return response({ profile });
+    if (url.pathname.endsWith("app_integration_credentials")) return response(stored);
+    if (url.hostname === "video.bunnycdn.com") return bunny(url, init);
+  });
+  const search = (body: Record<string, unknown> = {}) => capabilities(found.d)(request({ action: "bunny-videos", query: "Módulo 1", page: 2, ...body }));
+  const outside = () => found.requests.filter((r) => !r.url.startsWith("http://127.0.0.1"));
+  return { ...found, search, outside };
+}
+Deno.test("instrutor busca vídeos do Bunny e recebe só id, título, duração e situação", async () => {
+  const { requests, search, outside } = bunnySearch({ role: "instructor" }, (_url, init) => {
+    equal(init.redirect, "error"); assert(init.signal instanceof AbortSignal, "sem tempo máximo");
+    return response({ totalItems: 1, currentPage: 2, itemsPerPage: 20, items: [{
+      guid: other, title: "Módulo 1", length: 754, status: 4, videoLibraryId: 42, storageSize: 1024, thumbnailFileName: "thumbnail.jpg", captions: [],
+    }] });
+  });
+  const result = await search();
+  equal(result.status, 200);
+  const body = await result.text();
+  equal(JSON.parse(body), { items: [{ id: other, title: "Módulo 1", length: 754, ready: true }], total: 1, page: 2 });
+  assert(!body.includes("synthetic-stream-key"), "chave na resposta");
+  equal(outside().map((r) => r.url), ["https://video.bunnycdn.com/library/42/videos?page=2&itemsPerPage=20&orderBy=date&search=M%C3%B3dulo%201"]);
+  equal(outside()[0].headers.get("accesskey"), "synthetic-stream-key");
+  equal(requests.filter((r) => r.url.endsWith("app_staff_bunny_search_throttle")).map((r) => r.body), [{ p_actor_id: id }]);
+});
+Deno.test("membro não busca vídeos do Bunny", async () => {
+  for (const profile of [{ role: "member" }, { role: "moderator" }, { role: "support" }, { role: "instructor", demo: true }, { role: "admin", password_setup_required: true }]) {
+    const { requests, search } = bunnySearch(profile, () => response({ totalItems: 0, items: [] }));
+    const result = await search();
+    equal(result.status, 403);
+    assert(!requests.some((r) => r.url.endsWith("app_integration_credentials") || r.url.endsWith("app_staff_bunny_search_throttle") || !r.url.startsWith("http://127.0.0.1")),
+      `${JSON.stringify(profile)} chegou ao Bunny`);
+  }
+});
+Deno.test("busca longa é recusada antes do Bunny", async () => {
+  for (const body of [{ query: "a".repeat(101) }, { query: 42 }, { page: 0 }, { page: 1001 }, { page: 1.5 }, { page: "2" }]) {
+    const { requests, search } = bunnySearch({ role: "admin" }, () => response({ totalItems: 0, items: [] }));
+    const result = await search(body);
+    equal(result.status, 422);
+    assert(!requests.some((r) => r.url.endsWith("app_integration_credentials") || !r.url.startsWith("http://127.0.0.1")), `${JSON.stringify(body)} chegou ao Bunny`);
+  }
+  const { search, outside } = bunnySearch({ role: "admin" }, () => response({ totalItems: 0, currentPage: 1000, items: [] }));
+  equal(await (await search({ query: "a".repeat(100), page: 1000 })).json(), { items: [], total: 0, page: 1000 });
+  equal(outside().length, 1);
+});
+Deno.test("chave recusada pelo Bunny vira mensagem clara", async () => {
+  const refused = "A API do Bunny Stream recusou a chave. Confira as credenciais salvas.";
+  const unavailable = "A API do Bunny Stream está indisponível. Tente novamente.";
+  for (const [status, message] of [[401, refused], [403, refused], [500, unavailable], [0, unavailable]] as const) {
+    const { search } = bunnySearch({ role: "admin" }, () => {
+      if (!status) throw new TypeError("network");
+      return response({ Message: "synthetic-stream-key inválida" }, status);
+    });
+    const result = await search();
+    equal(result.status, 502);
+    const body = await result.text();
+    equal(JSON.parse(body).error.message, message);
+    assert(!body.includes("synthetic-stream-key"), "chave na resposta");
+  }
+});
+Deno.test("Bunny sem chave salva responde BUNNY_NOT_CONFIGURED", async () => {
+  for (const stored of [{ library_id: "42", token_key: "synthetic-player-key" }, { ...bunnyVault, library_id: "biblioteca" }]) {
+    const { search, outside } = bunnySearch({ role: "instructor" }, () => response({ totalItems: 0, items: [] }), stored);
+    const result = await search();
+    equal(result.status, 409);
+    equal((await result.json()).error, { code: "BUNNY_NOT_CONFIGURED", message: "Configure o Bunny Stream em Configurações > Integrações." });
+    equal(outside(), []);
+  }
+});
 Deno.test("checkout in production requires switch proof for the current keys and the Turnstile secret", async () => {
   const apiKey = "fake-asaas-production";
   const config = { ...billing, ASAAS_ENV: "production", ASAAS_API_KEY: apiKey, ICARUS_MODE: "production" };
@@ -312,7 +397,7 @@ Deno.test("aula com vídeo do YouTube sai pelo player sem cookies, só depois da
   const result = await media(gated("dQw4w9WgXcQ"))(request({ kind: "lesson", id }));
   equal(result.status, 200);
   const body = await result.json();
-  equal(body.provider, "youtube"); equal(body.url, "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0");
+  equal(body.provider, "youtube"); equal(body.url, "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0&enablejsapi=1");
   equal((await media(gated("javascript:alert(1)"))(request({ kind: "lesson", id }))).status, 503);
 });
 Deno.test("storage URL uses private bucket, server path and short TTL", async () => {
@@ -493,7 +578,7 @@ Deno.test("capa do curso aceita imagem de até 500 KB", async () => {
   const { d, requests } = deps((url) => url.pathname.endsWith("app_upload_access") ? response({ id, bucket: "icarus-private", path: `course-cover/${other}/${id}.jpg` }) : url.pathname.includes("/storage/v1/object/icarus-private/") ? response({ Key: "icarus-private/course-cover" }) : url.pathname.endsWith("app_upload_finalize") ? response({ id, state: "ready" }) : undefined);
   equal((await send(d, file)).status, 200);
   equal(requests.find((r) => r.url.includes("app_upload_access"))?.body, { p_actor_id: id, p_kind: "course-cover", p_resource_id: other, p_file_name: "capa.jpg", p_content_type: "image/jpeg", p_size_bytes: 500 * 1024 });
-  // A reserva em JSON é só de vídeo e material. Por ela a capa escaparia do limite.
+  // A reserva em JSON é só de material. Por ela a capa escaparia do limite.
   const reserve = deps();
   equal((await upload(reserve.d)(request({ action: "reserve", kind: "course-cover", resource_id: other, file_name: "capa.jpg", content_type: "image/jpeg", size_bytes: 500 * 1024 }))).status, 422);
   assert(!reserve.requests.some((r) => r.url.includes("app_upload_access")));
@@ -511,6 +596,31 @@ Deno.test("reserva de material aceita PDF até 5 MB e ZIP até 500 MiB", async (
   const zip = { ...pdf, file_name: "demo.zip", content_type: "application/zip", size_bytes: 500 * 1024 * 1024 };
   equal((await upload(d)(request(zip))).status, 200);
   equal((await upload(d)(request({ ...zip, size_bytes: zip.size_bytes + 1 }))).status, 422);
+});
+Deno.test("reserva de vídeo da aula e MP4 de material são recusados com a frase do vídeo", async () => {
+  const noVideo = { code: "INVALID_FILE", message: "A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube." };
+  const mp4 = { file_name: "aula.mp4", content_type: "video/mp4", size_bytes: 1024 };
+  for (const body of [
+    { action: "reserve", kind: "lesson", resource_id: other, ...mp4 },
+    { action: "reserve", kind: "lesson", resource_id: other, file_name: "roteiro.pdf", content_type: "application/pdf", size_bytes: 1024 },
+    { action: "reserve", kind: "material", resource_id: other, ...mp4 },
+    { action: "reserve", kind: "material", resource_id: other, ...mp4, size_bytes: 2 * 1024 * 1024 * 1024 },
+  ]) {
+    const { d, requests } = deps();
+    const refused = await upload(d)(request(body));
+    equal(refused.status, 422);
+    equal((await refused.json()).error, noVideo);
+    assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")), `${body.kind} ${body.file_name}`);
+  }
+  const video = new Uint8Array(16); video.set(new TextEncoder().encode("ftypisom"), 4);
+  for (const kind of ["lesson", "material", "ticket-attachment"]) {
+    const { d, requests } = deps();
+    const form = new FormData(); form.set("kind", kind); form.set("resource_id", other); form.set("file", new File([video], "tela.mp4", { type: "video/mp4" }));
+    const refused = await upload(d)(new Request("http://localhost/upload", { method: "POST", headers: { authorization: `Bearer ${jwt()}` }, body: form }));
+    equal(refused.status, 422);
+    equal((await refused.json()).error, noVideo);
+    assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")), kind);
+  }
 });
 Deno.test("multipart recusa imagem acima de 500 KB e PDF acima de 5 MB antes da reserva", async () => {
   const send = (d: Dependencies, kind: string, file: File) => {
@@ -922,4 +1032,129 @@ Deno.test("SVG só é processado depois da autorização, prévia não grava e u
   const reject = brandDeps(route);
   equal((await sendLogo(reject.d, malformed, "dark")).status, 422);
   assert(!reject.requests.some((r) => r.url.includes("/storage/") || r.url.includes("app_brand_asset_commit")));
+});
+
+const removedFile = `material/${other}/${id}.pdf`;
+const deleteDeps = (storage: () => Response, paths = [removedFile]) => deps((url, init) =>
+  url.pathname.endsWith("/app_admin_delete") ? response({ id: other, paths })
+  : url.pathname === "/storage/v1/object/icarus-private" && init.method === "DELETE" ? storage()
+  : undefined);
+Deno.test("exclusão chama a RPC com o ator do JWT e remove os arquivos devolvidos", async () => {
+  const { d, requests } = deleteDeps(() => response([{ name: removedFile }]));
+  const result = await upload(d)(request({ action: "delete", entity: "materials", id: other }));
+  equal(result.status, 200); equal(await result.json(), { deleted: true, files_removed: 1 });
+  equal(requests.find((r) => r.url.endsWith("/app_admin_delete"))?.body, { p_actor_id: id, p_entity: "materials", p_id: other });
+  equal(requests.filter((r) => r.method === "DELETE").map((r) => r.body), [{ prefixes: [removedFile] }]);
+  assert(requests.findIndex((r) => r.url.endsWith("/app_admin_delete")) < requests.findIndex((r) => r.method === "DELETE"), "banco antes do Storage");
+});
+Deno.test("falha do Storage não desfaz a exclusão e avisa", async () => {
+  const { d } = deleteDeps(() => response({ statusCode: "500", message: "falha sintética", error: "Internal" }, 500));
+  const logged: unknown[][] = [], original = console.error;
+  console.error = (...args: unknown[]) => { logged.push(args); };
+  try {
+    const result = await upload(d)(request({ action: "delete", entity: "materials", id: other }));
+    equal(result.status, 200);
+    equal(await result.json(), { deleted: true, files_removed: 0, warning: "O item foi excluído, mas alguns arquivos não foram apagados do armazenamento." });
+  } finally { console.error = original; }
+  equal(logged.length, 1);
+  assert(!JSON.stringify(logged).includes(removedFile), "log sem o caminho do arquivo");
+});
+Deno.test("exclusão apaga só arquivos de aula e material", async () => {
+  const outside = [`ticket-attachment/${other}/${id}.pdf`, `avatar/${id}/${other}.png`, `material/../ticket-attachment/${id}.pdf`, `demo/material.txt`, `lesson/${other}/${id}.MP4`];
+  const { d, requests } = deleteDeps(() => response([{ name: removedFile }]), [removedFile, ...outside]);
+  const logged: unknown[][] = [], original = console.error;
+  console.error = (...args: unknown[]) => { logged.push(args); };
+  try {
+    const result = await upload(d)(request({ action: "delete", entity: "materials", id: other }));
+    equal(await result.json(), { deleted: true, files_removed: 1 });
+  } finally { console.error = original; }
+  equal(requests.filter((r) => r.method === "DELETE").map((r) => r.body), [{ prefixes: [removedFile] }]);
+  equal(logged.length, 1);
+  assert(!outside.some((path) => JSON.stringify(logged).includes(path)), "log sem os caminhos ignorados");
+  const only = deleteDeps(() => response([]), outside);
+  equal(await (await upload(only.d)(request({ action: "delete", entity: "lessons", id: other }))).json(), { deleted: true, files_removed: 0 });
+  assert(!only.requests.some((r) => r.method === "DELETE"), "Storage chamado sem arquivo próprio");
+});
+Deno.test("entidade fora da lista é recusada antes da RPC", async () => {
+  const { d, requests } = deleteDeps(() => response([]));
+  for (const [body, message] of [
+    [{ entity: "courses", id: other }, "Esta entidade não pode ser excluída."],
+    [{ entity: "materials", id: "nao-e-uuid" }, "Identificador inválido."],
+  ] as const) {
+    const result = await upload(d)(request({ action: "delete", ...body }));
+    equal(result.status, 422); equal((await result.json()).error.message, message);
+  }
+  assert(!requests.some((r) => r.url.includes("app_admin_delete") || r.url.includes("/storage/")));
+});
+const gravatarUrl = "https://gravatar.com/avatar/31b21a3f2c939fc175200c7c917baaa96d0cf27843d5eb11bc3cfd19777eee03?s=160&d=404";
+const gravatarPng = (size = 64) => { const bytes = new Uint8Array(size); bytes.set([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13]); return bytes; };
+function gravatar(photo: (init: RequestInit) => Response | Promise<Response>, check = true) {
+  return deps((url, init) => url.pathname.endsWith("app_gravatar_context") ? response({ check, email: check ? " Membro@Demo.Icarus.Invalid " : null })
+    : url.hostname === "gravatar.com" ? photo(init)
+    : url.pathname.endsWith("app_upload_access") ? response({ id: other, bucket: "icarus-private", path: `avatar/${id}/${other}.png` })
+    : url.pathname.includes("/storage/v1/object/icarus-private/") ? response({ Key: "icarus-private/avatar" })
+    : url.pathname.endsWith("app_gravatar_done") ? response({ avatar_id: JSON.parse(String(init.body)).p_upload_id })
+    : undefined);
+}
+const askGravatar = (d: Dependencies) => upload(d)(request({ action: "gravatar" }));
+Deno.test("gravatar guarda a foto de 160 px de quem não tem avatar", async () => {
+  let lookup: RequestInit = {};
+  const photo = gravatarPng();
+  const { d, requests } = gravatar((init) => { lookup = init; return new Response(photo, { headers: { "content-type": "image/png" } }); });
+  const result = await askGravatar(d);
+  equal(result.status, 200); equal(await result.json(), { avatar: true });
+  equal(requests.filter((r) => new URL(r.url).hostname === "gravatar.com").map((r) => r.url), [gravatarUrl]);
+  equal(lookup.redirect, "error"); assert(lookup.signal instanceof AbortSignal, "tempo limite");
+  equal(requests.find((r) => r.url.endsWith("app_upload_access"))?.body, { p_actor_id: id, p_kind: "avatar", p_resource_id: id, p_file_name: "gravatar.png", p_content_type: "image/png", p_size_bytes: photo.length });
+  assert(requests.some((r) => r.method === "POST" && r.url.includes(`/storage/v1/object/icarus-private/avatar/${id}/${other}.png`)), "foto guardada no Storage");
+  equal(requests.find((r) => r.url.endsWith("app_gravatar_done"))?.body, { p_actor_id: id, p_upload_id: other });
+  assert(!requests.some((r) => r.url.endsWith("app_upload_finalize")), "a finalização fica dentro de app_gravatar_done");
+});
+Deno.test("404 do Gravatar marca como conferido", async () => {
+  const { d, requests } = gravatar(() => new Response("", { status: 404 }));
+  const result = await askGravatar(d);
+  equal(await result.json(), { avatar: false });
+  equal(requests.find((r) => r.url.endsWith("app_gravatar_done"))?.body, { p_actor_id: id, p_upload_id: null });
+  assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")));
+});
+Deno.test("erro de rede não marca e responde avatar false", async () => {
+  for (const photo of [() => { throw new TypeError("rede indisponível"); }, () => new Response("", { status: 503 })]) {
+    const { d, requests } = gravatar(photo);
+    const result = await askGravatar(d);
+    equal(result.status, 200); equal(await result.json(), { avatar: false });
+    assert(!requests.some((r) => r.url.includes("app_gravatar_done") || r.url.includes("app_upload_access") || r.url.includes("/storage/")));
+  }
+});
+Deno.test("conexão que cai ou tempo esgotado no meio do arquivo não marca", async () => {
+  const broken = (error: Error) => () => new Response(new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (!this.sent) { this.sent = true; controller.enqueue(gravatarPng(16)); } else controller.error(error);
+    },
+    sent: false,
+  } as UnderlyingDefaultSource<Uint8Array> & { sent: boolean }), { headers: { "content-type": "image/png" } });
+  for (const photo of [broken(new TypeError("conexão encerrada")), broken(new DOMException("tempo esgotado", "TimeoutError"))]) {
+    const { d, requests } = gravatar(photo);
+    const result = await askGravatar(d);
+    equal(result.status, 200); equal(await result.json(), { avatar: false });
+    assert(!requests.some((r) => r.url.includes("app_gravatar_done") || r.url.includes("app_upload_access") || r.url.includes("/storage/")), "nada marcado nem guardado");
+  }
+});
+Deno.test("quem já tem foto não consulta o Gravatar", async () => {
+  const { d, requests } = gravatar(() => { throw Error("não devia consultar"); }, false);
+  equal(await (await askGravatar(d)).json(), { avatar: false });
+  equal(requests.find((r) => r.url.endsWith("app_gravatar_context"))?.body, { p_actor_id: id });
+  assert(!requests.some((r) => new URL(r.url).hostname === "gravatar.com" || r.url.includes("app_gravatar_done")));
+});
+Deno.test("arquivo acima de 100 KB ou que não é imagem é descartado", async () => {
+  for (const photo of [
+    () => new Response(gravatarPng(100 * 1024 + 1), { headers: { "content-type": "image/png" } }),
+    () => new Response("<html>não é foto</html>", { headers: { "content-type": "text/html" } }),
+    () => new Response(new TextEncoder().encode("não é png"), { headers: { "content-type": "image/png" } }),
+    () => new Response(new TextEncoder().encode("GIF89a"), { headers: { "content-type": "image/gif" } }),
+  ]) {
+    const { d, requests } = gravatar(photo);
+    equal(await (await askGravatar(d)).json(), { avatar: false });
+    assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")), "nada guardado");
+    equal(requests.find((r) => r.url.endsWith("app_gravatar_done"))?.body, { p_actor_id: id, p_upload_id: null });
+  }
 });

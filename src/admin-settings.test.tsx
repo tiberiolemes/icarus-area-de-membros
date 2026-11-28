@@ -187,6 +187,18 @@ it("Materiais cria pasta e material e lista as pastas em cartão", async () => {
   expect(await screen.findByRole("heading", { level: 2, name: "Criar material" })).toBeInTheDocument();
 });
 
+it("Vídeo MP4 sai da escolha de tipo e só fica no material que já é MP4", async () => {
+  page = { ...page, items: [{ id: "antigo", name: "Aula gravada", status: "published", file_type: "video/mp4", size_bytes: 2048 }], total: 1 };
+  show("", <AdminMaterials />, "/admin/materiais");
+  fireEvent.click(screen.getByRole("button", { name: "Novo material" }));
+  const created = within(await screen.findByRole("combobox", { name: "Tipo" }));
+  expect(created.queryByRole("option", { name: "Vídeo MP4" })).toBeNull();
+  fireEvent.click(await screen.findByRole("button", { name: "Editar material" }));
+  await screen.findByRole("heading", { level: 2, name: "Editar material" });
+  // Sem a opção, salvar o material antigo trocaria o tipo dele por PDF.
+  expect(screen.getByRole("combobox", { name: "Tipo" })).toHaveValue("video/mp4");
+});
+
 it("Espaços da Comunidade ficam num cartão com Criar espaço", async () => {
   show("", <AdminCommunity />, "/admin/comunidade?aba=espacos");
   const card = screen.getByRole("heading", { level: 2, name: "Espaços" }).closest(".settings-panel") as HTMLElement;

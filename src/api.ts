@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { QueryClient, useQuery } from "@tanstack/react-query";
+import { clearAllDrafts } from "./draft";
 
 const demo = import.meta.env.MODE === "demo" ? await import("../demo/transport") : null;
 export const demoAccounts = demo?.demoAccounts;
@@ -59,6 +60,7 @@ export async function signOut() {
     throw new AppError(
       "Não foi possível encerrar sua sessão no servidor. Tente novamente.",
     );
+  clearAllDrafts();
   cache.clear();
 }
 export function uploadStorage(signal: AbortSignal) {
@@ -259,6 +261,8 @@ export type Profile = {
   access_ends_at: string | null;
   suspended: boolean;
   onboarding_complete: boolean;
+  auto_advance?: boolean;
+  gravatar_checked_at?: string | null;
 };
 export type Plan = {
   id: string;
@@ -268,6 +272,7 @@ export type Plan = {
   access_months: number;
   benefits: string[];
   active: boolean;
+  interest_free?: boolean;
 };
 export type Bootstrap = {
   profile: Profile;
@@ -330,7 +335,7 @@ export type Material = {
   file_type: string;
   size_bytes: number;
   folder_id: string;
-  lesson_id?: string;
+  lesson_ids?: string[];
   can_access: boolean;
 };
 export type Post = {

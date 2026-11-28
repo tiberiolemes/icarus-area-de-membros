@@ -59,7 +59,8 @@ insert into public.spaces(id, name, status, access_mode) select space, 'DEMONSTR
 insert into public.posts(id, space_id, author_id, title, body, status) select post, space, pg_temp.id('member'), 'DEMONSTRAÇÃO publicação', 'Corpo', 'approved' from fixture;
 insert into public.material_folders(id, name, status, access_mode) select folder, 'DEMONSTRAÇÃO pasta', 'published', 'members' from fixture;
 insert into public.materials(id, folder_id, name, status, access_mode) select library_material, folder, 'DEMONSTRAÇÃO material', 'published', 'members' from fixture;
-insert into public.materials(id, lesson_id, name, status, access_mode) select lesson_material, lesson, 'DEMONSTRAÇÃO anexo da aula', 'published', 'members' from fixture;
+insert into public.materials(id, name, status, access_mode) select lesson_material, 'DEMONSTRAÇÃO anexo da aula', 'published', 'members' from fixture;
+insert into public.material_lessons(material_id, lesson_id) select lesson_material, lesson from fixture;
 insert into public.podcast_episodes(id, youtube_id, kind, title, description, published_at, status) select episode, 'abcdefghijk', 'podcast', 'DEMONSTRAÇÃO episódio', '', now() - interval '1 day', 'published' from fixture;
 insert into public.live_events(id, title, guest, starts_at, duration_minutes, meeting_url, access_mode, status)
 select live_event, 'DEMONSTRAÇÃO encontro', 'Convidado', now() + interval '1 day', 60, 'https://meet.google.com/aab-bbcd-eee', 'members', 'published' from fixture;

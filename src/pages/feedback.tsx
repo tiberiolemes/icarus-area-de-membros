@@ -2,6 +2,7 @@ import { MessageSquarePlus } from "lucide-react";
 import { useRef, useState } from "react";
 import { matchPath, useLocation } from "react-router-dom";
 import { client, errorMessage, rpc } from "../api";
+import { Dropzone } from "../dropzone";
 import { finalLimit, limits, optimizeFile } from "../optimize";
 import { Field, Form, Modal, Unsaved, value } from "../ui";
 
@@ -39,6 +40,7 @@ type Attempt = {
 function FeedbackForm({ pagePath }: { pagePath: string | null }) {
   const attempt = useRef<Attempt | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const [chosen, setChosen] = useState<File>();
   const [pending, setPending] = useState(false);
   const [draftPreserved, setDraftPreserved] = useState(false);
   return (
@@ -89,7 +91,10 @@ function FeedbackForm({ pagePath }: { pagePath: string | null }) {
       attempt.current = null;
       setPending(false);
       setDraftPreserved(edited);
-      if (!edited) form.reset();
+      if (!edited) {
+        form.reset();
+        setChosen(undefined);
+      }
     }}>
       <Unsaved dirty={draftPreserved} />
       {pending && <p>Confirme o envio anterior antes de enviar as alterações do rascunho.</p>}
@@ -100,9 +105,9 @@ function FeedbackForm({ pagePath }: { pagePath: string | null }) {
         </select>
       </Field>
       <Field label="Descrição"><textarea name="description" rows={5} required={!pending} maxLength={4000} /></Field>
-      <Field label="Print (opcional)" hint="PNG, JPG ou WebP de até 20 MB. Depois de otimizado, o print precisa ficar com até 5 MB. Confira se o print contém dados pessoais antes de enviar.">
-        <input ref={fileInput} name="screenshot" type="file" accept="image/png,image/jpeg,image/webp" />
-      </Field>
+      <Dropzone label="Print (opcional)" hint="PNG, JPG ou WebP · até 20 MB, e até 5 MB depois de otimizado · confira se o print contém dados pessoais antes de enviar"
+        name="screenshot" accept="image/png,image/jpeg,image/webp" inputRef={fileInput}
+        fileName={chosen?.name} fileSize={chosen?.size} onFile={setChosen} />
     </Form>
   );
 }

@@ -12,10 +12,18 @@ export const teamArticles: HelpArticle[] = [
         title: "Entrar no painel",
         steps: [
           "Entre na plataforma com a sua conta da equipe.",
-          "Abra o menu e vá até o fim, logo abaixo de **Configurações**. No celular, toque antes no botão de menu no topo.",
+          "Procure o atalho no rodapé do menu, logo abaixo de **Configurações**. No celular, toque antes no botão de menu no topo.",
           "Clique no atalho do seu papel. Ele se chama **Administração** para administradores, **Painel de conteúdo** para instrutores, **Moderação** para moderadores e **Atendimento** para a equipe de suporte.",
         ],
         note: "Para voltar à visão do aluno, clique em **Área do aluno** no rodapé do menu do painel.",
+      },
+      {
+        title: "Recolher o menu no computador",
+        steps: [
+          "Clique em **Recolher menu**, no topo da barra lateral. Passe o mouse sobre um ícone ou chegue a ele com **Tab** para ver seu nome.",
+          "Clique em **Expandir menu** para voltar a ver todos os nomes. O navegador guarda a escolha do painel separadamente da área do aluno.",
+        ],
+        note: "**Área do aluno**, **Central de ajuda** e **Sair** ficam no rodapé do menu enquanto você rola a lista de áreas. Isso também vale no celular.",
       },
       {
         title: "O que há em cada grupo do menu",
@@ -40,13 +48,19 @@ export const teamArticles: HelpArticle[] = [
         title: "Pedir ajuda dentro de cada tela",
         list: [
           "**Guia desta tela**, no topo, destaca as partes principais da página e explica o que elas fazem. Em algumas telas, ele mostra só o menu.",
-          "**Ajuda da administração**, no fim de cada página, abre o artigo sobre aquela tela.",
+          "**Ajuda da administração**, no fim de cada página, abre o artigo sobre aquela tela sem sair do painel.",
+          "Use **Abrir em uma nova janela** para ler o artigo em outra aba e manter o painel aberto.",
         ],
+      },
+      {
+        title: "Recuperar o que você digitou",
+        intro: "Quando você edita um formulário compatível, o navegador guarda um rascunho depois de meio segundo sem digitar. Ao reabrir a mesma edição, clique em **Recuperar rascunho** para preencher os campos ou em **Descartar** para apagar a cópia. Revise os dados e clique no botão de salvar da tela para publicar a alteração.",
+        note: "O rascunho fica neste navegador por até sete dias e é apagado ao salvar, descartar ou encerrar a sessão. Arquivos, senhas, a **Posição na lista** da estrutura do curso e dados de formulários sensíveis ficam de fora.",
       },
       {
         title: "Hábitos de quem administra",
         list: [
-          "Salve antes de trocar de aba ou fechar um editor. Alguns editores descartam o que não foi salvo sem avisar.",
+          "Salve antes de trocar de aba ou fechar um editor. O rascunho depende do navegador e não substitui o salvamento.",
           "A sessão da equipe termina depois de 30 minutos sem uso. Um minuto antes aparece o botão **Continuar conectado**.",
           "Quem usa a verificação em duas etapas e marca **Lembrar por 15 dias** ao entrar fica conectado por 15 dias, sem o limite de 30 minutos.",
           "Ações delicadas pedem a sua senha de novo. É uma proteção, e cada confirmação vale para uma ação.",
@@ -167,7 +181,7 @@ export const teamArticles: HelpArticle[] = [
     need: [
       "Uma conta de administrador ou instrutor.",
       "O título e a descrição do curso.",
-      "Os vídeos das aulas, em arquivo MP4 ou já enviados ao Bunny Stream.",
+      "Os vídeos das aulas, já enviados ao Bunny Stream ou publicados no YouTube.",
       "Os planos já criados, se o curso for restrito a alguns deles.",
     ],
     sections: [
@@ -198,11 +212,11 @@ export const teamArticles: HelpArticle[] = [
       },
       {
         title: "Enviar a capa e ajustar o corte",
-        intro: "A capa aparece na lista de cursos, na página do curso e no início da aula em vídeo. Cada lugar tem um formato, então a mesma imagem é recortada de jeitos diferentes.",
+        intro: "A capa aparece na lista de cursos, na página do curso e no início das aulas que ainda usam vídeo enviado à plataforma. Cada lugar tem um formato, então a mesma imagem é recortada de jeitos diferentes.",
         steps: [
           "Na aba **Curso**, encontre **Capa do curso**.",
-          "Clique em **Escolher arquivo** e selecione uma imagem PNG, JPG ou WebP de até 20 MB. O ideal é uma imagem deitada, de 1600\u00a0×\u00a0900\u00a0px. A plataforma otimiza a imagem no envio, sem perda visível, e guarda só a versão otimizada, que precisa ficar com até 500 KB.",
-          "Clique em **Enviar arquivo** e espere a mensagem **Arquivo enviado e associado ao registro**.",
+          "Arraste a imagem até a área **Arraste o arquivo aqui** ou clique em **Selecionar arquivo**. Vale PNG, JPG ou WebP de até 20 MB, e o ideal é uma imagem deitada, de 1600\u00a0×\u00a0900\u00a0px. A plataforma otimiza a imagem no envio, sem perda visível, e guarda só a versão otimizada, que precisa ficar com até 500 KB.",
+          "O envio começa assim que você escolhe a imagem. Espere a mensagem **Arquivo enviado e associado ao registro**.",
           "Role até **Como a capa aparece** e confira as três prévias. **Lista de cursos e aula** mostra a imagem quase inteira. **Página do curso** corta as laterais. **Página do curso no tablet** corta o topo e a base.",
           "Se uma prévia cortar algo importante, vá até **Foco do corte** e clique na imagem, no ponto que precisa aparecer sempre. As prévias mudam na hora.",
           "Clique em **Salvar foco** e espere a mensagem **Foco salvo**.",
@@ -224,7 +238,7 @@ export const teamArticles: HelpArticle[] = [
         ],
         list: [
           "O **Endereço (slug)** do módulo e da aula também é montado sozinho a partir do título. Seções não têm endereço.",
-          "**Posição na lista** define a ordem. Use 0 para o primeiro item, 1 para o segundo e assim por diante. Se todos ficarem em 0, a ordem não segue a de criação, e você arruma com **Reordenar**.",
+          "**Posição na lista** define a ordem. Use 0 para o primeiro item, 1 para o segundo e assim por diante. Se todos ficarem em 0, a ordem não segue a de criação, e você arruma com **Reordenar**, arrastando ou com as setas.",
         ],
       },
       {
@@ -237,7 +251,7 @@ export const teamArticles: HelpArticle[] = [
         ],
         list: [
           "As aulas criadas direto no módulo aparecem antes das seções, sem título de seção.",
-          "Depois de criada, a aula não troca de seção nem passa do módulo para uma seção. Para mudar, crie a aula de novo no lugar certo e [arquive](/ajuda/arquivar-conteudo) a antiga.",
+          "Depois de criada, a aula não troca de seção nem passa do módulo para uma seção. Para mudar, crie a aula de novo no lugar certo e [arquive ou exclua](/ajuda/arquivar-conteudo) a antiga.",
         ],
       },
       {
@@ -249,14 +263,34 @@ export const teamArticles: HelpArticle[] = [
           "**Obrigatória para o certificado** coloca a aula na lista exigida para o certificado. Ela já vem marcada em aulas novas.",
           "**Seção bônus**, no editor da seção, tira as aulas dela da exigência do certificado. Para ter aulas bônus, crie uma seção só para elas.",
         ],
-        note: "Para anexar um arquivo a uma aula, cadastre o material em [Publicar materiais para download](/ajuda/publicar-materiais) e escolha a **Aula vinculada**.",
+        note: "Para anexar um arquivo a uma aula, use **Materiais da aula**, no próprio editor da aula, como explicado a seguir.",
+      },
+      {
+        title: "Adicionar materiais à aula",
+        intro: "O bloco **Materiais da aula** fica abaixo do formulário da aula e mostra os materiais vinculados a ela. Aula nova mostra **Salve a aula para adicionar materiais.** até você clicar em **Salvar conteúdo** pela primeira vez.",
+        steps: [
+          "Abra a aula pelo lápis e role até **Materiais da aula**.",
+          "Arraste o arquivo até **Adicionar material** ou clique em **Selecionar arquivo**. Vale PDF, imagem, ZIP, TXT ou MP3, com os limites de [Publicar materiais para download](/ajuda/publicar-materiais).",
+          "Espere a mensagem **Material enviado e publicado na aula**. O material aparece na lista com o nome do arquivo, sem a extensão.",
+        ],
+        list: [
+          "O material criado aqui fica na raiz da biblioteca, com a regra **Todos os membros**. Quem controla o acesso é a aula, e o aluno só baixa o arquivo se puder abrir uma das aulas em que ele está.",
+          "**Editar em Materiais** abre o material para trocar nome, descrição, pasta ou regra de acesso e para vincular outras aulas.",
+          "**Desvincular** tira o material só desta aula. Se ele não estiver em nenhuma outra, volta para **Rascunho**.",
+        ],
       },
       {
         title: "Mudar a ordem",
         steps: [
-          "Clique em **Reordenar**.",
-          "Use as setas para cima e para baixo ao lado de cada item.",
+          "Clique em **Reordenar**. Módulos, seções e aulas ganham a alça de arrastar, com seis pontinhos, ao lado das setas.",
+          "Arraste o item pela alça e solte sobre a linha do lugar onde ele deve ficar. Uma linha colorida mostra onde ele vai cair. Se preferir, use as setas **Subir** e **Descer**.",
+          "Espere a nova ordem aparecer. Enquanto ela é salva, a alça fica apagada.",
           "Clique em **Reordenar** de novo para sair do modo de ordenação.",
+        ],
+        list: [
+          "Cada item só muda de lugar dentro da própria lista. Uma aula não passa para outra seção nem para outro módulo arrastando.",
+          "No celular e no tablet, a alça não aparece, porque a tela de toque não arrasta. Use as setas.",
+          "Se a nova ordem não for salva, aparece um aviso e a estrutura volta à ordem que está gravada.",
         ],
       },
       {
@@ -273,12 +307,13 @@ export const teamArticles: HelpArticle[] = [
     ],
     trouble: [
       ["Aparece o aviso de que já existe um registro com esses dados", "O **Endereço (slug)** já está em uso. Escreva outro no campo e salve de novo."],
-      ["As aulas aparecem fora de ordem", "Os itens ficaram com a mesma **Posição na lista**. Clique em **Reordenar** e arrume com as setas."],
+      ["As aulas aparecem fora de ordem", "Os itens ficaram com a mesma **Posição na lista**. Clique em **Reordenar** e arrume arrastando pela alça ou com as setas."],
       ["Aparece o aviso de que, mesmo otimizada, a imagem passa de 500 KB", "A plataforma já reduz a imagem e a compressão em etapas, mas uma arte muito detalhada pode não caber. Exporte a arte de novo com 1600\u00a0×\u00a0900\u00a0px, em JPG ou WebP, e envie outra vez. Se o aviso for de arquivo acima de 20 MB, reduza a imagem antes de escolher."],
       ["A capa aparece cortada na página do curso", "No computador, a página do curso mostra a capa em um quadro quase quadrado, que corta as laterais. No tablet, ela vira uma faixa larga, que corta o topo e a base. Em **Capa do curso**, clique na imagem, no ponto que precisa aparecer, e depois em **Salvar foco**."],
       ["O curso não publica e cita o certificado", "Com o certificado ligado, o curso precisa do responsável preenchido e de pelo menos uma aula obrigatória publicada, com duração e que não seja de prévia. Veja [Configurar o certificado do curso](/ajuda/certificado-do-curso)."],
       ["Perdi o que estava digitando", "Trocar de aba ou fechar o editor descarta o que não foi salvo. Clique em **Salvar conteúdo** antes de sair."],
-      ["Não acho o botão de excluir", "Não existe exclusão. O caminho é [arquivar](/ajuda/arquivar-conteudo), que tira do ar e pode ser desfeito."],
+      ["O material aparece como Rascunho · Sem arquivo", "O envio do arquivo não terminou, e o material ficou em rascunho. Em **Materiais da aula**, clique em **Reenviar arquivo** na linha dele e escolha o arquivo de novo. Ao terminar, o material é publicado. Se não precisar mais dele, abra **Editar em Materiais** e use **Excluir para sempre**."],
+      ["Quero apagar uma aula, uma seção ou um módulo", "Abra o item pelo lápis e, no fim do editor, use **Excluir para sempre** na **Zona de perigo**. A exclusão não tem volta e apaga o progresso dos alunos no item. Se ele ainda pode servir, prefira [arquivar](/ajuda/arquivar-conteudo), que tira do ar e pode ser desfeito."],
     ],
     related: ["video-da-aula", "apresentacao-da-aula", "certificado-do-curso", "publicar-materiais"],
   },
@@ -286,35 +321,28 @@ export const teamArticles: HelpArticle[] = [
     slug: "video-da-aula",
     category: "conteudo",
     title: "Colocar vídeo em uma aula",
-    summary: "Há três caminhos. Você pode enviar o arquivo direto para a plataforma, hospedar o vídeo no Bunny Stream e informar o código dele, ou colar o link de um vídeo do YouTube.",
+    summary: "Há dois caminhos. Você pode hospedar o vídeo no Bunny Stream e informar o código dele, ou colar o link de um vídeo do YouTube. A plataforma não recebe vídeo.",
     sections: [
       {
         title: "Qual caminho escolher",
         list: [
-          "**Arquivo de vídeo** é o mais simples. Serve para arquivos MP4 de até 500 MB e dispensa qualquer integração. O envio precisa terminar em até 15 minutos, o que pede uma boa conexão para arquivos grandes.",
-          "**Bunny Stream** recebe o código de um vídeo hospedado lá. É o caminho indicado para muitos vídeos ou arquivos grandes, e exige a [integração com o Bunny](/ajuda/integracao-bunny), configurada por um administrador.",
+          "**Bunny Stream** recebe o código de um vídeo hospedado lá. É o caminho indicado para conteúdo pago, e exige a [integração com o Bunny](/ajuda/integracao-bunny), configurada por um administrador.",
           "**YouTube** recebe o link de um vídeo publicado lá. Não precisa de integração. O vídeo toca dentro da aula, mas continua no YouTube.",
         ],
-        warn: "O campo **Vídeo do Bunny ou link do YouTube** tem prioridade. Com qualquer valor nele, a plataforma ignora o arquivo enviado.",
-      },
-      {
-        title: "Enviar um arquivo MP4",
-        steps: [
-          "Em **Cursos e aulas**, abra o curso e a aba **Estrutura e aulas**.",
-          "Clique no lápis da aula. A aula precisa já ter sido salva uma vez.",
-          "Em **Mídia da aula**, deixe o **Tipo de aula** em **Vídeo**.",
-          "Em **Arquivo de vídeo**, clique em **Escolher arquivo** e selecione o MP4.",
-          "Clique em **Enviar arquivo** e não feche o editor nem troque de aba do curso até aparecer **Arquivo enviado e associado ao registro**.",
-          "Preencha a **Duração em segundos** e clique em **Salvar conteúdo**.",
-        ],
-        warn: "O envio precisa terminar em até 15 minutos. Em conexão lenta, um arquivo grande não chega a tempo e aparece o aviso de prazo expirado. Nesse caso, reduza o arquivo ou use o Bunny Stream.",
+        note: "Aulas que já tinham vídeo enviado à plataforma continuam tocando enquanto o campo **Vídeo do Bunny ou link do YouTube** estiver vazio. Com qualquer valor nele, vale o vídeo do campo.",
       },
       {
         title: "Usar um vídeo do Bunny Stream",
         steps: [
-          "No Bunny, copie o código do vídeo, chamado **Video ID**. Ele tem 36 caracteres, com letras, números e hífens.",
-          "No editor da aula, cole o código em **Vídeo do Bunny ou link do YouTube**.",
-          "Preencha a **Duração em segundos** e clique em **Salvar conteúdo**.",
+          "No editor da aula, clique em **Buscar no Bunny**, logo abaixo de **Vídeo do Bunny ou link do YouTube**.",
+          "Digite parte do título e clique na lupa. A lista mostra o título e a duração de cada vídeo, e **Processando** quando o Bunny ainda está preparando o vídeo.",
+          "Clique em **Usar este vídeo**. O código do vídeo entra no campo, a **Duração em segundos** é preenchida com a do vídeo e a janela fecha.",
+          "Confira a duração e clique em **Salvar conteúdo**.",
+        ],
+        list: [
+          "O botão **Buscar no Bunny** só aparece com a [integração com o Bunny](/ajuda/integracao-bunny) configurada, incluindo a **Chave de API do Stream**. Sem ela, a dica do campo avisa quem precisa configurar.",
+          "Vídeo em **Processando** ainda não tem duração. A plataforma mantém a que estava no campo, então preencha a **Duração em segundos** à mão.",
+          "Também dá para colar o código à mão. No Bunny, copie o **Video ID**, que tem 36 caracteres, com letras, números e hífens, e cole em **Vídeo do Bunny ou link do YouTube**.",
         ],
       },
       {
@@ -324,7 +352,7 @@ export const teamArticles: HelpArticle[] = [
           "No editor da aula, cole o link em **Vídeo do Bunny ou link do YouTube**.",
           "Preencha a **Duração em segundos** e clique em **Salvar conteúdo**. A plataforma guarda só o código do vídeo e, ao reabrir a aula, mostra o link de novo.",
         ],
-        warn: "A plataforma só mostra o vídeo a quem tem acesso à aula, mas ele continua no YouTube. Um vídeo **Não listado** abre para qualquer pessoa que tenha o link, e um **Privado** não toca dentro da aula. Para conteúdo pago, prefira o Bunny Stream ou o arquivo enviado.",
+        warn: "A plataforma só mostra o vídeo a quem tem acesso à aula, mas ele continua no YouTube. Um vídeo **Não listado** abre para qualquer pessoa que tenha o link, e um **Privado** não toca dentro da aula. Para conteúdo pago, prefira o Bunny Stream.",
       },
       {
         title: "Conferir",
@@ -335,11 +363,10 @@ export const teamArticles: HelpArticle[] = [
       },
     ],
     trouble: [
-      ["O campo de arquivo não aparece", "Ele só surge em aula já salva. Clique em **Salvar conteúdo**, reabra a aula pelo lápis e o campo estará lá."],
-      ["O arquivo foi recusado", "Só MP4 de até 500 MB é aceito. Converta o vídeo ou reduza a qualidade na exportação."],
-      ["Aparece o aviso de prazo do upload expirado", "O envio passou de 15 minutos, e o arquivo não foi associado à aula. Reduza o arquivo ou use o Bunny Stream. Depois, envie de novo."],
-      ["O aluno vê que não foi possível carregar o vídeo", "No caminho do Bunny, confira se o código foi colado inteiro e se a integração está como **Configurado**. O editor não avisa quando o código está errado, então teste sempre pela prévia. No caminho do YouTube, confira se o vídeo está como **Público** ou **Não listado** e se a incorporação está permitida. No caminho do arquivo, confira se **Vídeo do Bunny ou link do YouTube** está vazio."],
+      ["Não acho onde enviar o arquivo do vídeo", "A plataforma não recebe vídeo. Envie o arquivo ao Bunny Stream e cole o código dele na aula, ou publique no YouTube e cole o link."],
+      ["O aluno vê que não foi possível carregar o vídeo", "No caminho do Bunny, confira se o código foi colado inteiro e se a integração está como **Configurado**. O editor não avisa quando o código está errado, então teste sempre pela prévia. No caminho do YouTube, confira se o vídeo está como **Público** ou **Não listado** e se a incorporação está permitida. Numa aula que já tinha vídeo enviado à plataforma, confira se **Vídeo do Bunny ou link do YouTube** está vazio."],
       ["Aparece o aviso para colar um link do YouTube ou o ID do Bunny", "O campo aceita só esses dois formatos. Links de outras plataformas, como Vimeo, não funcionam."],
+      ["A busca no Bunny mostra um aviso em vez dos vídeos", "Se o aviso pedir para configurar o Bunny Stream, falta a chave de API em **Configurações > Integrações**. Se disser que a API recusou a chave, confira as credenciais salvas lá. Se disser que a API está indisponível, clique em **Tentar novamente** daqui a pouco. Enquanto isso, dá para colar o código do vídeo à mão."],
     ],
     related: ["criar-curso", "integracao-bunny", "apresentacao-da-aula"],
   },
@@ -352,8 +379,13 @@ export const teamArticles: HelpArticle[] = [
       {
         title: "Abrir o editor",
         steps: [
-          "Na aba **Estrutura e aulas**, clique no lápis de uma aula já salva.",
-          "Clique em **Editar apresentação**.",
+          "Em **Cursos e aulas**, clique em **Editar apresentação** na linha do curso.",
+          "Na janela **Escolha a aula**, as aulas aparecem agrupadas por módulo, na ordem da estrutura. Clique na aula que vai receber a apresentação.",
+        ],
+        list: [
+          "Também dá para abrir pela aula. Na aba **Estrutura e aulas**, clique no lápis de uma aula já salva e depois em **Editar apresentação**.",
+          "Aulas arquivadas não aparecem na janela nem têm o botão no editor da aula.",
+          "Curso sem aulas mostra **Este curso ainda não tem aulas.** com o botão **Estrutura e aulas**, que leva direto para criar a primeira.",
         ],
       },
       {
@@ -400,8 +432,8 @@ export const teamArticles: HelpArticle[] = [
           "No painel, clique em **Configurações** e abra a aba **Certificado**.",
           "Preencha **Nome do responsável** e **Cargo do responsável**. São os dados de quem assina.",
           "Clique em **Salvar modelo**.",
-          "No cartão **Assinatura**, clique em **Escolher assinatura**.",
-          "Selecione um PNG com fundo transparente de até 500 KB. O tamanho recomendado é 600 × 200 px.",
+          "No cartão **Assinatura**, arraste a imagem até a área de envio ou clique em **Selecionar arquivo**.",
+          "Use um PNG com fundo transparente de até 500 KB. O tamanho recomendado é 600 × 200 px.",
           "Clique em **Salvar assinatura**.",
         ],
         warn: "A imagem da assinatura fica pública no certificado. Use uma rubrica feita para isso, nunca a assinatura que você usa em contratos.",
@@ -424,7 +456,7 @@ export const teamArticles: HelpArticle[] = [
           "Na aba **Certificado** do curso, marque **Personalizar só este curso**. Os campos chegam preenchidos com o modelo.",
           "Edite **Nome do responsável** e **Cargo do responsável**.",
           "Clique em **Salvar configuração do certificado**.",
-          "Se você for administrador, envie a assinatura do curso no cartão **Assinatura**. Clique em **Escolher assinatura** e depois em **Salvar assinatura**.",
+          "Se você for administrador, envie a assinatura do curso no cartão **Assinatura**. Arraste a imagem até a área de envio ou clique em **Selecionar arquivo**, e depois em **Salvar assinatura**.",
         ],
         note: "Para voltar ao padrão, marque **Usar o modelo global** e salve. A assinatura própria do curso fica guardada e volta se você personalizar de novo.",
       },
@@ -450,7 +482,7 @@ export const teamArticles: HelpArticle[] = [
     trouble: [
       ["O curso não publica com o certificado ligado", "Falta o responsável, ou não há aula obrigatória publicada com duração. Se o curso usa o modelo global, confira se o modelo está preenchido em **Configurações**, na aba **Certificado**. Se todas as obrigatórias forem aulas de prévia, o certificado também é recusado. Ajuste e salve de novo."],
       ["Mudei o modelo e um certificado antigo continua igual", "É o esperado. Cada certificado guarda o responsável e a assinatura do momento da emissão."],
-      ["Os alunos concluíram tudo, mas o certificado não sai", "Uma aula obrigatória pode ter sido arquivada. Ela continua na lista exigida, e a emissão fica travada para todos. Restaure o item. Se a aula não deve mais contar, mude o **Estado** dela para **Rascunho** ou desmarque **Obrigatória para o certificado**. Veja [Arquivar e restaurar conteúdo](/ajuda/arquivar-conteudo)."],
+      ["Os alunos concluíram tudo, mas o certificado não sai", "Uma aula obrigatória pode ter sido arquivada. Ela continua na lista exigida, e a emissão fica travada para todos. Restaure o item. Se a aula não deve mais contar, mude o **Estado** dela para **Rascunho** ou desmarque **Obrigatória para o certificado**. Veja [Arquivar, restaurar ou excluir conteúdo](/ajuda/arquivar-conteudo)."],
       ["Sou instrutor e não vejo o envio de assinatura", "A assinatura do modelo e a de cada curso são enviadas por um administrador. Peça a alguém com esse papel."],
     ],
     related: ["criar-curso", "marca-da-plataforma"],
@@ -492,8 +524,8 @@ export const teamArticles: HelpArticle[] = [
   {
     slug: "arquivar-conteudo",
     category: "conteudo",
-    title: "Arquivar e restaurar conteúdo",
-    summary: "Não existe botão de excluir. Arquivar tira o conteúdo do ar e guarda tudo, para você poder voltar atrás.",
+    title: "Arquivar, restaurar ou excluir conteúdo",
+    summary: "Arquivar tira o conteúdo do ar e guarda tudo, para você poder voltar atrás. Excluir para sempre apaga o item e o que depende dele, sem volta.",
     sections: [
       {
         title: "Antes de arquivar",
@@ -508,23 +540,49 @@ export const teamArticles: HelpArticle[] = [
         title: "Arquivar",
         steps: [
           "Abra o curso, o módulo, a seção, a aula, a pasta ou o material.",
-          "Abra a seção **Arquivar registro**.",
-          "Clique em **Autorizar alteração crítica**.",
-          "Digite a sua **Senha atual** e clique em **Confirmar e executar**.",
-          "Confirme a pergunta do navegador.",
+          "Abra a seção **Arquivar registro** e clique em **Arquivar**.",
+          "Leia o aviso e clique em **Confirmar arquivamento**. Não é preciso digitar a senha.",
+          "Espere a mensagem **Registro arquivado**.",
         ],
       },
       {
         title: "Restaurar",
         steps: [
           "Abra o item arquivado.",
-          "Abra **Restaurar registro** e repita a confirmação com a senha.",
+          "Abra **Restaurar registro**, clique em **Restaurar** e depois em **Confirmar restauração**.",
         ],
+        note: "O item volta ao estado que tinha antes de ser arquivado, como **Publicado** ou **Rascunho**.",
+      },
+      {
+        title: "Excluir para sempre",
+        intro: "Vale para aula, seção, módulo, material e pasta de materiais. O curso não é excluído, só arquivado. Use quando o item não deve mais existir, como uma aula criada por engano.",
+        steps: [
+          "Abra o item no editor.",
+          "No fim do editor, na caixa **Zona de perigo**, clique em **Excluir para sempre**.",
+          "Leia o resumo do que será apagado, como aulas, o progresso dos alunos e comentários.",
+          "Clique em **Excluir para sempre** de novo para confirmar. Não é preciso digitar a senha.",
+          "O editor fecha, o item sai da lista e aparece a mensagem **Excluído**.",
+        ],
+      },
+      {
+        title: "O que se perde e o que fica",
+        list: [
+          "A aula leva junto o progresso, os favoritos, as anotações e os comentários dos alunos, a apresentação, o checklist e os pontos de ranking que vieram dela.",
+          "A seção leva as aulas dela, com tudo o que cada aula leva.",
+          "O módulo leva as seções e as aulas dele e o anúncio de lançamento ligado a ele.",
+          "O material leva o arquivo e o vínculo com as aulas. A pasta leva as subpastas e os materiais dentro delas.",
+          "Os certificados já emitidos ficam e continuam válidos na verificação. O registro da exclusão também fica na auditoria.",
+          "Um material que fica sem nenhuma aula volta para **Rascunho**. Antes de publicar de novo, confira a **Regra de acesso** dele em **Materiais**.",
+          "Uma aula obrigatória excluída sai da lista exigida para o certificado. Quem concluiu as demais obrigatórias passa a poder emitir, e quem já tem o certificado não ganha outro.",
+        ],
+        warn: "Não dá para desfazer. Se o item ainda pode servir, arquive em vez de excluir.",
       },
     ],
     trouble: [
       ["Aparece o aviso para usar arquivar ou restaurar com confirmação", "O item está arquivado, e por isso o salvamento comum é recusado. Restaure primeiro."],
-      ["Apareceu um aviso de muitas tentativas", "Há um limite de 5 confirmações de senha por minuto e de 20 por hora. Aguarde um minuto. Se o aviso continuar, espere a hora seguinte."],
+      ["Aparece o aviso de muitas solicitações", "Cada pessoa pode arquivar ou restaurar até 30 itens por minuto e excluir até 20. Aguarde um minuto e tente de novo."],
+      ["A exclusão avisou que alguns arquivos não foram apagados", "O item já foi excluído e não aparece mais para ninguém. Só alguns arquivos ficaram no armazenamento, ocupando espaço. Avise quem cuida do servidor da instalação para apagá-los."],
+      ["Aparece o aviso Registro indisponível ao excluir", "O item já não existe, talvez porque outra pessoa da equipe o excluiu. Feche o editor e confira a lista."],
     ],
     related: ["criar-curso", "certificado-do-curso", "publicar-materiais"],
   },
@@ -536,7 +594,7 @@ export const teamArticles: HelpArticle[] = [
     summary: "PDFs, planilhas compactadas, áudios e outros arquivos ficam em pastas, com a mesma regra de acesso dos cursos.",
     need: [
       "Uma conta de administrador ou instrutor.",
-      "O arquivo em PDF, ZIP, TXT, MP4, MP3, PNG ou JPG.",
+      "O arquivo em PDF, ZIP, TXT, MP3, PNG ou JPG.",
     ],
     sections: [
       {
@@ -552,13 +610,14 @@ export const teamArticles: HelpArticle[] = [
       },
       {
         title: "Cadastrar o material e enviar o arquivo",
+        intro: "Arquivo de uma aula só? É mais rápido soltar o arquivo em **Materiais da aula**, no editor da aula, que já cria o material vinculado e publicado. Veja [Criar um curso do zero](/ajuda/criar-curso).",
         steps: [
           "Clique em **Novo material**.",
           "Preencha **Nome** e **Descrição**.",
-          "Escolha a **Pasta** e o **Tipo**. Se o arquivo pertence a uma aula específica, escolha a **Aula vinculada**.",
+          "Escolha a **Pasta** e o **Tipo**. Se o arquivo é de uma ou mais aulas, marque cada uma em **Aulas vinculadas**.",
           "Escolha a **Regra de acesso** e deixe o **Estado** em **Rascunho**.",
           "Clique em **Salvar material**.",
-          "Em **Enviar arquivo**, clique em **Escolher arquivo**, selecione o arquivo e clique em **Enviar arquivo**.",
+          "Em **Enviar arquivo**, arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**. O envio começa assim que você escolhe o arquivo.",
           "Espere a mensagem **Arquivo enviado e associado ao registro** e clique em **Fechar editor**.",
         ],
       },
@@ -568,17 +627,47 @@ export const teamArticles: HelpArticle[] = [
           "Na lista **Arquivos**, clique em **Editar material**.",
           "Mude o **Estado** para **Publicado** e clique em **Salvar material**.",
         ],
-        warn: "Feche o editor antes de publicar, como no passo anterior. Depois do primeiro salvamento, o formulário volta a mostrar os valores padrão. Os dados foram gravados. Não salve de novo sem fechar o editor, porque o segundo salvamento pode trocar a pasta, o tipo e a regra de acesso pelos valores padrão.",
+      },
+      {
+        title: "Vincular o material a várias aulas",
+        intro: "Um material pode ficar em até 200 aulas. Elas aparecem agrupadas por curso e módulo, na ordem do curso.",
+        steps: [
+          "Na lista **Arquivos**, clique em **Editar material**.",
+          "Em **Aulas vinculadas**, marque as aulas que devem mostrar o material e desmarque as que não devem mais.",
+          "Para achar uma aula numa lista longa, digite em **Filtrar aulas** parte do nome da aula, do módulo ou do curso.",
+          "Confira a contagem de aulas selecionadas logo abaixo do filtro e clique em **Salvar material**.",
+        ],
+        list: [
+          "O filtro só esconde aulas da lista. A aula marcada continua vinculada mesmo quando o filtro a esconde.",
+          "Aula arquivada só aparece se já estiver vinculada, com o selo **Arquivado**. Desmarque para tirar o material dela.",
+          "Na lista **Arquivos**, o material vinculado mostra em quantas aulas está, como **Em 2 aulas**.",
+          "No editor da aula, **Desvincular** tira o material daquela aula. Se ele ficar sem nenhuma aula, volta para **Rascunho**.",
+        ],
       },
       {
         title: "Limites de arquivo",
         list: [
           "PDF, PNG, JPG e WebP de até 20 MB. O envio otimiza o arquivo e guarda só a versão otimizada, que precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). A imagem é guardada em WebP.",
-          "ZIP, TXT, MP4 e MP3 de até 500 MB.",
+          "ZIP, TXT e MP3 de até 500 MB.",
           "A otimização não tem perda visível: a imagem é reduzida só quando passa do necessário e o PDF é comprimido sem perda. A tela mostra quanto o arquivo diminuiu. Um PDF que continue acima de 5 MB depois de otimizado é recusado; nesse caso, exporte de novo com imagens menores.",
           "O envio precisa terminar em até 15 minutos. Em conexão lenta, um arquivo grande não chega a tempo e aparece o aviso de prazo expirado. Nesse caso, reduza o arquivo.",
           "Word, Excel e PowerPoint não são aceitos. Exporte em PDF antes de enviar.",
+          "Vídeo não é aceito. Publique o vídeo no Bunny Stream ou no YouTube e use na aula. Veja [Colocar vídeo em uma aula](/ajuda/video-da-aula).",
         ],
+      },
+      {
+        title: "Excluir um material ou uma pasta",
+        steps: [
+          "Na lista **Arquivos**, clique em **Editar material**. Para uma pasta, clique em **Editar pasta** na lista **Pastas**.",
+          "No fim do editor, na caixa **Zona de perigo**, clique em **Excluir para sempre**.",
+          "Confira o resumo do que será apagado e clique em **Excluir para sempre** de novo.",
+        ],
+        list: [
+          "Excluir o material apaga o arquivo e tira o material de todas as aulas em que ele estava.",
+          "Excluir a pasta apaga as subpastas e todos os materiais dentro delas. O resumo diz quantos desses materiais estão em aulas, porque eles deixam de aparecer nelas.",
+          "Quando uma aula é excluída e o material fica sem nenhuma aula, ele volta para **Rascunho**. Antes de publicar de novo, confira a **Regra de acesso**, porque sem aula ele segue só a dele e a das pastas.",
+        ],
+        warn: "Não dá para desfazer. Para só tirar do ar, use **Arquivar registro**. Veja [Arquivar, restaurar ou excluir conteúdo](/ajuda/arquivar-conteudo).",
       },
       {
         title: "Quando o aluno consegue baixar",
@@ -586,13 +675,14 @@ export const teamArticles: HelpArticle[] = [
           "O material está em **Publicado** e o arquivo foi enviado.",
           "A pasta e as pastas acima dela estão em **Publicado**.",
           "O plano do aluno atende à **Regra de acesso** do material e de cada pasta do caminho.",
-          "Se houver **Aula vinculada**, o aluno tem acesso a essa aula.",
+          "Se o material estiver vinculado a aulas, o aluno tem acesso a pelo menos uma delas.",
         ],
         warn: "Um material publicado aparece na lista mesmo sem arquivo ou sem o plano certo. Nesses casos, o aluno vê o nome, mas não consegue baixar.",
       },
     ],
     trouble: [
-      ["A aula vinculada não pode ser trocada", "O vínculo com a aula e a pasta superior são definidos na criação e não mudam depois. Crie um material novo se precisar de outro vínculo."],
+      ["Aparece o aviso para vincular no máximo 200 aulas", "Um material fica em até 200 aulas. Desmarque as aulas que não precisam dele ou cadastre um segundo material para as demais."],
+      ["A pasta superior de uma pasta não pode ser trocada", "A pasta superior é definida na criação da pasta e não muda depois. Crie a pasta de novo no lugar certo e mova os materiais para ela."],
       ["Aparece o aviso de prazo do upload expirado", "O envio passou de 15 minutos, e o arquivo não foi associado ao material. Reduza o arquivo e envie de novo."],
     ],
     related: ["criar-curso", "arquivar-conteudo"],
@@ -796,13 +886,17 @@ export const teamArticles: HelpArticle[] = [
           },
           "Informe o **Preço em reais** e os **Meses de acesso**.",
           "Escreva os **Benefícios, um por linha**.",
+          {
+            text: "Marque **Parcelamento sem juros no cartão** só se a sua conta do Asaas não repassa juros do parcelamento ao aluno.",
+            note: "Com a marcação, o cartão do plano diz, por exemplo, **12x de R$ 49,00 sem juros**. Sem ela, diz **em até 12x de R$ 49,00 no cartão** e avisa que o valor final da parcela é confirmado no pagamento. A marcação muda só o texto. Quem decide os juros é a configuração da conta do Asaas.",
+          },
           "Mantenha **Plano ativo** marcado e clique em **Salvar plano**.",
         ],
       },
       {
         title: "Onde o plano aparece",
         list: [
-          "Na aba **Assinatura** das configurações do aluno, com o botão **Assinar**.",
+          "Na aba **Assinatura** das configurações do aluno, em um cartão com a parcela de 12 vezes em destaque, o valor à vista e o botão **Assinar**.",
           "No checkout, que é a página de pagamento. O link é o endereço da sua plataforma seguido de `/checkout?plano=` e do endereço do plano, como em `https://membros.seudominio.com.br/checkout?plano=plano-anual`. É esse link que você divulga.",
           "Nas regras de acesso de cursos, materiais, espaços da comunidade e encontros.",
         ],
@@ -1003,11 +1097,11 @@ export const teamArticles: HelpArticle[] = [
         title: "Enviar um arquivo",
         steps: [
           "Na conversa, vá até **Anexar arquivo à conversa**.",
-          "Clique em **Escolher arquivo** e depois em **Enviar arquivo**.",
+          "Arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**. O envio começa assim que você escolhe o arquivo.",
         ],
         list: [
           "PDF, PNG, JPG ou WebP de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem).",
-          "ZIP, TXT, MP4 e MP3 de até 20 MB.",
+          "ZIP, TXT e MP3 de até 20 MB. Vídeo não é aceito.",
         ],
       },
       {
@@ -1083,7 +1177,7 @@ export const teamArticles: HelpArticle[] = [
       {
         title: "Enviar a logo",
         steps: [
-          "Em **Logo da plataforma**, no cartão **Logo colorida**, clique em **Escolher logo colorida** e selecione o arquivo.",
+          "Em **Logo da plataforma**, no cartão **Logo colorida**, arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**.",
           "Confira em **Prévia da identidade** como a logo fica no menu, nas telas públicas, no painel e no certificado, nos dois temas.",
           "Clique em **Salvar logo colorida**.",
           "Repita no cartão **Logo branca**, que aparece no tema escuro.",
@@ -1099,7 +1193,7 @@ export const teamArticles: HelpArticle[] = [
         title: "Enviar o ícone",
         intro: "O ícone aparece na aba do navegador e no atalho da tela inicial do celular.",
         steps: [
-          "Em **Ícone da plataforma**, clique em **Escolher ícone** e selecione um SVG ou um PNG quadrado de pelo menos 180 × 180 px.",
+          "Em **Ícone da plataforma**, arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**. Use um SVG ou um PNG quadrado de pelo menos 180 × 180 px.",
           "Clique em **Salvar ícone**.",
         ],
       },

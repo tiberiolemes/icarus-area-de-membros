@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Bell, Building2, Camera, CreditCard, LockKeyhole, Shield, UserRound } from "lucide-react";
+import { Bell, Building2, Camera, Check, CreditCard, LockKeyhole, Shield, UserRound } from "lucide-react";
 import { cache, downloadBlob, client, date, edge, money, rpc } from "../api";
 import type { Profile } from "../api";
 import { useAuth, useBootstrap } from "../auth";
@@ -17,6 +17,8 @@ import {
 } from "../ui";
 import { Upload } from "../upload";
 import { PrivateImage } from "../media";
+import { FallbackAvatar } from "../avatar-fallback";
+import { installmentOffer } from "../plan-price";
 import { CompanyFields, companyData, companyKeys } from "./access";
 import type { OnboardingQuestion } from "./access";
 import { NotificationPreferences } from "./notifications";
@@ -212,7 +214,7 @@ export function Settings() {
                   />
                 ) : (
                   <span className="student-account-avatar" aria-hidden="true">
-                    <UserRound size={28} />
+                    <FallbackAvatar seed={p.id} size={80} />
                   </span>
                 )}
                 <div>
@@ -321,6 +323,7 @@ export function Settings() {
               </Form>
               <h2>Altere sua senha</h2>
               <Form
+                draft={false}
                 label="Atualizar senha"
                 onSave={async (data, form) => {
                   try {
@@ -377,27 +380,44 @@ export function Settings() {
                 do provedor configurado.
               </p>
               <h2 className="student-account-plans">Planos disponíveis</h2>
-              {boot
-                .data!.plans.filter((plan) => plan.active)
-                .map((plan) => (
-                  <article className="plan-row" key={plan.id}>
-                    <h3>{plan.name}</h3>
-                    <p>
-                      {money(plan.price_cents)} · {plan.access_months} meses de
-                      acesso
-                    </p>
-                    <ul>
-                      {plan.benefits.map((b) => (
-                        <li key={b}>{b}</li>
-                      ))}
-                    </ul>
-                    {p.current_plan_id === plan.id ? <span className="badge">Seu plano atual</span> : (
-                      <Link className="button primary" to={"/checkout?plano=" + encodeURIComponent(plan.slug)}>
-                        Assinar
-                      </Link>
-                    )}
-                  </article>
-                ))}
+              <div className="plan-cards">
+                {boot
+                  .data!.plans.filter((plan) => plan.active)
+                  .map((plan) => {
+                    const offer = installmentOffer(plan.price_cents);
+                    return (
+                      <article className="plan-card" key={plan.id}>
+                        <h3>{plan.name}</h3>
+                        <p className="plan-card-duration">
+                          {plan.access_months === 1 ? "1 mês de acesso" : `${plan.access_months} meses de acesso`}
+                        </p>
+                        {offer ? (
+                          <div className="plan-card-price">
+                            <p className="plan-card-installment">
+                              {plan.interest_free ? "" : "em até "}{offer.count}x de{" "}
+                              <strong>{money(offer.installmentCents)}</strong>{" "}
+                              {plan.interest_free ? "sem juros" : "no cartão"}
+                            </p>
+                            <p>ou {money(plan.price_cents)} à vista</p>
+                            {!plan.interest_free && <p className="plan-card-note">Valor final da parcela confirmado no pagamento.</p>}
+                          </div>
+                        ) : (
+                          <p className="plan-card-installment"><strong>Gratuito</strong></p>
+                        )}
+                        <ul>
+                          {plan.benefits.map((b) => (
+                            <li key={b}><Check size={18} aria-hidden="true" />{b}</li>
+                          ))}
+                        </ul>
+                        {p.current_plan_id === plan.id ? <span className="badge">Seu plano atual</span> : (
+                          <Link className="button primary" to={"/checkout?plano=" + encodeURIComponent(plan.slug)}>
+                            Assinar
+                          </Link>
+                        )}
+                      </article>
+                    );
+                  })}
+              </div>
               {!boot.data!.plans.some((plan) => plan.active) && (
                 <Notice>
                   Assinaturas indisponíveis no momento. Nenhum plano ativo foi
@@ -433,6 +453,7 @@ export function Settings() {
                   trigger={<button>Solicitar exclusão</button>}
                 >
                   <Form
+                    draft={false}
                     label="Enviar solicitação"
                     onSave={async (data) => {
                       if (value(data, "confirm") !== "EXCLUIR")
@@ -519,6 +540,7 @@ export function Mfa({
               <div key={factor.id}>
                 <h3>{factor.friendly_name ?? "Aplicativo autenticador"}</h3>
                 <Form
+                  draft={false}
                   label="Verificar código"
                   onSave={async (data) => {
                     const { error } =
@@ -594,6 +616,7 @@ export function Mfa({
             Chave de configuração: <code>{qr.secret}</code>
           </p>
           <Form
+            draft={false}
             label="Ativar verificação"
             onSave={async (data) => {
               const { error } = await client().auth.mfa.challengeAndVerify({
@@ -647,6 +670,7 @@ export function Reauth({
       description="A senha é enviada somente para validação. Esta autorização vale para uma ação e não é salva no navegador."
     >
       <Form
+        draft={false}
         label="Confirmar e executar"
         onSave={async (data, form) => {
           try {

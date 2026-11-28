@@ -103,7 +103,8 @@ flowchart LR
     lesson_notes -->|lesson_id| lessons
     lesson_favorites -->|lesson_id| lessons
     lesson_comments -->|lesson_id| lessons
-    materials -->|lesson_id| lessons
+    material_lessons -->|material_id| materials
+    material_lessons -->|lesson_id| lessons
     materials -->|folder_id| material_folders
     uploads -->|lesson_id| lessons
     uploads -->|material_id| materials

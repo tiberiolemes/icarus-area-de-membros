@@ -84,7 +84,7 @@ function fixture(theme) {
     ["Playbook de Pricing.pdf", "application/pdf", 8100000],
     ["Slides Apresentados.key", "application/vnd.apple.keynote", 14000000],
   ].map(([name, file_type, size_bytes], index) => ({
-    id: `material-${index}`, name, description: "", file_type, size_bytes, folder_id: "folder", lesson_id: "lesson-2-1", can_access: true,
+    id: `material-${index}`, name, description: "", file_type, size_bytes, folder_id: "folder", lesson_ids: ["lesson-2-1"], can_access: true,
   }));
   const comments = Array.from({ length: 12 }, (_, index) => ({
     id: `comment-${index + 1}`,

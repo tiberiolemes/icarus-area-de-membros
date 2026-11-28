@@ -92,13 +92,20 @@ import { CoverFocus } from "./admin-course-cover";
 import { Reauth } from "./settings";
 import { Moderate, statusName } from "./community";
 import { useBootstrap } from "../auth";
+import { HelpLink } from "../help-link";
 import { moduleLabel, modules, readModules, type ModuleKey } from "../modules";
 import { Upload } from "../upload";
 import "./admin-commercial.css";
 import { AdminSurface } from "./admin-surface";
+import { materialSize, materialTypes, save, text, useAll, type Row } from "./admin-data";
+import { LessonLinks, LessonMaterials } from "./admin-material-lessons";
+import { Archive, DangerZone, useDeletedNotice } from "./admin-delete";
+import { BunnyPicker } from "./admin-bunny-picker";
+import { DragOrder, persistOrder, useDragOrder } from "./admin-drag";
+import { PresentationPicker } from "./admin-presentation-picker";
+import { moveItem } from "../reorder";
 import "../admin-content.css";
 
-type Row = { id: string; [key: string]: unknown };
 type MemberDetail = {
   profile: Row;
   subscriptions: Page<Row>;
@@ -106,8 +113,6 @@ type MemberDetail = {
   orders: Page<Row>;
   tickets: Page<Row>;
 };
-const text = (row: Row | undefined, key: string, fallback = "") =>
-  String(row?.[key] ?? fallback);
 const memberName = (member: Row) =>
   text(member, "full_name").trim() || `Membro sem nome · ${member.id.slice(0, 8)}`;
 function focusEditor(node: HTMLElement | null) {
@@ -125,43 +130,6 @@ function focusEditor(node: HTMLElement | null) {
 }
 const num = (data: FormData, key: string) => Number(value(data, key) || 0);
 const check = (data: FormData, key: string) => data.has(key);
-async function save(
-  entity: string,
-  id: string | null,
-  data: Record<string, unknown>,
-) {
-  const result = await rpc<{ id: string }>("app_admin_save", {
-    p_entity: entity,
-    p_id: id,
-    p_data: data,
-  });
-  await cache.invalidateQueries({ queryKey: ["app_admin_list"] });
-  if (entity === "plans") await cache.invalidateQueries({ queryKey: ["app_admin_commercial"] });
-  return result;
-}
-function useAll(entity: string) {
-  return useQuery({
-    queryKey: ["app_admin_list", entity, "all"],
-    queryFn: async () => {
-      const first = await rpc<Page<Row>>("app_admin_list", {
-        p_entity: entity,
-        p_page: 1,
-        p_query: "",
-      });
-      const items = [...first.items];
-      for (let page = 2; items.length < first.total; page++) {
-        const next = await rpc<Page<Row>>("app_admin_list", {
-          p_entity: entity,
-          p_page: page,
-          p_query: "",
-        });
-        if (!next.items.length) break;
-        items.push(...next.items);
-      }
-      return items;
-    },
-  });
-}
 function orderedSettings(rows: Row[] | undefined) {
   return [...(rows ?? [])].sort((a, b) => Number(a.order_index) - Number(b.order_index) || a.id.localeCompare(b.id));
 }
@@ -395,62 +363,30 @@ const accessData = (data: FormData) => ({
   access_mode: value(data, "access_mode"),
   plan_ids: data.getAll("plan_ids").map(String),
 });
-function Archive({ entity, row }: { entity: string; row: Row }) {
-  const archived = row.status === "archived";
-  return (
-    <details className="archive">
-      <summary>{archived ? "Restaurar registro" : "Arquivar registro"}</summary>
-      <p>
-        {archived
-          ? "O estado anterior será restaurado."
-          : "O conteúdo deixa de ser publicado; histórico, progresso e certificados são preservados."}
-      </p>
-      <Reauth>
-        {async (token) => {
-          if (
-            !window.confirm(
-              archived ? "Restaurar este registro?" : "Arquivar este registro?",
-            )
-          )
-            throw new Error("Operação cancelada.");
-          await rpc("app_admin_archive", {
-            p_entity: entity,
-            p_id: row.id,
-            p_archived: !archived,
-            p_reauth_token: token,
-          });
-          await cache.invalidateQueries({ queryKey: ["app_admin_list"] });
-        }}
-      </Reauth>
-    </details>
-  );
-}
 function OrderControl({
   entity,
   row,
   siblings,
+  drag,
 }: {
   entity: string;
   row: Row;
   siblings: Row[];
+  drag: ReturnType<typeof useDragOrder>;
 }) {
   const index = siblings.findIndex((item) => item.id === row.id);
   async function move(direction: number) {
     const target = index + direction;
     if (target < 0 || target >= siblings.length) return;
-    const ordered = [...siblings];
-    [ordered[index], ordered[target]] = [ordered[target], ordered[index]];
-    for (const [position, item] of ordered.entries())
-      if (Number(item.order_index) !== position)
-        await save(entity, item.id, { order_index: position });
+    await drag.run(() => persistOrder(entity, moveItem(siblings, index, target)));
   }
   return (
     <div className="order-controls">
-      <Action disabled={index <= 0} run={() => move(-1)}>
+      <Action disabled={drag.busy || index <= 0} run={() => move(-1)}>
         <ArrowUp size={18} aria-hidden="true" />
         <span className="sr-only">Subir {text(row, "title")}</span>
       </Action>
-      <Action disabled={index >= siblings.length - 1} run={() => move(1)}>
+      <Action disabled={drag.busy || index >= siblings.length - 1} run={() => move(1)}>
         <ArrowDown size={18} aria-hidden="true" />
         <span className="sr-only">Descer {text(row, "title")}</span>
       </Action>
@@ -490,6 +426,7 @@ export function AdminCourses() {
                 <Link className="button" to={editor}>
                   Editar curso
                 </Link>
+                <PresentationPicker course={course} />
                 <Link className="button primary" to={`${editor}?aba=estrutura`}>
                   Estrutura e aulas
                 </Link>
@@ -636,12 +573,14 @@ function StructureActions({
   siblings,
   onEdit,
   current,
+  drag,
 }: {
   entity: StructureSelection["entity"];
   row: Row;
   siblings?: Row[];
   onEdit: (event: MouseEvent<HTMLButtonElement>) => void;
   current?: boolean;
+  drag: ReturnType<typeof useDragOrder>;
 }) {
   const label = `Editar ${structureLabels[entity]} ${text(row, "title")}`;
   return (
@@ -656,7 +595,8 @@ function StructureActions({
       >
         <Pencil size={18} aria-hidden="true" />
       </button>
-      {siblings && <OrderControl entity={entity} row={row} siblings={siblings} />}
+      {siblings && <OrderControl entity={entity} row={row} siblings={siblings} drag={drag} />}
+      {drag.handle(row)}
     </div>
   );
 }
@@ -665,7 +605,8 @@ function Structure({ course }: { course: Row }) {
     sections = useAll("sections"),
     lessons = useAll("lessons"),
     [reordering, setReordering] = useState(false),
-    [selected, setSelected] = useState<StructureSelection | null>(null);
+    [selected, setSelected] = useState<StructureSelection | null>(null),
+    deleted = useDeletedNotice();
   const opener = useRef<HTMLButtonElement>(null);
   const focusPanel = useCallback((node: HTMLElement | null) => {
     focusEditor(node);
@@ -683,6 +624,7 @@ function Structure({ course }: { course: Row }) {
   const ownModules = (modules.data ?? [])
     .filter((module) => module.course_id === course.id)
     .sort((a, b) => Number(a.order_index) - Number(b.order_index));
+  const moduleDrag = useDragOrder("modules", reordering ? ownModules : []);
   const moduleIds = new Set(ownModules.map((module) => module.id));
   const courseSections = (sections.data ?? []).filter((section) =>
     moduleIds.has(text(section, "module_id")),
@@ -710,7 +652,9 @@ function Structure({ course }: { course: Row }) {
     const ownLessons = courseLessons
       .filter((lesson) => lesson.section_id === section.id)
       .sort((a, b) => Number(a.order_index) - Number(b.order_index));
-    return ownLessons.map((lesson) => {
+    return (
+      <DragOrder entity="lessons" siblings={reordering ? ownLessons : []}>
+        {(drag) => ownLessons.map((lesson) => {
       const editing =
         selected?.entity === "lessons" && selected.row?.id === lesson.id;
       return (
@@ -718,6 +662,7 @@ function Structure({ course }: { course: Row }) {
           className="lesson-editor-row"
           data-selected={editing || undefined}
           key={lesson.id}
+          {...drag.rowProps(lesson)}
         >
           <div className="lesson-editor-title">
             <span className="content-icon">
@@ -746,6 +691,7 @@ function Structure({ course }: { course: Row }) {
             row={lesson}
             siblings={reordering ? ownLessons : undefined}
             current={editing}
+            drag={drag}
             onEdit={openEditor({
               entity: "lessons",
               row: lesson,
@@ -754,7 +700,9 @@ function Structure({ course }: { course: Row }) {
           />
         </article>
       );
-    });
+        })}
+      </DragOrder>
+    );
   };
 
   return (
@@ -781,11 +729,12 @@ function Structure({ course }: { course: Row }) {
           }
         />
         <p className="content-hint">
-          {reordering && "Use Subir e Descer para mudar a ordem dos itens. "}
-          <Link className="text-action" to="/ajuda/criar-curso">
+          {reordering && "Arraste pela alça ou use Subir e Descer para mudar a ordem. "}
+          <HelpLink className="text-action" to="/ajuda/criar-curso">
             Ajuda sobre conteúdo
-          </Link>
+          </HelpLink>
         </p>
+        {deleted.notice}
         <QueryState query={modules}>
           <QueryState query={sections}>
             <QueryState query={lessons}>
@@ -796,6 +745,7 @@ function Structure({ course }: { course: Row }) {
                 {courseLessons.length}{" "}
                 {courseLessons.length === 1 ? "aula" : "aulas"}
               </p>
+              {moduleDrag.notice}
               <div className="editor-outline">
                 {ownModules.map((module) => {
                   const ownSections = courseSections
@@ -810,6 +760,7 @@ function Structure({ course }: { course: Row }) {
                     <section
                       className="content-panel content-module"
                       key={module.id}
+                      {...moduleDrag.rowProps(module)}
                     >
                       <SectionHeading
                         level={3}
@@ -830,6 +781,7 @@ function Structure({ course }: { course: Row }) {
                             row={module}
                             siblings={reordering ? ownModules : undefined}
                             current={selected?.row?.id === module.id}
+                            drag={moduleDrag}
                             onEdit={openEditor({
                               entity: "modules",
                               row: module,
@@ -851,8 +803,9 @@ function Structure({ course }: { course: Row }) {
                         <Plus size={18} aria-hidden="true" />
                         Adicionar aula
                       </button>
-                      {named.map((section) => (
-                        <div className="section-block" key={section.id}>
+                      <DragOrder entity="sections" siblings={reordering ? named : []}>
+                      {(drag) => named.map((section) => (
+                        <div className="section-block" key={section.id} {...drag.rowProps(section)}>
                           <SectionHeading
                             level={4}
                             title={
@@ -872,6 +825,7 @@ function Structure({ course }: { course: Row }) {
                                 row={section}
                                 siblings={reordering ? named : undefined}
                                 current={selected?.row?.id === section.id}
+                                drag={drag}
                                 onEdit={openEditor({
                                   entity: "sections",
                                   row: section,
@@ -895,6 +849,7 @@ function Structure({ course }: { course: Row }) {
                           </button>
                         </div>
                       ))}
+                      </DragOrder>
                       <button
                         className="content-append"
                         type="button"
@@ -977,6 +932,12 @@ function Structure({ course }: { course: Row }) {
               ]);
               setSelected((current) => (current === selected ? null : current));
             }}
+            onDeleted={(message) => {
+              // O lápis do item apagado saiu da lista: o foco vai para a confirmação.
+              opener.current = null;
+              setSelected(null);
+              deleted.show(message);
+            }}
           />
           </FormHeadingTarget.Provider>
         </section>
@@ -990,19 +951,33 @@ function StructureForm({
   parent,
   inModule,
   after,
+  onDeleted,
 }: {
   entity: "modules" | "sections" | "lessons";
   row?: Row;
   parent: string;
   inModule?: boolean;
   after: () => Promise<void>;
+  onDeleted: (message: string) => void;
 }) {
-  const [uploading, setUploading] = useState(false);
+  const video = useRef<HTMLInputElement>(null),
+    duration = useRef<HTMLInputElement>(null),
+    instructor = useBootstrap().data?.profile.role === "instructor",
+    capabilities = useQuery({
+      queryKey: ["capabilities"],
+      queryFn: () => edge<{ bunny_search: boolean }>("capabilities"),
+      enabled: entity === "lessons",
+    });
+  // Os campos não são controlados: o evento input avisa o Form que houve alteração.
+  function fill(input: HTMLInputElement | null, value: string) {
+    if (!input) return;
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
   return (
     <>
-      <Form submitInHeading
+      <Form submitInHeading draft={row?.id ?? `${entity}:${parent}`}
         label="Salvar conteúdo"
-        submitDisabled={uploading}
         onSave={async (data) => {
           let fields: Record<string, unknown> = {
             title: value(data, "title"),
@@ -1070,6 +1045,7 @@ function StructureForm({
                 </Field>
                 <Field label="Duração em segundos">
                   <input
+                    ref={duration}
                     name="duration_seconds"
                     type="number"
                     required
@@ -1081,19 +1057,30 @@ function StructureForm({
               </div>
               <Field
                 label="Vídeo do Bunny ou link do YouTube"
-                hint="Cole o link do vídeo no YouTube ou o ID do vídeo na biblioteca do Bunny Stream."
+                hint={`Cole o link do vídeo no YouTube ou o ID do vídeo na biblioteca do Bunny Stream.${
+                  capabilities.data && !capabilities.data.bunny_search
+                    ? instructor
+                      ? " Peça a um administrador para configurar o Bunny."
+                      : " Para buscar na biblioteca, configure o Bunny em Configurações > Integrações."
+                    : ""
+                }`}
               >
                 <input
+                  ref={video}
                   name="video_id"
                   defaultValue={youtubeIdPattern.test(text(row, "video_id")) ? `https://www.youtube.com/watch?v=${text(row, "video_id")}` : text(row, "video_id")}
                   maxLength={100}
                 />
               </Field>
-              {row ? (
-                <div onInput={(event) => event.stopPropagation()}>
-                  <Upload kind="lesson" resourceId={row.id} onBusyChange={setUploading} />
-                </div>
-              ) : <p>Salve a aula para enviar um arquivo de vídeo.</p>}
+              {capabilities.data?.bunny_search && (
+                <BunnyPicker
+                  onPick={(picked) => {
+                    fill(video.current, picked.id);
+                    // Vídeo ainda em processamento chega sem duração: mantém a que já está no campo.
+                    if (picked.length > 0) fill(duration.current, String(picked.length));
+                  }}
+                />
+              )}
             </fieldset>
             <RichEditor
               name="body"
@@ -1105,7 +1092,9 @@ function StructureForm({
         <div className="content-form-grid">
           <StatusField row={row} />
           <Field label="Posição na lista">
+            {/* Fora do rascunho: recuperar um rascunho antigo desfaria a ordem gravada pelo arraste. */}
             <input
+              data-no-draft
               name="order_index"
               type="number"
               min="0"
@@ -1147,33 +1136,45 @@ function StructureForm({
           </>
         )}
       </Form>
+      {entity === "lessons" && (row ? <LessonMaterials lessonId={row.id} /> : (
+        <section className="lesson-materials" aria-labelledby="lesson-materials-new">
+          <h3 id="lesson-materials-new">Materiais da aula</h3>
+          <p>Salve a aula para adicionar materiais.</p>
+        </section>
+      ))}
       {row && (
         <>
           {entity === "modules" && row.status === "draft" && (
             <AdminCatalogLaunch entity="modules" id={row.id} />
           )}
           <Archive entity={entity} row={row} />
+          <DangerZone entity={entity} row={row} onDeleted={onDeleted} />
         </>
       )}
     </>
   );
 }
-const materialTypes: Record<string, string> = {
-  "application/pdf": "PDF", "application/zip": "ZIP", "video/mp4": "Vídeo MP4",
-  "image/png": "Imagem PNG", "image/jpeg": "Imagem JPEG", "image/webp": "Imagem WebP", "text/plain": "Texto", "audio/mpeg": "Áudio MP3",
+const inLessons = (row: Row) => {
+  const count = (row.lesson_ids as string[] | undefined)?.length ?? 0;
+  return count ? ` · Em ${count} ${count === 1 ? "aula" : "aulas"}` : "";
 };
-const fileNumber = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
-function materialSize(size: number) {
-  if (size >= 1_048_576) return `${fileNumber.format(size / 1_048_576)} MB`;
-  if (size >= 1024) return `${fileNumber.format(size / 1024)} KB`;
-  return `${fileNumber.format(size)} B`;
+/** Abre o editor pelo endereço (?editar=<id>), destino de "Editar em Materiais". */
+function MaterialFromUrl({ id, open }: { id: string; open: (row: Row) => void }) {
+  const row = useAll("materials").data?.find((item) => item.id === id);
+  // Só a chegada da linha dispara: open muda a cada render de quem chama.
+  useEffect(() => {
+    if (row) open(row);
+  }, [row]);
+  return null;
 }
 
 export function AdminMaterials() {
   const folders = useAll("material_folders"),
-    lessons = useAll("lessons"),
+    [params, setParams] = useSearchParams(),
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
-    [folder, setFolder] = useState<Row | null | undefined>(undefined);
+    [folder, setFolder] = useState<Row | null | undefined>(undefined),
+    deleted = useDeletedNotice();
+  const target = params.get("editar");
   const [folderSubmit, setFolderSubmit] = useState<HTMLDivElement | null>(null);
   const [materialSubmit, setMaterialSubmit] = useState<HTMLDivElement | null>(null);
   return (
@@ -1191,14 +1192,18 @@ export function AdminMaterials() {
         </div>
       }
     >
+      {deleted.notice}
       <AdminList entity="materials" title="Arquivos" icon={<FileText size={20} aria-hidden="true" />}>
         {(item) => (
           <>
             <div>
               <h3>{text(item, "name")}</h3>
               <p>
-                {statusName(text(item, "status"))} · {materialTypes[text(item, "file_type")] ?? "Arquivo"} ·{" "}
-                {materialSize(Number(item.size_bytes))}
+                {statusName(text(item, "status"))} ·{" "}
+                {item.storage_path
+                  ? `${materialTypes[text(item, "file_type")] ?? "Arquivo"} · ${materialSize(Number(item.size_bytes))}`
+                  : "Sem arquivo"}
+                {inLessons(item)}
               </p>
             </div>
             <button onClick={() => setEditing(item)}>Editar material</button>
@@ -1224,7 +1229,7 @@ export function AdminMaterials() {
             <SectionHeading title={folder ? "Editar pasta" : "Criar pasta"}
               actions={<div className="heading-submit" ref={setFolderSubmit} />} />
             <FormHeadingTarget.Provider value={folderSubmit}>
-            <Form submitInHeading
+            <Form submitInHeading draft={folder?.id}
               label="Salvar pasta"
               secondaryAction={<button type="button" onClick={() => setFolder(undefined)}>Fechar editor</button>}
               onSave={async (data) => {
@@ -1260,9 +1265,28 @@ export function AdminMaterials() {
               <AccessFields row={folder ?? undefined} />
             </Form>
             </FormHeadingTarget.Provider>
-            {folder && <Archive entity="material_folders" row={folder} />}
+            {folder && (
+              <>
+                <Archive entity="material_folders" row={folder} />
+                <DangerZone entity="material_folders" row={folder} onDeleted={(message) => {
+                  setFolder(undefined);
+                  deleted.show(message);
+                }} />
+              </>
+            )}
           </div>
         </section>
+      )}
+      {target && (
+        <MaterialFromUrl id={target} open={(row) => {
+          setEditing(row);
+          // Sem o parâmetro, fechar o editor não o reabre quando a lista recarrega.
+          setParams((current) => {
+            const next = new URLSearchParams(current);
+            next.delete("editar");
+            return next;
+          }, { replace: true });
+        }} />
       )}
       {editing !== undefined && (
         <section className="settings-panel">
@@ -1270,26 +1294,22 @@ export function AdminMaterials() {
             <SectionHeading title={editing ? "Editar material" : "Criar material"}
               actions={<div className="heading-submit" ref={setMaterialSubmit} />} />
             <FormHeadingTarget.Provider value={materialSubmit}>
-            <Form submitInHeading
+            <Form submitInHeading draft={editing?.id}
               label="Salvar material"
               secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
               onSave={async (data) => {
-                const result = await save("materials", editing?.id ?? null, {
+                const saved = {
                   name: value(data, "name"),
                   description: value(data, "description"),
                   folder_id: nullable(data, "folder_id"),
-                  lesson_id: nullable(data, "lesson_id"),
+                  lesson_ids: data.getAll("lesson_ids").map(String),
                   file_type: value(data, "file_type"),
                   status: value(data, "status"),
                   ...accessData(data),
-                });
-                setEditing({
-                  ...editing,
-                  id: result.id,
-                  name: value(data, "name"),
-                  description: value(data, "description"),
-                  status: value(data, "status"),
-                });
+                };
+                const result = await save("materials", editing?.id ?? null, saved);
+                // O material novo remonta o editor com a chave do id; sem tudo o que foi salvo, os campos voltariam ao padrão.
+                setEditing({ ...editing, id: result.id, ...saved });
               }}
             >
               <Field label="Nome">
@@ -1318,19 +1338,7 @@ export function AdminMaterials() {
                   ))}
                 </select>
               </Field>
-              <Field label="Aula vinculada">
-                <select
-                  name="lesson_id"
-                  defaultValue={text(editing ?? undefined, "lesson_id")}
-                >
-                  <option value="">Sem vínculo</option>
-                  {lessons.data?.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {text(l, "title")}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+              <LessonLinks selected={(editing?.lesson_ids as string[] | undefined) ?? []} />
               <Field label="Tipo">
                 {/* A chave remonta o campo quando o envio grava o tipo real do arquivo (a imagem vira WebP). */}
                 <select
@@ -1342,9 +1350,12 @@ export function AdminMaterials() {
                     "application/pdf",
                   )}
                 >
-                  {Object.entries(materialTypes).map(([type, label]) => (
-                    <option key={type} value={type}>{label}</option>
-                  ))}
+                  {/* A plataforma não recebe vídeo: o MP4 só aparece no material antigo que já é MP4, para salvar sem trocar o tipo. */}
+                  {Object.entries(materialTypes)
+                    .filter(([type]) => type !== "video/mp4" || text(editing ?? undefined, "file_type") === type)
+                    .map(([type, label]) => (
+                      <option key={type} value={type}>{label}</option>
+                    ))}
                 </select>
               </Field>
               <StatusField row={editing ?? undefined} />
@@ -1355,6 +1366,10 @@ export function AdminMaterials() {
               <>
                 <Upload kind="material" resourceId={editing.id} onUploaded={(file) => setEditing({ ...editing, file_type: file.type })} />
                 <Archive entity="materials" row={editing} />
+                <DangerZone entity="materials" row={editing} onDeleted={(message) => {
+                  setEditing(undefined);
+                  deleted.show(message);
+                }} />
               </>
             )}
           </div>
@@ -1734,6 +1749,7 @@ function MemberDetailPanel({ id }: { id?: string }) {
                 um pagamento nem confirma uma venda.
               </Notice>
               <Form
+                draft={false}
                 label="Revisar alteração"
                 successMessage={
                   change
@@ -1976,6 +1992,7 @@ export function AdminPlans() {
             actions={<div className="heading-submit" ref={setSubmitTarget} />} />
           <FormHeadingTarget.Provider value={submitTarget}>
           <Form
+            draft={editing?.id}
             submitInHeading
             label="Salvar plano"
             onDone={() => {
@@ -1998,6 +2015,7 @@ export function AdminPlans() {
                   .map((v) => v.trim())
                   .filter(Boolean),
                 active: check(data, "active"),
+                interest_free: check(data, "interest_free"),
               });
             }}
           >
@@ -2041,6 +2059,18 @@ export function AdminPlans() {
               />
               Plano ativo
             </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                name="interest_free"
+                defaultChecked={editing?.interest_free === true}
+                aria-describedby="plan-interest-free-hint"
+              />
+              Parcelamento sem juros no cartão
+            </label>
+            <small className="check-hint" id="plan-interest-free-hint">
+              Ligue só se a sua conta do Asaas não repassa juros do parcelamento ao aluno.
+            </small>
           </Form>
           </FormHeadingTarget.Provider>
         </section>
@@ -2362,6 +2392,7 @@ export function AdminCommunity() {
                   after={() => cache.invalidateQueries({ queryKey: ["app_admin_reports"] })} />
               ) : null}
               {text(report, "status") === "pending" && <Form
+                draft={false}
                 label="Concluir análise"
                 onSave={async (data) => {
                   await rpc("app_moderate", {
@@ -2418,6 +2449,7 @@ export function AdminCommunity() {
               <div className="reading inline-editor" key={editing?.id ?? "new"} ref={focusEditor}>
                 <h2>{editing ? "Editar espaço" : "Criar espaço"}</h2>
                 <Form
+                  draft={editing?.id}
                   label="Salvar espaço"
                   secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
                   onSave={async (data) => {
@@ -2832,6 +2864,7 @@ function LegalSettings() {
           <div className="reading inline-editor" key={legal?.id ?? "new"} ref={focusEditor}>
             <h2>{legal ? "Editar documento" : "Criar documento"}</h2>
             <Form
+              draft={legal?.id}
               label="Salvar documento"
               secondaryAction={<button type="button" onClick={() => setLegal(undefined)}>Fechar editor</button>}
               onSave={async (data) => {
@@ -2930,6 +2963,7 @@ function PrivacySettings() {
               </p>
               {(status === "pending" || status === "processing") && (
                 <Form
+                  draft={false}
                   label="Registrar atendimento"
                   successMessage="Atendimento registrado."
                   onSave={async (data) => {
@@ -3004,6 +3038,7 @@ function OnboardingAdmin() {
           <div className="reading inline-editor" key={selected?.id ?? "new"} ref={focusEditor}>
             <h2>{selected ? "Editar pergunta" : "Criar pergunta"}</h2>
             <Form
+              draft={selected?.id}
               label="Salvar pergunta"
               secondaryAction={<button type="button" onClick={() => setSelected(undefined)}>Fechar editor</button>}
               onSave={async (data) => {

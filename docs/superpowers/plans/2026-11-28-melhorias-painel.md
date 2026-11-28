@@ -375,7 +375,7 @@ git commit -m "feat: área de arraste no padrão do Icarus em todos os uploads"
 - Consumes: `lesson_ids` de `app_admin_list`/`app_admin_save` (Task 1).
 - Produces:
   - `src/pages/admin-data.ts`: `save(entity: string, id: string | null, data: Record<string, unknown>): Promise<{ id: string }>`, `useAll(entity: string)`, `text(row: Row | undefined, key: string, fallback?: string): string`, `type Row`.
-  - `LessonLinks({ selected }: { selected: string[] }): JSX.Element` — fieldset "Aulas vinculadas" com checkboxes `name="lesson_ids"`, agrupados por curso e módulo na ordem de `order_index`, campo "Filtrar aulas" (`data-no-draft`, sem `name`) e contagem "N aulas selecionadas". Aula arquivada só aparece se estiver em `selected`, com o selo "Arquivado".
+  - `LessonLinks({ selected }: { selected: string[] }): JSX.Element`. Fieldset "Aulas vinculadas" com checkboxes `name="lesson_ids"`, agrupados por curso e módulo na ordem de `order_index`, campo "Filtrar aulas" (`data-no-draft`, sem `name`) e contagem "N aulas selecionadas". Aula arquivada só aparece se estiver em `selected`, com o selo "Arquivado".
   - `AdminMaterials` aceita `?editar=<id>` na URL e abre o editor desse material.
 
 - [ ] **Step 1: Escrever os testes que falham**
@@ -422,7 +422,7 @@ git commit -m "feat: editor do material vincula várias aulas por checkbox"
 **Interfaces:**
 - Consumes: `app_admin_delete_preview`, `app_admin_archive` de 3 argumentos (Task 2); ação `delete` da função `upload` (Task 3); `save`, `Row`, `text` de `admin-data.ts` (Task 7).
 - Produces:
-  - `Archive({ entity, row }: { entity: string; row: Row }): JSX.Element` — confirma num `Modal` ("Arquivar este registro?" ou "Restaurar este registro?") e chama `rpc("app_admin_archive", { p_entity, p_id, p_archived })`, sem `Reauth`.
+  - `Archive({ entity, row }: { entity: string; row: Row }): JSX.Element`. Confirma num `Modal` ("Arquivar este registro?" ou "Restaurar este registro?") e chama `rpc("app_admin_archive", { p_entity, p_id, p_archived })`, sem `Reauth`.
   - `DangerZone({ entity, row, onDeleted }: { entity: DeletableEntity; row: Row; onDeleted: () => void }): JSX.Element` com `type DeletableEntity = "lessons" | "sections" | "modules" | "materials" | "material_folders"` exportado.
 
 - [ ] **Step 1: Escrever os testes que falham**

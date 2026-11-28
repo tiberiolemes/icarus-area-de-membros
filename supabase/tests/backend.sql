@@ -123,26 +123,24 @@ set local role authenticated;
 select pg_temp.assert((public.app_admin_list('profiles','DEMONSTRAÇÃO pessoa')->>'total')::integer=8,'AAL2 admin list');
 select pg_temp.denied($q$select public.app_admin_save('courses;drop table profiles',null,'{}')$q$,'entity SQL injection denied');
 select pg_temp.denied($q$select public.app_admin_save('profiles',null,'{"role":"admin"}')$q$,'generic member edit denied');
-select pg_temp.denied($q$select public.app_admin_archive('courses','30000000-0000-4000-8000-000000000001',true,'wrong')$q$,'wrong reauth denied');
+-- Arquivar não pede mais senha; o mecanismo de reautenticação segue coberto pela alteração de membro.
+select pg_temp.denied($q$select public.app_admin_member('00000000-0000-4000-8000-000000000002','{}','Conferência da reautenticação','wrong')$q$,'wrong reauth denied');
 reset role;
 set local role service_role;
 select pg_temp.service_headers(3,'aal2');
-select public.app_confirm_reauth(pg_temp.uid(3),'10000000-0000-4000-8000-000000000003',encode(extensions.digest('nonce-archive-test','sha256'),'hex'));
+select public.app_confirm_reauth(pg_temp.uid(3),'10000000-0000-4000-8000-000000000003',encode(extensions.digest('nonce-member-test','sha256'),'hex'));
 reset role;
 select pg_temp.login(3,'aal2');
 set local role authenticated;
-select pg_temp.assert((public.app_admin_archive('courses','30000000-0000-4000-8000-000000000001',true,'nonce-archive-test')->>'archived')::boolean,'archive valid reauth');
-select pg_temp.denied($q$select public.app_admin_archive('courses','30000000-0000-4000-8000-000000000001',false,'nonce-archive-test')$q$,'reauth single use');
+select pg_temp.assert(public.app_admin_member(pg_temp.uid(2),'{}','Conferência da reautenticação','nonce-member-test')->>'id'=pg_temp.uid(2)::text,'member change valid reauth');
+select pg_temp.denied($q$select public.app_admin_member('00000000-0000-4000-8000-000000000002','{}','Conferência da reautenticação','nonce-member-test')$q$,'reauth single use');
+select pg_temp.assert((public.app_admin_archive('courses','30000000-0000-4000-8000-000000000001',true)->>'archived')::boolean,'archive without reauth');
 reset role;
 select pg_temp.assert((select count(*)=1 from public.certificates where user_id=pg_temp.uid(1)),'archive keeps certificate');
 select pg_temp.assert((select count(*)=2 from public.lesson_progress where user_id=pg_temp.uid(1)),'archive keeps progress');
-set local role service_role;
-select pg_temp.service_headers(3,'aal2');
-select public.app_confirm_reauth(pg_temp.uid(3),'10000000-0000-4000-8000-000000000003',encode(extensions.digest('nonce-restore-test','sha256'),'hex'));
-reset role;
 select pg_temp.login(3,'aal2');
 set local role authenticated;
-select pg_temp.assert(not (public.app_admin_archive('courses','30000000-0000-4000-8000-000000000001',false,'nonce-restore-test')->>'archived')::boolean,'restore valid reauth');
+select pg_temp.assert(not (public.app_admin_archive('courses','30000000-0000-4000-8000-000000000001',false)->>'archived')::boolean,'restore without reauth');
 reset role;
 select pg_temp.assert((select status='published' from public.courses where id='30000000-0000-4000-8000-000000000001'),'restore preserves original status');
 -- Transaction rollback must also roll back nonce consumption.
@@ -152,8 +150,8 @@ select public.app_confirm_reauth(pg_temp.uid(3),'10000000-0000-4000-8000-0000000
 reset role;
 select pg_temp.login(3,'aal2');
 set local role authenticated;
-select pg_temp.denied($q$select public.app_admin_archive('courses','39999999-0000-4000-8000-000000000001',true,'nonce-rollback-test')$q$,'failed critical transaction rejects');
-select pg_temp.assert((public.app_admin_archive('courses','30000000-0000-4000-8000-000000000003',true,'nonce-rollback-test')->>'archived')::boolean,'nonce restored after failed critical transaction');
+select pg_temp.denied($q$select public.app_admin_member('39999999-0000-4000-8000-000000000001','{}','Conferência da reautenticação','nonce-rollback-test')$q$,'failed critical transaction rejects');
+select pg_temp.assert(public.app_admin_member(pg_temp.uid(2),'{}','Conferência da reautenticação','nonce-rollback-test')->>'id'=pg_temp.uid(2)::text,'nonce restored after failed critical transaction');
 select pg_temp.denied($q$select public.app_admin_save('lessons','60000000-0000-4000-8000-000000000001','{"section_id":"50000000-0000-4000-8000-000000000099"}')$q$,'curriculum parent immutable');
 select public.app_admin_save('plans',null,'{"name":"DEMONSTRAÇÃO novo","slug":"demo-novo","price_cents":4500,"access_months":3,"benefits":["DEMONSTRAÇÃO"],"active":true}') as newplan \gset
 select pg_temp.assert((public.app_admin_list('plans','demo-novo')->>'total')::integer=1,'admin CRUD create searchable');

@@ -4,7 +4,7 @@ Contrato de `docs/CONTRACT.md`, sem escrita direta do browser. Todas as RPCs ret
 
 ## Admin
 
-`app_admin_list(p_entity text,p_query text='',p_page integer=1)`; `app_admin_save(p_entity text,p_id uuid,p_data jsonb)`; `app_admin_archive(p_entity text,p_id uuid,p_archived boolean,p_reauth_token text)`.
+`app_admin_list(p_entity text,p_query text='',p_page integer=1)`; `app_admin_save(p_entity text,p_id uuid,p_data jsonb)`; `app_admin_archive(p_entity text,p_id uuid,p_archived boolean)`, sem senha desde a 2.13.0.
 
 | Entidade | Campos aceitos em save | Papel |
 |---|---|---|

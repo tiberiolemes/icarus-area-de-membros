@@ -348,6 +348,8 @@ export function Shell() {
   }
 
   return (
+    // O dono do rascunho cobre também a barra do topo, onde fica o formulário de feedback.
+    <DraftOwner.Provider value={profile.id}>
     <div
       className={`app-shell stitch-shell ${admin ? "admin-shell-stitch" : "member-shell-stitch"}`}
       data-admin-view={adminView}
@@ -432,9 +434,7 @@ export function Shell() {
               {profile.role === "admin" ? <> e ligar o módulo em <Link to="/admin/configuracoes?aba=modulos">Configurações &gt; Módulos</Link>.</> : "."}
             </Notice>
           )}
-          <DraftOwner.Provider value={profile.id}>
-            {!admin && offModule && !(offModule === "help" && profile.role !== "member") ? <ModuleUnavailable /> : <Outlet />}
-          </DraftOwner.Provider>
+          {!admin && offModule && !(offModule === "help" && profile.role !== "member") ? <ModuleUnavailable /> : <Outlet />}
         </main>
       </div>
       {!admin && (
@@ -446,5 +446,6 @@ export function Shell() {
         </nav>
       )}
     </div>
+    </DraftOwner.Provider>
   );
 }

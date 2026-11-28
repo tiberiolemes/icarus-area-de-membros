@@ -390,3 +390,17 @@ it.each([
   expect(container.querySelector(".admin-badge")).toBeNull();
   expect(screen.queryByText("Admin")).not.toBeInTheDocument();
 });
+
+it("o formulário de feedback da barra do topo oferece o rascunho guardado", async () => {
+  settings.modules = { feedback: true };
+  localStorage.setItem(`icarus:draft:${profile.id}:/app/suporte|Enviar feedback|`,
+    JSON.stringify({ savedAt: Date.now(), fields: [["kind", "bug"], ["description", "Texto que ficou no rascunho"]] }));
+  try {
+    mount("/app/suporte");
+    fireEvent.click(screen.getByRole("button", { name: "Enviar feedback" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Envie seu feedback" }));
+    fireEvent.click(await dialog.findByRole("button", { name: "Recuperar rascunho" }));
+    expect(dialog.getByLabelText("Descrição")).toHaveValue("Texto que ficou no rascunho");
+    expect(dialog.getByLabelText("Tipo")).toHaveValue("bug");
+  } finally { localStorage.clear(); }
+});

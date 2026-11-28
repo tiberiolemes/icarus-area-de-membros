@@ -292,7 +292,8 @@
       :is(a[data-label]:is(:hover, :focus-visible), button:is(:hover, :focus-visible) > .rail-hint)::after {
         content: attr(data-label) / "";
         position: fixed;
-        inset-inline-start: 64px;
+        /* Depois do anel de foco, que passa da borda do item. */
+        inset-inline-start: calc(var(--shell-rail-width) + 4px);
         z-index: 1;
         padding: var(--ic-space-1) var(--ic-space-2);
         border-radius: var(--stitch-radius-base);

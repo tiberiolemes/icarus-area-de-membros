@@ -99,6 +99,7 @@ import { AdminSurface } from "./admin-surface";
 import { materialSize, materialTypes, save, text, useAll, type Row } from "./admin-data";
 import { LessonLinks, LessonMaterials } from "./admin-material-lessons";
 import { Archive, DangerZone, useDeletedNotice } from "./admin-delete";
+import { BunnyPicker } from "./admin-bunny-picker";
 import "../admin-content.css";
 
 type MemberDetail = {
@@ -940,6 +941,20 @@ function StructureForm({
   after: () => Promise<void>;
   onDeleted: (message: string) => void;
 }) {
+  const video = useRef<HTMLInputElement>(null),
+    duration = useRef<HTMLInputElement>(null),
+    instructor = useBootstrap().data?.profile.role === "instructor",
+    capabilities = useQuery({
+      queryKey: ["capabilities"],
+      queryFn: () => edge<{ bunny: boolean }>("capabilities"),
+      enabled: entity === "lessons",
+    });
+  // Os campos não são controlados: o evento input avisa o Form que houve alteração.
+  function fill(input: HTMLInputElement | null, value: string) {
+    if (!input) return;
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
   return (
     <>
       <Form submitInHeading
@@ -1011,6 +1026,7 @@ function StructureForm({
                 </Field>
                 <Field label="Duração em segundos">
                   <input
+                    ref={duration}
                     name="duration_seconds"
                     type="number"
                     required
@@ -1022,14 +1038,30 @@ function StructureForm({
               </div>
               <Field
                 label="Vídeo do Bunny ou link do YouTube"
-                hint="Cole o link do vídeo no YouTube ou o ID do vídeo na biblioteca do Bunny Stream."
+                hint={`Cole o link do vídeo no YouTube ou o ID do vídeo na biblioteca do Bunny Stream.${
+                  capabilities.data && !capabilities.data.bunny
+                    ? instructor
+                      ? " Peça a um administrador para configurar o Bunny."
+                      : " Para buscar na biblioteca, configure o Bunny em Configurações > Integrações."
+                    : ""
+                }`}
               >
                 <input
+                  ref={video}
                   name="video_id"
                   defaultValue={youtubeIdPattern.test(text(row, "video_id")) ? `https://www.youtube.com/watch?v=${text(row, "video_id")}` : text(row, "video_id")}
                   maxLength={100}
                 />
               </Field>
+              {capabilities.data?.bunny && (
+                <BunnyPicker
+                  onPick={(picked) => {
+                    fill(video.current, picked.id);
+                    // Vídeo ainda em processamento chega sem duração: mantém a que já está no campo.
+                    if (picked.length > 0) fill(duration.current, String(picked.length));
+                  }}
+                />
+              )}
             </fieldset>
             <RichEditor
               name="body"

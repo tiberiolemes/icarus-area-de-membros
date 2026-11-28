@@ -78,7 +78,7 @@ it("material começa o envio ao escolher o arquivo, sem botão Enviar arquivo", 
   const pdf = new File([new Uint8Array(1024)], "apostila.pdf", { type: "application/pdf" });
   fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), { target: { files: [pdf] } });
   expect(await screen.findByText("Otimizando arquivo…")).toBeInTheDocument();
-  expect(screen.getByText("apostila.pdf")).toBeInTheDocument();
+  expect(screen.getByText("apostila.pdf").parentElement).toHaveTextContent("apostila.pdf · 1 KB");
   expect(screen.getByRole("button", { name: "Trocar arquivo" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "Cancelar envio" })).toBeInTheDocument();
   expect(screen.getByLabelText("Envio em andamento, sem estimativa percentual")).toBeInTheDocument();
@@ -226,6 +226,7 @@ it("foto de perfil espera o recorte e o Salvar foto", async () => {
   choose(new File([png], "foto.png", { type: "image/png" }));
   await screen.findByLabelText("Prévia do recorte quadrado da foto");
   expect(screen.getByRole("button", { name: "Salvar foto" })).toBeEnabled();
+  expect(screen.getByText("foto.png").parentElement).toHaveTextContent("foto.png · 12 B");
   expect(screen.getByRole("button", { name: "Trocar arquivo" })).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Cancelar envio" })).not.toBeInTheDocument();
   expect(invoke).not.toHaveBeenCalled();

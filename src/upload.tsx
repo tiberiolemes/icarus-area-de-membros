@@ -93,7 +93,7 @@ export function Upload({
 }) {
   const [state, setState] = useState(""),
     [error, setError] = useState(""),
-    [fileName, setFileName] = useState(""),
+    [chosen, setChosen] = useState<File>(),
     [busy, setBusy] = useState(false),
     controller = useRef<AbortController | null>(null),
     file = useRef<HTMLInputElement>(null),
@@ -124,7 +124,7 @@ export function Upload({
       setState("");
       setError("Não foi possível ler esta foto. Escolha outro JPG ou PNG.");
       if (file.current) file.current.value = "";
-      setFileName("");
+      setChosen(undefined);
     };
     image.src = preview;
     return () => {
@@ -169,7 +169,7 @@ export function Upload({
             : "Arquivo enviado e associado ao registro.",
       );
       if (file.current) file.current.value = "";
-      setFileName("");
+      setChosen(undefined);
       setPreview("");
       onUploaded?.(selected);
     } catch (err) {
@@ -182,7 +182,7 @@ export function Upload({
       // Sem o botão de reenviar, o arquivo sai do campo: escolher o mesmo de novo volta a disparar o envio.
       if (kind !== "avatar") {
         if (file.current) file.current.value = "";
-        setFileName("");
+        setChosen(undefined);
       }
     } finally {
       lock.current = false;
@@ -192,7 +192,7 @@ export function Upload({
   }
   async function choose(selected: File | undefined) {
     picked.current = selected;
-    setFileName(selected?.name ?? "");
+    setChosen(selected);
     setError("");
     setState("");
     if (kind !== "avatar") {
@@ -200,7 +200,7 @@ export function Upload({
       if (refused) {
         setError(refused);
         if (file.current) file.current.value = "";
-        setFileName("");
+        setChosen(undefined);
       } else if (selected) void upload(selected);
       return;
     }
@@ -219,7 +219,7 @@ export function Upload({
           : "Escolha uma foto JPG ou PNG de até 20 MB.",
       );
       if (file.current) file.current.value = "";
-      setFileName("");
+      setChosen(undefined);
       return;
     }
     setPreview(URL.createObjectURL(selected));
@@ -246,7 +246,8 @@ export function Upload({
             : undefined
         }
         disabled={busy}
-        fileName={fileName}
+        fileName={chosen?.name}
+        fileSize={chosen?.size}
         inputRef={file}
         onFile={(selected) => void choose(selected)}
       />

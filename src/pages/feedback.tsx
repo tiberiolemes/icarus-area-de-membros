@@ -40,7 +40,7 @@ type Attempt = {
 function FeedbackForm({ pagePath }: { pagePath: string | null }) {
   const attempt = useRef<Attempt | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const [fileName, setFileName] = useState("");
+  const [chosen, setChosen] = useState<File>();
   const [pending, setPending] = useState(false);
   const [draftPreserved, setDraftPreserved] = useState(false);
   return (
@@ -93,7 +93,7 @@ function FeedbackForm({ pagePath }: { pagePath: string | null }) {
       setDraftPreserved(edited);
       if (!edited) {
         form.reset();
-        setFileName("");
+        setChosen(undefined);
       }
     }}>
       <Unsaved dirty={draftPreserved} />
@@ -106,7 +106,8 @@ function FeedbackForm({ pagePath }: { pagePath: string | null }) {
       </Field>
       <Field label="Descrição"><textarea name="description" rows={5} required={!pending} maxLength={4000} /></Field>
       <Dropzone label="Print (opcional)" hint="PNG, JPG ou WebP · até 20 MB, e até 5 MB depois de otimizado · confira se o print contém dados pessoais antes de enviar"
-        name="screenshot" accept="image/png,image/jpeg,image/webp" inputRef={fileInput} fileName={fileName} onFile={(file) => setFileName(file?.name ?? "")} />
+        name="screenshot" accept="image/png,image/jpeg,image/webp" inputRef={fileInput}
+        fileName={chosen?.name} fileSize={chosen?.size} onFile={setChosen} />
     </Form>
   );
 }

@@ -188,7 +188,7 @@ it("aceita print original até 20 MB, otimiza uma vez, reenvia os mesmos bytes e
   expect(sent).toHaveLength(0);
   fireEvent.change(print, { target: { files: [new File([new Uint8Array(8 * 1024 ** 2)], "tela.png", { type: "image/png" })] } });
   // O print escolhido aparece na área de arraste e só sobe com o formulário.
-  expect(dialog.getByText("tela.png")).toBeVisible();
+  expect(dialog.getByText("tela.png").parentElement).toHaveTextContent("tela.png · 8 MB");
   expect(dialog.getByRole("button", { name: "Trocar arquivo" })).toBeEnabled();
   fireEvent.click(dialog.getByRole("button", { name: "Enviar feedback" }));
   await dialog.findByText("Resposta do upload perdida.");

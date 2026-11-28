@@ -81,6 +81,7 @@ it("mostra a prévia nos dois temas antes de salvar e salva a colorida por AJAX"
   const file = new File([pngBytes()], "marca.png", { type: "image/png" });
   mount();
   choose("Escolher logo colorida", file);
+  expect((await screen.findByText("marca.png")).parentElement).toHaveTextContent("marca.png · 64 B");
   const preview = screen.getByRole("region", { name: "Prévia da identidade" });
   await waitFor(() => expect(within(preview).getAllByRole("img", { name: "Icarus" }).filter((img) => img.getAttribute("src") === "blob:previa")).toHaveLength(13));
   expect(edge).not.toHaveBeenCalled();

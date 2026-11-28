@@ -4,6 +4,9 @@ import { Notice } from "./ui";
 import "./dropzone.css";
 
 const video = "A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube.";
+const number = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+const size = (bytes: number) =>
+  bytes >= 1_048_576 ? `${number.format(bytes / 1_048_576)} MB` : bytes >= 1024 ? `${number.format(bytes / 1024)} KB` : `${number.format(bytes)} B`;
 
 // Arquivo sem tipo informado segue para a conferência pelo conteúdo, feita por quem recebe e pelo servidor.
 const accepts = (accept: string | undefined, file: File) =>
@@ -15,13 +18,14 @@ const accepts = (accept: string | undefined, file: File) =>
   });
 
 /** Área de arraste do Icarus. O input real fica escondido para o FormData dos formulários; o botão é o controle. */
-export function Dropzone({ label, hint, accept, name, disabled, fileName, inputRef, onFile }: {
+export function Dropzone({ label, hint, accept, name, disabled, fileName, fileSize, inputRef, onFile }: {
   label: string;
   hint: string;
   accept?: string;
   name?: string;
   disabled?: boolean;
   fileName?: string;
+  fileSize?: number;
   inputRef?: Ref<HTMLInputElement>;
   onFile: (file: File | undefined) => void;
 }) {
@@ -38,7 +42,10 @@ export function Dropzone({ label, hint, accept, name, disabled, fileName, inputR
     if (file.type.startsWith("video/")) return setMessage({ text: video, error: true });
     if (!accepts(accept, file)) return setMessage({ text: "Tipo de arquivo não aceito aqui.", error: true });
     try {
-      input.current!.files = files;
+      // Só o primeiro vai para o campo, que não é múltiplo: o FormData não leva arquivo sem conferência.
+      const first = new DataTransfer();
+      first.items.add(file);
+      input.current!.files = first.files;
       // Mesmo aviso de uma escolha pelo seletor: o formulário passa a ter alteração.
       input.current!.dispatchEvent(new Event("input", { bubbles: true }));
     } catch {
@@ -63,7 +70,7 @@ export function Dropzone({ label, hint, accept, name, disabled, fileName, inputR
         <FolderOpen size={40} strokeWidth={1.5} aria-hidden="true" />
         <strong className="dropzone-drag">Arraste o arquivo aqui</strong>
         <span className="dropzone-or">ou</span>
-        {fileName && <span className="dropzone-file">{fileName}</span>}
+        {fileName && <span className="dropzone-file"><strong>{fileName}</strong>{fileSize !== undefined && ` · ${size(fileSize)}`}</span>}
         <button type="button" disabled={disabled} aria-describedby={`${id}-hint`} onClick={() => input.current?.click()}>
           {fileName ? "Trocar arquivo" : "Selecionar arquivo"}
         </button>

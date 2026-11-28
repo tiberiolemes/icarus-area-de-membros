@@ -85,7 +85,7 @@ export function AssetCard({ variant, saved, savedRatio, draft: controlled, onDra
   const onDraft = setControlled ?? setOwn;
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
-  const [fileName, setFileName] = useState("");
+  const [chosen, setChosen] = useState<File>();
   const [removed, setRemoved] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
   const input = useRef<HTMLInputElement>(null);
@@ -96,7 +96,7 @@ export function AssetCard({ variant, saved, savedRatio, draft: controlled, onDra
   async function choose(file?: File) {
     // Só a última escolha vale: a validação de um arquivo já trocado é descartada.
     const pick = ++latest.current;
-    setFileName(file?.name ?? "");
+    setChosen(file);
     setError("");
     setRemoved(false);
     onDraft(undefined);
@@ -147,7 +147,8 @@ export function AssetCard({ variant, saved, savedRatio, draft: controlled, onDra
         }}
       >
         <Dropzone label={`${saved ? "Trocar" : "Escolher"} ${copy.noun}`} hint={copy.hint} name="file" accept={acceptOf(variant)}
-          inputRef={input} fileName={draft || checking ? fileName : undefined} onFile={(file) => void choose(file)} />
+          inputRef={input} fileName={draft || checking ? chosen?.name : undefined} fileSize={draft || checking ? chosen?.size : undefined}
+          onFile={(file) => void choose(file)} />
         {error && <Notice error>{error}</Notice>}
       </Form>
       {saved && !draft && !checking && (

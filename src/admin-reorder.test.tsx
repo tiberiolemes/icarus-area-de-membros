@@ -10,6 +10,7 @@ vi.hoisted(() => {
 
 import { cache } from "./api";
 import { CourseEditor } from "./pages/admin";
+import { DraftOwner } from "./ui";
 
 const lesson = (id: string, section_id: string, title: string, order_index: number) =>
   ({ id, section_id, title, slug: id, type: "text", status: "published", order_index });
@@ -188,4 +189,25 @@ it("setas e arraste compartilham a trava de gravação", async () => {
     { p_entity: "lessons", p_id: "b", p_data: { order_index: 0 } },
     { p_entity: "lessons", p_id: "a", p_data: { order_index: 1 } },
   ]);
+});
+
+it("recuperar o rascunho da aula mantém a posição que o arraste gravou", async () => {
+  // Rascunho guardado antes do arraste: a aula estava em outra posição.
+  localStorage.setItem("icarus:draft:autor:/admin/cursos/c?aba=estrutura|Salvar conteúdo|d",
+    JSON.stringify({ savedAt: Date.now(), fields: [["title", "Revisão com rascunho"], ["status", "published"], ["order_index", "9"]] }));
+  try {
+    render(
+      <QueryClientProvider client={cache}>
+        <MemoryRouter initialEntries={["/admin/cursos/c?aba=estrutura"]}>
+          <DraftOwner.Provider value="autor">
+            <Routes><Route path="/admin/cursos/:id" element={<CourseEditor />} /></Routes>
+          </DraftOwner.Provider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Editar aula Revisão" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Recuperar rascunho" }));
+    expect(screen.getByLabelText("Título")).toHaveValue("Revisão com rascunho");
+    expect(screen.getByLabelText("Posição na lista")).toHaveValue(3);
+  } finally { localStorage.clear(); }
 });

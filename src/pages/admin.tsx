@@ -1092,7 +1092,9 @@ function StructureForm({
         <div className="content-form-grid">
           <StatusField row={row} />
           <Field label="Posição na lista">
+            {/* Fora do rascunho: recuperar um rascunho antigo desfaria a ordem gravada pelo arraste. */}
             <input
+              data-no-draft
               name="order_index"
               type="number"
               min="0"

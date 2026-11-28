@@ -79,6 +79,8 @@ export async function sendFile(kind: UploadKind, resourceId: string, file: File,
     });
     if (error) throw error;
   }
+  // A confirmação não recebe o sinal: cancelado nesse meio, o envio não conta como concluído para quem chamou.
+  if (signal.aborted) throw new Error("Envio cancelado.");
   return file;
 }
 
@@ -160,6 +162,8 @@ export function Upload({
         selected = new File([blob], "avatar.jpg", { type: "image/jpeg" });
       }
       selected = await sendFile(kind, resourceId, selected, controller.current.signal, setState);
+      // Cancelado ou desmontado (a desmontagem cancela), quem usa o envio não recebe a conclusão.
+      if (controller.current?.signal.aborted) throw new Error("Envio cancelado.");
       const kb = (bytes: number) => Math.round(bytes / 1024);
       setState(
         kind === "avatar"

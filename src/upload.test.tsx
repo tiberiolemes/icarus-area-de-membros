@@ -195,6 +195,27 @@ it("cancelar durante a otimização não envia nada", async () => {
   expect(invoke).not.toHaveBeenCalled();
 });
 
+it.each(["cancelar", "fechar"] as const)("%s durante a confirmação do servidor não avisa conclusão a quem usa o envio", async (mode) => {
+  let confirm!: (value: unknown) => void;
+  edge.mockImplementation((_name: string, body: { action: string }) => body.action === "reserve"
+    ? Promise.resolve({ upload_id: "u1", bucket: "icarus-private", path: "material/m/u1.zip", expires_at: "" })
+    : new Promise((resolve) => { confirm = resolve; }));
+  storageUpload.mockResolvedValue({ error: null });
+  const uploaded = vi.fn();
+  const { unmount } = render(<Upload kind="material" resourceId="material-1" onUploaded={uploaded} />);
+  fireEvent.change(screen.getByLabelText("Enviar arquivo", { selector: "input" }), {
+    target: { files: [new File(["PK"], "mapa.zip", { type: "application/zip" })] },
+  });
+  expect(await screen.findByText("Confirmando o arquivo no servidor…")).toBeInTheDocument();
+  if (mode === "cancelar") fireEvent.click(screen.getByRole("button", { name: "Cancelar envio" }));
+  else unmount();
+  confirm({});
+  // Quem usa o envio (o editor da aula publica ao concluir) não pode agir sobre um envio cancelado.
+  if (mode === "cancelar") expect(await screen.findByText(/Envio cancelado/)).toBeInTheDocument();
+  else await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(uploaded).not.toHaveBeenCalled();
+});
+
 it("material reserva e envia o PDF e a imagem já otimizados", async () => {
   optimize.mockResolvedValueOnce(new File([new Uint8Array(1024)], "apostila.pdf", { type: "application/pdf" }));
   edge.mockImplementation((_name: string, body: { action: string }) =>

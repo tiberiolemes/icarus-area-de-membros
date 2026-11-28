@@ -8,15 +8,13 @@ vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-public-key");
 });
 
-const { sendFile, uploads } = vi.hoisted(() => ({ sendFile: vi.fn(), uploads: [] as { kind: string; resourceId: string }[] }));
-vi.mock("./upload", async (importOriginal) => ({
-  ...await importOriginal<typeof import("./upload")>(),
-  sendFile,
-  // O componente de envio tem testes próprios; aqui só importa o que o bloco faz quando ele conclui.
-  Upload: ({ kind, resourceId, onUploaded }: { kind: string; resourceId: string; onUploaded?: (file: File) => void }) => {
-    uploads.push({ kind, resourceId });
-    return <button type="button" onClick={() => onUploaded?.(new File(["webp"], "mapa.webp", { type: "image/webp" }))}>Concluir envio</button>;
-  },
+const { sendFile, edge, storageUpload } = vi.hoisted(() => ({ sendFile: vi.fn(), edge: vi.fn(), storageUpload: vi.fn() }));
+// A área de arraste do bloco usa o sendFile falso; o Reenviar usa o Upload real, com reserva, Storage e confirmação falsos.
+vi.mock("./upload", async (importOriginal) => ({ ...await importOriginal<typeof import("./upload")>(), sendFile }));
+vi.mock("./api", async (importOriginal) => ({
+  ...await importOriginal<typeof import("./api")>(),
+  edge,
+  uploadStorage: () => ({ from: () => ({ upload: storageUpload }) }),
 }));
 
 import { cache } from "./api";
@@ -27,11 +25,20 @@ const material = (id: string, name: string, lesson_ids: string[], extra: Record<
     access_mode: "members", plan_ids: [], lesson_ids, storage_path: `materials/${id}.pdf`, ...extra });
 let rows: Record<string, Record<string, unknown>[]>;
 let calls: { name: string; body: Record<string, unknown> }[];
+let failPublish = false;
+const reserved = { upload_id: "u1", bucket: "icarus-private", path: "materials/novo.zip", expires_at: "" };
 
 beforeEach(() => {
   calls = [];
-  uploads.length = 0;
+  failPublish = false;
   sendFile.mockReset();
+  storageUpload.mockReset().mockResolvedValue({ error: null });
+  edge.mockReset().mockImplementation(async (_name: string, body: { action: string }) => {
+    if (body.action === "reserve") return reserved;
+    // A confirmação grava o arquivo no material, como app_upload_finalize.
+    Object.assign(rows.materials.find((row) => row.id === "novo")!, { storage_path: reserved.path, file_type: "application/zip", size_bytes: 2 });
+    return {};
+  });
   rows = {
     courses: [{ id: "c", title: "Curso editorial", slug: "editorial", status: "published", access_mode: "members" }],
     modules: [{ id: "m", course_id: "c", title: "Fundamentos", slug: "fundamentos", status: "published", order_index: 0 }],
@@ -46,6 +53,8 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const name = String(input).split("/").at(-1)!, body = typeof init?.body === "string" ? JSON.parse(init.body) : {};
     calls.push({ name, body });
+    if (name === "app_admin_save" && failPublish && body.p_data.status === "published")
+      return Response.json({ message: "Falha ao publicar." }, { status: 500 });
     if (name === "app_admin_save") {
       const list = rows[body.p_entity];
       const row = list.find(({ id }) => id === body.p_id);
@@ -84,6 +93,24 @@ async function editor(button: string) {
 
 const saves = () => calls.filter(({ name }) => name === "app_admin_save").map(({ body }) => body);
 const item = (block: HTMLElement, name: string) => within(block).getByText(name, { selector: "strong" }).closest("li") as HTMLElement;
+const zip = () => new File(["PK"], "mapa-mental.zip", { type: "application/zip" });
+
+/** Material solto na aula cujo envio falhou: fica como rascunho sem arquivo, com Reenviar arquivo. */
+async function failedDraft() {
+  sendFile.mockRejectedValue(new Error("Tipo ou tamanho de arquivo não permitido."));
+  const block = await editor("Editar aula Exercício");
+  fireEvent.drop(within(block).getByRole("group", { name: "Adicionar material" }), { dataTransfer: { files: [zip()] } });
+  await waitFor(() => expect(item(block, "Mapa-mental")).toHaveTextContent("Rascunho · Sem arquivo"));
+  return block;
+}
+/** Abre o Reenviar do material que falhou e escolhe o arquivo, o que já inicia o envio. */
+function resendFile(block: HTMLElement) {
+  const toggle = within(item(block, "Mapa-mental")).getByRole("button", { name: "Reenviar arquivo Mapa-mental" });
+  fireEvent.click(toggle);
+  fireEvent.change(within(item(block, "Mapa-mental")).getByLabelText("Enviar arquivo", { selector: "input" }), { target: { files: [zip()] } });
+  return toggle;
+}
+const unlinkButton = (block: HTMLElement) => within(item(block, "Mapa-mental")).getByRole("button", { name: "Desvincular Mapa-mental" });
 
 it("aula salva lista os materiais vinculados", async () => {
   const block = await editor("Editar aula Exercício");
@@ -123,15 +150,10 @@ it("soltar arquivo cria material rascunho vinculado à aula, envia e publica", a
 });
 
 it("falha no envio deixa o material como rascunho Sem arquivo com Reenviar arquivo", async () => {
-  sendFile.mockRejectedValue(new Error("Tipo ou tamanho de arquivo não permitido."));
-  const block = await editor("Editar aula Exercício");
-  fireEvent.drop(within(block).getByRole("group", { name: "Adicionar material" }), {
-    dataTransfer: { files: [new File(["PK"], "mapa-mental.zip", { type: "application/zip" })] },
-  });
-  expect(await within(block).findByRole("alert")).toHaveTextContent("Tipo ou tamanho de arquivo não permitido.");
+  const block = await failedDraft();
+  expect(within(block).getByRole("alert")).toHaveTextContent("Tipo ou tamanho de arquivo não permitido.");
   expect(within(block).getByRole("alert")).toHaveTextContent("rascunho");
   expect(saves()).toHaveLength(1);
-  await waitFor(() => expect(item(block, "Mapa-mental")).toHaveTextContent("Rascunho · Sem arquivo"));
   // A confirmação de outra ação substitui o aviso da falha.
   fireEvent.click(within(item(block, "Apostila")).getByRole("button", { name: "Desvincular Apostila" }));
   expect(await within(block).findByText("Material desvinculado da aula.")).toBeInTheDocument();
@@ -141,12 +163,49 @@ it("falha no envio deixa o material como rascunho Sem arquivo com Reenviar arqui
   fireEvent.click(resend);
   expect(resend).toHaveAttribute("aria-expanded", "true");
   // Com o reenvio aberto, desvincular a última aula deixaria o envio publicar um material sem aula, aberto a todos.
-  expect(within(item(block, "Mapa-mental")).getByRole("button", { name: "Desvincular Mapa-mental" })).toBeDisabled();
-  expect(uploads.at(-1)).toEqual({ kind: "material", resourceId: "novo" });
-  fireEvent.click(within(block).getByRole("button", { name: "Concluir envio" }));
+  expect(unlinkButton(block)).toBeDisabled();
+  fireEvent.change(within(item(block, "Mapa-mental")).getByLabelText("Enviar arquivo", { selector: "input" }), { target: { files: [zip()] } });
   await waitFor(() => expect(saves()).toHaveLength(2));
-  expect(saves()[1]).toEqual({ p_entity: "materials", p_id: "novo", p_data: { status: "published", file_type: "image/webp" } });
+  expect(edge.mock.calls.map(([, body]) => [body.action, body.resource_id ?? body.upload_id])).toEqual([["reserve", "novo"], ["finalize", "u1"]]);
+  expect(saves()[1]).toEqual({ p_entity: "materials", p_id: "novo", p_data: { status: "published", file_type: "application/zip" } });
   expect(await within(block).findByText("Arquivo enviado e material publicado na aula.")).toBeInTheDocument();
+  await waitFor(() => expect(item(block, "Mapa-mental")).toHaveTextContent("Publicado · ZIP · 2 B"));
+});
+
+it("fechar o reenvio durante a confirmação do servidor não publica o material", async () => {
+  const block = await failedDraft();
+  let confirm!: (value: unknown) => void;
+  edge.mockImplementation((_name: string, body: { action: string }) =>
+    body.action === "reserve" ? Promise.resolve(reserved) : new Promise((resolve) => { confirm = resolve; }));
+  const toggle = resendFile(block);
+  expect(await within(block).findByText("Confirmando o arquivo no servidor…")).toBeInTheDocument();
+  fireEvent.click(toggle);
+  // Fechado o reenvio, o Desvincular volta; por isso o envio que ainda termina não pode publicar.
+  expect(unlinkButton(block)).toBeEnabled();
+  confirm({});
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(saves()).toHaveLength(1);
+});
+
+it("reenvio que não consegue publicar fecha o painel e libera o Desvincular", async () => {
+  const block = await failedDraft();
+  failPublish = true;
+  resendFile(block);
+  await waitFor(() => expect(within(block).getByRole("alert")).toHaveTextContent("Falha ao publicar. O arquivo foi enviado, mas o material continua em rascunho."));
+  await waitFor(() => expect(item(block, "Mapa-mental")).toHaveTextContent("Rascunho · ZIP · 2 B"));
+  expect(within(item(block, "Mapa-mental")).queryByRole("button", { name: /Reenviar arquivo/ })).toBeNull();
+  expect(unlinkButton(block)).toBeEnabled();
+});
+
+it("Cancelar envio deixa o material em rascunho sem publicar", async () => {
+  sendFile.mockImplementation((_kind: string, _id: string, _file: File, signal: AbortSignal) =>
+    new Promise((_resolve, reject) => signal.addEventListener("abort", () => reject(new Error("Envio cancelado.")))));
+  const block = await editor("Editar aula Exercício");
+  fireEvent.drop(within(block).getByRole("group", { name: "Adicionar material" }), { dataTransfer: { files: [zip()] } });
+  fireEvent.click(await within(block).findByRole("button", { name: "Cancelar envio" }));
+  // Cancelado na confirmação, o arquivo pode já ter chegado: a mensagem não afirma que falta o arquivo.
+  await waitFor(() => expect(within(block).getByRole("alert")).toHaveTextContent(/^Envio cancelado\. O material ficou em rascunho\.$/));
+  expect(saves()).toHaveLength(1);
 });
 
 it("tipo fora da lista é recusado antes de criar o material, solto ou escolhido", async () => {

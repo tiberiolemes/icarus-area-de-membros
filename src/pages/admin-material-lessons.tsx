@@ -144,8 +144,12 @@ export function LessonMaterials({ lessonId }: { lessonId: string }) {
       setState("Material enviado e publicado na aula.");
     } catch (err) {
       setState("");
-      const reason = abort.signal.aborted ? "Envio cancelado." : errorMessage(err);
-      setError(!id ? reason : sent ? reason + draftLeft : `${reason} O material ficou em rascunho, sem arquivo. Use Reenviar arquivo na lista.`);
+      const aborted = abort.signal.aborted, reason = aborted ? "Envio cancelado." : errorMessage(err);
+      setError(!id ? reason
+        : sent ? reason + draftLeft
+        // Cancelado na confirmação, o arquivo pode já ter chegado: a linha da lista mostra se ele existe.
+        : aborted ? `${reason} O material ficou em rascunho.`
+        : `${reason} O material ficou em rascunho, sem arquivo. Use Reenviar arquivo na lista.`);
       void materials.refetch();
     } finally {
       controller.current = null;
@@ -158,11 +162,13 @@ export function LessonMaterials({ lessonId }: { lessonId: string }) {
     setError("");
     try {
       await publish(id, file);
-      setResend("");
       announce("Arquivo enviado e material publicado na aula.");
     } catch (err) {
       setError(errorMessage(err) + draftLeft);
       void materials.refetch();
+    } finally {
+      // O arquivo já subiu: o reenvio fecha e o Desvincular volta, mesmo sem publicar.
+      setResend("");
     }
   }
 

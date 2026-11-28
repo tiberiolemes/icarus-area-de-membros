@@ -302,6 +302,17 @@ export const memberArticles: HelpArticle[] = [
         ],
       },
       {
+        title: "Avançar para a próxima aula automaticamente",
+        intro: "Ao lado de **Marcar como concluída** fica o interruptor **Avançar para a próxima aula automaticamente**. Ele começa desligado e vale para todas as aulas da sua conta.",
+        list: [
+          "Com ele ligado, **Marcar como concluída** leva direto para a próxima aula assim que a plataforma confirma a conclusão.",
+          "Com ele ligado, quando o vídeo ou o áudio chega ao fim, a aula é marcada como concluída e aparece **Próxima aula em 5 segundos**. Clique em **Ir agora** para seguir na hora ou em **Cancelar** para ficar na aula.",
+          "Ele não avança na última aula, quando a próxima aula não está liberada para o seu plano ou quando a conclusão emite o seu certificado, para você ver o aviso.",
+          "Com ele desligado, o fim do vídeo não marca nada. A conclusão continua sendo pelo botão.",
+        ],
+        warn: "Com o interruptor ligado, chegar ao fim do vídeo conta como conclusão, e a conclusão não pode ser desfeita.",
+      },
+      {
         title: "Pular para um capítulo",
         steps: [
           "Abra a aba **Descrição**.",

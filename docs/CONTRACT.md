@@ -13,7 +13,7 @@ Consulte o [mapa técnico](architecture.md) para seguir uma ação da interface 
 - Descrição rica poderá usar editor pontual existente; corpo de comunidade/ticket é texto inicialmente. Não renderizar HTML não sanitizado.
 
 ## DTOs compartilhados
-Profile: {id,full_name,email?,phone,bio,company:object,role,theme,plan_name,access_ends_at,suspended,onboarding_complete}. Plano/role nunca editáveis por app_profile.
+Profile: {id,full_name,email?,phone,bio,company:object,role,theme,plan_name,access_ends_at,suspended,onboarding_complete,auto_advance}. Plano/role nunca editáveis por app_profile.
 Plan: {id,name,slug,price_cents,access_months,benefits:string[],active}. Não semear preço/copy da arr.academy.
 Course: {id,slug,title,description,cover_url,status,access_mode,plan_ids,certificate_enabled,required_lessons,total_lessons,completed_lessons,progress_percent,duration_seconds,can_access}.
 Module: {id,slug,title,order_index,can_access,sections:Section[]}; Section: {id,title,order_index,is_bonus,lessons:LessonSummary[]}.
@@ -48,7 +48,7 @@ app_lesson_checklist_item(p_lesson_id uuid,p_item_id text,p_checked boolean) -> 
 app_materials(p_folder_id uuid=null,p_query text='',p_page integer=1) -> {current_folder,folders,items,total,page,page_size}. O campo `current_folder` é nulo na raiz ou contém `id`, `name` e `parent_id` após a validação de acesso à pasta.
 app_certificates() -> {items: certificados emitidos, courses: progresso de cursos certificáveis}; SOMENTE LEITURA. app_progress com p_complete=true tenta emitir na mesma transação ao atingir currículo válido, total>0, emissão única/snapshot; reprodução/read não emitem.
 app_certificate(p_code text) -> certificado público mínimo ou erro indisponível.
-app_profile(p_data jsonb) -> Profile atualizado; campos autorizados: full_name,phone,bio,company,theme,onboarding_complete.
+app_profile(p_data jsonb) -> Profile atualizado; campos autorizados: full_name,phone,bio,company,theme,onboarding_complete,avatar_id,auto_advance (booleano).
 app_notifications(p_page integer=1) -> {items,total,page,page_size,unread_count}. Caixa privada do titular. Itens contêm {id,event_key,title,subtitle,action_path,created_at,read_at}. O servidor só oferece um destino de aula quando ela permanece acessível e a rota é inequívoca.
 app_notifications_read(p_id uuid=null) -> {unread_count}. Registra leitura do item informado ou de toda a caixa do titular quando o ID é nulo.
 app_notification_preferences() -> {items}. Cada item contém {event_key,group,label,in_app,email,email_available}.

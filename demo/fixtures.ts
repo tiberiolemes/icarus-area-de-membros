@@ -21,7 +21,7 @@ const names = [
 const profiles: Profile[] = demoAccounts.map((account, index) => ({
   id: demoId(index + 1), full_name: account.name, email: account.email,
   role: account.role, theme: "light", phone: "", bio: "", company: {},
-  plan_name: "Membro Pro · Demonstração", current_plan_id: demoId(21), access_ends_at: null, suspended: false, onboarding_complete: true,
+  plan_name: "Membro Pro · Demonstração", current_plan_id: demoId(21), access_ends_at: null, suspended: false, onboarding_complete: true, auto_advance: false,
 }));
 export const plans: Plan[] = [
   { id: demoId(21), name: "Membro Pro · Demonstração", slug: "pro-demo", price_cents: 0, access_months: 12,

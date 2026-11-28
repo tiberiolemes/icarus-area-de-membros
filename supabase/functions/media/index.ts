@@ -14,7 +14,7 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   const expires = Math.floor(Date.now() / 1000) + 120;
   if (gate.video_id && gate.provider === "youtube") {
     if (!/^[A-Za-z0-9_-]{11}$/.test(gate.video_id)) throw new HttpError(503, "CONFIGURATION_REQUIRED", "Vídeo ainda não configurado.");
-    return { url: `https://www.youtube-nocookie.com/embed/${gate.video_id}?rel=0`, expires_at: new Date(expires * 1000).toISOString(), provider: "youtube" };
+    return { url: `https://www.youtube-nocookie.com/embed/${gate.video_id}?rel=0&enablejsapi=1`, expires_at: new Date(expires * 1000).toISOString(), provider: "youtube" };
   }
   if (gate.video_id && gate.provider === "bunny") {
     const { playbackReady, fields } = await bunnyConfig(d, a.admin);

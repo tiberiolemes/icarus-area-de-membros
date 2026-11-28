@@ -259,6 +259,7 @@ export type Profile = {
   access_ends_at: string | null;
   suspended: boolean;
   onboarding_complete: boolean;
+  auto_advance?: boolean;
 };
 export type Plan = {
   id: string;

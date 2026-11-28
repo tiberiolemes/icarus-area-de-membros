@@ -1016,6 +1016,7 @@ RLS ativada.
 | `created_at` | `timestamp with time zone` | Não | `now()` |
 | `avatar_id` | `uuid` | Sim | — |
 | `password_setup_required` | `boolean` | Não | `false` |
+| `auto_advance` | `boolean` | Não | `false` |
 
 **Chaves e restrições**
 

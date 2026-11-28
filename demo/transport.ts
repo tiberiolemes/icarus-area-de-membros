@@ -629,7 +629,7 @@ export const transport: typeof fetch = async (input, init) => {
     if (lesson && !lesson.can_access) return fail("Aula indisponível.", 403);
     const youtube = lesson && str((lesson.lesson as Row | undefined)?.video_id);
     if (youtube && /^[A-Za-z0-9_-]{11}$/.test(youtube))
-      return Response.json({ url: `https://www.youtube-nocookie.com/embed/${youtube}?rel=0`, expires_at: expires(), provider: "youtube" });
+      return Response.json({ url: `https://www.youtube-nocookie.com/embed/${youtube}?rel=0&enablejsapi=1`, expires_at: expires(), provider: "youtube" });
     if (lesson || file) {
       const media = lesson ? await getVideo() : attachment ??= URL.createObjectURL(new Blob([roteiro], { type: "text/plain" }));
       return Response.json({ url: media, expires_at: expires(), provider: "storage" });

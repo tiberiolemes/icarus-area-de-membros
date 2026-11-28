@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentProps, ReactNode, Ref } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -40,6 +40,7 @@ import {
   QueryState,
 } from "../ui";
 import { BunnyPlayer } from "../bunny";
+import { watchYouTubeEnded } from "../youtube-ended";
 import { LessonVideoControls } from "../lesson-video-controls";
 import { usePrivateImageQuery } from "../media";
 import { CourseFeature, curriculumPercent } from "./catalog";
@@ -425,9 +426,41 @@ function LessonProgressAction({ children, run, complete, resume }: {
   );
 }
 
+function AutoAdvanceSwitch() {
+  const bootstrap = useBootstrap();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  if (!bootstrap.data) return null;
+  const on = !!bootstrap.data.profile.auto_advance;
+  return (
+    <span className="stitch-auto-advance">
+      <button type="button" id="auto-advance" className="notification-switch" role="switch"
+        aria-checked={on} aria-labelledby="auto-advance-label" aria-disabled={busy || undefined}
+        onClick={async () => {
+          if (busy) return;
+          setBusy(true);
+          setError("");
+          try {
+            await rpc("app_profile", { p_data: { auto_advance: !on } });
+            await bootstrap.refetch({ throwOnError: true });
+          } catch (err) {
+            setError(errorMessage(err));
+          } finally {
+            setBusy(false);
+          }
+        }}>
+        <span aria-hidden="true" />
+      </button>
+      <label id="auto-advance-label" htmlFor="auto-advance">Avançar para a próxima aula automaticamente</label>
+      {error && <span role="alert">{error}</span>}
+    </span>
+  );
+}
+
 export function LessonPage() {
   const memberId = useAuth().session?.user.id;
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { curso, modulo, aula } = useParams(),
     course = useRpc<CourseDetail>("app_course", { p_slug: curso }),
     module = course.data?.modules.find((m) => m.slug === modulo),
@@ -447,6 +480,12 @@ export function LessonPage() {
     [hdVideo, setHdVideo] = useState<HTMLVideoElement | null>(null),
     [seekableVideo, setSeekableVideo] = useState<HTMLVideoElement | null>(null),
     [bunnySeek, setBunnySeek] = useState<{ lessonId: string; url: string; seek: (seconds: number) => void } | null>(null),
+    [advance, setAdvance] = useState<{ lessonId: string; path: string; left: number } | null>(null),
+    [finishError, setFinishError] = useState(""),
+    [youtubeFrame, setYoutubeFrame] = useState<HTMLIFrameElement | null>(null),
+    finishing = useRef(false),
+    mediaEnded = useRef(() => {}),
+    shownLesson = useRef<string>(undefined),
     bunnyPosition = useRef<{ lessonId: string; url: string; seconds: number } | null>(null),
     position = useRef(0),
     lastSaved = useRef(0);
@@ -511,7 +550,10 @@ export function LessonPage() {
   );
   const activeChapter = playbackChapter?.lessonId === found?.id ? playbackChapter?.start
     : chapterAt(data?.position_seconds ?? 0);
-  const authorName = useBootstrap().data?.profile.full_name;
+  const bootstrap = useBootstrap();
+  const authorName = bootstrap.data?.profile.full_name;
+  const autoAdvance = !!bootstrap.data?.profile.auto_advance;
+  shownLesson.current = found?.id;
   useEffect(() => {
     position.current = data?.position_seconds ?? 0;
     lastSaved.current = 0;
@@ -524,7 +566,16 @@ export function LessonPage() {
     setPlayingVideo(null);
     setStartedLesson(null);
     setPlaybackChapter(undefined);
+    setAdvance(null);
+    setFinishError("");
   }, [found?.id]);
+  useEffect(() => {
+    if (!advance || advance.lessonId !== found?.id) return;
+    if (advance.left === 0) return void navigate(advance.path);
+    const timer = setTimeout(() => setAdvance((current) => current && { ...current, left: current.left - 1 }), 1_000);
+    return () => clearTimeout(timer);
+  }, [advance, found?.id, navigate]);
+  useEffect(() => youtubeFrame ? watchYouTubeEnded(youtubeFrame, () => mediaEnded.current()) : undefined, [youtubeFrame]);
   const storePosition = useCallback(async (id: string, seconds: number) => {
     await rpc("app_progress", { p_lesson_id: id, p_position_seconds: seconds, p_complete: false });
     await queryClient.invalidateQueries({ queryKey: ["app_course", { p_slug: curso }], refetchType: "none" });
@@ -560,6 +611,51 @@ export function LessonPage() {
     youtube =
       !isAudio && media.data?.provider === "youtube" && mediaUrl &&
       new URL(mediaUrl).hostname === "www.youtube-nocookie.com";
+  const nextLesson = course.data?.modules.flatMap((m) => m.sections.flatMap((s) => s.lessons)).find((l) => l.id === data?.next_id);
+  // Uma função para o botão e para o fim do vídeo: conclui pelo servidor e decide o avanço.
+  const finishLesson = async (origin: "button" | "ended") => {
+    if (!found) return;
+    const result = await rpc<{
+      certificate_code?: string;
+      certificate_reason?: string;
+      course_progress_percent: number;
+    }>("app_progress", {
+      p_lesson_id: found.id,
+      p_position_seconds: playbackPosition(),
+      p_complete: true,
+    });
+    if (result.certificate_code && memberId) {
+      void reconcileNotificationQueries(queryClient, { queryKey: notificationListKey(memberId) });
+    }
+    setProgressError("");
+    setProgressFeedback(
+      result.certificate_code
+        ? "Aula concluída e certificado emitido. Consulte seus certificados."
+        : result.course_progress_percent ===
+              100 && result.certificate_reason
+          ? result.certificate_reason
+          : "Conclusão confirmada pelo servidor.",
+    );
+    await Promise.all([
+      query.refetch(),
+      course.refetch(),
+      cache.invalidateQueries({
+        queryKey: ["app_certificates"],
+      }),
+    ]);
+    if (!autoAdvance || result.certificate_code || !next || !nextLesson?.can_access || shownLesson.current !== found.id) return;
+    if (origin === "button") navigate(next);
+    else setAdvance({ lessonId: found.id, path: next, left: 5 });
+  };
+  const onMediaEnded = () => {
+    if (!autoAdvance || finishing.current) return;
+    finishing.current = true;
+    setFinishError("");
+    void finishLesson("ended")
+      .catch((error) => setFinishError(errorMessage(error)))
+      .finally(() => { finishing.current = false; });
+  };
+  mediaEnded.current = onMediaEnded;
   const moduleLessons = module?.sections.flatMap((s) => s.lessons) ?? [];
   const moduleDone = moduleLessons.filter((lesson) => lesson.completed).length;
   const moduleProgress = moduleLessons.length
@@ -616,6 +712,7 @@ export function LessonPage() {
         void media.refetch();
     },
     onTimeUpdate: (event) => trackPosition(event.currentTarget.currentTime),
+    onEnded: onMediaEnded,
     onPause: () => {
       if (!found) return;
       lastSaved.current = Date.now();
@@ -718,10 +815,12 @@ export function LessonPage() {
                                 seek ? { lessonId: found.id, url: mediaUrl, seek }
                                   : current?.lessonId === found.id && current.url === mediaUrl ? null : current
                               )}
+                              onEnded={onMediaEnded}
                             />
                           ) : youtube ? (
                             <iframe
                               key={found.id}
+                              ref={setYoutubeFrame}
                               src={mediaUrl}
                               title={data.lesson.title}
                               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -751,7 +850,10 @@ export function LessonPage() {
                                   setPlayingVideo(null);
                                   nativeMedia.onPause?.(event);
                                 }}
-                                onEnded={() => setPlayingVideo(null)}
+                                onEnded={(event) => {
+                                  setPlayingVideo(null);
+                                  nativeMedia.onEnded?.(event);
+                                }}
                                 onResize={({ currentTarget }) => setHdVideo(currentTarget.videoHeight >= 720 ? currentTarget : null)}
                               />
                               {media.data?.provider === "supabase" && data.course.cover_url && startedLesson !== found.id && (
@@ -761,6 +863,13 @@ export function LessonPage() {
                             </>
                           )
                         ) : <Notice>O servidor não retornou um {mediaLabel} autorizado. Procure o suporte.</Notice>}
+                      </div>
+                    )}
+                    {advance?.lessonId === found.id && (
+                      <div className="stitch-auto-advance-countdown">
+                        <p aria-live="polite">Próxima aula em {advance.left} {advance.left === 1 ? "segundo" : "segundos"}</p>
+                        <button type="button" className="primary" onClick={() => navigate(advance.path)}>Ir agora</button>
+                        <button type="button" onClick={() => setAdvance(null)}>Cancelar</button>
                       </div>
                     )}
                     {data.can_access && media.data?.provider === "local-demo" && (
@@ -792,36 +901,7 @@ export function LessonPage() {
                         <div className="stitch-lesson-actions" key={found.id}>
                           <LessonProgressAction
                             complete={data.completed}
-                            run={async () => {
-                              const result = await rpc<{
-                                certificate_code?: string;
-                                certificate_reason?: string;
-                                course_progress_percent: number;
-                              }>("app_progress", {
-                                p_lesson_id: found.id,
-                                p_position_seconds: playbackPosition(),
-                                p_complete: true,
-                              });
-                              if (result.certificate_code && memberId) {
-                                void reconcileNotificationQueries(queryClient, { queryKey: notificationListKey(memberId) });
-                              }
-                              setProgressError("");
-                              setProgressFeedback(
-                                result.certificate_code
-                                  ? "Aula concluída e certificado emitido. Consulte seus certificados."
-                                  : result.course_progress_percent ===
-                                        100 && result.certificate_reason
-                                    ? result.certificate_reason
-                                    : "Conclusão confirmada pelo servidor.",
-                              );
-                              await Promise.all([
-                                query.refetch(),
-                                course.refetch(),
-                                cache.invalidateQueries({
-                                  queryKey: ["app_certificates"],
-                                }),
-                              ]);
-                            }}
+                            run={() => finishLesson("button")}
                           >
                             <CheckCircle2 size={20} aria-hidden="true" />
                             <span>Marcar como concluída</span>
@@ -845,6 +925,7 @@ export function LessonPage() {
                               <span className="sr-only">Salvar ponto de retomada</span>
                             </span>
                           </LessonProgressAction>
+                          <AutoAdvanceSwitch />
                         </div>
                       )}
                     </section>
@@ -854,6 +935,9 @@ export function LessonPage() {
                           <Notice error>Ponto de retomada não confirmado. {progressError} Use Salvar ponto de retomada para tentar novamente.</Notice>
                         )}
                         {progressFeedback && <Notice>{progressFeedback}</Notice>}
+                        {finishError && (
+                          <Notice error>A aula não foi marcada como concluída. {finishError} Use Marcar como concluída para tentar de novo.</Notice>
+                        )}
                         <div className="stitch-lesson-deck">
                           <div
                             className="stitch-lesson-tabs"

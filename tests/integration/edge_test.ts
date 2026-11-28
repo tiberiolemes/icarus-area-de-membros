@@ -383,7 +383,7 @@ Deno.test("aula com vídeo do YouTube sai pelo player sem cookies, só depois da
   const result = await media(gated("dQw4w9WgXcQ"))(request({ kind: "lesson", id }));
   equal(result.status, 200);
   const body = await result.json();
-  equal(body.provider, "youtube"); equal(body.url, "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0");
+  equal(body.provider, "youtube"); equal(body.url, "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0&enablejsapi=1");
   equal((await media(gated("javascript:alert(1)"))(request({ kind: "lesson", id }))).status, 503);
 });
 Deno.test("storage URL uses private bucket, server path and short TTL", async () => {

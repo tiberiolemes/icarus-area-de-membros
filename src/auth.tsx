@@ -49,7 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     const { data } = supabase.auth.onAuthStateChange((event, next) => {
       if (!alive) return;
-      if (event === "SIGNED_OUT" || (actor.current && actor.current !== next?.user.id)) clearAllDrafts();
+      const ended = event === "SIGNED_OUT" || (event === "INITIAL_SESSION" && !next);
+      if (ended || (actor.current && actor.current !== next?.user.id)) clearAllDrafts();
       set(next);
     });
     return () => {

@@ -35,6 +35,7 @@ type Draft = {
 const emptyFormula = { label: "", reference: "", expression: "", description: "" };
 const emptyCta = { label: "", context: "", title: "", body: "", button: "", url: "" };
 const lessonIdPattern = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i;
+const checklistIdPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 const whatsappLink = /^https:\/\/(wa\.me|(?:(?:api|chat|web|www)\.)?whatsapp\.com)(?:[/?#](?:[A-Za-z0-9._~!$&'()*+,;=:@/?#-]|%[0-9A-Fa-f]{2})*)?$/i;
 const discardMessage = "Você tem alterações não salvas. Deseja sair desta edição?";
 
@@ -60,7 +61,7 @@ function parsePresentationDraft(raw: string): Draft | null {
       !rows(draft.chapters, 40, ["title", "start", "duration"]) ||
       !rows(draft.takeaways, 20, ["icon", "title", "body"]) ||
       !rows(draft.checklist, 40, ["id", "label"]) ||
-      draft.checklist.some(({ id }: ChecklistItem) => !lessonIdPattern.test(id)) ||
+      draft.checklist.some(({ id }: ChecklistItem) => !checklistIdPattern.test(id)) ||
       (draft.formula !== undefined && !strings(draft.formula, Object.keys(emptyFormula))) ||
       (draft.cta !== undefined && !strings(draft.cta, Object.keys(emptyCta)))) return null;
     return {
@@ -384,6 +385,7 @@ function PresentationForm({ lessonId, initial, onSave, onClose }: {
   const [draft, setDraft] = useState(saved);
   const [errors, setErrors] = useState<Errors>({});
   const [message, setMessage] = useState<{ text: string; error?: boolean }>();
+  const [recoveryError, setRecoveryError] = useState(false);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const feedback = useRef<HTMLDivElement>(null);
@@ -437,16 +439,23 @@ function PresentationForm({ lessonId, initial, onSave, onClose }: {
     <>
       <Unsaved dirty={dirty} />
       <form id={formId} noValidate autoComplete="off" onSubmit={submit} aria-busy={busy}>
-        {localDraft.pending && !busy && (
-          <DraftNotice draft={localDraft.pending} onDiscard={localDraft.discard} onRecover={() => {
+        {localDraft.pending && !busy && <>
+          <DraftNotice draft={localDraft.pending} onDiscard={() => {
+            localDraft.discard();
+            setRecoveryError(false);
+          }} onRecover={() => {
             const raw = localDraft.pending?.fields.find(([name]) => name === "presentation")?.[1];
             const restored = raw && parsePresentationDraft(raw);
-            if (restored) {
-              setDraft(restored);
-              localDraft.hide();
-            } else localDraft.discard();
+            if (!restored) {
+              setRecoveryError(true);
+              return;
+            }
+            setRecoveryError(false);
+            update(restored);
+            localDraft.hide();
           }} />
-        )}
+          {recoveryError && <Notice error>Não foi possível recuperar o rascunho da apresentação.</Notice>}
+        </>}
         <fieldset disabled={busy}>
           <EditorField name="subtitle" label="Subtítulo (opcional)" value={draft.subtitle}
             error={errors.subtitle} onChange={(subtitle) => update({ subtitle })} />

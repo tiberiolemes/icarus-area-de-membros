@@ -34,12 +34,11 @@ export function cancelDraftWrite(key: string): void {
   timers.delete(key);
 }
 
-export function scheduleDraftWrite(key: string, read: () => Fields, onWrite: () => void): void {
+export function scheduleDraftWrite(key: string, read: () => Fields): void {
   cancelDraftWrite(key);
   timers.set(key, setTimeout(() => {
     timers.delete(key);
     writeDraft(key, read());
-    onWrite();
   }, 500));
 }
 

@@ -172,7 +172,7 @@ it("localStorage que lança erro não quebra o formulário", async () => {
   expect(screen.queryByRole("button", { name: "Recuperar rascunho" })).not.toBeInTheDocument();
 });
 
-it("SIGNED_OUT apaga todos os rascunhos do Icarus", () => {
+it.each(["SIGNED_OUT", "INITIAL_SESSION"] as const)("%s sem sessão apaga todos os rascunhos do Icarus", (event) => {
   const auth = vi.spyOn(client().auth, "onAuthStateChange").mockReturnValue({
     data: { subscription: { id: "auth-test", callback: vi.fn(), unsubscribe: vi.fn() } },
   });
@@ -182,9 +182,23 @@ it("SIGNED_OUT apaga todos os rascunhos do Icarus", () => {
   seed([["title", "Rascunho privado"]]);
   localStorage.setItem("icarus:draft:outra-conta:outro-rascunho", "{}");
   localStorage.setItem("outro-site:rascunho", "Manter");
-  act(() => { void auth.mock.calls[0][0]("SIGNED_OUT", null); });
+  act(() => { void auth.mock.calls[0][0](event, null); });
   tick();
   expect(Object.keys(localStorage)).toEqual(["outro-site:rascunho"]);
+});
+
+it.each(["Recuperar rascunho", "Descartar"])("protege o rascunho até escolher %s e volta a gravar após a escolha", (action) => {
+  seed([["title", "Texto da edição anterior"]]);
+  const stored = localStorage.getItem(key);
+  show();
+  typeTitle("Digitação antes da escolha");
+  tick(700);
+  expect(localStorage.getItem(key)).toBe(stored);
+  expect(screen.getByRole("button", { name: "Recuperar rascunho" })).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: action }));
+  typeTitle("Digitação após a escolha");
+  tick();
+  expect(JSON.parse(localStorage.getItem(key)!).fields).toContainEqual(["title", "Digitação após a escolha"]);
 });
 
 it("a demo aceita o POST sem corpo que encerra a sessão do Supabase", async () => {

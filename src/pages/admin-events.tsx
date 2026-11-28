@@ -52,14 +52,15 @@ function EventForm({ event: current, plans, onDone }: {
   onDone: () => void;
 }) {
   const [event] = useState(current);
-  const [id] = useState(() => event?.id ?? crypto.randomUUID());
+  const id = event?.id;
+  const [saveId] = useState(() => id ?? crypto.randomUUID());
   const [mode, setMode] = useState<AdminEvent["access_mode"]>(event?.access_mode ?? "plans");
   return (
-    <Form submitInHeading label="Salvar encontro" onDone={onDone} onSave={async (data) => {
+    <Form submitInHeading draft={id} label="Salvar encontro" onDone={onDone} onSave={async (data) => {
       const selected = mode === "plans" ? data.getAll("plans") : [];
       if (mode === "plans" && selected.length === 0) throw new Error("Selecione pelo menos um plano com acesso.");
       await rpc("app_admin_save_live_event", {
-        p_id: id, p_revision: event?.revision ?? 0, p_title: value(data, "title"),
+        p_id: saveId, p_revision: event?.revision ?? 0, p_title: value(data, "title"),
         p_guest: value(data, "guest"), p_description: value(data, "description"),
         p_starts_at: value(data, "starts_at"), p_duration_minutes: Number(value(data, "duration")),
         p_meeting_url: value(data, "meeting"), p_recording_url: value(data, "recording") || null,

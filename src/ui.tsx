@@ -306,18 +306,24 @@ export function useDraftKey(label: string, record?: false | string) {
 export function useDraft(label: string, record: false | string | undefined, read: () => SavedDraft["fields"], ready = true) {
   const key = useDraftKey(label, record);
   const [pending, setPending] = useState<{ key: string; draft: SavedDraft } | null>(null);
+  const offered = pending?.key === key ? pending.draft : null;
   useEffect(() => {
     if (!key) return;
     const draft = readDraft(key);
-    setPending(draft && (!ready || JSON.stringify(draft.fields) !== JSON.stringify(read())) ? { key, draft } : null);
+    if (draft && (!ready || JSON.stringify(draft.fields) !== JSON.stringify(read()))) {
+      cancelDraftWrite(key);
+      setPending({ key, draft });
+    } else {
+      setPending(null);
+    }
   }, [key, read, ready]);
   useEffect(() => key ? () => cancelDraftWrite(key) : undefined, [key]);
 
   return {
     enabled: key !== null,
-    pending: pending?.key === key ? pending.draft : null,
+    pending: offered,
     schedule: (fields = read) => {
-      if (key) scheduleDraftWrite(key, fields, () => setPending(null));
+      if (key && !offered) scheduleDraftWrite(key, fields);
     },
     hide: () => {
       if (key) cancelDraftWrite(key);

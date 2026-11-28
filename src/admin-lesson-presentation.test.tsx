@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { AdminLessonPresentation } from "./pages/admin-lesson-presentation";
-import { draftStorageKey, readDraft } from "./draft";
+import { draftStorageKey, readDraft, writeDraft } from "./draft";
 import { DraftOwner } from "./ui";
 
 vi.hoisted(() => {
@@ -53,7 +53,8 @@ afterEach(() => {
 it("reabre o rascunho da apresentação com os blocos e limpa depois de salvar", async () => {
   const owner = "editor";
   const key = draftStorageKey(owner, `/|Salvar apresentação|${lessonId}`);
-  const first = show({ owner });
+  const presentation = { checklist: [{ id: "primeiro", label: "Primeiro" }, { id: "segundo", label: "Segundo" }] };
+  const first = show({ owner, presentation });
   await screen.findByLabelText("Subtítulo (opcional)");
   change("Subtítulo (opcional)", "Rascunho da aula");
   click("Adicionar capítulo");
@@ -62,14 +63,28 @@ it("reabre o rascunho da apresentação com os blocos e limpa depois de salvar",
   await waitFor(() => expect(readDraft(key)?.fields[0][1]).toContain("Capítulo recuperado"));
   expect(first.writes()).toHaveLength(0);
   first.unmount();
-  const reopened = show({ owner });
+  const reopened = show({ owner, presentation });
   fireEvent.click(await screen.findByRole("button", { name: "Recuperar rascunho" }));
   expect(screen.getByLabelText("Subtítulo (opcional)")).toHaveValue("Rascunho da aula");
   expect(screen.getByLabelText("Início em segundos")).toHaveValue("0,5");
   expect(reopened.writes()).toHaveLength(0);
   submit();
   expect(await screen.findByText("Apresentação salva.")).toBeVisible();
+  expect(reopened.writes()[0].args.p_presentation).toMatchObject(presentation);
   expect(readDraft(key)).toBeNull();
+});
+
+it("mantém o rascunho corrompido da apresentação e avisa ao tentar recuperar", async () => {
+  const owner = "editor";
+  const key = draftStorageKey(owner, `/|Salvar apresentação|${lessonId}`);
+  writeDraft(key, [["presentation", "{"]]);
+  const stored = localStorage.getItem(key);
+  const { writes } = show({ owner });
+  fireEvent.click(await screen.findByRole("button", { name: "Recuperar rascunho" }));
+  expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível recuperar o rascunho da apresentação.");
+  expect(localStorage.getItem(key)).toBe(stored);
+  expect(screen.getByRole("button", { name: "Descartar" })).toBeVisible();
+  expect(writes()).toHaveLength(0);
 });
 
 it("carrega e salva os seis blocos para o instrutor, mantendo IDs e ordem do checklist", async () => {

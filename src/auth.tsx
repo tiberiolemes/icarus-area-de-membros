@@ -21,10 +21,23 @@ import {
 import type { Bootstrap } from "./api";
 import { Action, Heading, Loading, Notice } from "./ui";
 import { PasswordSetup, PublicFrame } from "./pages/access";
+import { clearAllDrafts } from "./draft";
 const AuthContext = createContext<{
   session: Session | null;
   loading: boolean;
 }>({ session: null, loading: true });
+
+function sharedAuthStorageIsEmpty(): boolean {
+  const auth = supabase?.auth as unknown as { storage?: Storage; storageKey?: string } | undefined;
+  try {
+    // Uma aba nova da demo pode ter sessionStorage vazio enquanto outra segue conectada.
+    return auth?.storage === window.localStorage && !!auth.storageKey &&
+      auth.storage.getItem(auth.storageKey) === null;
+  } catch {
+    return false;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null),
     [loading, setLoading] = useState(true),
@@ -41,18 +54,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (actor.current !== id) {
         cache.clear();
         document.documentElement.dataset.theme = "light";
-        if (actor.current || !id)
-          for (const key of Object.keys(sessionStorage)) {
-            if (key.startsWith("icarus:draft:")) sessionStorage.removeItem(key);
-          }
         actor.current = id;
       }
       setSession(next);
       setLoading(false);
     };
-    const { data } = supabase.auth.onAuthStateChange((_event, next) =>
-      set(next),
-    );
+    const { data } = supabase.auth.onAuthStateChange((event, next) => {
+      if (!alive) return;
+      const ended = event === "SIGNED_OUT" ||
+        (event === "INITIAL_SESSION" && !next && sharedAuthStorageIsEmpty());
+      if (ended || (next && actor.current && actor.current !== next.user.id)) clearAllDrafts();
+      set(next);
+    });
     return () => {
       alive = false;
       data.subscription.unsubscribe();

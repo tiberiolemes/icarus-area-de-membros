@@ -586,19 +586,19 @@ export const transport: typeof fetch = async (input, init) => {
   if (request.signal.aborted) throw new DOMException("Cancelado", "AbortError");
   const endpoint = new URL(request.url);
   if (endpoint.origin !== url) return fail("Destinos externos estão indisponíveis na demonstração.", 403);
+  const path = endpoint.pathname;
+  if (path === "/auth/v1/logout") return new Response(null, { status: 204 });
   const session = request.headers.get("authorization")?.split(" ")[1]?.split(".")[1];
   let sub: string | undefined;
   try { sub = session && JSON.parse(atob(session.replaceAll("-", "+").replaceAll("_", "/"))).sub; } catch { /* Sem sessão. */ }
   const profile = state.profiles.find((item) => item.id === sub);
   const a: Args = request.headers.get("content-type")?.includes("application/json") ? await request.json() : {};
-  const path = endpoint.pathname;
   if (path === "/auth/v1/token") {
     const account = demoAccounts.findIndex((item) => item.email === a.email && item.password === a.password);
     const actor = account >= 0 ? state.profiles[account] : state.profiles.find((item) => item.id === a.refresh_token);
     if (!actor) return fail("Invalid login credentials", 400, "invalid_credentials");
     return Response.json(token(actor));
   }
-  if (path === "/auth/v1/logout") return new Response(null, { status: 204 });
   if (path === "/auth/v1/user" && request.method === "GET" && profile) return Response.json(user(profile));
   if (path === "/rest/v1/rpc/app_public_context")
     return Response.json({ name: state.installation.name, modules: state.installation.modules ?? {}, plans, legal_versions: legalVersions, legal_ready: true, registration_enabled: false });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormBusy } from "./ui";
 import DOMPurify from "dompurify";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -54,6 +54,7 @@ export function RichEditor({
 }) {
   const [html, setHtml] = useState(initial),
     busy = useFormBusy();
+  const input = useRef<HTMLInputElement>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -74,15 +75,34 @@ export function RichEditor({
       },
       transformPastedHTML: sanitizeRich,
     },
-    onUpdate: ({ editor }) => setHtml(editor.getHTML()),
+    onUpdate: ({ editor }) => {
+      const content = editor.getHTML();
+      setHtml(content);
+      if (input.current) {
+        input.current.value = content;
+        input.current.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    },
   });
   useEffect(() => {
-    editor?.setEditable(!busy);
+    editor?.setEditable(!busy, false);
   }, [editor, busy]);
+  useEffect(() => {
+    const field = input.current;
+    if (!field || !editor) return;
+    const restore = (event: Event) => {
+      const content = sanitizeRich((event as CustomEvent<string>).detail);
+      editor.commands.setContent(content, { emitUpdate: false });
+      field.value = content;
+      setHtml(content);
+    };
+    field.addEventListener("draftrestore", restore);
+    return () => field.removeEventListener("draftrestore", restore);
+  }, [editor]);
   return (
     <div className="rich-field">
       <span>{label}</span>
-      <input type="hidden" name={name} value={html} />
+      <input ref={input} type="hidden" name={name} value={html} />
       <div
         className="rich-toolbar"
         role="toolbar"

@@ -37,7 +37,7 @@ import { useBootstrap } from "./auth";
 import { usePrivateImageQuery } from "./media";
 import { NotificationBell } from "./pages/notifications";
 import { FeedbackButton } from "./pages/feedback";
-import { Action, AdminBadge, Empty, Field, Modal, Notice, RouteFocus } from "./ui";
+import { Action, AdminBadge, DraftOwner, Empty, Field, Modal, Notice, RouteFocus } from "./ui";
 import { Tour } from "./tour";
 import { UpdateNotice } from "./update-notice";
 import { MemberSearch } from "./pages/member-search";
@@ -420,7 +420,9 @@ export function Shell() {
               {profile.role === "admin" ? <> e ligar o módulo em <Link to="/admin/configuracoes?aba=modulos">Configurações &gt; Módulos</Link>.</> : "."}
             </Notice>
           )}
-          {!admin && offModule && !(offModule === "help" && profile.role !== "member") ? <ModuleUnavailable /> : <Outlet />}
+          <DraftOwner.Provider value={profile.id}>
+            {!admin && offModule && !(offModule === "help" && profile.role !== "member") ? <ModuleUnavailable /> : <Outlet />}
+          </DraftOwner.Provider>
         </main>
       </div>
       {!admin && (

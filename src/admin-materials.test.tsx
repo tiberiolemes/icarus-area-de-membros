@@ -9,7 +9,9 @@ vi.hoisted(() => {
 });
 
 import { cache } from "./api";
+import { draftStorageKey, writeDraft } from "./draft";
 import { AdminMaterials } from "./pages/admin";
+import { DraftOwner } from "./ui";
 
 const lesson = (id: string, section_id: string, title: string, order_index = 0, status = "published") =>
   ({ id, section_id, title, slug: id, type: "text", status, order_index });
@@ -18,10 +20,12 @@ const material = (id: string, name: string, lesson_ids: string[]) =>
 let rows: Record<string, Record<string, unknown>[]>;
 let calls: { name: string; body: Record<string, unknown> }[];
 let failing = "";
+let lessonLoad: Promise<void> | undefined;
 
 beforeEach(() => {
   calls = [];
   failing = "";
+  lessonLoad = undefined;
   rows = {
     courses: [
       { id: "ca", title: "Curso A", status: "published", order_index: 1 },
@@ -54,6 +58,7 @@ beforeEach(() => {
     calls.push({ name, body });
     if (name === "app_admin_save") return Response.json({ id: body.p_id ?? "novo" });
     if (failing === body.p_entity) return Response.json({ message: "falha" }, { status: 500 });
+    if (body.p_entity === "lessons") await lessonLoad;
     const items = name === "app_admin_list" ? rows[body.p_entity] ?? [] : [];
     return Response.json({ items, total: items.length, page: 1, page_size: 20 });
   }));
@@ -62,14 +67,15 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   cache.clear();
+  localStorage.clear();
   vi.unstubAllGlobals();
 });
 
-function show(path = "/admin/materiais") {
+function show(path = "/admin/materiais", owner: string | null = null) {
   render(
     <QueryClientProvider client={cache}>
       <MemoryRouter initialEntries={[path]}>
-        <AdminMaterials />
+        <DraftOwner.Provider value={owner}><AdminMaterials /></DraftOwner.Provider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -101,6 +107,25 @@ it("editor agrupa as aulas por curso e módulo e marca as vinculadas", async () 
   expect(within(within(links).getByRole("group", { name: "Módulo 2" })).getByRole("checkbox", { name: "Revisão final" })).toBeChecked();
   expect(within(links).getByText("2 aulas selecionadas")).toBeInTheDocument();
   expect(within(links).queryByText("Prática")).toBeNull();
+});
+
+it("recupera as aulas do material depois do carregamento e atualiza o contador", async () => {
+  let finishLoad!: () => void;
+  lessonLoad = new Promise<void>((resolve) => { finishLoad = resolve; });
+  writeDraft(draftStorageKey("editor", "/admin/materiais|Salvar material|apostila"), [["lesson_ids", "l2"]]);
+  show("/admin/materiais", "editor");
+  const row = (await screen.findByRole("heading", { level: 3, name: "Apostila" })).closest(".admin-row") as HTMLElement;
+  fireEvent.click(within(row).getByRole("button", { name: "Editar material" }));
+  const recover = await screen.findByRole("button", { name: "Recuperar rascunho" });
+  expect(recover).toBeDisabled();
+  finishLoad();
+  await waitFor(() => expect(recover).toBeEnabled());
+  fireEvent.click(recover);
+  const links = screen.getByRole("group", { name: "Aulas vinculadas" });
+  expect(within(links).getByText("1 aula selecionada")).toBeInTheDocument();
+  expect(within(links).getByRole("checkbox", { name: "Exercício" })).toBeChecked();
+  expect(within(links).getByRole("checkbox", { name: "Boas-vindas" })).not.toBeChecked();
+  expect(within(links).getByRole("searchbox", { name: "Filtrar aulas" })).toHaveValue("");
 });
 
 it("filtrar esconde as aulas que não batem e o envio mantém as marcadas escondidas", async () => {

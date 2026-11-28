@@ -1,9 +1,9 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { cache, errorMessage, rpc } from "../api";
 import { Dropzone } from "../dropzone";
 import { overLimit } from "../optimize";
-import { Action, Empty, Field, Notice, QueryState } from "../ui";
+import { Action, Empty, Field, FormDraftReady, Notice, QueryState } from "../ui";
 import { hints, sendFile, Upload } from "../upload";
 import { statusName } from "./community";
 import { materialSize, materialTypes, save, text, useAll, type Row } from "./admin-data";
@@ -16,6 +16,12 @@ const selection = (count: number) => `${count} ${count === 1 ? "aula selecionada
 /** Aulas do material por curso e módulo. A seção não aparece: a automática é invisível para a equipe. */
 export function LessonLinks({ selected }: { selected: string[] }) {
   const queries = [useAll("courses"), useAll("modules"), useAll("sections"), useAll("lessons")];
+  const loading = queries.some((query) => query.isPending);
+  const setDraftReady = useContext(FormDraftReady);
+  useLayoutEffect(() => {
+    setDraftReady?.(!loading);
+    return () => setDraftReady?.(true);
+  }, [loading, setDraftReady]);
   const [courses, modules, sections, lessons] = queries.map((query) => query.data ?? []);
   const [filter, setFilter] = useState(""), [count, setCount] = useState(selected.length);
   const term = searchable(filter.trim());
@@ -53,9 +59,9 @@ export function LessonLinks({ selected }: { selected: string[] }) {
       </Field>
       <p className="lesson-links-count" aria-live="polite">{selection(count)}</p>
       {/* Vínculo sem caixa na tela (lista carregando ou com erro) segue no envio, para salvar não apagar o que não se vê. */}
-      {selected.filter((id) => !shown.has(id)).map((id) => <input key={id} type="hidden" name="lesson_ids" value={id} />)}
+      {selected.filter((id) => !shown.has(id)).map((id) => <input key={id} type="hidden" name="lesson_ids" value={id} readOnly />)}
       <QueryState query={{
-        isPending: queries.some((query) => query.isPending),
+        isPending: loading,
         error: queries.find((query) => query.error)?.error ?? null,
         refetch: () => queries.forEach((query) => query.refetch()),
       }}>

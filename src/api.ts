@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { QueryClient, useQuery } from "@tanstack/react-query";
+import { clearAllDrafts } from "./draft";
 
 const demo = import.meta.env.MODE === "demo" ? await import("../demo/transport") : null;
 export const demoAccounts = demo?.demoAccounts;
@@ -59,6 +60,7 @@ export async function signOut() {
     throw new AppError(
       "Não foi possível encerrar sua sessão no servidor. Tente novamente.",
     );
+  clearAllDrafts();
   cache.clear();
 }
 export function uploadStorage(signal: AbortSignal) {

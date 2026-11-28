@@ -976,7 +976,7 @@ function StructureForm({
   }
   return (
     <>
-      <Form submitInHeading
+      <Form submitInHeading draft={row?.id ?? `${entity}:${parent}`}
         label="Salvar conteúdo"
         onSave={async (data) => {
           let fields: Record<string, unknown> = {
@@ -1224,7 +1224,7 @@ export function AdminMaterials() {
             <SectionHeading title={folder ? "Editar pasta" : "Criar pasta"}
               actions={<div className="heading-submit" ref={setFolderSubmit} />} />
             <FormHeadingTarget.Provider value={folderSubmit}>
-            <Form submitInHeading
+            <Form submitInHeading draft={folder?.id}
               label="Salvar pasta"
               secondaryAction={<button type="button" onClick={() => setFolder(undefined)}>Fechar editor</button>}
               onSave={async (data) => {
@@ -1289,7 +1289,7 @@ export function AdminMaterials() {
             <SectionHeading title={editing ? "Editar material" : "Criar material"}
               actions={<div className="heading-submit" ref={setMaterialSubmit} />} />
             <FormHeadingTarget.Provider value={materialSubmit}>
-            <Form submitInHeading
+            <Form submitInHeading draft={editing?.id}
               label="Salvar material"
               secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
               onSave={async (data) => {
@@ -1744,6 +1744,7 @@ function MemberDetailPanel({ id }: { id?: string }) {
                 um pagamento nem confirma uma venda.
               </Notice>
               <Form
+                draft={false}
                 label="Revisar alteração"
                 successMessage={
                   change
@@ -1986,6 +1987,7 @@ export function AdminPlans() {
             actions={<div className="heading-submit" ref={setSubmitTarget} />} />
           <FormHeadingTarget.Provider value={submitTarget}>
           <Form
+            draft={editing?.id}
             submitInHeading
             label="Salvar plano"
             onDone={() => {
@@ -2372,6 +2374,7 @@ export function AdminCommunity() {
                   after={() => cache.invalidateQueries({ queryKey: ["app_admin_reports"] })} />
               ) : null}
               {text(report, "status") === "pending" && <Form
+                draft={false}
                 label="Concluir análise"
                 onSave={async (data) => {
                   await rpc("app_moderate", {
@@ -2428,6 +2431,7 @@ export function AdminCommunity() {
               <div className="reading inline-editor" key={editing?.id ?? "new"} ref={focusEditor}>
                 <h2>{editing ? "Editar espaço" : "Criar espaço"}</h2>
                 <Form
+                  draft={editing?.id}
                   label="Salvar espaço"
                   secondaryAction={<button type="button" onClick={() => setEditing(undefined)}>Fechar editor</button>}
                   onSave={async (data) => {
@@ -2842,6 +2846,7 @@ function LegalSettings() {
           <div className="reading inline-editor" key={legal?.id ?? "new"} ref={focusEditor}>
             <h2>{legal ? "Editar documento" : "Criar documento"}</h2>
             <Form
+              draft={legal?.id}
               label="Salvar documento"
               secondaryAction={<button type="button" onClick={() => setLegal(undefined)}>Fechar editor</button>}
               onSave={async (data) => {
@@ -2940,6 +2945,7 @@ function PrivacySettings() {
               </p>
               {(status === "pending" || status === "processing") && (
                 <Form
+                  draft={false}
                   label="Registrar atendimento"
                   successMessage="Atendimento registrado."
                   onSave={async (data) => {
@@ -3014,6 +3020,7 @@ function OnboardingAdmin() {
           <div className="reading inline-editor" key={selected?.id ?? "new"} ref={focusEditor}>
             <h2>{selected ? "Editar pergunta" : "Criar pergunta"}</h2>
             <Form
+              draft={selected?.id}
               label="Salvar pergunta"
               secondaryAction={<button type="button" onClick={() => setSelected(undefined)}>Fechar editor</button>}
               onSave={async (data) => {

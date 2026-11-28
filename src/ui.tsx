@@ -2,6 +2,7 @@ import {
   cloneElement,
   createContext,
   isValidElement,
+  useCallback,
   useContext,
   useEffect,
   useId,
@@ -10,10 +11,11 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import type { FormEvent, InputHTMLAttributes, ReactNode } from "react";
-import { Link, useLocation, useNavigationType } from "react-router-dom";
+import { Link, UNSAFE_LocationContext, useLocation, useNavigationType } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AlertCircle, ArrowLeft, Check, Crown, Eye, EyeOff, Inbox, Search as SearchIcon, X } from "lucide-react";
 import { errorMessage } from "./api";
+import { cancelDraftWrite, clearDraft, draftDate, draftFields, draftStorageKey, isDraftField, readDraft, restoreDraft, scheduleDraftWrite, type SavedDraft } from "./draft";
 import "./stitch-primitives.css";
 
 export function Heading({
@@ -291,6 +293,68 @@ export function SubmitInHeading({ children, enabled = true }: { children: ReactN
   return enabled && target ? createPortal(children, target) : children;
 }
 
+export const DraftOwner = createContext<string | null>(null);
+export const FormDraftReady = createContext<((ready: boolean) => void) | null>(null);
+
+export function useDraftKey(label: string, record?: false | string) {
+  const owner = useContext(DraftOwner);
+  const location = useContext(UNSAFE_LocationContext)?.location;
+  return owner && location && record !== false
+    ? draftStorageKey(owner, `${location.pathname}${location.search}|${label}|${record || ""}`) : null;
+}
+
+export function useDraft(label: string, record: false | string | undefined, read: () => SavedDraft["fields"], ready = true) {
+  const key = useDraftKey(label, record);
+  const [pending, setPending] = useState<{ key: string; draft: SavedDraft } | null>(null);
+  const offered = pending?.key === key ? pending.draft : null;
+  useEffect(() => {
+    if (!key) return;
+    const draft = readDraft(key);
+    if (draft && (!ready || JSON.stringify(draft.fields) !== JSON.stringify(read()))) {
+      cancelDraftWrite(key);
+      setPending({ key, draft });
+    } else {
+      setPending(null);
+    }
+  }, [key, read, ready]);
+  useEffect(() => key ? () => cancelDraftWrite(key) : undefined, [key]);
+
+  return {
+    enabled: key !== null,
+    pending: offered,
+    schedule: (fields = read) => {
+      if (key && !offered) scheduleDraftWrite(key, fields);
+    },
+    hide: () => {
+      if (key) cancelDraftWrite(key);
+      setPending(null);
+    },
+    discard: () => {
+      if (key) clearDraft(key);
+      setPending(null);
+    },
+  };
+}
+
+export function DraftNotice({ draft, onRecover, onDiscard, ready = true }: {
+  draft: SavedDraft; onRecover: () => void; onDiscard: () => void; ready?: boolean;
+}) {
+  function act(button: HTMLButtonElement, action: () => void) {
+    const form = button.form;
+    action();
+    Array.from(form?.elements ?? []).filter(isDraftField).find((field) => field.type !== "hidden")?.focus();
+  }
+  return (
+    <Notice>
+      <p>Há um rascunho não salvo {draftDate(draft.savedAt)}.</p>
+      <div className="form-actions">
+        <button type="button" disabled={!ready} onClick={(event) => act(event.currentTarget, onRecover)}>Recuperar rascunho</button>
+        <button type="button" onClick={(event) => act(event.currentTarget, onDiscard)}>Descartar</button>
+      </div>
+    </Notice>
+  );
+}
+
 export function Form({
   children,
   onSave,
@@ -302,6 +366,8 @@ export function Form({
   submitDisabled = false,
   secondaryAction,
   submitInHeading = false,
+  draft,
+  draftReady = true,
 }: {
   children: ReactNode;
   onSave: (data: FormData, form: HTMLFormElement) => Promise<unknown>;
@@ -313,6 +379,8 @@ export function Form({
   submitDisabled?: boolean;
   secondaryAction?: ReactNode;
   submitInHeading?: boolean;
+  draft?: false | string;
+  draftReady?: boolean;
 }) {
   const formId = useId();
   const [busy, setBusy] = useState(false),
@@ -322,6 +390,13 @@ export function Form({
     [dirty, setDirty] = useState(false);
   const lock = useRef(false),
     summary = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const restoring = useRef(false);
+  const savingFields = useRef<SavedDraft["fields"] | null>(null);
+  const [draftFieldsReady, setDraftFieldsReady] = useState(true);
+  const canRecoverDraft = draftReady && draftFieldsReady;
+  const readFields = useCallback(() => formRef.current ? savingFields.current ?? draftFields(formRef.current) : [], []);
+  const localDraft = useDraft(label, draft, readFields, canRecoverDraft);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (lock.current || disabled || submitDisabled) return;
@@ -332,12 +407,14 @@ export function Form({
       requestAnimationFrame(() => summary.current?.focus());
       return;
     }
+    if (localDraft.enabled) savingFields.current = draftFields(form);
     lock.current = true;
     setBusy(true);
     setError("");
     setSaved(false);
     try {
       await onSave(new FormData(form), form);
+      localDraft.discard();
       setDirty(false);
       setSaved(true);
       onDone?.();
@@ -345,6 +422,7 @@ export function Form({
       setError(errorMessage(err));
       requestAnimationFrame(() => summary.current?.focus());
     } finally {
+      savingFields.current = null;
       lock.current = false;
       setBusy(false);
     }
@@ -355,11 +433,13 @@ export function Form({
         <Unsaved dirty={dirty} />
         <form
           id={formId}
+          ref={formRef}
           className={`form ${className}`}
           noValidate
-          onInput={() => {
+          onInput={(event) => {
             setDirty(true);
             setSaved(false);
+            if (localDraft.enabled && !restoring.current && isDraftField(event.target)) localDraft.schedule();
           }}
           onInvalidCapture={(event) => {
             event.preventDefault();
@@ -373,6 +453,18 @@ export function Form({
           onSubmit={submit}
           aria-busy={busy}
         >
+          {localDraft.pending && !busy && !disabled && (
+            <DraftNotice draft={localDraft.pending} ready={canRecoverDraft} onDiscard={localDraft.discard} onRecover={() => {
+              if (!formRef.current || !localDraft.pending) return;
+              restoring.current = true;
+              try {
+                restoreDraft(formRef.current, localDraft.pending.fields);
+                localDraft.hide();
+              } finally {
+                restoring.current = false;
+              }
+            }} />
+          )}
           {error && (
             <div className="notice" role="alert" tabIndex={-1} ref={summary}>
               <AlertCircle size={20} />
@@ -383,7 +475,7 @@ export function Form({
             </div>
           )}
           <fieldset disabled={busy || disabled}>
-            {children}
+            <FormDraftReady.Provider value={setDraftFieldsReady}>{children}</FormDraftReady.Provider>
             <div className="form-actions">
               <SubmitInHeading enabled={submitInHeading}>
                 <button className="primary" type="submit" form={formId} disabled={busy || disabled || submitDisabled}>

@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { AdminLessonPresentation } from "./pages/admin-lesson-presentation";
+import { draftStorageKey, readDraft, writeDraft } from "./draft";
+import { DraftOwner } from "./ui";
 
 vi.hoisted(() => {
   vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:58126");
@@ -22,6 +24,7 @@ const change = (label: string, value: string, container: Pick<typeof screen, "ge
 function show(options: {
   presentation?: object; role?: string; id?: string; close?: () => void;
   load?: () => Response | Promise<Response>; save?: () => Response | Promise<Response>;
+  owner?: string;
 } = {}) {
   const requests: { name: string; args: Record<string, unknown> }[] = [];
   const client = new QueryClient();
@@ -33,14 +36,56 @@ function show(options: {
     throw new Error(`RPC inesperada: ${name}`);
   }));
   client.setQueryData(["bootstrap", undefined], { profile: { role: options.role ?? "admin" } });
-  render(<QueryClientProvider client={client}><MemoryRouter>
-    <AdminLessonPresentation lessonId={options.id ?? lessonId} lessonTitle="Aula de demonstração" onClose={options.close} />
-    <a href="/admin/conteudo">Voltar ao conteúdo</a>
+  const view = render(<QueryClientProvider client={client}><MemoryRouter>
+    <DraftOwner.Provider value={options.owner ?? null}>
+      <AdminLessonPresentation lessonId={options.id ?? lessonId} lessonTitle="Aula de demonstração" onClose={options.close} />
+      <a href="/admin/conteudo">Voltar ao conteúdo</a>
+    </DraftOwner.Provider>
   </MemoryRouter></QueryClientProvider>);
-  return { requests, writes: () => requests.filter(({ name }) => name === write) };
+  return { ...view, requests, writes: () => requests.filter(({ name }) => name === write) };
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  localStorage.clear();
+  vi.unstubAllGlobals();
+});
+
+it("reabre o rascunho da apresentação com os blocos e limpa depois de salvar", async () => {
+  const owner = "editor";
+  const key = draftStorageKey(owner, `/|Salvar apresentação|${lessonId}`);
+  const presentation = { checklist: [{ id: "primeiro", label: "Primeiro" }, { id: "segundo", label: "Segundo" }] };
+  const first = show({ owner, presentation });
+  await screen.findByLabelText("Subtítulo (opcional)");
+  change("Subtítulo (opcional)", "Rascunho da aula");
+  click("Adicionar capítulo");
+  change("Título do capítulo", "Capítulo recuperado");
+  change("Início em segundos", "0,5");
+  await waitFor(() => expect(readDraft(key)?.fields[0][1]).toContain("Capítulo recuperado"));
+  expect(first.writes()).toHaveLength(0);
+  first.unmount();
+  const reopened = show({ owner, presentation });
+  fireEvent.click(await screen.findByRole("button", { name: "Recuperar rascunho" }));
+  expect(screen.getByLabelText("Subtítulo (opcional)")).toHaveValue("Rascunho da aula");
+  expect(screen.getByLabelText("Início em segundos")).toHaveValue("0,5");
+  expect(reopened.writes()).toHaveLength(0);
+  submit();
+  expect(await screen.findByText("Apresentação salva.")).toBeVisible();
+  expect(reopened.writes()[0].args.p_presentation).toMatchObject(presentation);
+  expect(readDraft(key)).toBeNull();
+});
+
+it("mantém o rascunho corrompido da apresentação e avisa ao tentar recuperar", async () => {
+  const owner = "editor";
+  const key = draftStorageKey(owner, `/|Salvar apresentação|${lessonId}`);
+  writeDraft(key, [["presentation", "{"]]);
+  const stored = localStorage.getItem(key);
+  const { writes } = show({ owner });
+  fireEvent.click(await screen.findByRole("button", { name: "Recuperar rascunho" }));
+  expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível recuperar o rascunho da apresentação.");
+  expect(localStorage.getItem(key)).toBe(stored);
+  expect(screen.getByRole("button", { name: "Descartar" })).toBeVisible();
+  expect(writes()).toHaveLength(0);
+});
 
 it("carrega e salva os seis blocos para o instrutor, mantendo IDs e ordem do checklist", async () => {
   const { requests, writes } = show({ role: "instructor", presentation: {

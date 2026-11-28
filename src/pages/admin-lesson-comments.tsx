@@ -95,7 +95,7 @@ function PendingComments() {
             <div className="actions">
               <Action run={() => moderate(comment, "approve", "Aprovação manual.")}>Aprovar</Action>
               <Modal title="Rejeitar comentário" trigger={<button>Rejeitar</button>}>
-                <Form label="Rejeitar comentário" onSave={(data) => moderate(comment, "reject", value(data, "reason"))}>
+                <Form draft={false} label="Rejeitar comentário" onSave={(data) => moderate(comment, "reject", value(data, "reason"))}>
                   <Field label="Motivo"><textarea name="reason" required minLength={3} maxLength={2000} /></Field>
                 </Form>
               </Modal>

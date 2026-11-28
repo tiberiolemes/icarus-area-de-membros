@@ -27,7 +27,7 @@ function EditorialLaunchForm({ entity, id }: Target) {
   return (
     <QueryState query={query}>
       <p>Use somente informações que os alunos podem ver antes da publicação. A previsão não publica o conteúdo. Na publicação, o aviso aparece no sino para quem se inscreveu e tem direito de recebê-lo.</p>
-      <Form label="Salvar anúncio" onSave={async data => {
+      <Form draft={`${entity}:${id}`} label="Salvar anúncio" onSave={async data => {
         await rpc("app_admin_save_catalog_launch", {
           ...args,
           p_title: value(data, "launch_title"),

@@ -83,6 +83,7 @@ export function PasswordSetup() {
           Conclua o convite para acessar a área de membros.
         </Heading>
         <Form
+          draft={false}
           label="Definir senha e continuar"
           onSave={async (data, form) => {
             try {
@@ -210,6 +211,7 @@ function Login({ target }: { target: string }) {
         </Notice>}
         {failure && <Notice error>{failure}</Notice>}
         <Form
+          draft={false}
           label={factors.length ? "Verificar e entrar" : "Entrar"}
           successMessage=""
           disabled={loading || checking || (!!session && !factors.length)}
@@ -441,6 +443,7 @@ function AccessForm({ mode, target }: { mode: "reset" | EmailAccessMode; target:
           </QueryState>
         )}
         {!resetUnavailable && (mode !== "register" || (context.data && !registerClosed)) && <Form
+          draft={false}
           label={
             {
               register: "Criar conta",

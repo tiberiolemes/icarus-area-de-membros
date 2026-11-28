@@ -1,14 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppWindow, FileText, Globe, ImageUp, Palette } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cache, client, edge, rpc } from "../api";
 import { useAuth, useBootstrap } from "../auth";
+import { clearDraft, draftStorageKey, type SavedDraft } from "../draft";
 import { Dropzone } from "../dropzone";
 import { acceptOf, BrandImage, BrandLogo, brandAssetUrl, brandRatio, checkImageFile, defaultIcon, defaultLogo, type AssetPreview, type AssetVariant } from "../brand";
-import { Action, Field, Form, Notice, QueryState } from "../ui";
+import { Action, DraftNotice, Field, Form, Notice, QueryState, useDraft } from "../ui";
 import "./admin-brand.css";
 
 type NameDraft = { name: string; revision: number | null };
+const nameFields = (draft: NameDraft): SavedDraft["fields"] => [
+  ["installation_name", draft.name], ["revision", String(draft.revision ?? "")],
+];
 type NameSave = { name: string; revision: number; saved: boolean };
 type Variant = "light" | "dark" | "icon";
 
@@ -171,10 +175,13 @@ function BrandEditor({ actorId, token, name, revision, logos, ratios }: { actorI
     ratios: { light: logoDrafts.light?.ratio ?? ratios.light, dark: logoDrafts.dark?.ratio ?? ratios.dark },
   };
   const shownIcon = logoDrafts.icon?.url ?? logos.icon ?? defaultIcon;
-  const draftKey = `icarus:draft:${actorId}:installation-name`;
+  const label = "Salvar nome";
+  const legacyKey = draftStorageKey(actorId, "installation-name");
+  const readPublished = useCallback(() => nameFields({ name, revision }), [name, revision]);
+  const localDraft = useDraft(label, undefined, readPublished);
   const [draft, setDraft] = useState<NameDraft | null>(() => {
     try {
-      const stored = JSON.parse(sessionStorage.getItem(draftKey) ?? "null");
+      const stored = JSON.parse(sessionStorage.getItem(legacyKey) ?? "null");
       if (typeof stored?.name !== "string") return null;
       return { name: stored.name, revision: Number.isInteger(stored.revision) ? stored.revision : null };
     } catch {
@@ -193,11 +200,10 @@ function BrandEditor({ actorId, token, name, revision, logos, ratios }: { actorI
 
   function preserve(next: NameDraft | null) {
     setDraft(next);
-    try {
-      if (next) sessionStorage.setItem(draftKey, JSON.stringify(next));
-      else sessionStorage.removeItem(draftKey);
-    } catch {
-      /* The editor continues to hold the draft when browser storage is unavailable. */
+    if (next) localDraft.schedule(() => nameFields(next));
+    else {
+      localDraft.discard();
+      clearDraft(legacyKey);
     }
   }
 
@@ -218,7 +224,8 @@ function BrandEditor({ actorId, token, name, revision, logos, ratios }: { actorI
             </header>
             <Form
               key={formVersion}
-              label="Salvar nome"
+              label={label}
+              draft={false}
               successMessage="Nome da instalação salvo."
               onDone={restoreFocus}
               secondaryAction={draft && (
@@ -252,6 +259,20 @@ function BrandEditor({ actorId, token, name, revision, logos, ratios }: { actorI
                 preserve(null);
               }}
             >
+              {localDraft.pending && <DraftNotice draft={localDraft.pending} onDiscard={() => preserve(null)} onRecover={() => {
+                const stored = Object.fromEntries(localDraft.pending?.fields ?? []);
+                const revision = Number(stored.revision);
+                if (typeof stored.installation_name !== "string") {
+                  localDraft.discard();
+                  return;
+                }
+                setDraft({
+                  name: stored.installation_name,
+                  revision: stored.revision && Number.isSafeInteger(revision) ? revision : null,
+                });
+                input.current?.dispatchEvent(new Event("input", { bubbles: true }));
+                localDraft.hide();
+              }} />}
               <Field label="Nome da instalação" hint="Até 80 caracteres. O nome fica visível ao público após salvar.">
                 <input
                   ref={input}

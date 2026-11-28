@@ -202,7 +202,7 @@ const steps = [
   {
     target: "lesson-presentation-editor",
     title: "Monte a apresentação da aula",
-    body: "Cadastre capítulos, destaques, fórmulas, checklist e CTA conforme o conteúdo. Ao remover um item já salvo, confirme a exclusão das marcações associadas.",
+    body: "Cadastre capítulos, destaques, fórmulas, checklist e CTA. Ao reabrir a edição, use Recuperar rascunho para retomar alterações deste navegador. Ao remover um item já salvo, confirme a exclusão das marcações associadas.",
   },
 ];
 // O passo do menu cita só os módulos ligados nesta plataforma.

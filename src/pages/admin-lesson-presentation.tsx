@@ -1,11 +1,12 @@
-import { useId, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import { errorMessage, rpc, useRpc } from "../api";
 import { RoleGate, useAuth } from "../auth";
-import { Loading, Notice, QueryState, SubmitInHeading, Unsaved } from "../ui";
+import { DraftNotice, Loading, Notice, QueryState, SubmitInHeading, Unsaved, useDraft } from "../ui";
+import type { SavedDraft } from "../draft";
 import { AdminSurface } from "./admin-surface";
 import "./admin-lesson-presentation.css";
 
@@ -36,6 +37,46 @@ const emptyCta = { label: "", context: "", title: "", body: "", button: "", url:
 const lessonIdPattern = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i;
 const whatsappLink = /^https:\/\/(wa\.me|(?:(?:api|chat|web|www)\.)?whatsapp\.com)(?:[/?#](?:[A-Za-z0-9._~!$&'()*+,;=:@/?#-]|%[0-9A-Fa-f]{2})*)?$/i;
 const discardMessage = "Você tem alterações não salvas. Deseja sair desta edição?";
+
+function presentationFields(draft: Draft): SavedDraft["fields"] {
+  return [["presentation", JSON.stringify({
+    ...draft,
+    chapters: draft.chapters.map(({ title, start, duration }) => ({ title, start, duration })),
+    takeaways: draft.takeaways.map(({ icon, title, body }) => ({ icon, title, body })),
+  })]];
+}
+
+function parsePresentationDraft(raw: string): Draft | null {
+  function strings(value: unknown, fields: string[]) {
+    return !!value && typeof value === "object" &&
+      fields.every((field) => typeof (value as Record<string, unknown>)[field] === "string");
+  }
+  function rows(value: unknown, max: number, fields: string[]) {
+    return Array.isArray(value) && value.length <= max && value.every((row) => strings(row, fields));
+  }
+  try {
+    const draft = JSON.parse(raw);
+    if (!strings(draft, ["subtitle"]) ||
+      !rows(draft.chapters, 40, ["title", "start", "duration"]) ||
+      !rows(draft.takeaways, 20, ["icon", "title", "body"]) ||
+      !rows(draft.checklist, 40, ["id", "label"]) ||
+      draft.checklist.some(({ id }: ChecklistItem) => !lessonIdPattern.test(id)) ||
+      (draft.formula !== undefined && !strings(draft.formula, Object.keys(emptyFormula))) ||
+      (draft.cta !== undefined && !strings(draft.cta, Object.keys(emptyCta)))) return null;
+    return {
+      subtitle: draft.subtitle,
+      chapters: draft.chapters.map(({ title, start, duration }: Draft["chapters"][number]) =>
+        ({ id: crypto.randomUUID(), title, start, duration })),
+      takeaways: draft.takeaways.map(({ icon, title, body }: Takeaway) =>
+        ({ id: crypto.randomUUID(), icon: icon === "layers" ? "layers" : "tune", title, body })),
+      checklist: draft.checklist.map(({ id, label }: ChecklistItem) => ({ id, label })),
+      formula: draft.formula,
+      cta: draft.cta,
+    };
+  } catch {
+    return null;
+  }
+}
 
 function fromPresentation(presentation: Presentation | null): Draft {
   return {
@@ -216,7 +257,7 @@ function PresentationEntry({ lessonId, actorId, onClose }: EditorProps & { actor
   );
 
   return (
-    <PresentationForm initial={query.data} onClose={onClose} onSave={async (presentation) => {
+    <PresentationForm lessonId={lessonId} initial={query.data} onClose={onClose} onSave={async (presentation) => {
       const current = client.getQueryCache().find({ queryKey, exact: true });
       const result = await rpc<{ lesson_id: string }>("app_admin_save_lesson_presentation", {
         p_lesson_id: lessonId, p_presentation: presentation,
@@ -335,8 +376,8 @@ function OptionalBlock<T extends Record<string, string>>({ name, label, value, f
   );
 }
 
-function PresentationForm({ initial, onSave, onClose }: {
-  initial: Presentation | null; onSave: (presentation: Presentation | null) => Promise<void>; onClose?: () => void;
+function PresentationForm({ lessonId, initial, onSave, onClose }: {
+  lessonId: string; initial: Presentation | null; onSave: (presentation: Presentation | null) => Promise<void>; onClose?: () => void;
 }) {
   const formId = useId();
   const [saved, setSaved] = useState(() => fromPresentation(initial));
@@ -346,10 +387,14 @@ function PresentationForm({ initial, onSave, onClose }: {
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const feedback = useRef<HTMLDivElement>(null);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  const readSaved = useCallback(() => presentationFields(saved), [saved]);
+  const localDraft = useDraft("Salvar apresentação", lessonId, readSaved);
+  const dirty = presentationFields(draft)[0][1] !== readSaved()[0][1];
 
   function update(change: Partial<Draft>) {
-    setDraft((previous) => ({ ...previous, ...change }));
+    const next = { ...draft, ...change };
+    setDraft(next);
+    localDraft.schedule(() => presentationFields(next));
     setMessage(undefined);
     setErrors({});
   }
@@ -375,6 +420,7 @@ function PresentationForm({ initial, onSave, onClose }: {
     setMessage(undefined);
     try {
       await onSave(next.presentation);
+      localDraft.discard();
       setSaved(draft);
       setMessage({ text: "Apresentação salva." });
       focusAfterRender(() => feedback.current);
@@ -391,6 +437,16 @@ function PresentationForm({ initial, onSave, onClose }: {
     <>
       <Unsaved dirty={dirty} />
       <form id={formId} noValidate autoComplete="off" onSubmit={submit} aria-busy={busy}>
+        {localDraft.pending && !busy && (
+          <DraftNotice draft={localDraft.pending} onDiscard={localDraft.discard} onRecover={() => {
+            const raw = localDraft.pending?.fields.find(([name]) => name === "presentation")?.[1];
+            const restored = raw && parsePresentationDraft(raw);
+            if (restored) {
+              setDraft(restored);
+              localDraft.hide();
+            } else localDraft.discard();
+          }} />
+        )}
         <fieldset disabled={busy}>
           <EditorField name="subtitle" label="Subtítulo (opcional)" value={draft.subtitle}
             error={errors.subtitle} onChange={(subtitle) => update({ subtitle })} />

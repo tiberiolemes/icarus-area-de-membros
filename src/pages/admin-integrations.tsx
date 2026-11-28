@@ -105,7 +105,7 @@ function RotateWebhook({ environment }: { environment: string }) {
     </>
   );
   return (
-    <Form label="Confirmar e gerar token" successMessage="" onSave={async (data, form) => {
+    <Form draft={false} label="Confirmar e gerar token" successMessage="" onSave={async (data, form) => {
       const result = await edge<{ webhook_token: string }>("reauthenticate", {
         action: "rotate-asaas-webhook", environment, password: takePassword(data, form),
       });
@@ -134,7 +134,7 @@ function ProductionApproval({ settings }: { settings: IntegrationStatus }) {
           aria-describedby="integration-production-description" disabled={!settings.can_write || !eligible}>
           <span aria-hidden="true" />
         </button>}>
-        <Form label={enabled ? "Desativar cobranças" : "Ativar cobranças"} onSave={async (data, form) => {
+        <Form draft={false} label={enabled ? "Desativar cobranças" : "Ativar cobranças"} onSave={async (data, form) => {
           await updateIntegration("asaas", { action: "integration-production", enabled: !enabled }, data, form);
           setOpen(false);
         }}><ConfirmPassword /></Form>
@@ -161,7 +161,7 @@ export function IntegrationCards({ provider, settings, onSave }: {
         <h2 id="integration-fields"><KeyRound size={20} aria-hidden="true" /> {asaas ? "Ambiente e chave de API" : "Biblioteca e credenciais"}</h2>
         {settings.demo ? <p>Configure provedores na sua instalação do Icarus.</p> : !settings.can_write &&
           <p>Para alterar as credenciais, ative a verificação em duas etapas em Sua conta → Segurança e entre com o segundo fator.</p>}
-        <Form disabled={!settings.can_write} label="Salvar configuração" successMessage="Configuração salva." onSave={async (data, form) => {
+        <Form draft={false} disabled={!settings.can_write} label="Salvar configuração" successMessage="Configuração salva." onSave={async (data, form) => {
           const patch: Record<string, string> = {};
           if (asaas) patch.env = fields.env?.source === "environment" ? environment ?? "" : value(data, "env");
           for (const key of asaas ? ["api_key"] : ["library_id", "api_key", "cdn_host", "token_key"]) {

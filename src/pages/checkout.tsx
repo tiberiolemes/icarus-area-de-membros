@@ -114,6 +114,7 @@ export function Checkout() {
                     </Notice>
                   ) : (
                     <Form
+                      draft={false}
                       className="icarus-checkout-form"
                       label={
                         method === "PIX"

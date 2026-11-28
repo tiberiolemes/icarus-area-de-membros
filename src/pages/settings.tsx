@@ -321,6 +321,7 @@ export function Settings() {
               </Form>
               <h2>Altere sua senha</h2>
               <Form
+                draft={false}
                 label="Atualizar senha"
                 onSave={async (data, form) => {
                   try {
@@ -433,6 +434,7 @@ export function Settings() {
                   trigger={<button>Solicitar exclusão</button>}
                 >
                   <Form
+                    draft={false}
                     label="Enviar solicitação"
                     onSave={async (data) => {
                       if (value(data, "confirm") !== "EXCLUIR")
@@ -519,6 +521,7 @@ export function Mfa({
               <div key={factor.id}>
                 <h3>{factor.friendly_name ?? "Aplicativo autenticador"}</h3>
                 <Form
+                  draft={false}
                   label="Verificar código"
                   onSave={async (data) => {
                     const { error } =
@@ -594,6 +597,7 @@ export function Mfa({
             Chave de configuração: <code>{qr.secret}</code>
           </p>
           <Form
+            draft={false}
             label="Ativar verificação"
             onSave={async (data) => {
               const { error } = await client().auth.mfa.challengeAndVerify({
@@ -647,6 +651,7 @@ export function Reauth({
       description="A senha é enviada somente para validação. Esta autorização vale para uma ação e não é salva no navegador."
     >
       <Form
+        draft={false}
         label="Confirmar e executar"
         onSave={async (data, form) => {
           try {

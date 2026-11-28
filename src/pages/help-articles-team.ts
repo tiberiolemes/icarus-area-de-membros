@@ -44,9 +44,14 @@ export const teamArticles: HelpArticle[] = [
         ],
       },
       {
+        title: "Recuperar o que você digitou",
+        intro: "Quando você edita um formulário compatível, o navegador guarda um rascunho depois de meio segundo sem digitar. Ao reabrir a mesma edição, clique em **Recuperar rascunho** para preencher os campos ou em **Descartar** para apagar a cópia. Revise os dados e clique no botão de salvar da tela para publicar a alteração.",
+        note: "O rascunho fica neste navegador por até sete dias e é apagado ao salvar, descartar ou encerrar a sessão. Arquivos, senhas e dados de formulários sensíveis ficam de fora.",
+      },
+      {
         title: "Hábitos de quem administra",
         list: [
-          "Salve antes de trocar de aba ou fechar um editor. Alguns editores descartam o que não foi salvo sem avisar.",
+          "Salve antes de trocar de aba ou fechar um editor. O rascunho depende do navegador e não substitui o salvamento.",
           "A sessão da equipe termina depois de 30 minutos sem uso. Um minuto antes aparece o botão **Continuar conectado**.",
           "Quem usa a verificação em duas etapas e marca **Lembrar por 15 dias** ao entrar fica conectado por 15 dias, sem o limite de 30 minutos.",
           "Ações delicadas pedem a sua senha de novo. É uma proteção, e cada confirmação vale para uma ação.",

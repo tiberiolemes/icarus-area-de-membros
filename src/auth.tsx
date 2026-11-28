@@ -21,6 +21,7 @@ import {
 import type { Bootstrap } from "./api";
 import { Action, Heading, Loading, Notice } from "./ui";
 import { PasswordSetup, PublicFrame } from "./pages/access";
+import { clearAllDrafts } from "./draft";
 const AuthContext = createContext<{
   session: Session | null;
   loading: boolean;
@@ -41,18 +42,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (actor.current !== id) {
         cache.clear();
         document.documentElement.dataset.theme = "light";
-        if (actor.current || !id)
-          for (const key of Object.keys(sessionStorage)) {
-            if (key.startsWith("icarus:draft:")) sessionStorage.removeItem(key);
-          }
         actor.current = id;
       }
       setSession(next);
       setLoading(false);
     };
-    const { data } = supabase.auth.onAuthStateChange((_event, next) =>
-      set(next),
-    );
+    const { data } = supabase.auth.onAuthStateChange((event, next) => {
+      if (!alive) return;
+      if (event === "SIGNED_OUT" || (actor.current && actor.current !== next?.user.id)) clearAllDrafts();
+      set(next);
+    });
     return () => {
       alive = false;
       data.subscription.unsubscribe();

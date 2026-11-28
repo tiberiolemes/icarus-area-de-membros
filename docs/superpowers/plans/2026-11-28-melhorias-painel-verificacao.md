@@ -108,3 +108,26 @@ Nenhum foi corrigido nesta tarefa.
 - Na área do aluno, a demo monta o curso sem ordenar as aulas por `order_index`, então a ordem arrastada só aparece no painel. Isso é da demo e anterior a esta versão.
 - O cadastro fica fechado na demo, então a tela de sucesso do Criar conta não abre ali. Está coberta pelo Vitest e pelas capturas da Task 17.
 - A contagem "Próxima aula em 5 segundos" no fim do vídeo não foi exercida no navegador, porque a aula testada é de texto. Está coberta pelo Vitest.
+
+## Correções da revisão final
+
+Rodada de 28/nov/2026 sobre `2a5cf1c`, depois das correções apontadas na revisão do branch e na revisão do PR. Todos os comandos saíram com código 0.
+
+| Passo | Resultado |
+| --- | --- |
+| `npm run typecheck` | Sem erros |
+| `npm test` | 70 arquivos e 646 testes passaram |
+| `node scripts/test-integrations.mjs` | 97 testes passaram e nenhum falhou (Deno 2.9.8) |
+| `node --test scripts/clean-install.test.mjs scripts/local.test.mjs` | 23 testes passaram |
+| `db reset` na cópia descartável | 67 migrations aplicadas e a seed |
+| 43 arquivos `supabase/tests/*.sql` | 0 em todos, 1.676 asserções (`content_delete.sql` passou de 43 para 47) |
+| `npm run build` e `npm run build:demo` | Sem avisos |
+
+O que mudou e foi conferido:
+
+- A exclusão definitiva devolve só os caminhos da tabela `uploads` ligados às aulas e aos materiais apagados, e a Edge só remove caminhos `lesson/<uuid>/<uuid>.<ext>` ou `material/<uuid>/<uuid>.<ext>`. Um `storage_path` gravado à mão em aula ou material não volta mais, e `app_admin_save` recusa `storage_path` em aula e material com "Campos não permitidos.".
+- Excluir o módulo também apaga o aviso `catalog_launch` do lançamento, e o material só volta para rascunho se não tiver mais nenhuma aula.
+- **Buscar no Bunny** depende da nova marca pública `bunny_search` (reprodução pronta e chave da API do Stream), e a demo responde falso.
+- No navegador (demo, Chromium do Playwright, 1280 e 360 px, tema claro e escuro), a lista de Materiais mostra "Rascunho · Sem arquivo" no material criado sem arquivo (o defeito 1 acima); arquivar o curso A e ir para o curso B sem recarregar mostra **Arquivar registro** em B, sem a mensagem de A, e A volta como **Restaurar registro**; com a barra recolhida e foco pelo teclado, a dica começa em 76 px e o anel de foco termina em 68 px, no painel e na área do aluno; o rótulo do avanço automático tem 14 px. Sem rolagem horizontal a 360 px e sem erro de página. Capturas em `artefatos/qa-2-13/final-fixes/`.
+
+A corrida em que outra sessão vincula o material a uma aula durante a exclusão não se reproduz numa sessão só. A nova checagem do vínculo ficou coberta pelos testes de material que volta para rascunho, sem um teste de concorrência próprio.

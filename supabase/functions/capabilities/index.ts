@@ -31,6 +31,37 @@ export const createHandler = (d: Dependencies = defaults) => {
     }
 
     const a = (await actor(req, d))!;
+    if (body.action === "bunny-videos") {
+      if (!["admin", "instructor"].includes(a.profile.role) || a.profile.password_setup_required || a.profile.demo) {
+        throw new HttpError(403, "FORBIDDEN", "Somente administradores e instrutores podem buscar vídeos do Bunny.");
+      }
+      const { query, page } = body;
+      if (typeof query !== "string" || query.length > 100 || typeof page !== "number" || !Number.isInteger(page) || page < 1 || page > 1000) {
+        throw new HttpError(422, "INVALID_INPUT", "Confira a busca e a página.");
+      }
+      await rpc(a.admin, "app_staff_bunny_search_throttle", { p_actor_id: a.userInfo.id });
+      const { fields } = await bunnyConfig(d, a.admin, true);
+      if (!validLibrary(fields.library_id.value) || !fields.api_key.value) {
+        throw new HttpError(409, "BUNNY_NOT_CONFIGURED", "Configure o Bunny Stream em Configurações > Integrações.");
+      }
+      const response = await d.fetch(
+        `https://video.bunnycdn.com/library/${fields.library_id.value}/videos?page=${page}&itemsPerPage=20&orderBy=date&search=${encodeURIComponent(query.trim())}`,
+        { headers: { AccessKey: fields.api_key.value }, redirect: "error", signal: AbortSignal.timeout(8_000) },
+      ).catch(() => null);
+      if (!response?.ok) await response?.body?.cancel().catch(() => {});
+      if (response?.status === 401 || response?.status === 403) {
+        throw new HttpError(502, "BUNNY_REJECTED", "A API do Bunny Stream recusou a chave. Confira as credenciais salvas.");
+      }
+      const data = response?.ok ? await response.json().catch(() => null) : null;
+      if (!Array.isArray(data?.items)) throw new HttpError(502, "BUNNY_UNAVAILABLE", "A API do Bunny Stream está indisponível. Tente novamente.");
+      return {
+        items: data.items.map((video: Record<string, unknown>) => ({
+          id: String(video.guid), title: String(video.title ?? ""), length: Number(video.length) || 0, ready: video.status === 4,
+        })),
+        total: Number(data.totalItems) || 0,
+        page,
+      };
+    }
     if (a.profile.role !== "admin" || a.profile.password_setup_required || a.profile.demo) {
       throw new HttpError(403, "FORBIDDEN", "Somente administradores podem consultar as integrações.");
     }

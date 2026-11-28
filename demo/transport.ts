@@ -602,6 +602,14 @@ export const transport: typeof fetch = async (input, init) => {
     if (a.action === "integration-status" && profile?.role === "admin") {
       return Response.json({ ...services, demo: true, configured: false, can_write: false, test_ready: false, fields: {} });
     }
+    if (a.action === "bunny-videos" && (profile?.role === "admin" || profile?.role === "instructor")) {
+      const items = [
+        { id: demoId(901), title: "DEMONSTRAÇÃO Boas-vindas", length: 95, ready: true },
+        { id: demoId(902), title: "DEMONSTRAÇÃO Módulo 1", length: 754, ready: true },
+        { id: demoId(903), title: "DEMONSTRAÇÃO Em processamento", length: 0, ready: false },
+      ].filter((video) => matches(str(a.query), video.title));
+      return Response.json({ items, total: items.length, page: 1 });
+    }
     return fail("A configuração exige uma instalação do Icarus.", 403);
   }
   if (!profile) return fail("Entre com uma conta da demonstração.", 401, "PGRST301");

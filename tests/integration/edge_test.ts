@@ -31,7 +31,7 @@ function deps(route: Route = () => undefined, config: Record<string, string> = {
     if (url.pathname.endsWith("/app_touch_session")) return response({ expires_at: "2026-11-23T01:00:00Z" });
     if (url.pathname.endsWith("/app_bootstrap")) return response({ profile: { role: "member" } });
     if (url.pathname.endsWith("/app_integration_credentials")) return response({});
-    if (["app_checkout_throttle", "app_reauth_throttle", "app_admin_integration_test_throttle"].includes(url.pathname.split("/").at(-1) ?? "")) return response(null);
+    if (["app_checkout_throttle", "app_reauth_throttle", "app_admin_integration_test_throttle", "app_staff_bunny_search_throttle"].includes(url.pathname.split("/").at(-1) ?? "")) return response(null);
     throw Error(`Unexpected fake transport request: ${url.pathname}`);
   }) as typeof fetch };
   return { d, requests };
@@ -207,6 +207,77 @@ Deno.test("member cannot inspect integrations and missing Bunny or webhook stays
   assert(!requests.some((r) => r.url.endsWith("app_integration_credentials")));
   equal((await media(d)(request({ kind: "lesson", id }))).status, 503);
   equal((await webhook(d)(request({}, { token: null }))).status, 503);
+});
+const bunnyVault = { library_id: "42", api_key: "synthetic-stream-key", token_key: "synthetic-player-key", cdn_host: "vz-fixture.b-cdn.net" };
+function bunnySearch(profile: Record<string, unknown>, bunny: Route = () => undefined, stored: Record<string, string> = bunnyVault) {
+  const found = deps((url, init) => {
+    if (url.pathname.endsWith("app_bootstrap")) return response({ profile });
+    if (url.pathname.endsWith("app_integration_credentials")) return response(stored);
+    if (url.hostname === "video.bunnycdn.com") return bunny(url, init);
+  });
+  const search = (body: Record<string, unknown> = {}) => capabilities(found.d)(request({ action: "bunny-videos", query: "Módulo 1", page: 2, ...body }));
+  const outside = () => found.requests.filter((r) => !r.url.startsWith("http://127.0.0.1"));
+  return { ...found, search, outside };
+}
+Deno.test("instrutor busca vídeos do Bunny e recebe só id, título, duração e situação", async () => {
+  const { requests, search, outside } = bunnySearch({ role: "instructor" }, (_url, init) => {
+    equal(init.redirect, "error"); assert(init.signal instanceof AbortSignal, "sem tempo máximo");
+    return response({ totalItems: 1, currentPage: 2, itemsPerPage: 20, items: [{
+      guid: other, title: "Módulo 1", length: 754, status: 4, videoLibraryId: 42, storageSize: 1024, thumbnailFileName: "thumbnail.jpg", captions: [],
+    }] });
+  });
+  const result = await search();
+  equal(result.status, 200);
+  const body = await result.text();
+  equal(JSON.parse(body), { items: [{ id: other, title: "Módulo 1", length: 754, ready: true }], total: 1, page: 2 });
+  assert(!body.includes("synthetic-stream-key"), "chave na resposta");
+  equal(outside().map((r) => r.url), ["https://video.bunnycdn.com/library/42/videos?page=2&itemsPerPage=20&orderBy=date&search=M%C3%B3dulo%201"]);
+  equal(outside()[0].headers.get("accesskey"), "synthetic-stream-key");
+  equal(requests.filter((r) => r.url.endsWith("app_staff_bunny_search_throttle")).map((r) => r.body), [{ p_actor_id: id }]);
+});
+Deno.test("membro não busca vídeos do Bunny", async () => {
+  for (const profile of [{ role: "member" }, { role: "moderator" }, { role: "support" }, { role: "instructor", demo: true }, { role: "admin", password_setup_required: true }]) {
+    const { requests, search } = bunnySearch(profile, () => response({ totalItems: 0, items: [] }));
+    const result = await search();
+    equal(result.status, 403);
+    assert(!requests.some((r) => r.url.endsWith("app_integration_credentials") || r.url.endsWith("app_staff_bunny_search_throttle") || !r.url.startsWith("http://127.0.0.1")),
+      `${JSON.stringify(profile)} chegou ao Bunny`);
+  }
+});
+Deno.test("busca longa é recusada antes do Bunny", async () => {
+  for (const body of [{ query: "a".repeat(101) }, { query: 42 }, { page: 0 }, { page: 1001 }, { page: 1.5 }, { page: "2" }]) {
+    const { requests, search } = bunnySearch({ role: "admin" }, () => response({ totalItems: 0, items: [] }));
+    const result = await search(body);
+    equal(result.status, 422);
+    assert(!requests.some((r) => r.url.endsWith("app_integration_credentials") || !r.url.startsWith("http://127.0.0.1")), `${JSON.stringify(body)} chegou ao Bunny`);
+  }
+  const { search, outside } = bunnySearch({ role: "admin" }, () => response({ totalItems: 0, currentPage: 1000, items: [] }));
+  equal(await (await search({ query: "a".repeat(100), page: 1000 })).json(), { items: [], total: 0, page: 1000 });
+  equal(outside().length, 1);
+});
+Deno.test("chave recusada pelo Bunny vira mensagem clara", async () => {
+  const refused = "A API do Bunny Stream recusou a chave. Confira as credenciais salvas.";
+  const unavailable = "A API do Bunny Stream está indisponível. Tente novamente.";
+  for (const [status, message] of [[401, refused], [403, refused], [500, unavailable], [0, unavailable]] as const) {
+    const { search } = bunnySearch({ role: "admin" }, () => {
+      if (!status) throw new TypeError("network");
+      return response({ Message: "synthetic-stream-key inválida" }, status);
+    });
+    const result = await search();
+    equal(result.status, 502);
+    const body = await result.text();
+    equal(JSON.parse(body).error.message, message);
+    assert(!body.includes("synthetic-stream-key"), "chave na resposta");
+  }
+});
+Deno.test("Bunny sem chave salva responde BUNNY_NOT_CONFIGURED", async () => {
+  for (const stored of [{ library_id: "42", token_key: "synthetic-player-key" }, { ...bunnyVault, library_id: "biblioteca" }]) {
+    const { search, outside } = bunnySearch({ role: "instructor" }, () => response({ totalItems: 0, items: [] }), stored);
+    const result = await search();
+    equal(result.status, 409);
+    equal((await result.json()).error, { code: "BUNNY_NOT_CONFIGURED", message: "Configure o Bunny Stream em Configurações > Integrações." });
+    equal(outside(), []);
+  }
 });
 Deno.test("checkout in production requires switch proof for the current keys and the Turnstile secret", async () => {
   const apiKey = "fake-asaas-production";

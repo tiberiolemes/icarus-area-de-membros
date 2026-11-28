@@ -218,6 +218,27 @@ Pedido de Tibério em 28/nov/2026, depois da aprovação do plano: uma opção q
 - Não avança quando não há próxima aula, quando o aluno não tem acesso a ela ou quando a conclusão emitiu certificado (para ele ver o aviso do certificado).
 - Fim do vídeo: Bunny pelo evento `ended` do player.js; YouTube pela API de mensagens do iframe (a função `media` passa a pedir `enablejsapi=1` no endereço do player, e a tela escuta o estado "terminado" vindo só da origem do YouTube); vídeo e áudio antigos guardados na plataforma pelo `ended` nativo.
 
+### 18. Planos em formato de venda, com a menor parcela em destaque
+
+Pedido de Tibério em 28/nov/2026, depois da aprovação do plano: a aba Assinatura da conta do aluno (`src/pages/settings.tsx`, "Planos disponíveis") passa a mostrar os planos num formato mais vendável, sempre com o valor parcelado menor em destaque. Imagem de referência do estado atual: `~/ai/projetos/icarus-area-de-membros/imagens/2026-11-28-melhorias-painel/08-planos-atual.png`.
+
+- Cartões lado a lado (um por linha no celular), com os tokens do DS: nome do plano, duração ("12 meses de acesso"), a parcela em destaque, o valor à vista embaixo, benefícios com ícone de check e o botão "Assinar" na largura do cartão. O plano atual mostra o selo "Seu plano atual" no lugar do botão.
+- Menor parcela: o checkout aceita até 12x, então o destaque é `12x de` o preço dividido por 12, arredondado para cima no centavo (nunca promete menos do que será cobrado). Plano gratuito (preço 0) mostra "Gratuito", sem parcela.
+- Juros (decisão de Tibério, opção por instalação): cada plano ganha a marcação "Parcelamento sem juros no cartão" no formulário de Planos (`plans.interest_free boolean not null default false`). Marcado: "12x de R$ 49,00 sem juros" e "ou R$ 588,00 à vista". Desmarcado: "em até 12x de R$ 49,00 no cartão", "ou R$ 588,00 à vista" e, em letra menor, "Valor final da parcela confirmado no pagamento.". A dica da marcação explica que ela só deve ficar ligada quando a conta do Asaas não repassa juros ao aluno, e o guia de operação diz o mesmo.
+- Sem selo "Mais popular", desconto ou economia: o Icarus não tem esses dados e não inventa.
+- Fora do escopo: o seletor de parcelas do checkout continua como está.
+
+### 19. Avatar automático com Gravatar e imagem padrão
+
+Pedido de Tibério em 28/nov/2026, depois da aprovação do plano. Imagem de referência: `~/ai/projetos/icarus-area-de-membros/imagens/2026-11-28-melhorias-painel/09-avatar-perfil.png`. Ordem de precedência: foto enviada pelo aluno (soberana), foto do Gravatar, imagem padrão gerada.
+
+- Foto do Gmail fica de fora (decisão de Tibério): o Google só entrega a foto a quem entra com a conta Google, e o Icarus não tem esse login. "Entrar com Google" com a foto do perfil fica como pendência de um próximo PR.
+- Gravatar (decisão de Tibério): o servidor busca, guarda e serve a foto; quem vê não fala com o Gravatar. Na primeira entrada de quem não tem foto, a tela pede à função `upload` a ação `gravatar`. O servidor calcula o SHA-256 do email (minúsculo, sem espaços), consulta `https://gravatar.com/avatar/<hash>?s=160&d=404` (5 s), aceita só JPG ou PNG de até 100 KB com assinatura válida, guarda pelo mesmo caminho do avatar enviado e só grava em `profiles.avatar_id` se ele ainda estiver vazio. 160 × 160 px (escolha minha, em vez dos 100 sugeridos): o perfil mostra a foto com 80 px e telas retina usam o dobro; fica entre 5 e 15 KB.
+- `profiles.gravatar_checked_at` registra a consulta com resposta definitiva (foto guardada ou 404), para não repetir. Erro de rede ou tempo esgotado não marca, e a consulta volta no próximo acesso. Limite por minuto por pessoa.
+- Foto enviada depois substitui a do Gravatar, como qualquer troca de foto.
+- Imagem padrão (decisão de Tibério): Boring Avatars, variante `beam`, nas cores do DS (`#000000`, `#1F1F1F`, `#8A8A8A`, `#EAEAEA`, `#FFFFFF`), com a semente no ID da conta, então cada pessoa tem sempre a mesma imagem. Aparece no topo (aluno e painel), no perfil e nas publicações da comunidade, no lugar das iniciais e do ícone de pessoa.
+- LGPD: o guia de operação avisa que o hash do email vai ao Gravatar (Automattic) e que a política de privacidade da instalação deve dizer isso; o artigo de privacidade da Central também.
+
 ## Decisões de Tibério (28/nov/2026)
 
 - Item 10: rascunho local em todos os formulários, sem autosave no servidor.

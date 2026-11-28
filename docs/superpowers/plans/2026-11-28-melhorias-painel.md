@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Entregar os 17 ajustes pedidos por Tibério em 28/nov/2026 (vínculos de material, exclusão definitiva, uploads, ajuda em popup, rascunho local, barra lateral, arraste, polimentos do DS, tela de sucesso do cadastro e avanço automático de aula) na versão 2.13.0 do Icarus.
+**Goal:** Entregar os 19 ajustes pedidos por Tibério em 28/nov/2026 (vínculos de material, exclusão definitiva, uploads, ajuda em popup, rascunho local, barra lateral, arraste, polimentos do DS, tela de sucesso do cadastro, avanço automático de aula, planos com a menor parcela em destaque e avatar automático) na versão 2.13.0 do Icarus.
 
 **Architecture:** Regras de acesso, exclusão e recusa de vídeo ficam no Postgres (RPCs `security definer` com grants mínimos), com Edge Functions só onde há Storage ou chave de terceiro (`upload` para apagar arquivos, `capabilities` para a API do Bunny). O front em React reaproveita `Form`, `Modal`, `Field`, `Notice` e os tokens do DS; peças novas ficam em arquivos próprios para não inchar `src/pages/admin.tsx` (3.091 linhas).
 
@@ -20,6 +20,7 @@
 - `localStorage` sempre em `try/catch`; a tela funciona sem ele.
 - A demo (`demo/transport.ts`, `demo/fixtures.ts`) responde a toda RPC e ação nova que a tela chamar, para `npm run build:demo` e o modo demo continuarem abrindo as telas.
 - Toda tela alterada atualiza o artigo da Central de ajuda indicado na tarefa (`src/pages/help-articles-*.ts`) e o passo do tour, se citar o que mudou (`src/tour.tsx`).
+- Dependência nova permitida só onde Tibério escolheu: `boring-avatars` (Task 20).
 - Mensagens fixas da spec, literais:
   - "A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube."
   - "Não dá para desfazer. Certificados já emitidos continuam válidos."
@@ -855,7 +856,103 @@ git commit -m "feat: opção de avançar para a próxima aula automaticamente"
 
 ---
 
-### Task 19: Versão 2.13.0, verificação completa e PR
+### Task 19: Planos em formato de venda com a menor parcela
+
+**Files:**
+- Create: `supabase/migrations/202611280006_plan_interest_free.sql`, `supabase/tests/plan_interest_free.sql`
+- Create: `src/plan-price.ts`, `src/plan-price.test.ts`, `src/student-plans.test.tsx`
+- Modify: `src/pages/settings.tsx:370-410` (aba Assinatura), `src/pages/account-settings.css`, `src/pages/admin.tsx` (`AdminPlans`, perto da linha 1996), `src/api.ts` (tipo do plano ganha `interest_free`)
+- Modify: `demo/fixtures.ts` e `demo/transport.ts` (planos com `interest_free`), artigos `assinatura` (`help-articles-member.ts`) e `planos` (`help-articles-team.ts`), `docs/operations.md`
+
+**Interfaces:**
+- Produces:
+  - `plans.interest_free boolean not null default false`; `app_admin_save('plans', ...)` aceita `interest_free` (booleano). Recriar `app_admin_save` a partir da última definição (a da Task 1). O bootstrap e o contexto público já devolvem a linha inteira do plano (`to_jsonb(p)`).
+  - `installmentOffer(priceCents: number): { count: 12; installmentCents: number } | null` em `src/plan-price.ts`: `null` para preço 0; `installmentCents = Math.ceil(priceCents / 12)`.
+
+- [ ] **Step 1: Escrever os testes que falham**
+
+`src/plan-price.test.ts`: `installmentOffer(58800)` → `{count: 12, installmentCents: 4900}`; `installmentOffer(10000)` → `installmentCents: 834`; `installmentOffer(0)` → `null`.
+`src/student-plans.test.tsx` (aba Assinatura):
+- `"plano sem juros destaca 12x de R$ 49,00 sem juros e o valor à vista"`.
+- `"plano com juros diz em até 12x no cartão e avisa que o valor final é confirmado no pagamento"`.
+- `"plano gratuito mostra Gratuito sem parcela"`.
+- `"plano atual mostra o selo no lugar de Assinar"`; `"Assinar leva ao checkout do plano"`.
+- `"benefícios aparecem com ícone de check"`.
+SQL `plan_interest_free.sql`: plano novo nasce com `false`; admin grava `true` por `app_admin_save`; membro não grava.
+No teste de planos do admin existente (`src/admin-commercial.test.tsx`): `"formulário de plano envia interest_free"`.
+
+- [ ] **Step 2: Rodar e ver falhar**
+
+Expected: FAIL.
+
+- [ ] **Step 3: Implementar**
+
+Textos literais da seção 18 da spec. Marcação no formulário de plano com a dica "Ligue só se a sua conta do Asaas não repassa juros do parcelamento ao aluno." Layout em grade (`repeat(auto-fit, minmax(min(100%, 18rem), 1fr))`), destaque da parcela em tamanho de título, valor à vista e aviso em `--ic-text-secondary`, check do lucide nos benefícios. Conferir 360 px e os dois temas.
+
+- [ ] **Step 4: Rodar e ver passar; ajuda; commit**
+
+Run: SQL, `npx vitest run src/plan-price.test.ts src/student-plans.test.tsx src/admin-commercial.test.tsx src/pages/student-account.test.tsx && npm run typecheck`. Expected: PASS.
+
+```bash
+git add supabase src demo docs
+git commit -m "feat: planos do aluno em cartões com a menor parcela em destaque"
+```
+
+---
+
+### Task 20: Avatar com Gravatar e imagem padrão
+
+**Files:**
+- Create: `supabase/migrations/202611280007_gravatar.sql`, `supabase/tests/gravatar.sql`
+- Modify: `supabase/functions/upload/index.ts` (ação `gravatar`), `tests/integration/edge_test.ts`
+- Create: `src/avatar-fallback.tsx`, `src/avatar-fallback.test.tsx`
+- Modify: `src/shell.tsx` (`AccountAvatar` e pedido do Gravatar), `src/pages/settings.tsx` (cartão do perfil), `src/pages/community.tsx:82-100` (`PostMeta`), `src/api.ts` (tipo `Profile` ganha `gravatar_checked_at`)
+- Modify: `package.json`, `package-lock.json` (dependência `boring-avatars`, versão exata publicada há mais de duas semanas: conferir com `npm view boring-avatars time --json`), `THIRD_PARTY_NOTICES.md`, `demo/transport.ts` (ação `gravatar` responde `{avatar: false}`), artigos `privacidade` e `conta` (`help-articles-member.ts`), `docs/operations.md`
+
+**Interfaces:**
+- Produces:
+  - `profiles.gravatar_checked_at timestamptz` (nulo por padrão), devolvido por `app_private.profile_json` (recriar a partir da última definição, a da Task 18).
+  - `app_gravatar_context(p_actor_id uuid) returns jsonb` → `{check: boolean, email: text}`; só `service_role`; `check` é verdadeiro só com `avatar_id` nulo e `gravatar_checked_at` nulo; aplica `throttle(p_actor_id, 'gravatar', 3)`.
+  - `app_gravatar_done(p_actor_id uuid, p_upload_id uuid) returns jsonb` → `{avatar_id}`; só `service_role`; grava `gravatar_checked_at = now()` e, com `p_upload_id` não nulo e `avatar_id` ainda nulo, `avatar_id = p_upload_id`.
+  - `POST /functions/v1/upload` com `{action: "gravatar"}` → `{avatar: boolean}`. Reusa `app_upload_access(kind 'avatar')`, o envio ao Storage e `app_upload_finalize` do avatar.
+  - `FallbackAvatar({ seed, size }: { seed: string; size: number }): JSX.Element` em `src/avatar-fallback.tsx` (Boring Avatars `variant="beam"`, `square`, cores do DS da seção 19 da spec, `aria-hidden`).
+
+- [ ] **Step 1: Escrever os testes que falham**
+
+Deno:
+- `"gravatar guarda a foto de 160 px de quem não tem avatar"`: confere a URL com `s=160&d=404` e o hash SHA-256 de `" Membro@Demo.Icarus.Invalid "` normalizado; PNG válido → Storage + `app_gravatar_done` com o upload.
+- `"404 do Gravatar marca como conferido"`: `app_gravatar_done` com `p_upload_id: null`.
+- `"erro de rede não marca e responde avatar false"`: nenhuma chamada a `app_gravatar_done`.
+- `"quem já tem foto não consulta o Gravatar"`: `check: false` → nenhum `fetch` ao gravatar.com.
+- `"arquivo acima de 100 KB ou que não é imagem é descartado"`.
+SQL `gravatar.sql`: `check` falso com `avatar_id` preenchido ou já conferido; `app_gravatar_done` não sobrescreve `avatar_id` existente; `authenticated` sem `execute` nas duas.
+Vitest `src/avatar-fallback.test.tsx`:
+- `"mesma semente gera a mesma imagem e sementes diferentes geram imagens diferentes"`.
+- `"topo mostra a imagem padrão de quem não tem foto, no aluno e no painel"`.
+- `"perfil mostra a imagem padrão no lugar do ícone de pessoa"`.
+- `"foto enviada aparece no lugar da imagem padrão"`.
+- `"entrada sem foto e sem consulta pede o Gravatar uma vez e recarrega o perfil quando chega foto"`.
+
+- [ ] **Step 2: Rodar e ver falhar**
+
+Expected: FAIL.
+
+- [ ] **Step 3: Implementar**
+
+Hash com `crypto.subtle.digest("SHA-256", ...)` em hexadecimal. `fetch` com `redirect: "error"` e `AbortSignal.timeout(5_000)`; ler no máximo 100 KB (`boundedBody`); `matchesSignature`. O pedido da tela sai uma vez por sessão (controle em memória do módulo) e não bloqueia nada. Na comunidade, a semente é o ID do autor da publicação.
+
+- [ ] **Step 4: Rodar e ver passar; textos; commit**
+
+Run: SQL, `node scripts/test-integrations.mjs`, `npx vitest run src/avatar-fallback.test.tsx src/member-shell.test.tsx src/pages/student-account.test.tsx src/community-feed.test.tsx && npm run typecheck`. Expected: PASS.
+
+```bash
+git add supabase src tests demo docs package.json package-lock.json THIRD_PARTY_NOTICES.md
+git commit -m "feat: avatar do Gravatar guardado no servidor e imagem padrão gerada"
+```
+
+---
+
+### Task 21: Versão 2.13.0, verificação completa e PR
 
 **Files:**
 - Modify: `package.json`, `package-lock.json` (versão `2.13.0`), `CHANGELOG.md`, `docs/operations.md`, `docs/CONTRACT.md`
@@ -866,7 +963,7 @@ git commit -m "feat: opção de avançar para a próxima aula automaticamente"
 
 - [ ] **Step 1: Changelog e guia**
 
-Entrada `## 2.13.0 · <data>` no padrão das anteriores, cobrindo os 17 itens e "Para atualizar da 2.12.0, aplique as migrations `202611280001` a `202611280005`, publique as Edge Functions `upload`, `capabilities` e `media` e então publique o frontend." Guia de operação sem envio de vídeo e com a exclusão definitiva.
+Entrada `## 2.13.0 · <data>` no padrão das anteriores, cobrindo os 19 itens e "Para atualizar da 2.12.0, aplique as migrations `202611280001` a `202611280007`, publique as Edge Functions `upload`, `capabilities` e `media` e então publique o frontend." Guia de operação sem envio de vídeo e com a exclusão definitiva.
 
 - [ ] **Step 2: Verificação local completa**
 

@@ -1197,8 +1197,11 @@ export function AdminMaterials() {
             <div>
               <h3>{text(item, "name")}</h3>
               <p>
-                {statusName(text(item, "status"))} · {materialTypes[text(item, "file_type")] ?? "Arquivo"} ·{" "}
-                {materialSize(Number(item.size_bytes))}{inLessons(item)}
+                {statusName(text(item, "status"))} ·{" "}
+                {item.storage_path
+                  ? `${materialTypes[text(item, "file_type")] ?? "Arquivo"} · ${materialSize(Number(item.size_bytes))}`
+                  : "Sem arquivo"}
+                {inLessons(item)}
               </p>
             </div>
             <button onClick={() => setEditing(item)}>Editar material</button>

@@ -175,6 +175,17 @@ it("listagem mostra Em 2 aulas", async () => {
   expect(row("Solto")).not.toHaveTextContent(/Em \d+ aula/);
 });
 
+it("listagem mostra Sem arquivo no lugar de tipo e tamanho do material sem arquivo", async () => {
+  Object.assign(rows.materials[0], { storage_path: "material/apostila/arquivo.pdf" });
+  Object.assign(rows.materials[2], { status: "draft", size_bytes: 0 });
+  show();
+  const row = (name: string) => screen.getByRole("heading", { level: 3, name }).closest(".admin-row") as HTMLElement;
+  await screen.findByRole("heading", { level: 3, name: "Solto" });
+  expect(row("Apostila")).toHaveTextContent("Publicado · PDF · 2 KB · Em 2 aulas");
+  expect(row("Solto")).toHaveTextContent("Rascunho · Sem arquivo");
+  expect(row("Solto")).not.toHaveTextContent(/PDF|0 B/);
+});
+
 it("?editar=<id> abre o editor do material", async () => {
   show("/admin/materiais?editar=mapa");
   expect(await screen.findByRole("heading", { level: 2, name: "Editar material" })).toBeInTheDocument();

@@ -388,7 +388,11 @@ function AccessForm({ mode, target }: { mode: "reset" | EmailAccessMode; target:
     return (
       <PublicFrame>
         <div className="access">
-          <MailCheck size={28} aria-hidden="true" />
+          <MailCheck
+            size={28}
+            aria-hidden="true"
+            style={{ display: "block", marginBlockEnd: "var(--stitch-space-sm)" }}
+          />
           <Heading title="Confira seu email">
             {sent.mode === "register" && <>
               Se o endereço puder ser cadastrado, você vai receber um link de confirmação em {email}. Abra a mensagem e clique no link para ativar sua conta.

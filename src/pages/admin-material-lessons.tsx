@@ -88,6 +88,8 @@ export function LessonLinks({ selected }: { selected: string[] }) {
 
 // Os tipos da dica: um arquivo que a função upload recusaria nem chega a criar o material.
 const materialFiles = ".pdf,.png,.jpg,.jpeg,.webp,.zip,.txt,.mp3";
+// Pela extensão, porque arquivo sem tipo informado e o seletor em "Todos os arquivos" passam pelo accept.
+const acceptedFile = (file: File) => materialFiles.split(",").some((extension) => file.name.toLowerCase().endsWith(extension));
 // Nome do arquivo sem a extensão, com a inicial maiúscula, no limite de 200 caracteres do material.
 function materialName(file: File) {
   const base = file.name.replace(/\.[^.]+$/, "") || file.name;
@@ -120,7 +122,7 @@ export function LessonMaterials({ lessonId }: { lessonId: string }) {
     if (!file || controller.current) return;
     setError("");
     setState("");
-    const refused = overLimit(file);
+    const refused = acceptedFile(file) ? overLimit(file) : "Tipo de arquivo não aceito aqui.";
     if (refused) {
       setError(refused);
       if (input.current) input.current.value = "";
@@ -171,11 +173,13 @@ export function LessonMaterials({ lessonId }: { lessonId: string }) {
         {linked.length ? (
           <ul className="lesson-materials-list">
             {linked.map((row) => {
-              const missing = !row.storage_path, uploading = sending?.id === row.id;
+              const missing = !row.storage_path, uploading = sending?.id === row.id, name = text(row, "name");
+              // As ações repetem em cada linha: o nome do material vai junto para o leitor de tela.
+              const which = <> <span className="sr-only">{name}</span></>;
               return (
                 <li key={row.id}>
                   <div>
-                    <strong>{text(row, "name")}</strong>
+                    <strong>{name}</strong>
                     <span>
                       {statusName(text(row, "status"))} ·{" "}
                       {missing
@@ -184,21 +188,21 @@ export function LessonMaterials({ lessonId }: { lessonId: string }) {
                     </span>
                   </div>
                   <div className="actions">
-                    <Link className="button" to={`/admin/materiais?editar=${encodeURIComponent(row.id)}`}>Editar em Materiais</Link>
+                    <Link className="button" to={`/admin/materiais?editar=${encodeURIComponent(row.id)}`}>Editar em Materiais{which}</Link>
                     {missing && !uploading && row.status !== "archived" && (
                       <button type="button" aria-expanded={resend === row.id} onClick={() => setResend(resend === row.id ? "" : row.id)}>
-                        Reenviar arquivo
+                        Reenviar arquivo{which}
                       </button>
                     )}
-                    {/* Durante o envio, desvincular deixaria o material publicado sem aula e aberto a todos os membros. */}
-                    <Action disabled={uploading} run={async () => {
+                    {/* Durante o envio ou com o reenvio aberto, desvincular deixaria o envio publicar o material sem aula, aberto a todos. */}
+                    <Action disabled={uploading || resend === row.id} run={async () => {
                       const result = await rpc<{ id: string; status: string }>("app_admin_unlink_material", { p_material_id: row.id, p_lesson_id: lessonId });
                       await cache.invalidateQueries({ queryKey: ["app_admin_list"] });
                       announce(result.status === "draft" && row.status !== "draft"
                         ? "Material desvinculado da aula. Sem nenhuma aula, ele voltou para rascunho."
                         : "Material desvinculado da aula.");
                     }}>
-                      Desvincular
+                      Desvincular{which}
                     </Action>
                   </div>
                   {missing && resend === row.id && (

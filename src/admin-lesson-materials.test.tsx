@@ -87,13 +87,15 @@ const item = (block: HTMLElement, name: string) => within(block).getByText(name,
 
 it("aula salva lista os materiais vinculados", async () => {
   const block = await editor("Editar aula Exercício");
-  await within(block).findByText("Apostila");
+  await within(block).findByText("Apostila", { selector: "strong" });
   expect(within(block).getAllByRole("listitem")).toHaveLength(1);
   expect(item(block, "Apostila")).toHaveTextContent("Publicado · PDF · 2 KB");
-  expect(within(item(block, "Apostila")).getByRole("link", { name: "Editar em Materiais" }))
+  // As ações repetem em cada linha; o nome do material vai junto para quem usa leitor de tela.
+  expect(within(item(block, "Apostila")).getByRole("link", { name: "Editar em Materiais Apostila" }))
     .toHaveAttribute("href", "/admin/materiais?editar=apostila");
-  expect(within(block).queryByText("Mapa")).toBeNull();
-  expect(within(block).queryByRole("button", { name: "Reenviar arquivo" })).toBeNull();
+  expect(within(item(block, "Apostila")).getByRole("button", { name: "Desvincular Apostila" })).toBeEnabled();
+  expect(within(block).queryByText("Mapa", { selector: "strong" })).toBeNull();
+  expect(within(block).queryByRole("button", { name: /Reenviar arquivo/ })).toBeNull();
   expect(within(block).getByRole("group", { name: "Adicionar material" })).toBeInTheDocument();
 });
 
@@ -131,13 +133,15 @@ it("falha no envio deixa o material como rascunho Sem arquivo com Reenviar arqui
   expect(saves()).toHaveLength(1);
   await waitFor(() => expect(item(block, "Mapa-mental")).toHaveTextContent("Rascunho · Sem arquivo"));
   // A confirmação de outra ação substitui o aviso da falha.
-  fireEvent.click(within(item(block, "Apostila")).getByRole("button", { name: "Desvincular" }));
+  fireEvent.click(within(item(block, "Apostila")).getByRole("button", { name: "Desvincular Apostila" }));
   expect(await within(block).findByText("Material desvinculado da aula.")).toBeInTheDocument();
   expect(within(block).queryByRole("alert")).toBeNull();
-  const resend = within(item(block, "Mapa-mental")).getByRole("button", { name: "Reenviar arquivo" });
+  const resend = within(item(block, "Mapa-mental")).getByRole("button", { name: "Reenviar arquivo Mapa-mental" });
   expect(resend).toHaveAttribute("aria-expanded", "false");
   fireEvent.click(resend);
   expect(resend).toHaveAttribute("aria-expanded", "true");
+  // Com o reenvio aberto, desvincular a última aula deixaria o envio publicar um material sem aula, aberto a todos.
+  expect(within(item(block, "Mapa-mental")).getByRole("button", { name: "Desvincular Mapa-mental" })).toBeDisabled();
   expect(uploads.at(-1)).toEqual({ kind: "material", resourceId: "novo" });
   fireEvent.click(within(block).getByRole("button", { name: "Concluir envio" }));
   await waitFor(() => expect(saves()).toHaveLength(2));
@@ -145,15 +149,31 @@ it("falha no envio deixa o material como rascunho Sem arquivo com Reenviar arqui
   expect(await within(block).findByText("Arquivo enviado e material publicado na aula.")).toBeInTheDocument();
 });
 
+it("tipo fora da lista é recusado antes de criar o material, solto ou escolhido", async () => {
+  const block = await editor("Editar aula Exercício");
+  // Sem tipo informado, o arquivo passa pelo accept da área de arraste; o bloco confere a extensão.
+  fireEvent.drop(within(block).getByRole("group", { name: "Adicionar material" }), {
+    dataTransfer: { files: [new File(["x"], "contrato.docx", { type: "" })] },
+  });
+  expect(await within(block).findByRole("alert")).toHaveTextContent("Tipo de arquivo não aceito aqui.");
+  // O seletor com "Todos os arquivos" entrega o arquivo sem passar pelo accept.
+  fireEvent.change(within(block).getByLabelText("Adicionar material", { selector: "input" }), {
+    target: { files: [new File(["x"], "planilha.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })] },
+  });
+  expect(within(block).getByRole("alert")).toHaveTextContent("Tipo de arquivo não aceito aqui.");
+  expect(saves()).toEqual([]);
+  expect(sendFile).not.toHaveBeenCalled();
+});
+
 it("Desvincular chama app_admin_unlink_material", async () => {
   const block = await editor("Editar aula Revisão");
-  await within(block).findByText("Mapa");
-  fireEvent.click(within(item(block, "Mapa")).getByRole("button", { name: "Desvincular" }));
-  await waitFor(() => expect(within(block).queryByText("Mapa")).toBeNull());
+  await within(block).findByText("Mapa", { selector: "strong" });
+  fireEvent.click(within(item(block, "Mapa")).getByRole("button", { name: "Desvincular Mapa" }));
+  await waitFor(() => expect(within(block).queryByText("Mapa", { selector: "strong" })).toBeNull());
   expect(calls.find(({ name }) => name === "app_admin_unlink_material")?.body).toEqual({ p_material_id: "mapa", p_lesson_id: "b" });
   const status = within(block).getByText("Material desvinculado da aula. Sem nenhuma aula, ele voltou para rascunho.");
   await waitFor(() => expect(status).toHaveFocus());
-  expect(within(block).getByText("Apostila")).toBeInTheDocument();
+  expect(within(block).getByText("Apostila", { selector: "strong" })).toBeInTheDocument();
 });
 
 it("aula nova pede para salvar antes", async () => {

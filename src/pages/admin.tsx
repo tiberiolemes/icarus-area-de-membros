@@ -98,6 +98,7 @@ import "./admin-commercial.css";
 import { AdminSurface } from "./admin-surface";
 import { materialSize, save, text, useAll, type Row } from "./admin-data";
 import { LessonLinks } from "./admin-material-lessons";
+import { Archive, DangerZone, useDeletedNotice } from "./admin-delete";
 import "../admin-content.css";
 
 type MemberDetail = {
@@ -357,36 +358,6 @@ const accessData = (data: FormData) => ({
   access_mode: value(data, "access_mode"),
   plan_ids: data.getAll("plan_ids").map(String),
 });
-function Archive({ entity, row }: { entity: string; row: Row }) {
-  const archived = row.status === "archived";
-  return (
-    <details className="archive">
-      <summary>{archived ? "Restaurar registro" : "Arquivar registro"}</summary>
-      <p>
-        {archived
-          ? "O estado anterior será restaurado."
-          : "O conteúdo deixa de ser publicado; histórico, progresso e certificados são preservados."}
-      </p>
-      <Reauth>
-        {async (token) => {
-          if (
-            !window.confirm(
-              archived ? "Restaurar este registro?" : "Arquivar este registro?",
-            )
-          )
-            throw new Error("Operação cancelada.");
-          await rpc("app_admin_archive", {
-            p_entity: entity,
-            p_id: row.id,
-            p_archived: !archived,
-            p_reauth_token: token,
-          });
-          await cache.invalidateQueries({ queryKey: ["app_admin_list"] });
-        }}
-      </Reauth>
-    </details>
-  );
-}
 function OrderControl({
   entity,
   row,
@@ -627,7 +598,8 @@ function Structure({ course }: { course: Row }) {
     sections = useAll("sections"),
     lessons = useAll("lessons"),
     [reordering, setReordering] = useState(false),
-    [selected, setSelected] = useState<StructureSelection | null>(null);
+    [selected, setSelected] = useState<StructureSelection | null>(null),
+    deleted = useDeletedNotice();
   const opener = useRef<HTMLButtonElement>(null);
   const focusPanel = useCallback((node: HTMLElement | null) => {
     focusEditor(node);
@@ -748,6 +720,7 @@ function Structure({ course }: { course: Row }) {
             Ajuda sobre conteúdo
           </Link>
         </p>
+        {deleted.notice}
         <QueryState query={modules}>
           <QueryState query={sections}>
             <QueryState query={lessons}>
@@ -939,6 +912,12 @@ function Structure({ course }: { course: Row }) {
               ]);
               setSelected((current) => (current === selected ? null : current));
             }}
+            onDeleted={(message) => {
+              // O lápis do item apagado saiu da lista: o foco vai para a confirmação.
+              opener.current = null;
+              setSelected(null);
+              deleted.show(message);
+            }}
           />
           </FormHeadingTarget.Provider>
         </section>
@@ -952,12 +931,14 @@ function StructureForm({
   parent,
   inModule,
   after,
+  onDeleted,
 }: {
   entity: "modules" | "sections" | "lessons";
   row?: Row;
   parent: string;
   inModule?: boolean;
   after: () => Promise<void>;
+  onDeleted: (message: string) => void;
 }) {
   return (
     <>
@@ -1108,6 +1089,7 @@ function StructureForm({
             <AdminCatalogLaunch entity="modules" id={row.id} />
           )}
           <Archive entity={entity} row={row} />
+          <DangerZone entity={entity} row={row} onDeleted={onDeleted} />
         </>
       )}
     </>
@@ -1136,7 +1118,8 @@ export function AdminMaterials() {
   const folders = useAll("material_folders"),
     [params, setParams] = useSearchParams(),
     [editing, setEditing] = useState<Row | null | undefined>(undefined),
-    [folder, setFolder] = useState<Row | null | undefined>(undefined);
+    [folder, setFolder] = useState<Row | null | undefined>(undefined),
+    deleted = useDeletedNotice();
   const target = params.get("editar");
   const [folderSubmit, setFolderSubmit] = useState<HTMLDivElement | null>(null);
   const [materialSubmit, setMaterialSubmit] = useState<HTMLDivElement | null>(null);
@@ -1155,6 +1138,7 @@ export function AdminMaterials() {
         </div>
       }
     >
+      {deleted.notice}
       <AdminList entity="materials" title="Arquivos" icon={<FileText size={20} aria-hidden="true" />}>
         {(item) => (
           <>
@@ -1224,7 +1208,15 @@ export function AdminMaterials() {
               <AccessFields row={folder ?? undefined} />
             </Form>
             </FormHeadingTarget.Provider>
-            {folder && <Archive entity="material_folders" row={folder} />}
+            {folder && (
+              <>
+                <Archive entity="material_folders" row={folder} />
+                <DangerZone entity="material_folders" row={folder} onDeleted={(message) => {
+                  setFolder(undefined);
+                  deleted.show(message);
+                }} />
+              </>
+            )}
           </div>
         </section>
       )}
@@ -1317,6 +1309,10 @@ export function AdminMaterials() {
               <>
                 <Upload kind="material" resourceId={editing.id} onUploaded={(file) => setEditing({ ...editing, file_type: file.type })} />
                 <Archive entity="materials" row={editing} />
+                <DangerZone entity="materials" row={editing} onDeleted={(message) => {
+                  setEditing(undefined);
+                  deleted.show(message);
+                }} />
               </>
             )}
           </div>

@@ -423,6 +423,14 @@ function call(name: string, a: Args, profile: Profile) {
       if (!rest.length && row.status !== "archived") row.status = "draft";
       return { id: row.id, status: row.status ?? "published" };
     }
+    case "app_admin_archive": {
+      const row = recordsFor(str(a.p_entity)).find((item) => item.id === id);
+      if (!row) return fail("Registro indisponível.");
+      // Como no servidor, sem senha: arquivar guarda o estado anterior e restaurar volta a ele.
+      if (a.p_archived === true && row.status !== "archived") Object.assign(row, { previous_status: row.status, status: "archived" });
+      if (a.p_archived === false && row.status === "archived") row.status = row.previous_status ?? "draft";
+      return { id, archived: a.p_archived === true };
+    }
     case "app_admin_delete_preview": {
       const scope = deleteScope(str(a.p_entity), id);
       if (scope instanceof Response) return scope;

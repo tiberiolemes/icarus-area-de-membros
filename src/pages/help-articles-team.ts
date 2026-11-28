@@ -237,7 +237,7 @@ export const teamArticles: HelpArticle[] = [
         ],
         list: [
           "As aulas criadas direto no módulo aparecem antes das seções, sem título de seção.",
-          "Depois de criada, a aula não troca de seção nem passa do módulo para uma seção. Para mudar, crie a aula de novo no lugar certo e [arquive](/ajuda/arquivar-conteudo) a antiga.",
+          "Depois de criada, a aula não troca de seção nem passa do módulo para uma seção. Para mudar, crie a aula de novo no lugar certo e [arquive ou exclua](/ajuda/arquivar-conteudo) a antiga.",
         ],
       },
       {
@@ -278,7 +278,7 @@ export const teamArticles: HelpArticle[] = [
       ["A capa aparece cortada na página do curso", "No computador, a página do curso mostra a capa em um quadro quase quadrado, que corta as laterais. No tablet, ela vira uma faixa larga, que corta o topo e a base. Em **Capa do curso**, clique na imagem, no ponto que precisa aparecer, e depois em **Salvar foco**."],
       ["O curso não publica e cita o certificado", "Com o certificado ligado, o curso precisa do responsável preenchido e de pelo menos uma aula obrigatória publicada, com duração e que não seja de prévia. Veja [Configurar o certificado do curso](/ajuda/certificado-do-curso)."],
       ["Perdi o que estava digitando", "Trocar de aba ou fechar o editor descarta o que não foi salvo. Clique em **Salvar conteúdo** antes de sair."],
-      ["Não acho o botão de excluir", "Não existe exclusão. O caminho é [arquivar](/ajuda/arquivar-conteudo), que tira do ar e pode ser desfeito."],
+      ["Quero apagar uma aula, uma seção ou um módulo", "Abra o item pelo lápis e, no fim do editor, use **Excluir para sempre** na **Zona de perigo**. A exclusão não tem volta e apaga o progresso dos alunos no item. Se ele ainda pode servir, prefira [arquivar](/ajuda/arquivar-conteudo), que tira do ar e pode ser desfeito."],
     ],
     related: ["video-da-aula", "apresentacao-da-aula", "certificado-do-curso", "publicar-materiais"],
   },
@@ -435,7 +435,7 @@ export const teamArticles: HelpArticle[] = [
     trouble: [
       ["O curso não publica com o certificado ligado", "Falta o responsável, ou não há aula obrigatória publicada com duração. Se o curso usa o modelo global, confira se o modelo está preenchido em **Configurações**, na aba **Certificado**. Se todas as obrigatórias forem aulas de prévia, o certificado também é recusado. Ajuste e salve de novo."],
       ["Mudei o modelo e um certificado antigo continua igual", "É o esperado. Cada certificado guarda o responsável e a assinatura do momento da emissão."],
-      ["Os alunos concluíram tudo, mas o certificado não sai", "Uma aula obrigatória pode ter sido arquivada. Ela continua na lista exigida, e a emissão fica travada para todos. Restaure o item. Se a aula não deve mais contar, mude o **Estado** dela para **Rascunho** ou desmarque **Obrigatória para o certificado**. Veja [Arquivar e restaurar conteúdo](/ajuda/arquivar-conteudo)."],
+      ["Os alunos concluíram tudo, mas o certificado não sai", "Uma aula obrigatória pode ter sido arquivada. Ela continua na lista exigida, e a emissão fica travada para todos. Restaure o item. Se a aula não deve mais contar, mude o **Estado** dela para **Rascunho** ou desmarque **Obrigatória para o certificado**. Veja [Arquivar, restaurar ou excluir conteúdo](/ajuda/arquivar-conteudo)."],
       ["Sou instrutor e não vejo o envio de assinatura", "A assinatura do modelo e a de cada curso são enviadas por um administrador. Peça a alguém com esse papel."],
     ],
     related: ["criar-curso", "marca-da-plataforma"],
@@ -477,8 +477,8 @@ export const teamArticles: HelpArticle[] = [
   {
     slug: "arquivar-conteudo",
     category: "conteudo",
-    title: "Arquivar e restaurar conteúdo",
-    summary: "Não existe botão de excluir. Arquivar tira o conteúdo do ar e guarda tudo, para você poder voltar atrás.",
+    title: "Arquivar, restaurar ou excluir conteúdo",
+    summary: "Arquivar tira o conteúdo do ar e guarda tudo, para você poder voltar atrás. Excluir para sempre apaga o item e o que depende dele, sem volta.",
     sections: [
       {
         title: "Antes de arquivar",
@@ -493,23 +493,49 @@ export const teamArticles: HelpArticle[] = [
         title: "Arquivar",
         steps: [
           "Abra o curso, o módulo, a seção, a aula, a pasta ou o material.",
-          "Abra a seção **Arquivar registro**.",
-          "Clique em **Autorizar alteração crítica**.",
-          "Digite a sua **Senha atual** e clique em **Confirmar e executar**.",
-          "Confirme a pergunta do navegador.",
+          "Abra a seção **Arquivar registro** e clique em **Arquivar**.",
+          "Leia o aviso e clique em **Confirmar arquivamento**. Não é preciso digitar a senha.",
+          "Espere a mensagem **Registro arquivado**.",
         ],
       },
       {
         title: "Restaurar",
         steps: [
           "Abra o item arquivado.",
-          "Abra **Restaurar registro** e repita a confirmação com a senha.",
+          "Abra **Restaurar registro**, clique em **Restaurar** e depois em **Confirmar restauração**.",
         ],
+        note: "O item volta ao estado que tinha antes de ser arquivado, como **Publicado** ou **Rascunho**.",
+      },
+      {
+        title: "Excluir para sempre",
+        intro: "Vale para aula, seção, módulo, material e pasta de materiais. O curso não é excluído, só arquivado. Use quando o item não deve mais existir, como uma aula criada por engano.",
+        steps: [
+          "Abra o item no editor.",
+          "No fim do editor, na caixa **Zona de perigo**, clique em **Excluir para sempre**.",
+          "Leia o resumo do que será apagado, como aulas, o progresso dos alunos e comentários.",
+          "Clique em **Excluir para sempre** de novo para confirmar. Não é preciso digitar a senha.",
+          "O editor fecha, o item sai da lista e aparece a mensagem **Excluído**.",
+        ],
+      },
+      {
+        title: "O que se perde e o que fica",
+        list: [
+          "A aula leva junto o progresso, os favoritos, as anotações e os comentários dos alunos, a apresentação, o checklist e os pontos de ranking que vieram dela.",
+          "A seção leva as aulas dela, com tudo o que cada aula leva.",
+          "O módulo leva as seções e as aulas dele e o anúncio de lançamento ligado a ele.",
+          "O material leva o arquivo e o vínculo com as aulas. A pasta leva as subpastas e os materiais dentro delas.",
+          "Os certificados já emitidos ficam e continuam válidos na verificação. O registro da exclusão também fica na auditoria.",
+          "Um material que fica sem nenhuma aula volta para **Rascunho**. Antes de publicar de novo, confira a **Regra de acesso** dele em **Materiais**.",
+          "Uma aula obrigatória excluída sai da lista exigida para o certificado. Quem concluiu as demais obrigatórias passa a poder emitir, e quem já tem o certificado não ganha outro.",
+        ],
+        warn: "Não dá para desfazer. Se o item ainda pode servir, arquive em vez de excluir.",
       },
     ],
     trouble: [
       ["Aparece o aviso para usar arquivar ou restaurar com confirmação", "O item está arquivado, e por isso o salvamento comum é recusado. Restaure primeiro."],
-      ["Apareceu um aviso de muitas tentativas", "Há um limite de 5 confirmações de senha por minuto e de 20 por hora. Aguarde um minuto. Se o aviso continuar, espere a hora seguinte."],
+      ["Aparece o aviso de muitas solicitações", "Cada pessoa pode arquivar ou restaurar até 30 itens por minuto e excluir até 20. Aguarde um minuto e tente de novo."],
+      ["A exclusão avisou que alguns arquivos não foram apagados", "O item já foi excluído e não aparece mais para ninguém. Só alguns arquivos ficaram no armazenamento, ocupando espaço. Avise quem cuida do servidor da instalação para apagá-los."],
+      ["Aparece o aviso Registro indisponível ao excluir", "O item já não existe, talvez porque outra pessoa da equipe o excluiu. Feche o editor e confira a lista."],
     ],
     related: ["criar-curso", "certificado-do-curso", "publicar-materiais"],
   },
@@ -579,6 +605,20 @@ export const teamArticles: HelpArticle[] = [
           "Word, Excel e PowerPoint não são aceitos. Exporte em PDF antes de enviar.",
           "Vídeo não é aceito. Publique o vídeo no Bunny Stream ou no YouTube e use na aula. Veja [Colocar vídeo em uma aula](/ajuda/video-da-aula).",
         ],
+      },
+      {
+        title: "Excluir um material ou uma pasta",
+        steps: [
+          "Na lista **Arquivos**, clique em **Editar material**. Para uma pasta, clique em **Editar pasta** na lista **Pastas**.",
+          "No fim do editor, na caixa **Zona de perigo**, clique em **Excluir para sempre**.",
+          "Confira o resumo do que será apagado e clique em **Excluir para sempre** de novo.",
+        ],
+        list: [
+          "Excluir o material apaga o arquivo e tira o material de todas as aulas em que ele estava.",
+          "Excluir a pasta apaga as subpastas e todos os materiais dentro delas. O resumo diz quantos desses materiais estão em aulas, porque eles deixam de aparecer nelas.",
+          "Quando uma aula é excluída e o material fica sem nenhuma aula, ele volta para **Rascunho**. Antes de publicar de novo, confira a **Regra de acesso**, porque sem aula ele segue só a dele e a das pastas.",
+        ],
+        warn: "Não dá para desfazer. Para só tirar do ar, use **Arquivar registro**. Veja [Arquivar, restaurar ou excluir conteúdo](/ajuda/arquivar-conteudo).",
       },
       {
         title: "Quando o aluno consegue baixar",

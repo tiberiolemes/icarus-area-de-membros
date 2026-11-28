@@ -51,3 +51,17 @@ it("a demonstração exclui a pasta com o material e recusa entidade fora da lis
   expect((await member("/functions/v1/upload", { action: "delete", entity: "lessons", id: "00000000-0000-4000-8000-000000000310" })).ok).toBe(false);
   expect((await member("/rest/v1/rpc/app_admin_delete_preview", { p_entity: "lessons", p_id: "00000000-0000-4000-8000-000000000310" })).ok).toBe(false);
 });
+
+it("a demonstração arquiva e restaura sem senha, voltando ao estado anterior", async () => {
+  const call = await demo();
+  const lesson = "00000000-0000-4000-8000-000000000310";
+  const status = async () => (await call<{ items: { id: string; status: string }[] }>("/rest/v1/rpc/app_admin_list", { p_entity: "lessons" }))
+    .body.items.find(({ id }) => id === lesson)?.status;
+  const before = await status();
+  expect((await call("/rest/v1/rpc/app_admin_archive", { p_entity: "lessons", p_id: lesson, p_archived: true })).body)
+    .toEqual({ id: lesson, archived: true });
+  expect(await status()).toBe("archived");
+  await call("/rest/v1/rpc/app_admin_archive", { p_entity: "lessons", p_id: lesson, p_archived: false });
+  expect(await status()).toBe(before);
+  expect((await call("/rest/v1/rpc/app_admin_archive", { p_entity: "lessons", p_id: "00000000-0000-4000-8000-000000000999", p_archived: true })).ok).toBe(false);
+});

@@ -24,7 +24,7 @@ const current = { id: "6dd0a182-c806-412f-9aa5-ac7f819c7cb2", slug: "atual", tit
 const following = { ...current, id: "ff9bd951-cfc7-4722-aeaf-c29bcec9b84b", slug: "seguinte", title: "Aula seguinte" };
 const switchName = "Avançar para a próxima aula automaticamente";
 
-function mount({ autoAdvance = false, type = "text", provider = "supabase", next = true, nextAllowed = true, certificate = false } = {}) {
+function mount({ autoAdvance = false, type = "text", provider = "supabase", next = true, nextAllowed = true, certificate = false as false | "issued" | "existing" } = {}) {
   if (type === "video") {
     const tracks = Object.assign(new EventTarget(), { length: 0 }) as TextTrackList;
     vi.spyOn(HTMLMediaElement.prototype, "textTracks", "get").mockReturnValue(tracks);
@@ -60,7 +60,9 @@ function mount({ autoAdvance = false, type = "text", provider = "supabase", next
         break;
       case "app_progress":
         if (args.p_complete) completed = true;
-        body = { course_progress_percent: 50, certificate_code: certificate && args.p_complete ? "certificado" : null };
+        // O servidor devolve o código também quando o certificado já existia; só certificate_issued diz se esta conclusão emitiu.
+        body = { course_progress_percent: 50, certificate_code: certificate && args.p_complete ? "certificado" : null,
+          certificate_issued: certificate === "issued" && args.p_complete === true };
         break;
       case "app_notifications": body = { items: [], page: 1, page_size: 20, total: 0, unread_count: 0 }; break;
       default: throw new Error(`Requisição inesperada para ${name}`);
@@ -182,7 +184,7 @@ it("fim do vídeo com a opção desligada não conclui nem avança", async () =>
 it.each([
   ["sem próxima aula", { next: false }],
   ["próxima aula sem acesso", { nextAllowed: false }],
-  ["conclusão que emite certificado", { certificate: true }],
+  ["conclusão que emite certificado", { certificate: "issued" as const }],
 ])("não avança sem próxima aula, para aula sem acesso ou quando sai certificado (%s)", async (_case, options) => {
   const requests = mount({ autoAdvance: true, type: "video", ...options });
   await waitFor(() => expect(screen.getByRole("switch", { name: switchName })).toHaveAttribute("aria-checked", "true"));
@@ -190,6 +192,22 @@ it.each([
   await waitFor(() => expect(completions(requests)).toHaveLength(1));
   expect(await screen.findByText("Aula concluída")).toBeVisible();
   expect(screen.queryByText(/Próxima aula em/)).toBeNull();
+  expect(screen.getByText("Texto da aula atual")).toBeVisible();
+});
+
+it("aluno já certificado avança na aula bônus", async () => {
+  mount({ autoAdvance: true, certificate: "existing" });
+  await waitFor(() => expect(screen.getByRole("switch", { name: switchName })).toHaveAttribute("aria-checked", "true"));
+  fireEvent.click(screen.getByRole("button", { name: /^Marcar como concluída/ }));
+  expect(await screen.findByText("Texto da aula seguinte")).toBeVisible();
+  expect(screen.queryByText(/certificado emitido/)).toBeNull();
+});
+
+it("conclusão que emite certificado avisa a emissão e fica na aula", async () => {
+  mount({ autoAdvance: true, certificate: "issued" });
+  await waitFor(() => expect(screen.getByRole("switch", { name: switchName })).toHaveAttribute("aria-checked", "true"));
+  fireEvent.click(screen.getByRole("button", { name: /^Marcar como concluída/ }));
+  expect(await screen.findByText("Aula concluída e certificado emitido. Consulte seus certificados.")).toBeVisible();
   expect(screen.getByText("Texto da aula atual")).toBeVisible();
 });
 

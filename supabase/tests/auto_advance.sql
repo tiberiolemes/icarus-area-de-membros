@@ -37,5 +37,25 @@ select pg_temp.ok(public.app_profile('{"auto_advance":false}')->'auto_advance'='
 reset role;
 select pg_temp.ok((select auto_advance=false from public.profiles where id=pg_temp.id(1)),'preferência fica gravada no perfil');
 
+-- Só a conclusão que emite o certificado bloqueia o avanço; o certificado que já existia não.
+insert into public.courses(id,slug,title,status,access_mode,certificate_enabled,signer_name,signer_title) values(pg_temp.id(100),'curso-avanco','Curso com bônus','published','members',true,'Responsável fictício','Direção');
+insert into public.modules(id,course_id,slug,title,status) values(pg_temp.id(101),pg_temp.id(100),'modulo-avanco','Módulo','published');
+insert into public.sections(id,module_id,title,status) values(pg_temp.id(102),pg_temp.id(101),'Seção','published');
+insert into public.lessons(id,section_id,slug,title,status,type,duration_seconds) values
+ (pg_temp.id(103),pg_temp.id(102),'obrigatoria','Aula obrigatória','published','text',60),
+ (pg_temp.id(104),pg_temp.id(102),'bonus','Aula bônus','published','text',60);
+update public.courses set required_lesson_ids=array[pg_temp.id(103)] where id=pg_temp.id(100);
+set local role authenticated;
+select public.app_progress(pg_temp.id(103),0,true) as first_completion \gset
+select public.app_progress(pg_temp.id(104),0,true) as bonus_completion \gset
+select public.app_progress(pg_temp.id(103),0,true) as repeat_completion \gset
+reset role;
+select pg_temp.ok((:'first_completion'::jsonb->>'certificate_issued')::boolean and :'first_completion'::jsonb->>'certificate_code' is not null,'conclusão que emite o certificado devolve certificate_issued verdadeiro');
+select pg_temp.ok(:'bonus_completion'::jsonb->'certificate_issued'='false'::jsonb and :'bonus_completion'::jsonb->>'certificate_code'=:'first_completion'::jsonb->>'certificate_code','aula bônus depois do certificado devolve certificate_issued falso');
+select pg_temp.ok(:'repeat_completion'::jsonb->'certificate_issued'='false'::jsonb,'concluir de novo a aula obrigatória não conta como emissão');
+set local role authenticated;
+select pg_temp.ok(public.app_progress(pg_temp.id(104),0,false)->'certificate_issued'='false'::jsonb,'progresso sem conclusão devolve certificate_issued falso');
+reset role;
+
 select count(*) as auto_advance_assertions from auto_advance_checks;
 rollback;

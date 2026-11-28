@@ -617,6 +617,7 @@ export function LessonPage() {
     if (!found) return;
     const result = await rpc<{
       certificate_code?: string;
+      certificate_issued?: boolean;
       certificate_reason?: string;
       course_progress_percent: number;
     }>("app_progress", {
@@ -628,8 +629,9 @@ export function LessonPage() {
       void reconcileNotificationQueries(queryClient, { queryKey: notificationListKey(memberId) });
     }
     setProgressError("");
+    // O código volta também quando o certificado já existia; só certificate_issued diz que esta conclusão emitiu.
     setProgressFeedback(
-      result.certificate_code
+      result.certificate_issued
         ? "Aula concluída e certificado emitido. Consulte seus certificados."
         : result.course_progress_percent ===
               100 && result.certificate_reason
@@ -643,7 +645,7 @@ export function LessonPage() {
         queryKey: ["app_certificates"],
       }),
     ]);
-    if (!autoAdvance || result.certificate_code || !next || !nextLesson?.can_access || shownLesson.current !== found.id) return;
+    if (!autoAdvance || result.certificate_issued || !next || !nextLesson?.can_access || shownLesson.current !== found.id) return;
     if (origin === "button") navigate(next);
     else setAdvance({ lessonId: found.id, path: next, left: 5 });
   };

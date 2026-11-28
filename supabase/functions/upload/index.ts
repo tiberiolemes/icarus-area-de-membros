@@ -1,5 +1,5 @@
 import { actor, defaults, rpc, type Dependencies } from "../_shared/client.ts";
-import { boundedBody, endpoint, HttpError, json, text, uuid } from "../_shared/http.ts";
+import { boundedBody, endpoint, HttpError, json, sha256, text, uuid } from "../_shared/http.ts";
 import { formats, matchesSignature } from "../_shared/files.ts";
 const tooBig = (mime: string) => mime === "application/pdf" || mime.startsWith("image/") ? "Imagens aceitam até 500 KB e PDFs até 5 MB." : "Tipo ou tamanho de arquivo não permitido.";
 // A aula usa o Bunny Stream ou o YouTube; vídeo nenhum sobe para o Storage.
@@ -26,6 +26,7 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
       return await rpc(a.admin, "app_upload_finalize", { p_actor_id: a.userInfo.id, p_id: id });
     }
     if (body.action === "brand-asset-remove") return await removeBrandLogo(a, body);
+    if (body.action === "gravatar") return await saveGravatar(d, a);
     if (body.action === "delete") {
       const entity = text(body.entity, 32);
       if (!["lessons", "sections", "modules", "materials", "material_folders"].includes(entity)) throw new HttpError(422, "INVALID_INPUT", "Esta entidade não pode ser excluída.");
@@ -79,5 +80,34 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   await rpc(a.admin, "app_upload_finalize", { p_actor_id: a.userInfo.id, p_id: gate.id });
   return screenshot ? { id: gate.id, uploaded: true } : { id: gate.id, storage_path: gate.path, uploaded: true };
 }, d.env);
+// O servidor busca e guarda a foto: quem vê o avatar não fala com o Gravatar.
+async function saveGravatar(d: Dependencies, a: NonNullable<Awaited<ReturnType<typeof actor>>>) {
+  const gate = await rpc(a.admin, "app_gravatar_context", { p_actor_id: a.userInfo.id });
+  if (!gate?.check || typeof gate.email !== "string") return { avatar: false };
+  const done = (uploadId: string | null) => rpc(a.admin, "app_gravatar_done", { p_actor_id: a.userInfo.id, p_upload_id: uploadId });
+  let photo: Response;
+  try {
+    photo = await d.fetch(`https://gravatar.com/avatar/${await sha256(gate.email.trim().toLowerCase())}?s=160&d=404`, { redirect: "error", signal: AbortSignal.timeout(5_000) });
+  } catch { return { avatar: false }; } // Rede ou tempo esgotado: a consulta volta no próximo acesso.
+  if (photo.status === 404) { await photo.body?.cancel(); await done(null); return { avatar: false }; }
+  if (!photo.ok) { await photo.body?.cancel(); return { avatar: false }; }
+  const mime = photo.headers.get("content-type")?.split(";")[0].trim() ?? "";
+  let bytes: Uint8Array<ArrayBuffer> | null = null;
+  if (["image/jpeg", "image/png"].includes(mime)) {
+    try { bytes = await boundedBody(photo, 100 * 1024); }
+    catch (error) {
+      // Só o tamanho é recusa definitiva; conexão que cai ou tempo esgotado no meio da leitura não marcam.
+      if (!(error instanceof HttpError && error.status === 413)) return { avatar: false };
+    }
+  }
+  // Resposta definitiva com arquivo que não serve: marca como conferido para não repetir a cada acesso.
+  if (!bytes?.length || !matchesSignature(mime, bytes)) { await photo.body?.cancel().catch(() => {}); await done(null); return { avatar: false }; }
+  const reserved = await rpc(a.admin, "app_upload_access", { p_actor_id: a.userInfo.id, p_kind: "avatar", p_resource_id: a.userInfo.id, p_file_name: mime === "image/png" ? "gravatar.png" : "gravatar.jpg", p_content_type: mime, p_size_bytes: bytes.length });
+  if (reserved.bucket !== "icarus-private" || typeof reserved.path !== "string" || reserved.path.includes("..") || reserved.path.startsWith("/")) throw new HttpError(403, "FORBIDDEN", "Upload não permitido.");
+  const stored = await a.admin.storage.from("icarus-private").upload(reserved.path, new Blob([bytes], { type: mime }), { contentType: mime, upsert: false, cacheControl: "120" });
+  if (stored.error) return { avatar: false }; // A reserva pendente expira sozinha; a consulta volta no próximo acesso.
+  const result = await done(reserved.id);
+  return { avatar: result?.avatar_id === reserved.id };
+}
 export const handler = createHandler();
 if (import.meta.main) Deno.serve(handler);

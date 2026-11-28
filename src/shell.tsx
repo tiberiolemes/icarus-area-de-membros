@@ -32,7 +32,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
-import { roleLabel, rpc, safeUrl, signOut, type Profile } from "./api";
+import { edge, roleLabel, rpc, safeUrl, signOut, type Profile } from "./api";
+import { FallbackAvatar } from "./avatar-fallback";
 import { useBootstrap } from "./auth";
 import { usePrivateImageQuery } from "./media";
 import { NotificationBell } from "./pages/notifications";
@@ -121,6 +122,8 @@ const staffEntryLabels: Readonly<Record<string, string | undefined>> = {
   support: "Atendimento",
 };
 
+const gravatarAsked = new Set<string>();
+
 function AccountPhoto({ avatarId }: { avatarId: string }) {
   const { data } = usePrivateImageQuery("avatar", avatarId);
   const url = safeUrl(data?.url);
@@ -132,11 +135,12 @@ function AccountPhoto({ avatarId }: { avatarId: string }) {
   ) : null;
 }
 
-function AccountAvatar({ profile, initials, admin = false }: { profile: Profile; initials: string; admin?: boolean }) {
+// Foto enviada (ou guardada do Gravatar) por cima da imagem padrão, no aluno e no painel.
+function AccountAvatar({ profile }: { profile: Profile }) {
   return (
     <span className="avatar" aria-hidden="true">
-      {admin ? <UserRound size={18} /> : initials}
-      {!admin && profile.avatar_id && (
+      <FallbackAvatar seed={profile.id} size={40} />
+      {profile.avatar_id && (
         <AccountPhoto key={JSON.stringify([profile.id, profile.avatar_id])} avatarId={profile.avatar_id} />
       )}
     </span>
@@ -210,7 +214,7 @@ function ShellNavigation({ admin, profile, brand, brandIcon, onToggleTheme, onNa
       {collapseToggle ? <div className="rail-head">{brandLink}{collapseToggle}</div> : brandLink}
       {drawerInitials && (
         <div className="mobile-drawer-account">
-          <AccountAvatar profile={profile} initials={drawerInitials} />
+          <AccountAvatar profile={profile} />
           <div>
             <strong>{profile.full_name || "Membro"}</strong>
             <small>{profile.role === "admin" ? <AdminBadge /> : profile.plan_name || "Sem plano ativo"}</small>
@@ -329,6 +333,14 @@ export function Shell() {
     document.documentElement.dataset.theme = profile.theme ?? "light";
   }, [profile.theme, profile.id]);
   useEffect(() => setOpen(false), [pathname]);
+  // Uma vez por sessão e em segundo plano: o servidor busca e guarda a foto do Gravatar de quem ainda não tem.
+  useEffect(() => {
+    if (profile.avatar_id || profile.gravatar_checked_at || gravatarAsked.has(profile.id)) return;
+    gravatarAsked.add(profile.id);
+    void edge<{ avatar: boolean }>("upload", { action: "gravatar" })
+      .then((result) => { if (result.avatar) void boot.refetch(); })
+      .catch(() => {});
+  }, [profile.id, profile.avatar_id, profile.gravatar_checked_at]);
 
   async function toggleTheme() {
     await rpc("app_profile", { p_data: { theme: profile.theme === "dark" ? "light" : "dark" } });
@@ -403,7 +415,7 @@ export function Shell() {
             {!admin && modules.feedback && <FeedbackButton key={JSON.stringify([profile.id, pathname])} />}
             {!admin && <NotificationBell key={profile.id} memberId={profile.id} />}
             <Link className="account-link" to="/app/configuracoes" aria-label={`Sua conta: ${profile.full_name || "Membro"}`}>
-              <AccountAvatar profile={profile} initials={accountInitials} admin={admin} />
+              <AccountAvatar profile={profile} />
               <span className="account-details">
                 {profile.full_name}
                 <small>{profile.role === "admin" ? <AdminBadge /> : admin ? roleLabel(profile.role) : profile.plan_name || "Sem plano ativo"}</small>

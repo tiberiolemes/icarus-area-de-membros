@@ -2010,6 +2010,7 @@ export function AdminPlans() {
                   .map((v) => v.trim())
                   .filter(Boolean),
                 active: check(data, "active"),
+                interest_free: check(data, "interest_free"),
               });
             }}
           >
@@ -2053,6 +2054,18 @@ export function AdminPlans() {
               />
               Plano ativo
             </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                name="interest_free"
+                defaultChecked={editing?.interest_free === true}
+                aria-describedby="plan-interest-free-hint"
+              />
+              Parcelamento sem juros no cartão
+            </label>
+            <small className="check-hint" id="plan-interest-free-hint">
+              Ligue só se a sua conta do Asaas não repassa juros do parcelamento ao aluno.
+            </small>
           </Form>
           </FormHeadingTarget.Provider>
         </section>

@@ -312,6 +312,17 @@ export const memberArticles: HelpArticle[] = [
         ],
       },
       {
+        title: "Avançar para a próxima aula automaticamente",
+        intro: "Abaixo de **Marcar como concluída** fica o interruptor **Avançar para a próxima aula automaticamente**. Ele começa desligado e vale para todas as aulas da sua conta.",
+        list: [
+          "Com ele ligado, **Marcar como concluída** leva direto para a próxima aula assim que a plataforma confirma a conclusão.",
+          "Com ele ligado, quando o vídeo ou o áudio chega ao fim, a aula é marcada como concluída e aparece **Próxima aula em 5 segundos**. Clique em **Ir agora** para seguir na hora ou em **Cancelar** para ficar na aula.",
+          "Ele não avança na última aula, quando a próxima aula não está liberada para o seu plano ou quando a conclusão emite o seu certificado, para você ver o aviso. Com o certificado já emitido, as aulas seguintes, como as de bônus, voltam a avançar.",
+          "Com ele desligado, o fim do vídeo não marca nada. A conclusão continua sendo pelo botão.",
+        ],
+        warn: "Com o interruptor ligado, chegar ao fim do vídeo conta como conclusão, e a conclusão não pode ser desfeita.",
+      },
+      {
         title: "Pular para um capítulo",
         steps: [
           "Abra a aba **Descrição**.",
@@ -712,6 +723,16 @@ export const memberArticles: HelpArticle[] = [
           "Arraste o controle **Posição do recorte** até o enquadramento ficar bom.",
           "Clique em **Salvar foto**.",
         ],
+        note: "A foto enviada por você sempre vale mais que qualquer outra e troca a do Gravatar, se houver.",
+      },
+      {
+        title: "De onde vem a imagem do seu perfil",
+        intro: "A imagem aparece no topo, no seu perfil e nas suas publicações da comunidade.",
+        list: [
+          "Se você enviou uma foto, é ela que aparece.",
+          "Sem foto enviada, na primeira entrada a plataforma procura uma foto ligada ao seu e-mail no Gravatar. Se encontrar, guarda uma cópia e passa a mostrar essa foto.",
+          "Sem foto nenhuma, aparece uma imagem gerada em preto, cinza e branco. Ela é sempre a mesma para a sua conta.",
+        ],
       },
       {
         title: "Escolher tema claro ou escuro",
@@ -807,7 +828,18 @@ export const memberArticles: HelpArticle[] = [
           "Abra **Configurações** e entre na aba **Assinatura**.",
           "Em **Plano atual**, confira o nome do plano e a validade.",
         ],
-        note: "A compra vale pelo período do plano, indicado em meses ao lado do preço. Quando ele termina, o acesso só continua com uma nova compra.",
+        note: "A compra vale pelo período do plano, indicado em meses logo abaixo do nome. Quando ele termina, o acesso só continua com uma nova compra.",
+      },
+      {
+        title: "Entender o preço de cada plano",
+        intro: "Em **Planos disponíveis**, cada plano aparece em um cartão com o nome, o tempo de acesso, a parcela em destaque e os benefícios.",
+        list: [
+          "A parcela em destaque é o preço dividido em 12 vezes no cartão, arredondado para cima no centavo. Logo abaixo vem o valor à vista.",
+          "Quando o cartão diz **sem juros**, o parcelamento no cartão não tem acréscimo.",
+          "Quando o cartão diz **em até 12x no cartão**, o parcelamento pode ter juros. O valor final da parcela aparece na hora do pagamento.",
+          "Plano gratuito aparece como **Gratuito**, sem parcela.",
+          "O plano que você já tem mostra **Seu plano atual** no lugar do botão **Assinar**.",
+        ],
       },
       {
         title: "Assinar",
@@ -868,6 +900,15 @@ export const memberArticles: HelpArticle[] = [
           "Clique em **Enviar solicitação**.",
         ],
         warn: "O pedido não apaga a conta na hora. A equipe analisa antes, porque alguns registros precisam ser mantidos por obrigação legal.",
+      },
+      {
+        title: "Foto do Gravatar",
+        intro: "Quem ainda não tem foto recebe uma busca no Gravatar, o serviço de fotos de perfil da Automattic, na primeira entrada.",
+        list: [
+          "A plataforma envia ao Gravatar só um código calculado a partir do seu e-mail, e não o e-mail em si.",
+          "A consulta é feita pelo servidor da plataforma. Quem vê a sua foto não acessa o Gravatar.",
+          "Se houver foto, uma cópia fica guardada na plataforma, como uma foto que você enviasse. Para trocar, envie outra em **Configurações**, aba **Meu perfil**.",
+        ],
       },
       {
         title: "Ler a política de privacidade",

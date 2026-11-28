@@ -886,13 +886,17 @@ export const teamArticles: HelpArticle[] = [
           },
           "Informe o **Preço em reais** e os **Meses de acesso**.",
           "Escreva os **Benefícios, um por linha**.",
+          {
+            text: "Marque **Parcelamento sem juros no cartão** só se a sua conta do Asaas não repassa juros do parcelamento ao aluno.",
+            note: "Com a marcação, o cartão do plano diz, por exemplo, **12x de R$ 49,00 sem juros**. Sem ela, diz **em até 12x de R$ 49,00 no cartão** e avisa que o valor final da parcela é confirmado no pagamento. A marcação muda só o texto. Quem decide os juros é a configuração da conta do Asaas.",
+          },
           "Mantenha **Plano ativo** marcado e clique em **Salvar plano**.",
         ],
       },
       {
         title: "Onde o plano aparece",
         list: [
-          "Na aba **Assinatura** das configurações do aluno, com o botão **Assinar**.",
+          "Na aba **Assinatura** das configurações do aluno, em um cartão com a parcela de 12 vezes em destaque, o valor à vista e o botão **Assinar**.",
           "No checkout, que é a página de pagamento. O link é o endereço da sua plataforma seguido de `/checkout?plano=` e do endereço do plano, como em `https://membros.seudominio.com.br/checkout?plano=plano-anual`. É esse link que você divulga.",
           "Nas regras de acesso de cursos, materiais, espaços da comunidade e encontros.",
         ],

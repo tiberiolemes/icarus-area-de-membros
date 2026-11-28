@@ -879,6 +879,7 @@ RLS ativada.
 | `benefits` | `jsonb` | Não | `'[]'::jsonb` |
 | `active` | `boolean` | Não | `false` |
 | `created_at` | `timestamp with time zone` | Não | `now()` |
+| `interest_free` | `boolean` | Não | `false` |
 
 **Chaves e restrições**
 
@@ -1016,6 +1017,8 @@ RLS ativada.
 | `created_at` | `timestamp with time zone` | Não | `now()` |
 | `avatar_id` | `uuid` | Sim | — |
 | `password_setup_required` | `boolean` | Não | `false` |
+| `auto_advance` | `boolean` | Não | `false` |
+| `gravatar_checked_at` | `timestamp with time zone` | Sim | — |
 
 **Chaves e restrições**
 

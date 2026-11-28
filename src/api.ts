@@ -261,6 +261,8 @@ export type Profile = {
   access_ends_at: string | null;
   suspended: boolean;
   onboarding_complete: boolean;
+  auto_advance?: boolean;
+  gravatar_checked_at?: string | null;
 };
 export type Plan = {
   id: string;
@@ -270,6 +272,7 @@ export type Plan = {
   access_months: number;
   benefits: string[];
   active: boolean;
+  interest_free?: boolean;
 };
 export type Bootstrap = {
   profile: Profile;

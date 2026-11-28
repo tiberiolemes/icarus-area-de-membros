@@ -629,7 +629,7 @@ export const transport: typeof fetch = async (input, init) => {
     if (lesson && !lesson.can_access) return fail("Aula indisponível.", 403);
     const youtube = lesson && str((lesson.lesson as Row | undefined)?.video_id);
     if (youtube && /^[A-Za-z0-9_-]{11}$/.test(youtube))
-      return Response.json({ url: `https://www.youtube-nocookie.com/embed/${youtube}?rel=0`, expires_at: expires(), provider: "youtube" });
+      return Response.json({ url: `https://www.youtube-nocookie.com/embed/${youtube}?rel=0&enablejsapi=1`, expires_at: expires(), provider: "youtube" });
     if (lesson || file) {
       const media = lesson ? await getVideo() : attachment ??= URL.createObjectURL(new Blob([roteiro], { type: "text/plain" }));
       return Response.json({ url: media, expires_at: expires(), provider: "storage" });
@@ -639,6 +639,8 @@ export const transport: typeof fetch = async (input, init) => {
       expires_at: expires(), provider: "storage", focus: covered.cover_focus ?? "50% 50%" });
     return fail("Arquivo indisponível nesta demonstração.", 404);
   }
+  // A demo não fala com o Gravatar: a imagem padrão gerada continua no lugar.
+  if (path === "/functions/v1/upload" && a.action === "gravatar") return Response.json({ avatar: false });
   if (path === "/functions/v1/upload" && a.action === "delete") {
     if (profile.role !== "admin") return fail("Você não tem permissão para esta ação.", 403, "42501");
     const scope = deleteScope(str(a.entity), str(a.id));

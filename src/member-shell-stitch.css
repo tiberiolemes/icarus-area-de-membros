@@ -176,6 +176,17 @@
 
 .avatar:has(> .member-account-photo) { position: relative; }
 
+/* Imagem padrão gerada: ocupa o contêiner e segue o arredondamento dele (topo, perfil e comunidade).
+   O contorno mantém o desenho visível quando a semente sorteia fundo preto no tema escuro. */
+.fallback-avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  outline: 1px solid var(--ic-border);
+  outline-offset: -1px;
+}
+
 .member-account-photo {
   position: absolute;
   inset: 0;

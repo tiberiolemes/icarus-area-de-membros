@@ -269,6 +269,7 @@ export type Plan = {
   access_months: number;
   benefits: string[];
   active: boolean;
+  interest_free?: boolean;
 };
 export type Bootstrap = {
   profile: Profile;

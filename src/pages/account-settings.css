@@ -36,8 +36,85 @@
 
 .student-account-plans { margin-block-start: var(--stitch-space-lg); }
 
-.student-account .plan-row li {
+.plan-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--stitch-space-md);
+}
+
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stitch-space-sm);
+  min-width: 0;
+  padding: var(--stitch-space-lg);
+  border: var(--stitch-border-width) solid var(--stitch-border-subtle);
+  border-radius: var(--stitch-radius-lg);
+  background: var(--stitch-surface-card);
+}
+
+.plan-card :is(h3, p) { margin: 0; }
+
+.plan-card h3 {
+  font-size: var(--stitch-type-headline-sm-size);
+  line-height: var(--stitch-type-headline-sm-line);
+  font-weight: var(--stitch-type-headline-sm-weight);
+}
+
+.plan-card-duration,
+.plan-card-price p {
+  color: var(--stitch-text-secondary);
+}
+
+.plan-card-price {
+  display: grid;
+  gap: var(--stitch-space-xs);
+  margin-block: var(--stitch-space-sm);
+  font-size: var(--stitch-type-body-lg-size);
+  line-height: var(--stitch-type-body-lg-line);
+}
+
+.plan-card .plan-card-installment { color: var(--stitch-text-primary); }
+
+.plan-card-installment strong {
+  font-size: var(--stitch-type-headline-lg-mobile-size);
+  line-height: var(--stitch-type-headline-lg-mobile-line);
+  font-weight: var(--stitch-type-headline-lg-mobile-weight);
+  letter-spacing: var(--stitch-type-headline-lg-mobile-tracking);
+}
+
+.plan-card .plan-card-note {
+  font-size: var(--stitch-type-body-md-size);
+  line-height: var(--stitch-type-body-md-line);
+}
+
+.plan-card ul {
+  display: grid;
+  gap: var(--stitch-space-sm);
+  margin: 0 0 var(--stitch-space-sm);
+  padding: 0;
+  list-style: none;
+}
+
+.plan-card li {
+  display: flex;
+  gap: var(--stitch-space-sm);
   text-wrap: balance;
+}
+
+.plan-card li svg {
+  flex: none;
+  margin-block-start: 1px;
+}
+
+.plan-card > .button {
+  width: 100%;
+  margin-block-start: auto;
+}
+
+.plan-card > .badge {
+  align-self: flex-start;
+  margin-block-start: auto;
 }
 
 .student-account > .tabs {

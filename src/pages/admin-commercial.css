@@ -282,6 +282,14 @@
   scroll-margin-block-start: var(--stitch-topbar-height);
 }
 
+/* Dica da caixa de seleção, alinhada ao texto dela como o erro de .check-error. */
+.admin-commercial .commercial-plan-editor .check-hint {
+  display: block;
+  margin: -8px 0 12px 28px;
+  color: var(--stitch-text-secondary);
+  line-height: 1.5;
+}
+
 .admin-commercial :is(.commercial-access, .commercial-detail > .notice) {
   grid-column: 1 / -1;
 }

@@ -808,7 +808,18 @@ export const memberArticles: HelpArticle[] = [
           "Abra **Configurações** e entre na aba **Assinatura**.",
           "Em **Plano atual**, confira o nome do plano e a validade.",
         ],
-        note: "A compra vale pelo período do plano, indicado em meses ao lado do preço. Quando ele termina, o acesso só continua com uma nova compra.",
+        note: "A compra vale pelo período do plano, indicado em meses logo abaixo do nome. Quando ele termina, o acesso só continua com uma nova compra.",
+      },
+      {
+        title: "Entender o preço de cada plano",
+        intro: "Em **Planos disponíveis**, cada plano aparece em um cartão com o nome, o tempo de acesso, a parcela em destaque e os benefícios.",
+        list: [
+          "A parcela em destaque é o preço dividido em 12 vezes no cartão, arredondado para cima no centavo. Logo abaixo vem o valor à vista.",
+          "Quando o cartão diz **sem juros**, o parcelamento no cartão não tem acréscimo.",
+          "Quando o cartão diz **em até 12x no cartão**, o parcelamento pode ter juros. O valor final da parcela aparece na hora do pagamento.",
+          "Plano gratuito aparece como **Gratuito**, sem parcela.",
+          "O plano que você já tem mostra **Seu plano atual** no lugar do botão **Assinar**.",
+        ],
       },
       {
         title: "Assinar",

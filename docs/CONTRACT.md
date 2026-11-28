@@ -14,7 +14,7 @@ Consulte o [mapa técnico](architecture.md) para seguir uma ação da interface 
 
 ## DTOs compartilhados
 Profile: {id,full_name,email?,phone,bio,company:object,role,theme,plan_name,access_ends_at,suspended,onboarding_complete,auto_advance}. Plano/role nunca editáveis por app_profile.
-Plan: {id,name,slug,price_cents,access_months,benefits:string[],active}. Não semear preço/copy da arr.academy.
+Plan: {id,name,slug,price_cents,access_months,benefits:string[],active,interest_free}. Não semear preço/copy da arr.academy.
 Course: {id,slug,title,description,cover_url,status,access_mode,plan_ids,certificate_enabled,required_lessons,total_lessons,completed_lessons,progress_percent,duration_seconds,can_access}.
 Module: {id,slug,title,order_index,can_access,sections:Section[]}; Section: {id,title,order_index,is_bonus,lessons:LessonSummary[]}.
 LessonSummary: {id,slug,title,duration_seconds,type,order_index,can_access,completed}. lesson_detail inclui body/video_id/storage_path SOMENTE quando autorizado.

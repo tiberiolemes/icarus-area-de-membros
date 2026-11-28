@@ -879,6 +879,7 @@ RLS ativada.
 | `benefits` | `jsonb` | Não | `'[]'::jsonb` |
 | `active` | `boolean` | Não | `false` |
 | `created_at` | `timestamp with time zone` | Não | `now()` |
+| `interest_free` | `boolean` | Não | `false` |
 
 **Chaves e restrições**
 

@@ -25,7 +25,7 @@ const profiles: Profile[] = demoAccounts.map((account, index) => ({
 }));
 export const plans: Plan[] = [
   { id: demoId(21), name: "Membro Pro · Demonstração", slug: "pro-demo", price_cents: 0, access_months: 12,
-    benefits: ["Cursos, materiais e comunidade de demonstração"], active: true },
+    benefits: ["Cursos, materiais e comunidade de demonstração"], active: true, interest_free: false },
 ];
 export const spaces = [
   { id: demoId(31), name: "Geral", description: "Conversas e apresentações da comunidade de demonstração.", can_post: true },

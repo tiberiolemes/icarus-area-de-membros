@@ -3,6 +3,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
   within,
 } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -168,4 +169,20 @@ it("expõe o benefício de um plano como texto e preserva o valor cadastrado", a
       name: "Editar plano DEMONSTRAÇÃO local",
     }),
   ).toBeEnabled();
+});
+
+it("formulário de plano envia interest_free", async () => {
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: vi.fn() });
+  const requests = show("/admin/planos", [
+    { id, name: "DEMONSTRAÇÃO local", slug: "demo-local", price_cents: 58800, access_months: 12, active: true, benefits: [], interest_free: false },
+  ]);
+  fireEvent.click(await screen.findByRole("button", { name: "Editar plano DEMONSTRAÇÃO local" }));
+  const box = screen.getByRole("checkbox", { name: "Parcelamento sem juros no cartão" });
+  expect(box).not.toBeChecked();
+  expect(box).toHaveAccessibleDescription("Ligue só se a sua conta do Asaas não repassa juros do parcelamento ao aluno.");
+  fireEvent.click(box);
+  fireEvent.click(screen.getByRole("button", { name: "Salvar plano" }));
+  await waitFor(() => expect(requests.mock.calls.some(([url]) => String(url).endsWith("app_admin_save"))).toBe(true));
+  const [, request] = requests.mock.calls.find(([url]) => String(url).endsWith("app_admin_save"))!;
+  expect(JSON.parse(String(request.body))).toMatchObject({ p_entity: "plans", p_id: id, p_data: { interest_free: true } });
 });

@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { useState } from "react";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { transport, url as demoUrl } from "../demo/transport";
 import { client } from "./api";
 import { AuthProvider } from "./auth";
@@ -172,19 +173,67 @@ it("localStorage que lança erro não quebra o formulário", async () => {
   expect(screen.queryByRole("button", { name: "Recuperar rascunho" })).not.toBeInTheDocument();
 });
 
-it.each(["SIGNED_OUT", "INITIAL_SESSION"] as const)("%s sem sessão apaga todos os rascunhos do Icarus", (event) => {
+function observeAuth() {
   const auth = vi.spyOn(client().auth, "onAuthStateChange").mockReturnValue({
     data: { subscription: { id: "auth-test", callback: vi.fn(), unsubscribe: vi.fn() } },
   });
   render(<AuthProvider><p>Autenticação</p></AuthProvider>);
+  return (event: AuthChangeEvent, session: Session | null = null) =>
+    act(() => { void auth.mock.calls[0][0](event, session); });
+}
+
+it.each(["SIGNED_OUT", "INITIAL_SESSION"] as const)("%s sem sessão armazenada apaga os rascunhos do Icarus", (event) => {
+  const emit = observeAuth();
   show();
   typeTitle("Rascunho com gravação pendente");
   seed([["title", "Rascunho privado"]]);
   localStorage.setItem("icarus:draft:outra-conta:outro-rascunho", "{}");
   localStorage.setItem("outro-site:rascunho", "Manter");
-  act(() => { void auth.mock.calls[0][0](event, null); });
+  emit(event);
   tick();
   expect(Object.keys(localStorage)).toEqual(["outro-site:rascunho"]);
+});
+
+const session: Session = {
+  access_token: "access-token-de-teste",
+  refresh_token: "refresh-token-de-teste",
+  token_type: "bearer",
+  expires_in: 3600,
+  user: { id: owner, aud: "authenticated", app_metadata: {}, user_metadata: {}, created_at: "2026-11-28" },
+};
+
+it("INITIAL_SESSION com sessão mantém o rascunho", () => {
+  const emit = observeAuth();
+  seed([["title", "Rascunho privado"]]);
+  const stored = localStorage.getItem(key);
+  emit("INITIAL_SESSION", session);
+  expect(localStorage.getItem(key)).toBe(stored);
+});
+
+it("INITIAL_SESSION nula mantém o rascunho se ainda houver uma sessão expirada no storage do cliente", () => {
+  const auth = client().auth as unknown as { storage: Storage; storageKey: string };
+  const emit = observeAuth();
+  auth.storage.setItem(auth.storageKey, JSON.stringify({ ...session, expires_at: Math.floor(Date.now() / 1000) - 1 }));
+  seed([["title", "Rascunho privado"]]);
+  const stored = localStorage.getItem(key);
+  emit("INITIAL_SESSION");
+  expect(localStorage.getItem(key)).toBe(stored);
+});
+
+it("abrir outra aba com autenticação por aba preserva os rascunhos compartilhados", () => {
+  const auth = client().auth as unknown as { storage: Storage; storageKey: string };
+  const { storage, storageKey } = auth;
+  const emit = observeAuth();
+  auth.storage = sessionStorage;
+  auth.storageKey = "icarus-static-demo-auth";
+  try {
+    seed([["title", "Rascunho da aba autenticada"]]);
+    const stored = localStorage.getItem(key);
+    emit("INITIAL_SESSION");
+    expect(localStorage.getItem(key)).toBe(stored);
+  } finally {
+    Object.assign(auth, { storage, storageKey });
+  }
 });
 
 it.each(["Recuperar rascunho", "Descartar"])("protege o rascunho até escolher %s e volta a gravar após a escolha", (action) => {

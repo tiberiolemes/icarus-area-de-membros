@@ -131,3 +131,13 @@ O que mudou e foi conferido:
 - No navegador (demo, Chromium do Playwright, 1280 e 360 px, tema claro e escuro), a lista de Materiais mostra "Rascunho · Sem arquivo" no material criado sem arquivo (o defeito 1 acima); arquivar o curso A e ir para o curso B sem recarregar mostra **Arquivar registro** em B, sem a mensagem de A, e A volta como **Restaurar registro**; com a barra recolhida e foco pelo teclado, a dica começa em 76 px e o anel de foco termina em 68 px, no painel e na área do aluno; o rótulo do avanço automático tem 14 px. Sem rolagem horizontal a 360 px e sem erro de página. Capturas em `artefatos/qa-2-13/final-fixes/`.
 
 A corrida em que outra sessão vincula o material a uma aula durante a exclusão não se reproduz numa sessão só. A nova checagem do vínculo ficou coberta pelos testes de material que volta para rascunho, sem um teste de concorrência próprio.
+
+## Stack real
+
+Em 28/nov/2026, a cópia `icarus-melhorias-qa` rodou com Auth, Storage, PostgREST, Kong e Edge (`functions serve` do branch), o app em `127.0.0.1:8092` e um admin criado pelo Auth admin API. A prova ficou parcial porque a Docker da máquina tinha 76 containers de outros projetos: o DNS interno teve tempo esgotado e o Edge Runtime cancelou workers por limite de CPU (460 registros de "CPU time hard limit reached").
+
+- **MP4 recusado:** comprovado. A tela recusa ao soltar e ao escolher, no bloco Materiais da aula e no editor de Materiais, com "A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube." e sem chamada a `upload` ou Storage. O `reserve` direto com `.mp4` devolve 422 `INVALID_FILE` com a mesma frase.
+- **PDF na aula:** a reserva devolveu `material/<id>/<upload>.pdf` e o objeto chegou a `storage.objects`, mas o `finalize` voltou 503 do Edge. O material ficou em rascunho, sem arquivo, com a mensagem de reenvio prevista. Publicação não comprovada.
+- **Exclusões:** não comprovadas. A exclusão da aula respondeu 200 com `files_removed: 0` numa rodada sem arquivo e 546 `WORKER_LIMIT` na rodada com arquivo; a do material, 502. O objeto sentinela fora de `lesson/` e `material/` ficou intacto.
+
+Nenhum defeito do produto apareceu. Falta repetir `real-stack/qa.mjs` numa Docker sem a carga dos outros projetos. Relatório completo em `.superpowers/sdd/2026-11-28-melhorias-painel/real-stack-report.md`; capturas e scripts em `artefatos/qa-2-13/real-stack/`.

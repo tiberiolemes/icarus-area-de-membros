@@ -51,7 +51,7 @@ const tickets: Ticket[] = [{
 }];
 const folder = { id: demoId(61), name: "Roteiros de curso", count: 1 };
 export const material: Material = {
-  id: demoId(62), folder_id: folder.id, lesson_id: demoId(301), name: "Roteiro de curso",
+  id: demoId(62), folder_id: folder.id, lesson_ids: [demoId(301)], name: "Roteiro de curso",
   description: "Modelo para planejar aulas, materiais e atividades.",
   file_type: "text/plain", size_bytes: 160, can_access: true,
 };

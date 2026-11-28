@@ -1,6 +1,6 @@
 # Dicionário de dados do Icarus
 
-**52 tabelas e 376 colunas** nos esquemas `public` e `app_private`.
+**53 tabelas e 377 colunas** nos esquemas `public` e `app_private`.
 
 Veja o [mapa técnico](architecture.md) para localizar os fluxos e visualizar os relacionamentos. Este inventário descreve a estrutura das tabelas da aplicação. Os esquemas gerenciados pelo Supabase, `auth` e `storage`, aparecem quando são destino de uma chave estrangeira.
 
@@ -628,6 +628,25 @@ RLS ativada.
 - `material_folders_name_check` — `CHECK (((length(name) >= 1) AND (length(name) <= 200)))`
 - `material_folders_status_check` — `CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'archived'::text])))`
 
+## `public.material_lessons`
+
+RLS ativada.
+
+| Coluna | Tipo PostgreSQL | Aceita nulo | Padrão |
+| --- | --- | --- | --- |
+| `material_id` | `uuid` | Não | — |
+| `lesson_id` | `uuid` | Não | — |
+
+**Chaves e restrições**
+
+- `material_lessons_pkey` — `PRIMARY KEY (material_id, lesson_id)`
+- `material_lessons_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.lessons(id) ON DELETE CASCADE`
+- `material_lessons_material_id_fkey` — `FOREIGN KEY (material_id) REFERENCES public.materials(id) ON DELETE CASCADE`
+
+**Índices adicionais**
+
+- `CREATE INDEX material_lessons_lesson ON public.material_lessons USING btree (lesson_id)`
+
 ## `public.materials`
 
 RLS ativada.
@@ -636,7 +655,6 @@ RLS ativada.
 | --- | --- | --- | --- |
 | `id` | `uuid` | Não | `gen_random_uuid()` |
 | `folder_id` | `uuid` | Sim | — |
-| `lesson_id` | `uuid` | Sim | — |
 | `name` | `text` | Não | — |
 | `description` | `text` | Não | `''::text` |
 | `file_type` | `text` | Não | `'application/pdf'::text` |
@@ -651,7 +669,6 @@ RLS ativada.
 
 - `materials_pkey` — `PRIMARY KEY (id)`
 - `materials_folder_id_fkey` — `FOREIGN KEY (folder_id) REFERENCES public.material_folders(id)`
-- `materials_lesson_id_fkey` — `FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)`
 - `materials_access_mode_check` — `CHECK ((access_mode = ANY (ARRAY['members'::text, 'subscribers'::text, 'plans'::text])))`
 - `materials_description_check` — `CHECK ((length(description) <= 4000))`
 - `materials_name_check` — `CHECK (((length(name) >= 1) AND (length(name) <= 200)))`
@@ -660,7 +677,7 @@ RLS ativada.
 
 **Índices adicionais**
 
-- `CREATE INDEX materials_parent ON public.materials USING btree (folder_id, lesson_id)`
+- `CREATE INDEX materials_parent ON public.materials USING btree (folder_id)`
 
 ## `public.moderation_events`
 

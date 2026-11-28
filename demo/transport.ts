@@ -100,7 +100,7 @@ const findLesson = (id: unknown, profile: Profile) => {
       return { course, module, lesson, can_access: lesson.can_access, reason: lesson.can_access ? null : "Acesso restrito",
         previous_id: lessons[index - 1]?.id ?? null, next_id: lessons[index + 1]?.id ?? null,
         position_seconds: progressOf(profile)[lesson.id]?.position_seconds ?? 0, completed: lesson.completed,
-        materials: lesson.id === material.lesson_id ? [material] : [] };
+        materials: material.lesson_ids?.includes(lesson.id) ? [material] : [] };
     }
   }
   return null;
@@ -396,6 +396,16 @@ function call(name: string, a: Args, profile: Profile) {
       if (!["courses", "modules", "sections", "lessons", "material_folders", "materials", "plans", "spaces"].includes(entity))
         return fail("Esta alteração exige uma instalação do Icarus.", 501);
       return saveRow(state.records[entity] ??= [], a.p_data as Args, id);
+    }
+    case "app_admin_unlink_material": {
+      const row = state.records.materials.find((item) => item.id === a.p_material_id);
+      const links = Array.isArray(row?.lesson_ids) ? row.lesson_ids.map(String) : [];
+      if (!row || !links.includes(lessonId)) return fail("Registro indisponível.");
+      const rest = links.filter((item) => item !== lessonId);
+      row.lesson_ids = rest;
+      // Sem nenhuma aula, o material volta para rascunho, como no servidor.
+      if (!rest.length && row.status !== "archived") row.status = "draft";
+      return { id: row.id, status: row.status ?? "published" };
     }
     case "app_admin_default_section": {
       const module = state.records.modules.find((row) => row.id === a.p_module_id);

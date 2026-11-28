@@ -13,7 +13,7 @@ Contrato de `docs/CONTRACT.md`, sem escrita direta do browser. Todas as RPCs ret
 | sections | module_id,title,order_index,is_bonus,status | admin/instructor |
 | lessons | section_id,slug,title,body,type,duration_seconds,video_id,storage_path,is_preview,is_required,order_index,status | admin/instructor |
 | material_folders | name,parent_id,status,access_mode,plan_ids | admin/instructor |
-| materials | name,description,folder_id,lesson_id,file_type,size_bytes,storage_path,status,access_mode,plan_ids | admin/instructor |
+| materials | name,description,folder_id,lesson_ids,file_type,size_bytes,storage_path,status,access_mode,plan_ids (`lesson_id` é aceito e ignorado desde a 2.13.0) | admin/instructor |
 | plans | name,slug,price_cents,access_months,benefits,active | admin |
 | spaces | name,description,status,access_mode,plan_ids,order_index | admin/moderator |
 | legal_versions | kind,version,title,body,published,demo | admin |

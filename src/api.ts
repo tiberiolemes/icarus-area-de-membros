@@ -330,7 +330,7 @@ export type Material = {
   file_type: string;
   size_bytes: number;
   folder_id: string;
-  lesson_id?: string;
+  lesson_ids?: string[];
   can_access: boolean;
 };
 export type Post = {

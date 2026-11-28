@@ -435,7 +435,9 @@ function call(name: string, a: Args, profile: Profile) {
       const scope = deleteScope(str(a.p_entity), id);
       if (scope instanceof Response) return scope;
       return {
-        sections: scope.sections.length, lessons: scope.lessons.length, materials: scope.materials.length,
+        // Como no banco: a seção automática sai com o módulo, mas não entra no resumo.
+        sections: recordsFor("sections").filter((row) => scope.sections.includes(row.id) && !row.is_default).length,
+        lessons: scope.lessons.length, materials: scope.materials.length,
         folders: scope.folders.filter((folder) => folder !== id).length,
         students: Object.values(state.progress).filter((rows) => scope.lessons.some((lesson) => lesson in rows)).length,
         comments: state.lessonComments.filter((row) => scope.lessons.includes(str(row.lesson_id))).length,

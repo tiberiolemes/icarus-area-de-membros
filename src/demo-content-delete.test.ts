@@ -26,7 +26,7 @@ it("a demonstração mostra o alcance e exclui o módulo com seções e aulas, d
   const lessons = ["300", "301", "302"].map((n) => `00000000-0000-4000-8000-000000000${n}`);
   const material = "00000000-0000-4000-8000-000000000062";
   expect((await call("/rest/v1/rpc/app_admin_delete_preview", { p_entity: "modules", p_id: module })).body).toEqual({
-    sections: 1, lessons: 3, materials: 0, folders: 0, students: 1, comments: 1, linked_materials: 0, orphaned_materials: 1,
+    sections: 0, lessons: 3, materials: 0, folders: 0, students: 1, comments: 1, linked_materials: 0, orphaned_materials: 1,
   });
   expect((await call("/functions/v1/upload", { action: "delete", entity: "modules", id: module })).body)
     .toEqual({ deleted: true, files_removed: 0 });

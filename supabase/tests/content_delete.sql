@@ -97,6 +97,12 @@ insert into public.certificates(id,user_id,course_id,curriculum_version,student_
 select pg_temp.id(700),pg_temp.id(4),c.id,c.curriculum_version,'Pessoa fictícia 4',c.title,20,c.required_lesson_ids from public.courses c where c.id=pg_temp.id(100);
 insert into app_private.catalog_launches(id,module_id,title,summary,enabled) values(pg_temp.id(600),pg_temp.id(101),'Lançamento fictício','Resumo fictício',true);
 insert into app_private.catalog_launch_signups(launch_id,user_id) values(pg_temp.id(600),pg_temp.id(4));
+-- Outro curso com um módulo cujas aulas ficam só na seção automática, escondida no painel.
+insert into public.courses(id,slug,title,status,access_mode) values(pg_temp.id(110),'curso-secao-automatica','Curso com seção automática','draft','members');
+insert into public.modules(id,course_id,slug,title,status) values(pg_temp.id(111),pg_temp.id(110),'modulo-sem-secao','Módulo sem seção','published');
+insert into public.sections(id,module_id,title,status,order_index,is_default) values(pg_temp.id(112),pg_temp.id(111),'Aulas do módulo','published',-1,true);
+insert into public.lessons(id,section_id,slug,title,status) values
+ (pg_temp.id(113),pg_temp.id(112),'aula-solta-um','Aula solta um','published'),(pg_temp.id(114),pg_temp.id(112),'aula-solta-dois','Aula solta dois','published');
 create temporary table before_delete as
  select (select to_jsonb(x) from public.certificates x where x.id=pg_temp.id(700)) certificate,
   (select curriculum_version from public.courses where id=pg_temp.id(100)) version;
@@ -229,6 +235,19 @@ select pg_temp.ok(not exists(select 1 from app_private.catalog_launches where id
 select pg_temp.ok((select required_lesson_ids='{}' and curriculum_version=(select version from before_delete) from public.courses where id=pg_temp.id(100))
  and (select to_jsonb(x) from public.certificates x where x.id=pg_temp.id(700))=(select certificate from before_delete),
  'curso fica sem obrigatórias, com a mesma versão e o certificado intacto');
+
+-- Módulo só com a seção automática: a prévia não conta a seção escondida, mas a exclusão leva a seção e as aulas.
+set local role authenticated;
+select pg_temp.login(1);
+select pg_temp.ok(public.app_admin_delete_preview('modules',pg_temp.id(111))=pg_temp.preview(0,2,0,0,0,0,0,0),
+ 'prévia do módulo não conta a seção automática');
+reset role;
+set local role service_role;
+select pg_temp.service(1);
+select public.app_admin_delete(pg_temp.id(1),'modules',pg_temp.id(111)) as deleted_default_module \gset
+reset role;
+select pg_temp.ok(not exists(select 1 from public.modules where id=pg_temp.id(111)) and not exists(select 1 from public.sections where id=pg_temp.id(112))
+ and not exists(select 1 from public.lessons where id in (pg_temp.id(113),pg_temp.id(114))),'excluir o módulo leva a seção automática e as aulas dela');
 
 -- Material avulso.
 set local role authenticated;

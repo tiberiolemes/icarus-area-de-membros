@@ -26,7 +26,8 @@ declare s record;present boolean;begin
  execute format('select exists(select 1 from public.%I where id=$1)',p_entity) into present using p_id;
  if not present then perform app_private.fail('Registro indisponível.');end if;
  select * into s from app_private.delete_scope(p_entity,p_id);
- return jsonb_build_object('sections',cardinality(s.section_ids),'lessons',cardinality(s.lesson_ids),'materials',cardinality(s.material_ids),
+ -- A seção automática não aparece no painel; a exclusão a apaga, mas o resumo não a conta.
+ return jsonb_build_object('sections',(select count(*) from public.sections where id=any(s.section_ids) and not is_default),'lessons',cardinality(s.lesson_ids),'materials',cardinality(s.material_ids),
   'folders',cardinality(array_remove(s.folder_ids,p_id)),
   'students',(select count(distinct user_id) from public.lesson_progress where lesson_id=any(s.lesson_ids)),
   'comments',(select count(*) from public.lesson_comments where lesson_id=any(s.lesson_ids)),

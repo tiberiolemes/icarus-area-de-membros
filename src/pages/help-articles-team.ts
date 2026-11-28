@@ -225,7 +225,7 @@ export const teamArticles: HelpArticle[] = [
         ],
         list: [
           "O **Endereço (slug)** do módulo e da aula também é montado sozinho a partir do título. Seções não têm endereço.",
-          "**Posição na lista** define a ordem. Use 0 para o primeiro item, 1 para o segundo e assim por diante. Se todos ficarem em 0, a ordem não segue a de criação, e você arruma com **Reordenar**.",
+          "**Posição na lista** define a ordem. Use 0 para o primeiro item, 1 para o segundo e assim por diante. Se todos ficarem em 0, a ordem não segue a de criação, e você arruma com **Reordenar**, arrastando ou com as setas.",
         ],
       },
       {
@@ -269,9 +269,15 @@ export const teamArticles: HelpArticle[] = [
       {
         title: "Mudar a ordem",
         steps: [
-          "Clique em **Reordenar**.",
-          "Use as setas para cima e para baixo ao lado de cada item.",
+          "Clique em **Reordenar**. Módulos, seções e aulas ganham a alça de arrastar, com seis pontinhos, ao lado das setas.",
+          "Arraste o item pela alça e solte sobre a linha do lugar onde ele deve ficar. Uma linha colorida mostra onde ele vai cair. Se preferir, use as setas **Subir** e **Descer**.",
+          "Espere a nova ordem aparecer. Enquanto ela é salva, a alça fica apagada.",
           "Clique em **Reordenar** de novo para sair do modo de ordenação.",
+        ],
+        list: [
+          "Cada item só muda de lugar dentro da própria lista. Uma aula não passa para outra seção nem para outro módulo arrastando.",
+          "No celular e no tablet, a alça não aparece, porque a tela de toque não arrasta. Use as setas.",
+          "Se a nova ordem não for salva, aparece um aviso e a estrutura volta à ordem que está gravada.",
         ],
       },
       {
@@ -288,7 +294,7 @@ export const teamArticles: HelpArticle[] = [
     ],
     trouble: [
       ["Aparece o aviso de que já existe um registro com esses dados", "O **Endereço (slug)** já está em uso. Escreva outro no campo e salve de novo."],
-      ["As aulas aparecem fora de ordem", "Os itens ficaram com a mesma **Posição na lista**. Clique em **Reordenar** e arrume com as setas."],
+      ["As aulas aparecem fora de ordem", "Os itens ficaram com a mesma **Posição na lista**. Clique em **Reordenar** e arrume arrastando pela alça ou com as setas."],
       ["Aparece o aviso de que, mesmo otimizada, a imagem passa de 500 KB", "A plataforma já reduz a imagem e a compressão em etapas, mas uma arte muito detalhada pode não caber. Exporte a arte de novo com 1600\u00a0×\u00a0900\u00a0px, em JPG ou WebP, e envie outra vez. Se o aviso for de arquivo acima de 20 MB, reduza a imagem antes de escolher."],
       ["A capa aparece cortada na página do curso", "No computador, a página do curso mostra a capa em um quadro quase quadrado, que corta as laterais. No tablet, ela vira uma faixa larga, que corta o topo e a base. Em **Capa do curso**, clique na imagem, no ponto que precisa aparecer, e depois em **Salvar foco**."],
       ["O curso não publica e cita o certificado", "Com o certificado ligado, o curso precisa do responsável preenchido e de pelo menos uma aula obrigatória publicada, com duração e que não seja de prévia. Veja [Configurar o certificado do curso](/ajuda/certificado-do-curso)."],
@@ -315,9 +321,15 @@ export const teamArticles: HelpArticle[] = [
       {
         title: "Usar um vídeo do Bunny Stream",
         steps: [
-          "No Bunny, copie o código do vídeo, chamado **Video ID**. Ele tem 36 caracteres, com letras, números e hífens.",
-          "No editor da aula, cole o código em **Vídeo do Bunny ou link do YouTube**.",
-          "Preencha a **Duração em segundos** e clique em **Salvar conteúdo**.",
+          "No editor da aula, clique em **Buscar no Bunny**, logo abaixo de **Vídeo do Bunny ou link do YouTube**.",
+          "Digite parte do título e clique na lupa. A lista mostra o título e a duração de cada vídeo, e **Processando** quando o Bunny ainda está preparando o vídeo.",
+          "Clique em **Usar este vídeo**. O código do vídeo entra no campo, a **Duração em segundos** é preenchida com a do vídeo e a janela fecha.",
+          "Confira a duração e clique em **Salvar conteúdo**.",
+        ],
+        list: [
+          "O botão **Buscar no Bunny** só aparece com a [integração com o Bunny](/ajuda/integracao-bunny) configurada. Sem ela, a dica do campo avisa quem precisa configurar.",
+          "Vídeo em **Processando** ainda não tem duração. A plataforma mantém a que estava no campo, então preencha a **Duração em segundos** à mão.",
+          "Também dá para colar o código à mão. No Bunny, copie o **Video ID**, que tem 36 caracteres, com letras, números e hífens, e cole em **Vídeo do Bunny ou link do YouTube**.",
         ],
       },
       {
@@ -341,6 +353,7 @@ export const teamArticles: HelpArticle[] = [
       ["Não acho onde enviar o arquivo do vídeo", "A plataforma não recebe vídeo. Envie o arquivo ao Bunny Stream e cole o código dele na aula, ou publique no YouTube e cole o link."],
       ["O aluno vê que não foi possível carregar o vídeo", "No caminho do Bunny, confira se o código foi colado inteiro e se a integração está como **Configurado**. O editor não avisa quando o código está errado, então teste sempre pela prévia. No caminho do YouTube, confira se o vídeo está como **Público** ou **Não listado** e se a incorporação está permitida. Numa aula que já tinha vídeo enviado à plataforma, confira se **Vídeo do Bunny ou link do YouTube** está vazio."],
       ["Aparece o aviso para colar um link do YouTube ou o ID do Bunny", "O campo aceita só esses dois formatos. Links de outras plataformas, como Vimeo, não funcionam."],
+      ["A busca no Bunny mostra um aviso em vez dos vídeos", "Se o aviso pedir para configurar o Bunny Stream, falta a chave de API em **Configurações > Integrações**. Se disser que a API recusou a chave, confira as credenciais salvas lá. Se disser que a API está indisponível, clique em **Tentar novamente** daqui a pouco. Enquanto isso, dá para colar o código do vídeo à mão."],
     ],
     related: ["criar-curso", "integracao-bunny", "apresentacao-da-aula"],
   },
@@ -353,8 +366,13 @@ export const teamArticles: HelpArticle[] = [
       {
         title: "Abrir o editor",
         steps: [
-          "Na aba **Estrutura e aulas**, clique no lápis de uma aula já salva.",
-          "Clique em **Editar apresentação**.",
+          "Em **Cursos e aulas**, clique em **Editar apresentação** na linha do curso.",
+          "Na janela **Escolha a aula**, as aulas aparecem agrupadas por módulo, na ordem da estrutura. Clique na aula que vai receber a apresentação.",
+        ],
+        list: [
+          "Também dá para abrir pela aula. Na aba **Estrutura e aulas**, clique no lápis de uma aula já salva e depois em **Editar apresentação**.",
+          "Aulas arquivadas não aparecem na janela nem têm o botão no editor da aula.",
+          "Curso sem aulas mostra **Este curso ainda não tem aulas.** com o botão **Estrutura e aulas**, que leva direto para criar a primeira.",
         ],
       },
       {

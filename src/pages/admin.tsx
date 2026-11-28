@@ -100,6 +100,10 @@ import { AdminSurface } from "./admin-surface";
 import { materialSize, materialTypes, save, text, useAll, type Row } from "./admin-data";
 import { LessonLinks, LessonMaterials } from "./admin-material-lessons";
 import { Archive, DangerZone, useDeletedNotice } from "./admin-delete";
+import { BunnyPicker } from "./admin-bunny-picker";
+import { DragOrder, persistOrder, useDragOrder } from "./admin-drag";
+import { PresentationPicker } from "./admin-presentation-picker";
+import { moveItem } from "../reorder";
 import "../admin-content.css";
 
 type MemberDetail = {
@@ -363,28 +367,26 @@ function OrderControl({
   entity,
   row,
   siblings,
+  drag,
 }: {
   entity: string;
   row: Row;
   siblings: Row[];
+  drag: ReturnType<typeof useDragOrder>;
 }) {
   const index = siblings.findIndex((item) => item.id === row.id);
   async function move(direction: number) {
     const target = index + direction;
     if (target < 0 || target >= siblings.length) return;
-    const ordered = [...siblings];
-    [ordered[index], ordered[target]] = [ordered[target], ordered[index]];
-    for (const [position, item] of ordered.entries())
-      if (Number(item.order_index) !== position)
-        await save(entity, item.id, { order_index: position });
+    await drag.run(() => persistOrder(entity, moveItem(siblings, index, target)));
   }
   return (
     <div className="order-controls">
-      <Action disabled={index <= 0} run={() => move(-1)}>
+      <Action disabled={drag.busy || index <= 0} run={() => move(-1)}>
         <ArrowUp size={18} aria-hidden="true" />
         <span className="sr-only">Subir {text(row, "title")}</span>
       </Action>
-      <Action disabled={index >= siblings.length - 1} run={() => move(1)}>
+      <Action disabled={drag.busy || index >= siblings.length - 1} run={() => move(1)}>
         <ArrowDown size={18} aria-hidden="true" />
         <span className="sr-only">Descer {text(row, "title")}</span>
       </Action>
@@ -424,6 +426,7 @@ export function AdminCourses() {
                 <Link className="button" to={editor}>
                   Editar curso
                 </Link>
+                <PresentationPicker course={course} />
                 <Link className="button primary" to={`${editor}?aba=estrutura`}>
                   Estrutura e aulas
                 </Link>
@@ -570,12 +573,14 @@ function StructureActions({
   siblings,
   onEdit,
   current,
+  drag,
 }: {
   entity: StructureSelection["entity"];
   row: Row;
   siblings?: Row[];
   onEdit: (event: MouseEvent<HTMLButtonElement>) => void;
   current?: boolean;
+  drag: ReturnType<typeof useDragOrder>;
 }) {
   const label = `Editar ${structureLabels[entity]} ${text(row, "title")}`;
   return (
@@ -590,7 +595,8 @@ function StructureActions({
       >
         <Pencil size={18} aria-hidden="true" />
       </button>
-      {siblings && <OrderControl entity={entity} row={row} siblings={siblings} />}
+      {siblings && <OrderControl entity={entity} row={row} siblings={siblings} drag={drag} />}
+      {drag.handle(row)}
     </div>
   );
 }
@@ -618,6 +624,7 @@ function Structure({ course }: { course: Row }) {
   const ownModules = (modules.data ?? [])
     .filter((module) => module.course_id === course.id)
     .sort((a, b) => Number(a.order_index) - Number(b.order_index));
+  const moduleDrag = useDragOrder("modules", reordering ? ownModules : []);
   const moduleIds = new Set(ownModules.map((module) => module.id));
   const courseSections = (sections.data ?? []).filter((section) =>
     moduleIds.has(text(section, "module_id")),
@@ -645,7 +652,9 @@ function Structure({ course }: { course: Row }) {
     const ownLessons = courseLessons
       .filter((lesson) => lesson.section_id === section.id)
       .sort((a, b) => Number(a.order_index) - Number(b.order_index));
-    return ownLessons.map((lesson) => {
+    return (
+      <DragOrder entity="lessons" siblings={reordering ? ownLessons : []}>
+        {(drag) => ownLessons.map((lesson) => {
       const editing =
         selected?.entity === "lessons" && selected.row?.id === lesson.id;
       return (
@@ -653,6 +662,7 @@ function Structure({ course }: { course: Row }) {
           className="lesson-editor-row"
           data-selected={editing || undefined}
           key={lesson.id}
+          {...drag.rowProps(lesson)}
         >
           <div className="lesson-editor-title">
             <span className="content-icon">
@@ -681,6 +691,7 @@ function Structure({ course }: { course: Row }) {
             row={lesson}
             siblings={reordering ? ownLessons : undefined}
             current={editing}
+            drag={drag}
             onEdit={openEditor({
               entity: "lessons",
               row: lesson,
@@ -689,7 +700,9 @@ function Structure({ course }: { course: Row }) {
           />
         </article>
       );
-    });
+        })}
+      </DragOrder>
+    );
   };
 
   return (
@@ -716,7 +729,7 @@ function Structure({ course }: { course: Row }) {
           }
         />
         <p className="content-hint">
-          {reordering && "Use Subir e Descer para mudar a ordem dos itens. "}
+          {reordering && "Arraste pela alça ou use Subir e Descer para mudar a ordem. "}
           <HelpLink className="text-action" to="/ajuda/criar-curso">
             Ajuda sobre conteúdo
           </HelpLink>
@@ -732,6 +745,7 @@ function Structure({ course }: { course: Row }) {
                 {courseLessons.length}{" "}
                 {courseLessons.length === 1 ? "aula" : "aulas"}
               </p>
+              {moduleDrag.notice}
               <div className="editor-outline">
                 {ownModules.map((module) => {
                   const ownSections = courseSections
@@ -746,6 +760,7 @@ function Structure({ course }: { course: Row }) {
                     <section
                       className="content-panel content-module"
                       key={module.id}
+                      {...moduleDrag.rowProps(module)}
                     >
                       <SectionHeading
                         level={3}
@@ -766,6 +781,7 @@ function Structure({ course }: { course: Row }) {
                             row={module}
                             siblings={reordering ? ownModules : undefined}
                             current={selected?.row?.id === module.id}
+                            drag={moduleDrag}
                             onEdit={openEditor({
                               entity: "modules",
                               row: module,
@@ -787,8 +803,9 @@ function Structure({ course }: { course: Row }) {
                         <Plus size={18} aria-hidden="true" />
                         Adicionar aula
                       </button>
-                      {named.map((section) => (
-                        <div className="section-block" key={section.id}>
+                      <DragOrder entity="sections" siblings={reordering ? named : []}>
+                      {(drag) => named.map((section) => (
+                        <div className="section-block" key={section.id} {...drag.rowProps(section)}>
                           <SectionHeading
                             level={4}
                             title={
@@ -808,6 +825,7 @@ function Structure({ course }: { course: Row }) {
                                 row={section}
                                 siblings={reordering ? named : undefined}
                                 current={selected?.row?.id === section.id}
+                                drag={drag}
                                 onEdit={openEditor({
                                   entity: "sections",
                                   row: section,
@@ -831,6 +849,7 @@ function Structure({ course }: { course: Row }) {
                           </button>
                         </div>
                       ))}
+                      </DragOrder>
                       <button
                         className="content-append"
                         type="button"
@@ -941,6 +960,20 @@ function StructureForm({
   after: () => Promise<void>;
   onDeleted: (message: string) => void;
 }) {
+  const video = useRef<HTMLInputElement>(null),
+    duration = useRef<HTMLInputElement>(null),
+    instructor = useBootstrap().data?.profile.role === "instructor",
+    capabilities = useQuery({
+      queryKey: ["capabilities"],
+      queryFn: () => edge<{ bunny: boolean }>("capabilities"),
+      enabled: entity === "lessons",
+    });
+  // Os campos não são controlados: o evento input avisa o Form que houve alteração.
+  function fill(input: HTMLInputElement | null, value: string) {
+    if (!input) return;
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
   return (
     <>
       <Form submitInHeading
@@ -1012,6 +1045,7 @@ function StructureForm({
                 </Field>
                 <Field label="Duração em segundos">
                   <input
+                    ref={duration}
                     name="duration_seconds"
                     type="number"
                     required
@@ -1023,14 +1057,30 @@ function StructureForm({
               </div>
               <Field
                 label="Vídeo do Bunny ou link do YouTube"
-                hint="Cole o link do vídeo no YouTube ou o ID do vídeo na biblioteca do Bunny Stream."
+                hint={`Cole o link do vídeo no YouTube ou o ID do vídeo na biblioteca do Bunny Stream.${
+                  capabilities.data && !capabilities.data.bunny
+                    ? instructor
+                      ? " Peça a um administrador para configurar o Bunny."
+                      : " Para buscar na biblioteca, configure o Bunny em Configurações > Integrações."
+                    : ""
+                }`}
               >
                 <input
+                  ref={video}
                   name="video_id"
                   defaultValue={youtubeIdPattern.test(text(row, "video_id")) ? `https://www.youtube.com/watch?v=${text(row, "video_id")}` : text(row, "video_id")}
                   maxLength={100}
                 />
               </Field>
+              {capabilities.data?.bunny && (
+                <BunnyPicker
+                  onPick={(picked) => {
+                    fill(video.current, picked.id);
+                    // Vídeo ainda em processamento chega sem duração: mantém a que já está no campo.
+                    if (picked.length > 0) fill(duration.current, String(picked.length));
+                  }}
+                />
+              )}
             </fieldset>
             <RichEditor
               name="body"

@@ -166,7 +166,8 @@ it("falha no envio deixa o material como rascunho Sem arquivo com Reenviar arqui
   expect(unlinkButton(block)).toBeDisabled();
   fireEvent.change(within(item(block, "Mapa-mental")).getByLabelText("Enviar arquivo", { selector: "input" }), { target: { files: [zip()] } });
   await waitFor(() => expect(saves()).toHaveLength(2));
-  expect(edge.mock.calls.map(([, body]) => [body.action, body.resource_id ?? body.upload_id])).toEqual([["reserve", "novo"], ["finalize", "u1"]]);
+  // O editor da aula também consulta capabilities para o botão Buscar no Bunny; aqui contam só os envios.
+  expect(edge.mock.calls.filter(([name]) => name === "upload").map(([, body]) => [body.action, body.resource_id ?? body.upload_id])).toEqual([["reserve", "novo"], ["finalize", "u1"]]);
   expect(saves()[1]).toEqual({ p_entity: "materials", p_id: "novo", p_data: { status: "published", file_type: "application/zip" } });
   expect(await within(block).findByText("Arquivo enviado e material publicado na aula.")).toBeInTheDocument();
   await waitFor(() => expect(item(block, "Mapa-mental")).toHaveTextContent("Publicado · ZIP · 2 B"));

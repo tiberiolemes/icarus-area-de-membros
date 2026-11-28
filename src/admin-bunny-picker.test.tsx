@@ -23,6 +23,7 @@ const videos = [
   { id: "22222222-2222-4222-8222-222222222222", title: "Em processamento", length: 0, ready: false },
 ];
 let bunny: boolean;
+let search: boolean;
 let library: () => Response;
 let calls: { url: string; body: Record<string, unknown> }[];
 const json = (body: unknown, status = 200) =>
@@ -30,6 +31,7 @@ const json = (body: unknown, status = 200) =>
 
 beforeEach(() => {
   bunny = true;
+  search = true;
   library = () => json({ items: videos, total: videos.length, page: 1 });
   calls = [];
   Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: vi.fn() });
@@ -42,7 +44,7 @@ beforeEach(() => {
       return json({ items, total: items.length, page: 1, page_size: 20 });
     }
     if (url.endsWith("/functions/v1/capabilities"))
-      return body.action === "bunny-videos" ? library() : json({ asaas: false, bunny, storage: true });
+      return body.action === "bunny-videos" ? library() : json({ asaas: false, bunny, bunny_search: search, storage: true });
     return json({});
   }));
 });
@@ -123,6 +125,16 @@ it("erro da API mostra a mensagem e Tentar novamente", async () => {
 
 it("sem Bunny configurado o botão não aparece e a dica aponta para Integrações", async () => {
   bunny = false;
+  search = false;
+  const media = await openLesson();
+  await waitFor(() =>
+    expect(media.getByText(/Para buscar na biblioteca, configure o Bunny em Configurações > Integrações\./)).toBeInTheDocument(),
+  );
+  expect(media.queryByRole("button", { name: "Buscar no Bunny" })).toBeNull();
+});
+
+it("com a reprodução pronta e sem a chave da API, a busca não aparece e a dica aponta para Integrações", async () => {
+  search = false;
   const media = await openLesson();
   await waitFor(() =>
     expect(media.getByText(/Para buscar na biblioteca, configure o Bunny em Configurações > Integrações\./)).toBeInTheDocument(),

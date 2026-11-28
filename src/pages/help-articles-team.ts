@@ -340,7 +340,7 @@ export const teamArticles: HelpArticle[] = [
           "Confira a duração e clique em **Salvar conteúdo**.",
         ],
         list: [
-          "O botão **Buscar no Bunny** só aparece com a [integração com o Bunny](/ajuda/integracao-bunny) configurada. Sem ela, a dica do campo avisa quem precisa configurar.",
+          "O botão **Buscar no Bunny** só aparece com a [integração com o Bunny](/ajuda/integracao-bunny) configurada, incluindo a **Chave de API do Stream**. Sem ela, a dica do campo avisa quem precisa configurar.",
           "Vídeo em **Processando** ainda não tem duração. A plataforma mantém a que estava no campo, então preencha a **Duração em segundos** à mão.",
           "Também dá para colar o código à mão. No Bunny, copie o **Video ID**, que tem 36 caracteres, com letras, números e hífens, e cole em **Vídeo do Bunny ou link do YouTube**.",
         ],

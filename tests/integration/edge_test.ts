@@ -46,7 +46,7 @@ const paidPayments = (value: number, status = "RECEIVED") => response({ hasMore:
 
 Deno.test("capabilities exposes only public capability flags", async () => {
   const { d, requests } = deps(); const result = await capabilities(d)(new Request("http://localhost/test"));
-  equal(await result.json(), { asaas: false, bunny: false, storage: true });
+  equal(await result.json(), { asaas: false, bunny: false, bunny_search: false, storage: true });
   assert(requests.every((r) => r.url.endsWith("app_integration_credentials") && r.headers.get("apikey") === "local-test-secret"));
 });
 Deno.test("public capabilities coalesces Vault reads and recalculates provider flags after one minute", async () => {
@@ -209,6 +209,20 @@ Deno.test("member cannot inspect integrations and missing Bunny or webhook stays
   equal((await webhook(d)(request({}, { token: null }))).status, 503);
 });
 const bunnyVault = { library_id: "42", api_key: "synthetic-stream-key", token_key: "synthetic-player-key", cdn_host: "vz-fixture.b-cdn.net" };
+Deno.test("busca no Bunny só aparece pronta com a reprodução e a chave da API", async () => {
+  const flags = async (stored: Record<string, string>, config: Record<string, string> = {}) => {
+    const { d } = deps((url) => url.pathname.endsWith("app_integration_credentials") ? response(stored) : undefined, config);
+    return await (await capabilities(d)(new Request("http://localhost/test"))).json();
+  };
+  const { api_key: _key, ...playback } = bunnyVault;
+  equal(await flags(bunnyVault), { asaas: false, bunny: true, bunny_search: true, storage: true });
+  equal(await flags(playback), { asaas: false, bunny: true, bunny_search: false, storage: true });
+  const environment = { BUNNY_LIBRARY_ID: "42", BUNNY_TOKEN_KEY: "synthetic-player-key", BUNNY_CDN_HOST: "vz-fixture.b-cdn.net" };
+  equal((await flags({ api_key: "synthetic-stream-key" }, environment)).bunny_search, true);
+  equal((await flags({}, environment)).bunny_search, false);
+  const answer = JSON.stringify(await flags(bunnyVault));
+  assert(!["synthetic-stream-key", "synthetic-player-key", "vz-fixture"].some((secret) => answer.includes(secret)), "segredo na resposta pública");
+});
 function bunnySearch(profile: Record<string, unknown>, bunny: Route = () => undefined, stored: Record<string, string> = bunnyVault) {
   const found = deps((url, init) => {
     if (url.pathname.endsWith("app_bootstrap")) return response({ profile });

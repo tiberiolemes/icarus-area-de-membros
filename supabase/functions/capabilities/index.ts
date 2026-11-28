@@ -14,17 +14,19 @@ async function testConnection(d: Dependencies, url: string, headers: HeadersInit
 }
 
 export const createHandler = (d: Dependencies = defaults) => {
-  const flags = minuteCache<{ asaas: boolean; bunny: boolean; storage: boolean }>();
+  const flags = minuteCache<{ asaas: boolean; bunny: boolean; bunny_search: boolean; storage: boolean }>();
   return endpoint(async (req) => {
     const body = req.method === "POST" && req.body ? await json(req) : {};
     if (body.action === undefined) {
       return flags.get(async () => {
         const { admin } = clients(d);
-        const [asaas, bunny] = await Promise.all([asaasConfig(d, admin), bunnyConfig(d, admin)]);
+        // Sem a chave da API no ambiente, a busca depende da chave salva no cofre.
+        const [asaas, bunny] = await Promise.all([asaasConfig(d, admin), bunnyConfig(d, admin, d.env("BUNNY_STREAM_API_KEY") === undefined)]);
         return {
           asaas: asaas.configured && asaas.checkoutAllowed &&
             (d.env("ICARUS_MODE") !== "production" || Boolean(d.env("TURNSTILE_SECRET_KEY"))),
           bunny: bunny.playbackReady,
+          bunny_search: bunny.playbackReady && Boolean(bunny.fields.api_key.value),
           storage: true,
         };
       });

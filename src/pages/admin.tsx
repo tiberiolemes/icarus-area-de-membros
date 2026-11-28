@@ -965,7 +965,7 @@ function StructureForm({
     instructor = useBootstrap().data?.profile.role === "instructor",
     capabilities = useQuery({
       queryKey: ["capabilities"],
-      queryFn: () => edge<{ bunny: boolean }>("capabilities"),
+      queryFn: () => edge<{ bunny_search: boolean }>("capabilities"),
       enabled: entity === "lessons",
     });
   // Os campos não são controlados: o evento input avisa o Form que houve alteração.
@@ -1058,7 +1058,7 @@ function StructureForm({
               <Field
                 label="Vídeo do Bunny ou link do YouTube"
                 hint={`Cole o link do vídeo no YouTube ou o ID do vídeo na biblioteca do Bunny Stream.${
-                  capabilities.data && !capabilities.data.bunny
+                  capabilities.data && !capabilities.data.bunny_search
                     ? instructor
                       ? " Peça a um administrador para configurar o Bunny."
                       : " Para buscar na biblioteca, configure o Bunny em Configurações > Integrações."
@@ -1072,7 +1072,7 @@ function StructureForm({
                   maxLength={100}
                 />
               </Field>
-              {capabilities.data?.bunny && (
+              {capabilities.data?.bunny_search && (
                 <BunnyPicker
                   onPick={(picked) => {
                     fill(video.current, picked.id);

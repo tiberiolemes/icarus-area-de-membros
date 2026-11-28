@@ -224,7 +224,7 @@ export const teamArticles: HelpArticle[] = [
         ],
         list: [
           "O **Endereço (slug)** do módulo e da aula também é montado sozinho a partir do título. Seções não têm endereço.",
-          "**Posição na lista** define a ordem. Use 0 para o primeiro item, 1 para o segundo e assim por diante. Se todos ficarem em 0, a ordem não segue a de criação, e você arruma com **Reordenar**.",
+          "**Posição na lista** define a ordem. Use 0 para o primeiro item, 1 para o segundo e assim por diante. Se todos ficarem em 0, a ordem não segue a de criação, e você arruma com **Reordenar**, arrastando ou com as setas.",
         ],
       },
       {
@@ -268,9 +268,15 @@ export const teamArticles: HelpArticle[] = [
       {
         title: "Mudar a ordem",
         steps: [
-          "Clique em **Reordenar**.",
-          "Use as setas para cima e para baixo ao lado de cada item.",
+          "Clique em **Reordenar**. Módulos, seções e aulas ganham a alça de arrastar, com seis pontinhos, ao lado das setas.",
+          "Arraste o item pela alça e solte sobre a linha do lugar onde ele deve ficar. Uma linha colorida mostra onde ele vai cair. Se preferir, use as setas **Subir** e **Descer**.",
+          "Espere a nova ordem aparecer. Enquanto ela é salva, a alça fica apagada.",
           "Clique em **Reordenar** de novo para sair do modo de ordenação.",
+        ],
+        list: [
+          "Cada item só muda de lugar dentro da própria lista. Uma aula não passa para outra seção nem para outro módulo arrastando.",
+          "No celular e no tablet, a alça não aparece, porque a tela de toque não arrasta. Use as setas.",
+          "Se a nova ordem não for salva, aparece um aviso e a estrutura volta à ordem que está gravada.",
         ],
       },
       {
@@ -287,7 +293,7 @@ export const teamArticles: HelpArticle[] = [
     ],
     trouble: [
       ["Aparece o aviso de que já existe um registro com esses dados", "O **Endereço (slug)** já está em uso. Escreva outro no campo e salve de novo."],
-      ["As aulas aparecem fora de ordem", "Os itens ficaram com a mesma **Posição na lista**. Clique em **Reordenar** e arrume com as setas."],
+      ["As aulas aparecem fora de ordem", "Os itens ficaram com a mesma **Posição na lista**. Clique em **Reordenar** e arrume arrastando pela alça ou com as setas."],
       ["Aparece o aviso de que, mesmo otimizada, a imagem passa de 500 KB", "A plataforma já reduz a imagem e a compressão em etapas, mas uma arte muito detalhada pode não caber. Exporte a arte de novo com 1600\u00a0×\u00a0900\u00a0px, em JPG ou WebP, e envie outra vez. Se o aviso for de arquivo acima de 20 MB, reduza a imagem antes de escolher."],
       ["A capa aparece cortada na página do curso", "No computador, a página do curso mostra a capa em um quadro quase quadrado, que corta as laterais. No tablet, ela vira uma faixa larga, que corta o topo e a base. Em **Capa do curso**, clique na imagem, no ponto que precisa aparecer, e depois em **Salvar foco**."],
       ["O curso não publica e cita o certificado", "Com o certificado ligado, o curso precisa do responsável preenchido e de pelo menos uma aula obrigatória publicada, com duração e que não seja de prévia. Veja [Configurar o certificado do curso](/ajuda/certificado-do-curso)."],

@@ -127,7 +127,7 @@ const steps = [
   {
     target: "course-editor",
     title: "Publique seu conteúdo",
-    body: "Em Estrutura e aulas, use Reordenar para revelar as setas. Abra uma aula para editar a mídia e acessar Editar apresentação. Em um curso ou módulo salvo como rascunho, use Anúncio de lançamento para editar o que os alunos verão antes da publicação.",
+    body: "Em Estrutura e aulas, use Reordenar para arrastar os itens pela alça ou mudar a ordem com as setas. Abra uma aula para editar a mídia e acessar Editar apresentação. Em um curso ou módulo salvo como rascunho, use Anúncio de lançamento para editar o que os alunos verão antes da publicação.",
   },
   {
     target: "ranking",

@@ -40,7 +40,6 @@
 :is(.stitch-shell > .sidebar, .stitch-shell-drawer) {
   gap: 0;
   padding: 0;
-  overflow: hidden;
 }
 
 :is(.member-shell-stitch > .sidebar, .member-shell-drawer) :is(.rail-head, .rail-brand) {

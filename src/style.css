@@ -662,6 +662,10 @@ h2 > a,
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
 }
+.sidebar,
+.drawer {
+  overflow-y: auto;
+}
 .sidebar {
   position: sticky;
   top: 0;
@@ -817,7 +821,6 @@ h2 > a,
   padding: 64px 20px 20px;
   gap: 32px;
   width: min(320px, 90vw);
-  overflow: hidden;
 }
 .drawer .rail-brand {
   font-size: 28px;

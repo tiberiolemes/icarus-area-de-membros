@@ -207,6 +207,17 @@ Modelo da imagem 3, com os tokens do DS:
 - O texto continua sem dizer se o email já existe, para não revelar quem tem conta, como hoje.
 - "Salvo com sucesso." deixa de aparecer nessas telas.
 
+### 17. Avançar para a próxima aula automaticamente
+
+Pedido de Tibério em 28/nov/2026, depois da aprovação do plano: uma opção que, marcada, leva o aluno à próxima aula ao terminar o vídeo ou ao marcar a aula como concluída. Escolhas minhas, para ele conferir:
+
+- A opção é do aluno e vale para a conta inteira, como o tema: coluna `profiles.auto_advance boolean not null default false`, aceita por `app_profile` e devolvida no perfil. Começa desligada.
+- Fica na tela da aula, junto de "Marcar como concluída", como interruptor com o texto "Avançar para a próxima aula automaticamente".
+- Ao clicar em "Marcar como concluída" com a opção ligada, depois de o servidor confirmar, a tela vai direto para a próxima aula.
+- Ao terminar o vídeo com a opção ligada, a aula é marcada como concluída (a mesma chamada do botão, para o progresso não ficar para trás) e aparece "Próxima aula em 5 segundos" com "Ir agora" e "Cancelar". Sem a opção, terminar o vídeo continua sem marcar nada, como hoje.
+- Não avança quando não há próxima aula, quando o aluno não tem acesso a ela ou quando a conclusão emitiu certificado (para ele ver o aviso do certificado).
+- Fim do vídeo: Bunny pelo evento `ended` do player.js; YouTube pela API de mensagens do iframe (a função `media` passa a pedir `enablejsapi=1` no endereço do player, e a tela escuta o estado "terminado" vindo só da origem do YouTube); vídeo e áudio antigos guardados na plataforma pelo `ended` nativo.
+
 ## Decisões de Tibério (28/nov/2026)
 
 - Item 10: rascunho local em todos os formulários, sem autosave no servidor.

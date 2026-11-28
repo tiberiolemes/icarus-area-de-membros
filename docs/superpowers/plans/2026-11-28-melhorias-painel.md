@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Entregar os 16 ajustes pedidos por Tibério em 28/nov/2026 (vínculos de material, exclusão definitiva, uploads, ajuda em popup, rascunho local, barra lateral, arraste, polimentos do DS e tela de sucesso do cadastro) na versão 2.13.0 do Icarus.
+**Goal:** Entregar os 17 ajustes pedidos por Tibério em 28/nov/2026 (vínculos de material, exclusão definitiva, uploads, ajuda em popup, rascunho local, barra lateral, arraste, polimentos do DS, tela de sucesso do cadastro e avanço automático de aula) na versão 2.13.0 do Icarus.
 
 **Architecture:** Regras de acesso, exclusão e recusa de vídeo ficam no Postgres (RPCs `security definer` com grants mínimos), com Edge Functions só onde há Storage ou chave de terceiro (`upload` para apagar arquivos, `capabilities` para a API do Bunny). O front em React reaproveita `Form`, `Modal`, `Field`, `Notice` e os tokens do DS; peças novas ficam em arquivos próprios para não inchar `src/pages/admin.tsx` (3.091 linhas).
 
@@ -806,7 +806,56 @@ git commit -m "feat: cadastro e recuperação de acesso mostram tela de confirma
 
 ---
 
-### Task 18: Versão 2.13.0, verificação completa e PR
+### Task 18: Avançar para a próxima aula automaticamente
+
+**Files:**
+- Create: `supabase/migrations/202611280005_auto_advance.sql`, `supabase/tests/auto_advance.sql`
+- Modify: `supabase/functions/media/index.ts:17` (`enablejsapi=1` no embed do YouTube), `tests/integration/edge_test.ts:310` (teste do YouTube)
+- Modify: `src/bunny.tsx` (prop `onEnded`), `src/pages/learning.tsx:520-840` (interruptor, fim do vídeo, avanço), `src/api.ts` (tipo `Profile` ganha `auto_advance`)
+- Create: `src/youtube-ended.ts`, `src/lesson-auto-advance.test.tsx`
+- Modify: `demo/transport.ts` (perfil com `auto_advance`, `app_profile` aceita a chave), artigo `recursos-da-aula` em `src/pages/help-articles-member.ts`
+
+**Interfaces:**
+- Produces:
+  - `profiles.auto_advance boolean not null default false`; `app_profile(p_data)` aceita `auto_advance` (booleano, recusa outro tipo); `app_private.profile_json` devolve `auto_advance`. Recriar a partir de `202611230007_private_uploads.sql` (`app_profile`) e `202611250009_student_experience.sql` (`profile_json`).
+  - `BunnyPlayer` ganha `onEnded?: () => void`, ligado ao evento `ended` do player.js.
+  - `watchYouTubeEnded(iframe: HTMLIFrameElement, onEnded: () => void): () => void` em `src/youtube-ended.ts`: envia `{"event":"listening"}` ao iframe no `load`, aceita só mensagens com `origin === "https://www.youtube-nocookie.com"` e `source === iframe.contentWindow`, chama `onEnded` quando chega `onStateChange` com `info === 0`; devolve a função que remove o ouvinte.
+
+- [ ] **Step 1: Escrever os testes que falham**
+
+SQL `auto_advance.sql`: perfil novo nasce com `auto_advance = false`; `app_profile('{"auto_advance":true}')` grava e devolve `true`; `app_profile('{"auto_advance":"sim"}')` falha. Deno: o teste do YouTube passa a esperar `?rel=0&enablejsapi=1`. Vitest `src/lesson-auto-advance.test.tsx` (molde de `src/lesson-stitch.test.tsx`):
+- `"interruptor grava a preferência no perfil"`: clicar em "Avançar para a próxima aula automaticamente" chama `app_profile` com `{auto_advance: true}`.
+- `"com a opção ligada, Marcar como concluída leva à próxima aula"`.
+- `"com a opção desligada, Marcar como concluída fica na aula"`.
+- `"fim do vídeo com a opção ligada conclui a aula e conta 5 segundos com Ir agora e Cancelar"`; `"Cancelar fica na aula"`; após 5 s (timers falsos), a rota é a da próxima aula.
+- `"fim do vídeo com a opção desligada não conclui nem avança"`.
+- `"não avança sem próxima aula, para aula sem acesso ou quando sai certificado"`.
+- `"watchYouTubeEnded ignora mensagem de outra origem e chama onEnded no estado 0"` (teste da função).
+
+- [ ] **Step 2: Rodar e ver falhar**
+
+Expected: FAIL em todos.
+
+- [ ] **Step 3: Implementar**
+
+Migration com `revoke`/`grant` iguais aos das funções recriadas. Na aula: uma função só, `finishLesson(origin: "button" | "ended")`, faz o `app_progress` com `p_complete: true` (o que o botão já faz) e decide o avanço; a próxima aula sai de `data.next_id` e o acesso vem da lista do curso já carregada. Contagem em texto com `aria-live="polite"`, sem animação com `prefers-reduced-motion`. Vídeo nativo e áudio usam `onEnded`; Bunny usa `onEnded`; YouTube usa `watchYouTubeEnded` no `ref` do iframe.
+
+- [ ] **Step 4: Rodar e ver passar**
+
+Run: SQL do `auto_advance`, `node scripts/test-integrations.mjs`, `npx vitest run src/lesson-auto-advance.test.tsx src/lesson-stitch.test.tsx src/bunny.test.tsx src/lesson-engagement.test.tsx && npm run typecheck`. Expected: PASS.
+
+- [ ] **Step 5: Ajuda e commit**
+
+Artigo `recursos-da-aula`: a opção, quando avança e quando não avança.
+
+```bash
+git add supabase src tests demo
+git commit -m "feat: opção de avançar para a próxima aula automaticamente"
+```
+
+---
+
+### Task 19: Versão 2.13.0, verificação completa e PR
 
 **Files:**
 - Modify: `package.json`, `package-lock.json` (versão `2.13.0`), `CHANGELOG.md`, `docs/operations.md`, `docs/CONTRACT.md`
@@ -817,7 +866,7 @@ git commit -m "feat: cadastro e recuperação de acesso mostram tela de confirma
 
 - [ ] **Step 1: Changelog e guia**
 
-Entrada `## 2.13.0 · <data>` no padrão das anteriores, cobrindo os 16 itens e "Para atualizar da 2.12.0, aplique as migrations `202611280001` a `202611280004`, publique as Edge Functions `upload` e `capabilities` e então publique o frontend." Guia de operação sem envio de vídeo e com a exclusão definitiva.
+Entrada `## 2.13.0 · <data>` no padrão das anteriores, cobrindo os 17 itens e "Para atualizar da 2.12.0, aplique as migrations `202611280001` a `202611280005`, publique as Edge Functions `upload`, `capabilities` e `media` e então publique o frontend." Guia de operação sem envio de vídeo e com a exclusão definitiva.
 
 - [ ] **Step 2: Verificação local completa**
 

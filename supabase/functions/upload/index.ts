@@ -23,6 +23,18 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
       return await rpc(a.admin, "app_upload_finalize", { p_actor_id: a.userInfo.id, p_id: id });
     }
     if (body.action === "brand-asset-remove") return await removeBrandLogo(a, body);
+    if (body.action === "delete") {
+      const entity = text(body.entity, 32);
+      if (!["lessons", "sections", "modules", "materials", "material_folders"].includes(entity)) throw new HttpError(422, "INVALID_INPUT", "Esta entidade não pode ser excluída.");
+      const target = uuid(body.id);
+      const { paths } = await rpc(a.admin, "app_admin_delete", { p_actor_id: a.userInfo.id, p_entity: entity, p_id: target });
+      if (!paths.length) return { deleted: true, files_removed: 0 };
+      // O banco já apagou: falha no Storage deixa arquivo órfão e vira aviso, nunca erro.
+      const removed = await a.admin.storage.from("icarus-private").remove(paths).catch((error: Error) => ({ data: null, error }));
+      if (!removed.error) return { deleted: true, files_removed: removed.data.length };
+      console.error("Exclusão sem limpeza do Storage", { entity, id: target, files: paths.length, error: removed.error.message });
+      return { deleted: true, files_removed: 0, warning: "O item foi excluído, mas alguns arquivos não foram apagados do armazenamento." };
+    }
     if (body.action !== "reserve") throw new HttpError(422, "INVALID_INPUT", "Ação de upload inválida.");
     const kind = text(body.kind, 32), name = text(body.file_name, 180), format = formats[name.split(".").pop()!.toLowerCase()];
     if (!["lesson", "material"].includes(kind) || !format || body.content_type !== format.mime || !Number.isSafeInteger(body.size_bytes) || Number(body.size_bytes) < 1 || (kind === "lesson" && format.mime !== "video/mp4")) throw new HttpError(422, "INVALID_FILE", "Tipo ou tamanho de arquivo não permitido.");

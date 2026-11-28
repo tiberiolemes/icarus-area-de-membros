@@ -92,7 +92,14 @@ async function saveGravatar(d: Dependencies, a: NonNullable<Awaited<ReturnType<t
   if (photo.status === 404) { await photo.body?.cancel(); await done(null); return { avatar: false }; }
   if (!photo.ok) { await photo.body?.cancel(); return { avatar: false }; }
   const mime = photo.headers.get("content-type")?.split(";")[0].trim() ?? "";
-  const bytes = ["image/jpeg", "image/png"].includes(mime) ? await boundedBody(photo, 100 * 1024).catch(() => null) : null;
+  let bytes: Uint8Array<ArrayBuffer> | null = null;
+  if (["image/jpeg", "image/png"].includes(mime)) {
+    try { bytes = await boundedBody(photo, 100 * 1024); }
+    catch (error) {
+      // Só o tamanho é recusa definitiva; conexão que cai ou tempo esgotado no meio da leitura não marcam.
+      if (!(error instanceof HttpError && error.status === 413)) return { avatar: false };
+    }
+  }
   // Resposta definitiva com arquivo que não serve: marca como conferido para não repetir a cada acesso.
   if (!bytes?.length || !matchesSignature(mime, bytes)) { await photo.body?.cancel().catch(() => {}); await done(null); return { avatar: false }; }
   const reserved = await rpc(a.admin, "app_upload_access", { p_actor_id: a.userInfo.id, p_kind: "avatar", p_resource_id: a.userInfo.id, p_file_name: mime === "image/png" ? "gravatar.png" : "gravatar.jpg", p_content_type: mime, p_size_bytes: bytes.length });

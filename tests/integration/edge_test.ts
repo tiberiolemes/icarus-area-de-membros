@@ -1095,6 +1095,20 @@ Deno.test("erro de rede não marca e responde avatar false", async () => {
     assert(!requests.some((r) => r.url.includes("app_gravatar_done") || r.url.includes("app_upload_access") || r.url.includes("/storage/")));
   }
 });
+Deno.test("conexão que cai ou tempo esgotado no meio do arquivo não marca", async () => {
+  const broken = (error: Error) => () => new Response(new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (!this.sent) { this.sent = true; controller.enqueue(gravatarPng(16)); } else controller.error(error);
+    },
+    sent: false,
+  } as UnderlyingDefaultSource<Uint8Array> & { sent: boolean }), { headers: { "content-type": "image/png" } });
+  for (const photo of [broken(new TypeError("conexão encerrada")), broken(new DOMException("tempo esgotado", "TimeoutError"))]) {
+    const { d, requests } = gravatar(photo);
+    const result = await askGravatar(d);
+    equal(result.status, 200); equal(await result.json(), { avatar: false });
+    assert(!requests.some((r) => r.url.includes("app_gravatar_done") || r.url.includes("app_upload_access") || r.url.includes("/storage/")), "nada marcado nem guardado");
+  }
+});
 Deno.test("quem já tem foto não consulta o Gravatar", async () => {
   const { d, requests } = gravatar(() => { throw Error("não devia consultar"); }, false);
   equal(await (await askGravatar(d)).json(), { avatar: false });

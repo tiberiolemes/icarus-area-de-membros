@@ -48,3 +48,7 @@ export function materialSize(size: number) {
   if (size >= 1024) return `${fileNumber.format(size / 1024)} KB`;
   return `${fileNumber.format(size)} B`;
 }
+export const materialTypes: Record<string, string> = {
+  "application/pdf": "PDF", "application/zip": "ZIP", "video/mp4": "Vídeo MP4",
+  "image/png": "Imagem PNG", "image/jpeg": "Imagem JPEG", "image/webp": "Imagem WebP", "text/plain": "Texto", "audio/mpeg": "Áudio MP3",
+};

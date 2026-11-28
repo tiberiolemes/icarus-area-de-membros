@@ -88,7 +88,9 @@ export function seed() {
   })));
   return {
     profiles: structuredClone(profiles), posts: structuredClone(posts), tickets: structuredClone(tickets),
-    records: { courses, modules, sections, lessons, material_folders: [folder], materials: [material], events: [{ ...event }], spaces, plans,
+    records: { courses, modules, sections, lessons, material_folders: [folder],
+      // O editor da aula mostra o estado e se o arquivo já subiu: sem storage_path, o roteiro apareceria como Sem arquivo.
+      materials: [{ ...material, status: "published", access_mode: "members", plan_ids: [], storage_path: "simulacao/roteiro.txt" }], events: [{ ...event }], spaces, plans,
       orders: [{ id: demoId(71), user_id: demoId(1), amount_cents: 9900, method: "PIX", status: "paid", created_at: date, paid_at: date, finalized_at: date }],
       podcast_episodes: [{ id: demoId(78), youtube_id: "qaOpExample", kind: "podcast", title: "Episódio de demonstração",
         description: "Episódio fictício para testar o editor.", published_at: date, status: "draft", is_featured: false,

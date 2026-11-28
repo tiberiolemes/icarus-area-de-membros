@@ -96,8 +96,8 @@ import { moduleLabel, modules, readModules, type ModuleKey } from "../modules";
 import { Upload } from "../upload";
 import "./admin-commercial.css";
 import { AdminSurface } from "./admin-surface";
-import { materialSize, save, text, useAll, type Row } from "./admin-data";
-import { LessonLinks } from "./admin-material-lessons";
+import { materialSize, materialTypes, save, text, useAll, type Row } from "./admin-data";
+import { LessonLinks, LessonMaterials } from "./admin-material-lessons";
 import { Archive, DangerZone, useDeletedNotice } from "./admin-delete";
 import "../admin-content.css";
 
@@ -1083,6 +1083,12 @@ function StructureForm({
           </>
         )}
       </Form>
+      {entity === "lessons" && (row ? <LessonMaterials lessonId={row.id} /> : (
+        <section className="lesson-materials" aria-labelledby="lesson-materials-new">
+          <h3 id="lesson-materials-new">Materiais da aula</h3>
+          <p>Salve a aula para adicionar materiais.</p>
+        </section>
+      ))}
       {row && (
         <>
           {entity === "modules" && row.status === "draft" && (
@@ -1095,11 +1101,6 @@ function StructureForm({
     </>
   );
 }
-const materialTypes: Record<string, string> = {
-  "application/pdf": "PDF", "application/zip": "ZIP", "video/mp4": "Vídeo MP4",
-  "image/png": "Imagem PNG", "image/jpeg": "Imagem JPEG", "image/webp": "Imagem WebP", "text/plain": "Texto", "audio/mpeg": "Áudio MP3",
-};
-
 const inLessons = (row: Row) => {
   const count = (row.lesson_ids as string[] | undefined)?.length ?? 0;
   return count ? ` · Em ${count} ${count === 1 ? "aula" : "aulas"}` : "";

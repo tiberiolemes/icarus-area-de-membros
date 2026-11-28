@@ -249,7 +249,21 @@ export const teamArticles: HelpArticle[] = [
           "**Obrigatória para o certificado** coloca a aula na lista exigida para o certificado. Ela já vem marcada em aulas novas.",
           "**Seção bônus**, no editor da seção, tira as aulas dela da exigência do certificado. Para ter aulas bônus, crie uma seção só para elas.",
         ],
-        note: "Para anexar um arquivo a uma aula, cadastre o material em [Publicar materiais para download](/ajuda/publicar-materiais) e marque a aula em **Aulas vinculadas**.",
+        note: "Para anexar um arquivo a uma aula, use **Materiais da aula**, no próprio editor da aula, como explicado a seguir.",
+      },
+      {
+        title: "Adicionar materiais à aula",
+        intro: "O bloco **Materiais da aula** fica abaixo do formulário da aula e mostra os materiais vinculados a ela. Aula nova mostra **Salve a aula para adicionar materiais.** até você clicar em **Salvar conteúdo** pela primeira vez.",
+        steps: [
+          "Abra a aula pelo lápis e role até **Materiais da aula**.",
+          "Arraste o arquivo até **Adicionar material** ou clique em **Selecionar arquivo**. Vale PDF, imagem, ZIP, TXT ou MP3, com os limites de [Publicar materiais para download](/ajuda/publicar-materiais).",
+          "Espere a mensagem **Material enviado e publicado na aula**. O material aparece na lista com o nome do arquivo, sem a extensão.",
+        ],
+        list: [
+          "O material criado aqui fica na raiz da biblioteca, com a regra **Todos os membros**. Quem controla o acesso é a aula, e o aluno só baixa o arquivo se puder abrir uma das aulas em que ele está.",
+          "**Editar em Materiais** abre o material para trocar nome, descrição, pasta ou regra de acesso e para vincular outras aulas.",
+          "**Desvincular** tira o material só desta aula. Se ele não estiver em nenhuma outra, volta para **Rascunho**.",
+        ],
       },
       {
         title: "Mudar a ordem",
@@ -278,6 +292,7 @@ export const teamArticles: HelpArticle[] = [
       ["A capa aparece cortada na página do curso", "No computador, a página do curso mostra a capa em um quadro quase quadrado, que corta as laterais. No tablet, ela vira uma faixa larga, que corta o topo e a base. Em **Capa do curso**, clique na imagem, no ponto que precisa aparecer, e depois em **Salvar foco**."],
       ["O curso não publica e cita o certificado", "Com o certificado ligado, o curso precisa do responsável preenchido e de pelo menos uma aula obrigatória publicada, com duração e que não seja de prévia. Veja [Configurar o certificado do curso](/ajuda/certificado-do-curso)."],
       ["Perdi o que estava digitando", "Trocar de aba ou fechar o editor descarta o que não foi salvo. Clique em **Salvar conteúdo** antes de sair."],
+      ["O material aparece como Rascunho · Sem arquivo", "O envio do arquivo não terminou, e o material ficou em rascunho. Em **Materiais da aula**, clique em **Reenviar arquivo** na linha dele e escolha o arquivo de novo. Ao terminar, o material é publicado. Se não precisar mais dele, abra **Editar em Materiais** e use **Excluir para sempre**."],
       ["Quero apagar uma aula, uma seção ou um módulo", "Abra o item pelo lápis e, no fim do editor, use **Excluir para sempre** na **Zona de perigo**. A exclusão não tem volta e apaga o progresso dos alunos no item. Se ele ainda pode servir, prefira [arquivar](/ajuda/arquivar-conteudo), que tira do ar e pode ser desfeito."],
     ],
     related: ["video-da-aula", "apresentacao-da-aula", "certificado-do-curso", "publicar-materiais"],
@@ -563,6 +578,7 @@ export const teamArticles: HelpArticle[] = [
       },
       {
         title: "Cadastrar o material e enviar o arquivo",
+        intro: "Arquivo de uma aula só? É mais rápido soltar o arquivo em **Materiais da aula**, no editor da aula, que já cria o material vinculado e publicado. Veja [Criar um curso do zero](/ajuda/criar-curso).",
         steps: [
           "Clique em **Novo material**.",
           "Preencha **Nome** e **Descrição**.",
@@ -593,6 +609,7 @@ export const teamArticles: HelpArticle[] = [
           "O filtro só esconde aulas da lista. A aula marcada continua vinculada mesmo quando o filtro a esconde.",
           "Aula arquivada só aparece se já estiver vinculada, com o selo **Arquivado**. Desmarque para tirar o material dela.",
           "Na lista **Arquivos**, o material vinculado mostra em quantas aulas está, como **Em 2 aulas**.",
+          "No editor da aula, **Desvincular** tira o material daquela aula. Se ele ficar sem nenhuma aula, volta para **Rascunho**.",
         ],
       },
       {

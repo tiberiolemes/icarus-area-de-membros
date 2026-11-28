@@ -1,6 +1,12 @@
-import { useState } from "react";
-import { Empty, Field, QueryState } from "../ui";
-import { text, useAll, type Row } from "./admin-data";
+import { useEffect, useId, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { cache, errorMessage, rpc } from "../api";
+import { Dropzone } from "../dropzone";
+import { overLimit } from "../optimize";
+import { Action, Empty, Field, Notice, QueryState } from "../ui";
+import { hints, sendFile, Upload } from "../upload";
+import { statusName } from "./community";
+import { materialSize, materialTypes, save, text, useAll, type Row } from "./admin-data";
 import "./admin-material-lessons.css";
 
 const byOrder = (a: Row, b: Row) => Number(a.order_index) - Number(b.order_index) || a.id.localeCompare(b.id);
@@ -77,5 +83,153 @@ export function LessonLinks({ selected }: { selected: string[] }) {
         ) : <Empty>Nenhuma aula cadastrada.</Empty>}
       </QueryState>
     </fieldset>
+  );
+}
+
+// Os tipos da dica: um arquivo que a função upload recusaria nem chega a criar o material.
+const materialFiles = ".pdf,.png,.jpg,.jpeg,.webp,.zip,.txt,.mp3";
+// Nome do arquivo sem a extensão, com a inicial maiúscula, no limite de 200 caracteres do material.
+function materialName(file: File) {
+  const base = file.name.replace(/\.[^.]+$/, "") || file.name;
+  return (base.charAt(0).toLocaleUpperCase("pt-BR") + base.slice(1)).slice(0, 200);
+}
+const draftLeft = " O arquivo foi enviado, mas o material continua em rascunho. Publique em Editar em Materiais.";
+
+/** Materiais da aula salva. Soltar um arquivo cria o material já vinculado, como rascunho, envia e só então publica. */
+export function LessonMaterials({ lessonId }: { lessonId: string }) {
+  const materials = useAll("materials"),
+    heading = useId(),
+    [sending, setSending] = useState<{ file: File; id?: string }>(),
+    [resend, setResend] = useState(""),
+    [state, setState] = useState(""),
+    [error, setError] = useState(""),
+    controller = useRef<AbortController | null>(null),
+    input = useRef<HTMLInputElement>(null),
+    status = useRef<HTMLParagraphElement>(null);
+  useEffect(() => () => controller.current?.abort(), []);
+  const linked = (materials.data ?? []).filter((row) => (row.lesson_ids as string[] | undefined)?.includes(lessonId));
+  const publish = (id: string, file: File) => save("materials", id, { status: "published", file_type: file.type });
+  // O botão usado some da lista: o foco vai para a confirmação.
+  const announce = (message: string) => {
+    setError("");
+    setState(message);
+    requestAnimationFrame(() => status.current?.focus());
+  };
+
+  async function add(file: File | undefined) {
+    if (!file || controller.current) return;
+    setError("");
+    setState("");
+    const refused = overLimit(file);
+    if (refused) {
+      setError(refused);
+      if (input.current) input.current.value = "";
+      return;
+    }
+    const abort = (controller.current = new AbortController());
+    let id = "", sent: File | undefined;
+    setSending({ file });
+    try {
+      setState("Criando o material…");
+      // Todos os membros: quem controla o acesso é a aula.
+      ({ id } = await save("materials", null, {
+        name: materialName(file), folder_id: null, lesson_ids: [lessonId], status: "draft",
+        access_mode: "members", plan_ids: [], file_type: file.type,
+      }));
+      setSending({ file, id });
+      sent = await sendFile("material", id, file, abort.signal, setState);
+      await publish(id, sent);
+      setState("Material enviado e publicado na aula.");
+    } catch (err) {
+      setState("");
+      const reason = abort.signal.aborted ? "Envio cancelado." : errorMessage(err);
+      setError(!id ? reason : sent ? reason + draftLeft : `${reason} O material ficou em rascunho, sem arquivo. Use Reenviar arquivo na lista.`);
+      void materials.refetch();
+    } finally {
+      controller.current = null;
+      setSending(undefined);
+      if (input.current) input.current.value = "";
+    }
+  }
+
+  async function republish(id: string, file: File) {
+    setError("");
+    try {
+      await publish(id, file);
+      setResend("");
+      announce("Arquivo enviado e material publicado na aula.");
+    } catch (err) {
+      setError(errorMessage(err) + draftLeft);
+      void materials.refetch();
+    }
+  }
+
+  return (
+    <section className="lesson-materials" aria-labelledby={heading}>
+      <h3 id={heading}>Materiais da aula</h3>
+      <QueryState query={materials}>
+        {linked.length ? (
+          <ul className="lesson-materials-list">
+            {linked.map((row) => {
+              const missing = !row.storage_path, uploading = sending?.id === row.id;
+              return (
+                <li key={row.id}>
+                  <div>
+                    <strong>{text(row, "name")}</strong>
+                    <span>
+                      {statusName(text(row, "status"))} ·{" "}
+                      {missing
+                        ? uploading ? "Enviando arquivo" : "Sem arquivo"
+                        : `${materialTypes[text(row, "file_type")] ?? "Arquivo"} · ${materialSize(Number(row.size_bytes))}`}
+                    </span>
+                  </div>
+                  <div className="actions">
+                    <Link className="button" to={`/admin/materiais?editar=${encodeURIComponent(row.id)}`}>Editar em Materiais</Link>
+                    {missing && !uploading && row.status !== "archived" && (
+                      <button type="button" aria-expanded={resend === row.id} onClick={() => setResend(resend === row.id ? "" : row.id)}>
+                        Reenviar arquivo
+                      </button>
+                    )}
+                    {/* Durante o envio, desvincular deixaria o material publicado sem aula e aberto a todos os membros. */}
+                    <Action disabled={uploading} run={async () => {
+                      const result = await rpc<{ id: string; status: string }>("app_admin_unlink_material", { p_material_id: row.id, p_lesson_id: lessonId });
+                      await cache.invalidateQueries({ queryKey: ["app_admin_list"] });
+                      announce(result.status === "draft" && row.status !== "draft"
+                        ? "Material desvinculado da aula. Sem nenhuma aula, ele voltou para rascunho."
+                        : "Material desvinculado da aula.");
+                    }}>
+                      Desvincular
+                    </Action>
+                  </div>
+                  {missing && resend === row.id && (
+                    <Upload kind="material" resourceId={row.id} onUploaded={(file) => void republish(row.id, file)} />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        ) : <Empty>Nenhum material nesta aula.</Empty>}
+      </QueryState>
+      <Dropzone
+        label="Adicionar material"
+        hint={hints.material}
+        accept={materialFiles}
+        disabled={!!sending}
+        fileName={sending?.file.name}
+        fileSize={sending?.file.size}
+        inputRef={input}
+        onFile={(file) => void add(file)}
+      />
+      {sending && (
+        <>
+          <div className="actions">
+            <button type="button" onClick={() => controller.current?.abort()}>Cancelar envio</button>
+          </div>
+          <progress aria-label="Envio em andamento, sem estimativa percentual" />
+        </>
+      )}
+      <p className="lesson-materials-status" role="status" tabIndex={-1} ref={status}>{state}</p>
+      {error && <Notice error>{error}</Notice>}
+    </section>
   );
 }

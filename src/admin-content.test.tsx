@@ -68,6 +68,8 @@ const fixtures: Record<string, { id: string; [key: string]: unknown }[]> = {
       order_index: 1,
     },
   ],
+  // O editor da aula lista os materiais vinculados.
+  materials: [],
 };
 let records: typeof fixtures;
 let calls: { url: string; body: Record<string, unknown> }[];

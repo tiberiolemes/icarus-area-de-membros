@@ -12,7 +12,7 @@ const avatarSignatures: Record<string, number[]> = {
   "image/png": [137, 80, 78, 71, 13, 10, 26, 10],
 };
 
-const hints: Record<UploadKind, string> = {
+export const hints: Record<UploadKind, string> = {
   "course-cover": "PNG, JPG ou WebP · até 500 KB depois de otimizada · ideal 1600\u00a0×\u00a0900\u00a0px",
   material: "PDF, imagem, ZIP, TXT ou MP3 · PDF até 5 MB e imagem até 500 KB depois de otimizados · ZIP, TXT e MP3 até 500 MB",
   "post-image": "PNG, JPG ou WebP · até 500 KB depois de otimizada",

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { date, downloadBlob, rpc, useRpc } from "../api";
 import { Action, Empty, Heading, NavigationTabs, QueryState } from "../ui";
 import { useModules } from "../modules";
+import { HelpLink } from "../help-link";
 import "./events.css";
 
 type EventPreview = { id: string; starts_at: string; title?: string; guest?: string };
@@ -211,7 +212,7 @@ export function Events() {
         </div>
         <div className="event-actions">
           <Link className="button primary" to="/app/configuracoes?aba=assinatura">Minha assinatura</Link>
-          {modules.help && <Link className="button" to="/ajuda/encontros">Ajuda sobre encontros</Link>}
+          {modules.help && <HelpLink className="button" to="/ajuda/encontros">Ajuda sobre encontros</HelpLink>}
         </div>
       </section>
     </div>

@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { HelpCircle } from "lucide-react";
 import { rpc } from "./api";
 import { useAuth, useBootstrap } from "./auth";
 import { readModules, type Modules } from "./modules";
+import { HelpLink } from "./help-link";
 import { helpPathFor } from "./pages/help-paths";
 import { Action } from "./ui";
 
@@ -350,7 +351,10 @@ export function Tour() {
     <>
     {active && step && <div className="tour-shade" aria-hidden="true"><div className="tour-spotlight" ref={spotlight} /></div>}
     <aside className="tour-panel" aria-label="Guia desta tela" ref={panel} tabIndex={-1} onKeyDown={(event) => {
-      if (event.key === "Escape") { event.stopPropagation(); close(); }
+      if (event.key === "Escape" && event.currentTarget.contains(event.target as Node)) {
+        event.stopPropagation();
+        close();
+      }
     }}>
       <h2>{done ? "O guia ajudou?" : (step?.title ?? "Conheça esta tela")}</h2>
       {done ? (
@@ -376,7 +380,7 @@ export function Tour() {
         <>
           <p>
             {step?.target === "navigation" ? navigationBody(modules) : step?.body ?? (helpOpen
-              ? "Consulte a central de ajuda para ver os passos completos deste fluxo."
+              ? "Abra Ajuda completa para ver os passos deste fluxo sem sair da tela."
               : "Esta tela ainda não tem um guia próprio.")}
           </p>
           {step && <p className="meta">
@@ -415,9 +419,9 @@ export function Tour() {
         </>
       )}
       {helpOpen && (
-        <Link className="text-action" to={helpPathFor(pathname, search)}>
+        <HelpLink className="text-action" to={helpPathFor(pathname, search)}>
           Ajuda completa
-        </Link>
+        </HelpLink>
       )}
     </aside>
     </>,

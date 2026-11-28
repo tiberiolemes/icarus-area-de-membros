@@ -5,6 +5,7 @@ import { Link, useHref, useNavigate, useParams } from "react-router-dom";
 import { useRpc, date, rpc } from "../api";
 import type { Certificate, Course } from "../api";
 import { useAuth } from "../auth";
+import { HelpLink } from "../help-link";
 import { Action, Empty, Field, Form, Heading, Notice, Progress, QueryState, value } from "../ui";
 import { PublicFrame } from "./access";
 import { RichContent } from "../rich";
@@ -324,7 +325,7 @@ export function CertificatePage({ verify = false }: { verify?: boolean }) {
               if (verify && code === nextCode) await query.refetch();
               else navigate(verificationPath(nextCode));
             }} />
-            {modules.help && <Link className="text-action" to="/ajuda/certificados">Ajuda sobre certificados</Link>}
+            {modules.help && <HelpLink className="text-action" to="/ajuda/certificados">Ajuda sobre certificados</HelpLink>}
             <Link className="text-action" to="/app/certificados">Meus certificados</Link>
           </div>
         </div>

@@ -40,7 +40,8 @@ export const teamArticles: HelpArticle[] = [
         title: "Pedir ajuda dentro de cada tela",
         list: [
           "**Guia desta tela**, no topo, destaca as partes principais da página e explica o que elas fazem. Em algumas telas, ele mostra só o menu.",
-          "**Ajuda da administração**, no fim de cada página, abre o artigo sobre aquela tela.",
+          "**Ajuda da administração**, no fim de cada página, abre o artigo sobre aquela tela sem sair do painel.",
+          "Use **Abrir em uma nova janela** para ler o artigo em outra aba e manter o painel aberto.",
         ],
       },
       {

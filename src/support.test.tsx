@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -19,6 +20,29 @@ afterEach(() => {
   cache.clear();
   vi.unstubAllGlobals();
 });
+
+it("abre os guias e a ajuda do atendimento sem sair do suporte", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => Response.json({ total: 0, items: [] })));
+  render(
+    <QueryClientProvider client={cache}>
+      <MemoryRouter initialEntries={["/app/suporte"]}>
+        <Routes>
+          <Route path="/app/suporte" element={<Tickets />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  const shortcut = screen.getByRole("link", { name: /Central de ajuda/ });
+  fireEvent.click(shortcut);
+  const index = within(await screen.findByRole("dialog"));
+  expect(await index.findByRole("searchbox", { name: "Buscar na ajuda" })).toBeVisible();
+  fireEvent.click(index.getByRole("button", { name: "Fechar" }));
+  expect(screen.getByRole("heading", { name: "Central de suporte" })).toBeVisible();
+  fireEvent.click(screen.getByRole("link", { name: "Acompanhar chamados e anexos" }));
+  const article = within(await screen.findByRole("dialog"));
+  expect(article.getByRole("link", { name: "Abrir em uma nova janela" })).toHaveAttribute("href", "/ajuda/suporte");
+});
+
 it("preserva assunto, prioridade e mensagem após uma falha e abre o chamado confirmado pelo servidor", async () => {
   const submissions: unknown[] = [];
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {

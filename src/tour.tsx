@@ -212,6 +212,7 @@ function navigationBody(state: Modules) {
   const listed = sections.length > 1 ? `${sections.slice(0, -1).join(", ")} e ${sections.at(-1)}` : sections[0];
   return [
     `O menu reúne ${listed}. No celular, abra o menu pelo topo.`,
+    "No computador, use Recolher menu para ver só os ícones e Expandir menu para voltar a ver os nomes. Os atalhos do rodapé continuam visíveis enquanto você rola a lista.",
     "Contas administradoras têm o atalho Administração logo abaixo de Configurações, no fim do menu da área de membros. Instrutores, moderadores e suporte têm, no mesmo lugar, atalhos para suas ferramentas.",
     state.ranking && "A barra inferior do celular também dá acesso ao Ranking.",
     state.materials && "Materiais tem um atalho na barra inferior do celular.",

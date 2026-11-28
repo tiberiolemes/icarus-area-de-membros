@@ -1,12 +1,10 @@
 import { FolderOpen } from "lucide-react";
 import { useId, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { Notice } from "./ui";
+import { materialSize } from "./pages/admin-data";
 import "./dropzone.css";
 
 const video = "A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube.";
-const number = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
-const size = (bytes: number) =>
-  bytes >= 1_048_576 ? `${number.format(bytes / 1_048_576)} MB` : bytes >= 1024 ? `${number.format(bytes / 1024)} KB` : `${number.format(bytes)} B`;
 
 // Arquivo sem tipo informado segue para a conferência pelo conteúdo, feita por quem recebe e pelo servidor.
 const accepts = (accept: string | undefined, file: File) =>
@@ -70,7 +68,7 @@ export function Dropzone({ label, hint, accept, name, disabled, fileName, fileSi
         <FolderOpen size={40} strokeWidth={1.5} aria-hidden="true" />
         <strong className="dropzone-drag">Arraste o arquivo aqui</strong>
         <span className="dropzone-or">ou</span>
-        {fileName && <span className="dropzone-file"><strong>{fileName}</strong>{fileSize !== undefined && ` · ${size(fileSize)}`}</span>}
+        {fileName && <span className="dropzone-file"><strong>{fileName}</strong>{fileSize !== undefined && ` · ${materialSize(fileSize)}`}</span>}
         <button type="button" disabled={disabled} aria-describedby={`${id}-hint`} onClick={() => input.current?.click()}>
           {fileName ? "Trocar arquivo" : "Selecionar arquivo"}
         </button>

@@ -97,6 +97,7 @@ insert into public.certificates(id,user_id,course_id,curriculum_version,student_
 select pg_temp.id(700),pg_temp.id(4),c.id,c.curriculum_version,'Pessoa fictícia 4',c.title,20,c.required_lesson_ids from public.courses c where c.id=pg_temp.id(100);
 insert into app_private.catalog_launches(id,module_id,title,summary,enabled) values(pg_temp.id(600),pg_temp.id(101),'Lançamento fictício','Resumo fictício',true);
 insert into app_private.catalog_launch_signups(launch_id,user_id) values(pg_temp.id(600),pg_temp.id(4));
+insert into public.notifications(user_id,event_key,source_id) values(pg_temp.id(4),'catalog_launch',pg_temp.id(600));
 -- Outro curso com um módulo cujas aulas ficam só na seção automática, escondida no painel.
 insert into public.courses(id,slug,title,status,access_mode) values(pg_temp.id(110),'curso-secao-automatica','Curso com seção automática','draft','members');
 insert into public.modules(id,course_id,slug,title,status) values(pg_temp.id(111),pg_temp.id(110),'modulo-sem-secao','Módulo sem seção','published');
@@ -231,7 +232,9 @@ reset role;
 select pg_temp.ok(not exists(select 1 from public.modules where id=pg_temp.id(101)) and not exists(select 1 from public.sections where id=pg_temp.id(103))
  and not exists(select 1 from public.lessons where id=pg_temp.id(106)),'excluir o módulo apaga as seções e aulas dele');
 select pg_temp.ok(not exists(select 1 from app_private.catalog_launches where id=pg_temp.id(600))
- and not exists(select 1 from app_private.catalog_launch_signups where launch_id=pg_temp.id(600)),'excluir o módulo apaga o lançamento e as inscrições');
+ and not exists(select 1 from app_private.catalog_launch_signups where launch_id=pg_temp.id(600))
+ and not exists(select 1 from public.notifications where event_key='catalog_launch' and source_id=pg_temp.id(600)),
+ 'excluir o módulo apaga o lançamento, as inscrições e o aviso de lançamento');
 select pg_temp.ok((select required_lesson_ids='{}' and curriculum_version=(select version from before_delete) from public.courses where id=pg_temp.id(100))
  and (select to_jsonb(x) from public.certificates x where x.id=pg_temp.id(700))=(select certificate from before_delete),
  'curso fica sem obrigatórias, com a mesma versão e o certificado intacto');

@@ -68,6 +68,8 @@ declare item_name text;s record;paths text[];begin
  -- material_lessons sai em cascata com aulas e materiais.
  delete from public.lessons where id=any(s.lesson_ids);
  delete from public.sections where id=any(s.section_ids);
+ -- O aviso de lançamento também aponta para o lançamento sem chave estrangeira.
+ delete from public.notifications where event_key='catalog_launch' and source_id in (select id from app_private.catalog_launches where p_entity='modules' and module_id=p_id);
  delete from app_private.catalog_launch_signups where launch_id in (select id from app_private.catalog_launches where p_entity='modules' and module_id=p_id);
  delete from app_private.catalog_launches where p_entity='modules' and module_id=p_id;
  delete from public.modules where p_entity='modules' and id=p_id;
@@ -78,7 +80,7 @@ declare item_name text;s record;paths text[];begin
   where required_lesson_ids&&s.lesson_ids;
  -- Como no desvínculo: sem aula, volta para rascunho; arquivado continua arquivado e restaura como rascunho.
  update public.materials set status=case when status='archived' then status else 'draft' end,previous_status=case when status='archived' then 'draft' else previous_status end
-  where id=any(s.orphan_ids);
+  where id=any(s.orphan_ids) and not exists(select 1 from public.material_lessons ml where ml.material_id=materials.id);
  perform app_private.audit(p_actor_id,'delete',p_entity,p_id,item_name);
  return jsonb_build_object('id',p_id,'paths',to_jsonb(paths));
 end $$;

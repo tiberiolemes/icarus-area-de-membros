@@ -23,6 +23,7 @@ Numeração igual à do pedido.
 13. A lupa da busca do aluno ganha fundo preto e ícone branco no tema claro, e o inverso no escuro.
 14. Buscar os vídeos da biblioteca do Bunny direto do campo de vídeo da aula.
 15. A plataforma deixa de receber vídeo: some o envio de MP4 da aula, do material e do anexo de suporte.
+16. Criar conta ganha tela de sucesso (pedido de Tibério em 28/nov/2026, depois da aprovação do plano). Hoje o formulário é AJAX, mas depois de enviar a tela fica igual: mesmo título, campos preenchidos, senha apagada, Turnstile reiniciado, um aviso pequeno no topo (fora da vista no celular) e "Salvo com sucesso." ao lado do botão, o que parece recarga. O mesmo acontece em Recuperar acesso e Reenviar confirmação, que entram juntas porque o defeito é o mesmo código (`Access` em `src/pages/access.tsx`).
 
 Imagens de referência enviadas por Tibério, que valem como especificação visual: `~/ai/projetos/icarus-area-de-membros/imagens/2026-11-28-melhorias-painel/` (01 vínculo do material, 02 rodapé da barra, 03 modelo de upload, 04 contorno do filtro, 05 lupa da busca, 06 campo do Bunny, 07 arquivo de vídeo).
 
@@ -196,6 +197,15 @@ Modelo da imagem 3, com os tokens do DS:
 - Servidor recusa: `kind = 'lesson'` na função `upload` e em `app_upload_access`, e `video/mp4` em qualquer envio (material, anexo de suporte). Mensagem: "A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube."
 - O que já foi enviado continua tocando e baixando (`app_media_access` e `media` sem mudança). O tipo "Vídeo MP4" continua só como rótulo de materiais antigos; sai das opções de escolha.
 - Dicas, artigos e o guia de operação deixam de citar MP4 de até 500 MiB.
+
+### 16. Tela de sucesso no cadastro e na recuperação
+
+- Ao enviar com sucesso, o formulário some e entra uma tela de confirmação no mesmo quadro, com ícone de email, título "Confira seu email" (o foco vai para ele) e o endereço digitado em destaque.
+- Criar conta: "Se o endereço puder ser cadastrado, você vai receber um link de confirmação em {email}. Abra a mensagem e clique no link para ativar sua conta." e "Não chegou em alguns minutos? Confira a pasta de spam ou reenvie a confirmação." Ações: "Voltar para entrar" (principal) e "Reenviar confirmação".
+- Recuperar acesso: "Se houver uma conta com {email}, você vai receber um link para criar uma nova senha." Ações: "Voltar para entrar" e "Enviar de novo" (volta ao formulário).
+- Reenviar confirmação: "Se houver uma confirmação pendente para {email}, enviamos um novo link." Ação: "Voltar para entrar".
+- O texto continua sem dizer se o email já existe, para não revelar quem tem conta, como hoje.
+- "Salvo com sucesso." deixa de aparecer nessas telas.
 
 ## Decisões de Tibério (28/nov/2026)
 

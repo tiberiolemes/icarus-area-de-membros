@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Entregar os 15 ajustes pedidos por Tibério em 28/nov/2026 (vínculos de material, exclusão definitiva, uploads, ajuda em popup, rascunho local, barra lateral, arraste e polimentos do DS) na versão 2.13.0 do Icarus.
+**Goal:** Entregar os 16 ajustes pedidos por Tibério em 28/nov/2026 (vínculos de material, exclusão definitiva, uploads, ajuda em popup, rascunho local, barra lateral, arraste, polimentos do DS e tela de sucesso do cadastro) na versão 2.13.0 do Icarus.
 
 **Architecture:** Regras de acesso, exclusão e recusa de vídeo ficam no Postgres (RPCs `security definer` com grants mínimos), com Edge Functions só onde há Storage ou chave de terceiro (`upload` para apagar arquivos, `capabilities` para a API do Bunny). O front em React reaproveita `Form`, `Modal`, `Field`, `Notice` e os tokens do DS; peças novas ficam em arquivos próprios para não inchar `src/pages/admin.tsx` (3.091 linhas).
 
@@ -769,7 +769,44 @@ git commit -m "fix: tira o contorno fora do design system e destaca a lupa da bu
 
 ---
 
-### Task 17: Versão 2.13.0, verificação completa e PR
+### Task 17: Tela de sucesso no cadastro e na recuperação
+
+**Files:**
+- Modify: `src/pages/access.tsx:364-575` (`Access`)
+- Modify: `src/login.test.tsx` (casos novos, no arranjo `setup()` existente, com rota de `/signup`, `/recover` e `/resend` no `fetch` falso)
+- Modify: artigo de acesso do aluno em `src/pages/help-articles-member.ts` (o que cita a mensagem depois de criar conta ou recuperar)
+
+**Interfaces:**
+- Produces: `Access` guarda `sent: { mode: "register" | "forgot" | "confirm"; email: string } | null`; com `sent`, troca `Heading` e `Form` pela tela de confirmação. `Form` dessas três telas recebe `successMessage=""`.
+
+- [ ] **Step 1: Escrever os testes que falham**
+
+Em `src/login.test.tsx`, com `app_public_context` devolvendo `{registration_enabled: true, legal_ready: true, legal_versions: [{id: "v1"}]}` nos casos de cadastro:
+- `"criar conta troca o formulário pela tela Confira seu email com o endereço"`: depois do envio, `heading` nível 1 "Confira seu email" com foco, texto com `ana@example.test`, nenhum `form`, nenhum "Salvo com sucesso.", links "Voltar para entrar" (`/entrar?returnTo=…`) e "Reenviar confirmação" (`/confirmar-email?returnTo=…`).
+- `"erro no cadastro mantém o formulário e mostra o erro"`: `/signup` 422 → formulário continua, alerta com a mensagem.
+- `"recuperar acesso mostra a confirmação e Enviar de novo volta ao formulário"`.
+- `"reenviar confirmação mostra a confirmação"`.
+
+- [ ] **Step 2: Rodar e ver falhar**
+
+Run: `npx vitest run src/login.test.tsx`. Expected: FAIL nos quatro casos novos.
+
+- [ ] **Step 3: Implementar**
+
+Textos literais da seção 16 da spec. Ícone `MailCheck` do lucide, título com `Heading` (o `RouteFocus` foca o novo H1), email em `<strong>`. O `finally` que reinicia o Turnstile e limpa a senha continua.
+
+- [ ] **Step 4: Rodar e ver passar; ajuda; commit**
+
+Run: `npx vitest run src/login.test.tsx src/captcha.test.tsx && npm run typecheck`. Expected: PASS.
+
+```bash
+git add src
+git commit -m "feat: cadastro e recuperação de acesso mostram tela de confirmação"
+```
+
+---
+
+### Task 18: Versão 2.13.0, verificação completa e PR
 
 **Files:**
 - Modify: `package.json`, `package-lock.json` (versão `2.13.0`), `CHANGELOG.md`, `docs/operations.md`, `docs/CONTRACT.md`
@@ -780,7 +817,7 @@ git commit -m "fix: tira o contorno fora do design system e destaca a lupa da bu
 
 - [ ] **Step 1: Changelog e guia**
 
-Entrada `## 2.13.0 · <data>` no padrão das anteriores, cobrindo os 15 itens e "Para atualizar da 2.12.0, aplique as migrations `202611280001` a `202611280004`, publique as Edge Functions `upload` e `capabilities` e então publique o frontend." Guia de operação sem envio de vídeo e com a exclusão definitiva.
+Entrada `## 2.13.0 · <data>` no padrão das anteriores, cobrindo os 16 itens e "Para atualizar da 2.12.0, aplique as migrations `202611280001` a `202611280004`, publique as Edge Functions `upload` e `capabilities` e então publique o frontend." Guia de operação sem envio de vídeo e com a exclusão definitiva.
 
 - [ ] **Step 2: Verificação local completa**
 

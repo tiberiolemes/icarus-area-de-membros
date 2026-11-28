@@ -651,6 +651,23 @@ h2 > a,
 .dialog h2 {
   padding-right: 44px;
 }
+.dialog-help {
+  width: min(50rem, calc(100% - 32px));
+}
+.dialog-help > h2 {
+  padding-inline-end: 88px;
+}
+.dialog-help .help h2 {
+  padding-right: 0;
+}
+.dialog-help .help-window {
+  position: absolute;
+  top: 16px;
+  right: 64px;
+}
+.dialog-help .help-return {
+  margin-block-end: var(--stitch-space-md);
+}
 .dialog .close,
 .drawer .close {
   position: absolute;

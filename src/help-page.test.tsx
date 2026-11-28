@@ -159,6 +159,7 @@ it("uma resposta aberta em um artigo não aparece aberta no artigo seguinte", ()
   mount("/app/ajuda/guia");
   screen.getByText("Não deu certo").closest("details")!.open = true;
   fireEvent.click(screen.getByRole("link", { name: "Outro guia" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.getByRole("heading", { level: 1, name: "Outro guia" })).toBeVisible();
   expect(screen.getByText("Outra dúvida").closest("details")).not.toHaveAttribute("open");
 });

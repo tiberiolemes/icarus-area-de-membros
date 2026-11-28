@@ -92,6 +92,7 @@ import { CoverFocus } from "./admin-course-cover";
 import { Reauth } from "./settings";
 import { Moderate, statusName } from "./community";
 import { useBootstrap } from "../auth";
+import { HelpLink } from "../help-link";
 import { moduleLabel, modules, readModules, type ModuleKey } from "../modules";
 import { Upload } from "../upload";
 import "./admin-commercial.css";
@@ -716,9 +717,9 @@ function Structure({ course }: { course: Row }) {
         />
         <p className="content-hint">
           {reordering && "Use Subir e Descer para mudar a ordem dos itens. "}
-          <Link className="text-action" to="/ajuda/criar-curso">
+          <HelpLink className="text-action" to="/ajuda/criar-curso">
             Ajuda sobre conteúdo
-          </Link>
+          </HelpLink>
         </p>
         {deleted.notice}
         <QueryState query={modules}>

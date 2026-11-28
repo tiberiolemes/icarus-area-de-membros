@@ -1,4 +1,5 @@
 import { AdminSurface } from "./admin-surface";
+import { HelpLink } from "../help-link";
 import { useCallback, useRef, useState } from "react";
 import {
   Link,
@@ -124,9 +125,9 @@ function ReviewInfo({ guide = false }: { guide?: boolean }) {
       </p>
       <p>Denúncias são analisadas pela equipe de moderação.</p>
       {guide && modules.help && (
-        <Link className="community-context-link" to="/ajuda/comunidade">
+        <HelpLink className="community-context-link" to="/ajuda/comunidade">
           Como publicar na comunidade <ArrowRight size={16} aria-hidden="true" />
-        </Link>
+        </HelpLink>
       )}
     </section>
   );

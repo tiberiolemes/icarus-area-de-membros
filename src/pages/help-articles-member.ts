@@ -27,6 +27,7 @@ export const memberArticles: HelpArticle[] = [
           "Crie uma **Senha** com pelo menos 12 caracteres, com letra maiúscula, minúscula, número e símbolo.",
           "Marque **Li e aceito os Termos de uso e a Política de privacidade**. A caixa de comunicações de marketing é opcional.",
           "Clique em **Criar conta**.",
+          "A tela **Confira seu email** mostra o endereço informado. Se o endereço puder ser cadastrado, você vai receber um link de confirmação.",
           {
             text: "Abra a mensagem de confirmação no seu e-mail e clique no link. Ele confirma o cadastro e abre a plataforma na tela **Complete seu perfil**.",
             note: "Se o link abrir a tela de entrada, entre com o e-mail e a senha que você criou.",
@@ -39,11 +40,12 @@ export const memberArticles: HelpArticle[] = [
         steps: [
           "Na tela de entrada, clique em **Esqueci minha senha**.",
           "Digite o **Email** da conta e clique em **Solicitar recuperação**.",
+          "Na tela **Confira seu email**, verifique o endereço informado. Para solicitar outro link, clique em **Enviar de novo** e preencha o formulário.",
           "Abra a mensagem mais recente que chegar e clique no link.",
           "Na tela **Defina uma nova senha**, preencha **Senha** e **Confirme a nova senha**. Use pelo menos 12 caracteres, com letra maiúscula, minúscula, número e símbolo.",
           "Clique em **Salvar nova senha**. Você já entra na plataforma com a senha nova.",
         ],
-        note: "Por segurança, a tela mostra o mesmo aviso exista ou não uma conta com aquele e-mail. Se nada chegar, confira se o endereço foi digitado certo.",
+        note: "Por segurança, a tela **Confira seu email** tem a mesma mensagem para todos os endereços. Se nada chegar, confira se o endereço foi digitado certo.",
       },
       {
         title: "Primeiro acesso por convite ou compra",
@@ -77,9 +79,9 @@ export const memberArticles: HelpArticle[] = [
     ],
     trouble: [
       ["A tela diz que o e-mail ou a senha são inválidos", "Confira se o e-mail é o mesmo do cadastro ou da compra e se a tecla de maiúsculas não ficou ligada. Se a dúvida for a senha, use **Esqueci minha senha**."],
-      ["Aparece um aviso pedindo para confirmar o e-mail", "Clique em **Reenviar confirmação de email**, logo abaixo do formulário. Na tela **Confirme seu email**, digite o **Email** e clique em **Reenviar confirmação**. Depois abra o link da mensagem mais recente, porque o anterior deixa de valer."],
+      ["Aparece um aviso pedindo para confirmar o e-mail", "Clique em **Reenviar confirmação de email**, logo abaixo do formulário. Na tela **Confirme seu email**, digite o **Email** e clique em **Reenviar confirmação**. A tela **Confira seu email** mostra o endereço informado. Se houver uma confirmação pendente, abra o link da mensagem mais recente."],
       ["O link do e-mail abriu uma tela dizendo que expirou", "Os links valem por tempo limitado e funcionam uma única vez. Na própria tela, clique em **Reenviar confirmação** ou em **Solicitar recuperação** e informe o seu e-mail para receber um link novo."],
-      ["A mensagem não chegou", "Espere alguns minutos e olhe a caixa de spam e a de promoções. Para a confirmação do cadastro, tente entrar e use o link **Reenviar confirmação de email**. Para a recuperação, repita **Esqueci minha senha**. O convite e o acesso de uma compra não têm reenvio na tela de entrada. Nesse caso, fale com a equipe e informe o e-mail usado."],
+      ["A mensagem não chegou", "Espere alguns minutos e olhe a caixa de spam e a de promoções. Depois de criar a conta, use **Reenviar confirmação** na tela **Confira seu email**. Na recuperação da senha, use **Enviar de novo**. Para reenviar um convite ou o acesso de uma compra, fale com a equipe e informe o e-mail usado."],
       ["Apareceu um aviso de muitas tentativas", "A plataforma pausa novas tentativas por alguns minutos para proteger a conta. Aguarde e tente de novo com calma."],
       ["A verificação de segurança não aparece ou não termina", "Recarregue a página. Se você usa bloqueador de anúncios, libere este site e tente outra vez."],
       ["Apareceu a tela Acesso indisponível", "A conta está suspensa ou sem acesso à área de membros. Fale com a equipe responsável pela plataforma para entender o motivo. O botão **Sair e usar outra conta** leva de volta à tela de entrada."],

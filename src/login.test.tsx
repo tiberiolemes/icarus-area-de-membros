@@ -49,6 +49,8 @@ function Location() {
 let touchReply: { seconds: number; remembered?: boolean } = { seconds: 1800 };
 let profileOverride: Record<string, unknown> = {};
 let bootstrapError = false;
+let registrationEnabled = false;
+let signupFails = false;
 let startAt = "/entrar?returnTo=/admin/cursos";
 function setup(hasFactor: boolean, failCode = false, loginError?: string, rememberFails = false) {
   const user = {
@@ -72,6 +74,7 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string, rememb
     "fetch",
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      const path = new URL(url).pathname;
       requests.push(url);
       if (url.includes("app_bootstrap")) {
         if (bootstrapError) return json({ code: "P0001", message: "Acesso indisponível." }, 400);
@@ -99,8 +102,14 @@ function setup(hasFactor: boolean, failCode = false, loginError?: string, rememb
           : json({ expires_at: new Date(Date.now() + 15 * 86400000).toISOString() });
       }
       if (url.includes("app_public_context")) {
-        return json({ registration_enabled: false, legal_ready: false });
+        return registrationEnabled
+          ? json({ registration_enabled: true, legal_ready: true, legal_versions: [{ id: "v1" }] })
+          : json({ registration_enabled: false, legal_ready: false });
       }
+      if (path === "/auth/v1/signup") return signupFails
+        ? json({ msg: "Password is too weak", code: "weak_password" }, 422)
+        : json(user);
+      if (path === "/auth/v1/recover" || path === "/auth/v1/resend") return json({});
       if (url.endsWith("/user")) {
         return json(user);
       }
@@ -165,6 +174,8 @@ beforeEach(() => {
   touchReply = { seconds: 1800 };
   profileOverride = {};
   bootstrapError = false;
+  registrationEnabled = false;
+  signupFails = false;
   startAt = "/entrar?returnTo=/admin/cursos";
   localStorage.clear();
   sessionStorage.clear();
@@ -368,6 +379,72 @@ it("cadastro fechado mostra um aviso com a saída e não oferece o formulário",
   expect(document.querySelectorAll(".notice")).toHaveLength(1);
   expect(screen.getByRole("link", { name: "Voltar para entrar" })).toHaveAttribute("href", expect.stringContaining("/entrar"));
   expect(screen.queryByRole("button", { name: "Criar conta" })).not.toBeInTheDocument();
+});
+
+async function submitEmail(label: string) {
+  const submit = await screen.findByRole("button", { name: label });
+  fireEvent.change(screen.getByLabelText("Email"), { target: { value: "ana@example.test" } });
+  fireEvent.submit(submit.closest("form")!);
+}
+
+async function submitSignup() {
+  registrationEnabled = true;
+  startAt = "/cadastro?returnTo=/admin/cursos";
+  setup(false);
+  fireEvent.change(await screen.findByLabelText("Nome completo"), { target: { value: "Ana Exemplo" } });
+  fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "SenhaFicticia123!" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /Li e aceito/ }));
+  await submitEmail("Criar conta");
+}
+
+async function expectEmailConfirmation(text: string) {
+  const heading = await screen.findByRole("heading", { name: "Confira seu email", level: 1 });
+  await waitFor(() => expect(heading).toHaveFocus());
+  expect(screen.getByText("ana@example.test", { selector: "strong" }).closest("p")).toHaveTextContent(text);
+  expect(document.querySelector("form")).not.toBeInTheDocument();
+  expect(screen.queryByText("Salvo com sucesso.")).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Voltar para entrar" })).toHaveAttribute("href", "/entrar?returnTo=%2Fadmin%2Fcursos");
+}
+
+it("criar conta troca o formulário pela tela Confira seu email com o endereço", async () => {
+  await submitSignup();
+  await expectEmailConfirmation("Se o endereço puder ser cadastrado, você vai receber um link de confirmação em ana@example.test. Abra a mensagem e clique no link para ativar sua conta.");
+  expect(screen.getByText("Não chegou em alguns minutos? Confira a pasta de spam ou reenvie a confirmação.")).toBeVisible();
+  const resend = screen.getByRole("link", { name: "Reenviar confirmação" });
+  expect(resend).toHaveAttribute("href", "/confirmar-email?returnTo=%2Fadmin%2Fcursos");
+  fireEvent.click(resend);
+  expect(await screen.findByRole("button", { name: "Reenviar confirmação" })).toBeVisible();
+});
+
+it("erro no cadastro mantém o formulário e mostra o erro", async () => {
+  signupFails = true;
+  await submitSignup();
+  expect(await screen.findByRole("alert")).toHaveTextContent("A senha não atende aos requisitos de segurança.");
+  expect(screen.getByRole("button", { name: "Criar conta" })).toBeEnabled();
+  expect(screen.getByLabelText("Nome completo")).toHaveValue("Ana Exemplo");
+  expect(screen.getByLabelText("Email")).toHaveValue("ana@example.test");
+  expect(screen.getByLabelText("Senha")).toHaveValue("");
+  expect(screen.queryByRole("heading", { name: "Confira seu email" })).not.toBeInTheDocument();
+});
+
+it("recuperar acesso mostra a confirmação e Enviar de novo volta ao formulário", async () => {
+  startAt = "/recuperar?returnTo=/admin/cursos";
+  const { requests } = setup(false);
+  await submitEmail("Solicitar recuperação");
+  await expectEmailConfirmation("Se houver uma conta com ana@example.test, você vai receber um link para criar uma nova senha.");
+  fireEvent.click(screen.getByRole("button", { name: "Enviar de novo" }));
+  const heading = await screen.findByRole("heading", { name: "Recupere seu acesso", level: 1 });
+  await waitFor(() => expect(heading).toHaveFocus());
+  expect(screen.getByRole("button", { name: "Solicitar recuperação" })).toBeEnabled();
+  expect(requests.filter((url) => new URL(url).pathname === "/auth/v1/recover")).toHaveLength(1);
+});
+
+it("reenviar confirmação mostra a confirmação", async () => {
+  startAt = "/confirmar-email?returnTo=/admin/cursos";
+  setup(false);
+  await submitEmail("Reenviar confirmação");
+  await expectEmailConfirmation("Se houver uma confirmação pendente para ana@example.test, enviamos um novo link.");
+  expect(screen.queryByRole("button", { name: "Enviar de novo" })).not.toBeInTheDocument();
 });
 
 it("conta suspensa recusada pelo servidor vê a explicação com moldura e a saída", async () => {

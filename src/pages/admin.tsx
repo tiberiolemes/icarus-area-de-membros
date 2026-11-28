@@ -366,26 +366,26 @@ function OrderControl({
   entity,
   row,
   siblings,
-  disabled = false,
+  drag,
 }: {
   entity: string;
   row: Row;
   siblings: Row[];
-  disabled?: boolean;
+  drag: ReturnType<typeof useDragOrder>;
 }) {
   const index = siblings.findIndex((item) => item.id === row.id);
   async function move(direction: number) {
     const target = index + direction;
     if (target < 0 || target >= siblings.length) return;
-    await persistOrder(entity, moveItem(siblings, index, target));
+    await drag.run(() => persistOrder(entity, moveItem(siblings, index, target)));
   }
   return (
     <div className="order-controls">
-      <Action disabled={disabled || index <= 0} run={() => move(-1)}>
+      <Action disabled={drag.busy || index <= 0} run={() => move(-1)}>
         <ArrowUp size={18} aria-hidden="true" />
         <span className="sr-only">Subir {text(row, "title")}</span>
       </Action>
-      <Action disabled={disabled || index >= siblings.length - 1} run={() => move(1)}>
+      <Action disabled={drag.busy || index >= siblings.length - 1} run={() => move(1)}>
         <ArrowDown size={18} aria-hidden="true" />
         <span className="sr-only">Descer {text(row, "title")}</span>
       </Action>
@@ -579,7 +579,7 @@ function StructureActions({
   siblings?: Row[];
   onEdit: (event: MouseEvent<HTMLButtonElement>) => void;
   current?: boolean;
-  drag?: ReturnType<typeof useDragOrder>;
+  drag: ReturnType<typeof useDragOrder>;
 }) {
   const label = `Editar ${structureLabels[entity]} ${text(row, "title")}`;
   return (
@@ -594,8 +594,8 @@ function StructureActions({
       >
         <Pencil size={18} aria-hidden="true" />
       </button>
-      {siblings && <OrderControl entity={entity} row={row} siblings={siblings} disabled={drag?.busy} />}
-      {drag?.handle(row)}
+      {siblings && <OrderControl entity={entity} row={row} siblings={siblings} drag={drag} />}
+      {drag.handle(row)}
     </div>
   );
 }

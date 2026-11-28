@@ -29,23 +29,32 @@ export function useDragOrder(entity: string, siblings: Row[]) {
     setDragged(null);
     setOver(null);
   }
-  async function drop(row: Row) {
-    const to = position(row);
-    clear();
-    if (from < 0 || to < 0 || from === to) return;
+  /** Trava única da lista: setas e arraste gravam por aqui, então um não começa enquanto o outro grava. */
+  async function run(task: () => Promise<unknown>) {
     setBusy(true);
-    setError("");
     try {
-      await persistOrder(entity, moveItem(siblings, from, to));
-    } catch (err) {
-      setError(`A nova ordem não foi salva. ${errorMessage(err)}`);
-      await cache.invalidateQueries({ queryKey: ["app_admin_list"] });
+      await task();
     } finally {
       setBusy(false);
     }
   }
+  async function drop(row: Row) {
+    const to = position(row);
+    clear();
+    if (from < 0 || to < 0 || from === to) return;
+    setError("");
+    await run(async () => {
+      try {
+        await persistOrder(entity, moveItem(siblings, from, to));
+      } catch (err) {
+        setError(`A nova ordem não foi salva. ${errorMessage(err)}`);
+        await cache.invalidateQueries({ queryKey: ["app_admin_list"] });
+      }
+    });
+  }
   return {
     busy,
+    run,
     notice: error ? <Notice error>{error}</Notice> : null,
     rowProps(row: Row): RowProps {
       const index = position(row);
@@ -81,6 +90,7 @@ export function useDragOrder(entity: string, siblings: Row[]) {
           aria-disabled={busy || undefined}
           draggable={!busy}
           onDragStart={(event) => {
+            if (busy) return event.preventDefault();
             event.dataTransfer.effectAllowed = "move";
             // Sem dado, o Firefox não inicia o arraste.
             event.dataTransfer.setData("text/plain", text(row, "title"));

@@ -16,10 +16,12 @@ const lesson = (id: string, section_id: string, title: string, order_index: numb
 let rows: Record<string, Record<string, unknown>[]>;
 let calls: { name: string; body: Record<string, unknown> }[];
 let failSave: boolean;
+let hold: Promise<void> | undefined;
 
 beforeEach(() => {
   calls = [];
   failSave = false;
+  hold = undefined;
   rows = {
     courses: [{ id: "c", title: "Curso editorial", slug: "editorial", status: "draft", access_mode: "members" }],
     modules: [
@@ -44,6 +46,7 @@ beforeEach(() => {
     const name = String(input).split("/").at(-1)!, body = typeof init?.body === "string" ? JSON.parse(init.body) : {};
     calls.push({ name, body });
     if (name === "app_admin_save") {
+      await hold;
       if (failSave) return Response.json({ message: "Conteúdo bloqueado para edição.", code: "P0001" }, { status: 400 });
       Object.assign(rows[body.p_entity].find(({ id }) => id === body.p_id)!, body.p_data);
       return Response.json({ id: body.p_id });
@@ -161,4 +164,28 @@ it("erro ao gravar mostra aviso e recarrega a estrutura", async () => {
   await waitFor(() => expect(lists()).toBeGreaterThan(before));
   expect(handle("Exercício")).toHaveAttribute("draggable", "true");
   expect(screen.getAllByRole("article")[0]).toHaveTextContent("Abertura");
+});
+
+it("setas e arraste compartilham a trava de gravação", async () => {
+  await reorder();
+  let release!: () => void;
+  hold = new Promise((resolve) => { release = resolve; });
+  fireEvent.click(screen.getByRole("button", { name: "Descer Abertura" }));
+  await waitFor(() => expect(saves()).toHaveLength(1));
+  // Enquanto a seta grava, a alça não arrasta e as outras setas da lista esperam.
+  expect(handle("Exercício")).toHaveAttribute("draggable", "false");
+  expect(screen.getByRole("button", { name: "Subir Exercício" })).toBeDisabled();
+  const dataTransfer = transfer();
+  fireEvent.dragStart(handle("Exercício"), { dataTransfer });
+  expect(fireEvent.dragOver(row("Abertura"), { dataTransfer })).toBe(true);
+  fireEvent.drop(row("Abertura"), { dataTransfer });
+  fireEvent.dragEnd(handle("Exercício"), { dataTransfer });
+  release();
+  await waitFor(() => expect(handle("Exercício")).toHaveAttribute("draggable", "true"));
+  expect(screen.getByRole("button", { name: "Subir Exercício" })).toBeEnabled();
+  // Só a seta gravou: Abertura desceu uma posição.
+  expect(saves()).toEqual([
+    { p_entity: "lessons", p_id: "b", p_data: { order_index: 0 } },
+    { p_entity: "lessons", p_id: "a", p_data: { order_index: 1 } },
+  ]);
 });

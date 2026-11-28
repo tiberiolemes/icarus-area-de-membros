@@ -251,7 +251,7 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   color: var(--lesson-text);
-  font: 500 13px / 18px var(--ic-font-family);
+  font: 500 14px / 20px var(--ic-font-family);
 }
 
 .stitch-auto-advance .notification-switch:hover { background: transparent; }

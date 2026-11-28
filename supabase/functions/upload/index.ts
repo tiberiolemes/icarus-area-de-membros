@@ -5,6 +5,7 @@ const tooBig = (mime: string) => mime === "application/pdf" || mime.startsWith("
 // A aula usa o Bunny Stream ou o YouTube; vídeo nenhum sobe para o Storage.
 const isVideo = (kind: string, mime: unknown) => kind === "lesson" || String(mime).startsWith("video/");
 const noVideo = "A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube.";
+const ownFile = /^(lesson|material)\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.[a-z0-9]+$/;
 import { objectExists } from "../_shared/storage.ts";
 import { removeBrandLogo, saveBrandLogo } from "./brand.ts";
 export const createHandler = (d: Dependencies = defaults) => endpoint(async (req) => {
@@ -32,11 +33,14 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
       if (!["lessons", "sections", "modules", "materials", "material_folders"].includes(entity)) throw new HttpError(422, "INVALID_INPUT", "Esta entidade não pode ser excluída.");
       const target = uuid(body.id);
       const { paths } = await rpc(a.admin, "app_admin_delete", { p_actor_id: a.userInfo.id, p_entity: entity, p_id: target });
-      if (!paths.length) return { deleted: true, files_removed: 0 };
+      // A remoção usa service_role: só arquivos de aula e material, mesmo que o banco devolva outro caminho.
+      const files = (paths as string[]).filter((path) => ownFile.test(path));
+      if (files.length < paths.length) console.error("Exclusão ignorou caminhos fora de aula e material", { entity, id: target, skipped: paths.length - files.length });
+      if (!files.length) return { deleted: true, files_removed: 0 };
       // O banco já apagou: falha no Storage deixa arquivo órfão e vira aviso, nunca erro.
-      const removed = await a.admin.storage.from("icarus-private").remove(paths).catch((error: Error) => ({ data: null, error }));
+      const removed = await a.admin.storage.from("icarus-private").remove(files).catch((error: Error) => ({ data: null, error }));
       if (!removed.error) return { deleted: true, files_removed: removed.data.length };
-      console.error("Exclusão sem limpeza do Storage", { entity, id: target, files: paths.length, error: removed.error.message });
+      console.error("Exclusão sem limpeza do Storage", { entity, id: target, files: files.length, error: removed.error.message });
       return { deleted: true, files_removed: 0, warning: "O item foi excluído, mas alguns arquivos não foram apagados do armazenamento." };
     }
     if (body.action !== "reserve") throw new HttpError(422, "INVALID_INPUT", "Ação de upload inválida.");

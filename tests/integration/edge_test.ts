@@ -1020,9 +1020,9 @@ Deno.test("SVG só é processado depois da autorização, prévia não grava e u
   assert(!reject.requests.some((r) => r.url.includes("/storage/") || r.url.includes("app_brand_asset_commit")));
 });
 
-const removedFile = `material/${other}/a.pdf`;
-const deleteDeps = (storage: () => Response) => deps((url, init) =>
-  url.pathname.endsWith("/app_admin_delete") ? response({ id: other, paths: [removedFile] })
+const removedFile = `material/${other}/${id}.pdf`;
+const deleteDeps = (storage: () => Response, paths = [removedFile]) => deps((url, init) =>
+  url.pathname.endsWith("/app_admin_delete") ? response({ id: other, paths })
   : url.pathname === "/storage/v1/object/icarus-private" && init.method === "DELETE" ? storage()
   : undefined);
 Deno.test("exclusão chama a RPC com o ator do JWT e remove os arquivos devolvidos", async () => {
@@ -1044,6 +1044,22 @@ Deno.test("falha do Storage não desfaz a exclusão e avisa", async () => {
   } finally { console.error = original; }
   equal(logged.length, 1);
   assert(!JSON.stringify(logged).includes(removedFile), "log sem o caminho do arquivo");
+});
+Deno.test("exclusão apaga só arquivos de aula e material", async () => {
+  const outside = [`ticket-attachment/${other}/${id}.pdf`, `avatar/${id}/${other}.png`, `material/../ticket-attachment/${id}.pdf`, `demo/material.txt`, `lesson/${other}/${id}.MP4`];
+  const { d, requests } = deleteDeps(() => response([{ name: removedFile }]), [removedFile, ...outside]);
+  const logged: unknown[][] = [], original = console.error;
+  console.error = (...args: unknown[]) => { logged.push(args); };
+  try {
+    const result = await upload(d)(request({ action: "delete", entity: "materials", id: other }));
+    equal(await result.json(), { deleted: true, files_removed: 1 });
+  } finally { console.error = original; }
+  equal(requests.filter((r) => r.method === "DELETE").map((r) => r.body), [{ prefixes: [removedFile] }]);
+  equal(logged.length, 1);
+  assert(!outside.some((path) => JSON.stringify(logged).includes(path)), "log sem os caminhos ignorados");
+  const only = deleteDeps(() => response([]), outside);
+  equal(await (await upload(only.d)(request({ action: "delete", entity: "lessons", id: other }))).json(), { deleted: true, files_removed: 0 });
+  assert(!only.requests.some((r) => r.method === "DELETE"), "Storage chamado sem arquivo próprio");
 });
 Deno.test("entidade fora da lista é recusada antes da RPC", async () => {
   const { d, requests } = deleteDeps(() => response([]));

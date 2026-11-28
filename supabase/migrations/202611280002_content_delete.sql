@@ -50,11 +50,8 @@ declare item_name text;s record;paths text[];begin
  perform 1 from public.lessons where id=any(s.lesson_ids) for update;
  perform 1 from public.material_folders where id=any(s.folder_ids) for update;
  perform 1 from public.materials where id=any(s.material_ids) for update;
- paths:=array(select p from (
-  select storage_path from public.lessons where id=any(s.lesson_ids)
-  union select storage_path from public.materials where id=any(s.material_ids)
-  union select path from public.uploads where lesson_id=any(s.lesson_ids) or material_id=any(s.material_ids)
- ) x(p) where p is not null order by p);
+ -- Só os caminhos que o upload gerou para estes registros; storage_path de linha antiga pode apontar para arquivo de outro registro.
+ paths:=array(select distinct path from public.uploads where lesson_id=any(s.lesson_ids) or material_id=any(s.material_ids) order by path);
  -- Sem chave estrangeira: aviso de comentário aprovado e pontos de ranking da aula.
  delete from public.notifications where event_key='lesson_comment_approved' and source_id in (select id from public.lesson_comments where lesson_id=any(s.lesson_ids));
  delete from app_private.ranking_events where kind='lesson' and source_id=any(s.lesson_ids);

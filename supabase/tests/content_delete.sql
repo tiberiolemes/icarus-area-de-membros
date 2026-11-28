@@ -65,14 +65,16 @@ insert into public.sections(id,module_id,title,status,order_index) values
 insert into public.lessons(id,section_id,slug,title,status,type,duration_seconds,storage_path,order_index) values
  (pg_temp.id(104),pg_temp.id(102),'aula-um','Aula um','published','video',600,pg_temp.file('lesson',104,500,'mp4'),0),
  (pg_temp.id(105),pg_temp.id(102),'aula-dois','Aula dois','published','text',300,null,1),
- (pg_temp.id(106),pg_temp.id(103),'aula-tres','Aula três','published','text',300,null,0);
+ (pg_temp.id(106),pg_temp.id(103),'aula-tres','Aula três','published','text',300,pg_temp.file('avatar',4,900,'png'),0);
 -- Mx só em L1, My em L1 e L2, Mz (dentro de P2, subpasta de P) em L2.
 insert into public.material_folders(id,parent_id,name,status) values
  (pg_temp.id(300),null,'Pasta P','published'),(pg_temp.id(301),pg_temp.id(300),'Pasta P2','published');
 insert into public.materials(id,folder_id,name,status,access_mode,storage_path) values
  (pg_temp.id(200),null,'Material X','published','members',null),
  (pg_temp.id(201),null,'Material Y','published','members',pg_temp.file('material',201,503,'pdf')),
- (pg_temp.id(202),pg_temp.id(301),'Material Z','published','members',pg_temp.file('material',202,502,'pdf'));
+ (pg_temp.id(202),pg_temp.id(301),'Material Z','published','members',pg_temp.file('material',202,502,'pdf')),
+ -- Linha antiga com caminho escolhido à mão: aponta para o anexo de um chamado.
+ (pg_temp.id(203),null,'Material forjado','draft','members',pg_temp.file('ticket-attachment',901,902,'pdf'));
 insert into public.material_lessons(material_id,lesson_id) values
  (pg_temp.id(200),pg_temp.id(104)),(pg_temp.id(201),pg_temp.id(104)),(pg_temp.id(201),pg_temp.id(105)),(pg_temp.id(202),pg_temp.id(105));
 
@@ -235,6 +237,7 @@ select pg_temp.ok(not exists(select 1 from app_private.catalog_launches where id
  and not exists(select 1 from app_private.catalog_launch_signups where launch_id=pg_temp.id(600))
  and not exists(select 1 from public.notifications where event_key='catalog_launch' and source_id=pg_temp.id(600)),
  'excluir o módulo apaga o lançamento, as inscrições e o aviso de lançamento');
+select pg_temp.ok(pg_temp.paths(:'deleted_module')='{}','caminho gravado à mão na aula não volta para o Storage');
 select pg_temp.ok((select required_lesson_ids='{}' and curriculum_version=(select version from before_delete) from public.courses where id=pg_temp.id(100))
  and (select to_jsonb(x) from public.certificates x where x.id=pg_temp.id(700))=(select certificate from before_delete),
  'curso fica sem obrigatórias, com a mesma versão e o certificado intacto');
@@ -264,6 +267,21 @@ reset role;
 select pg_temp.ok(pg_temp.paths(:'deleted_material')=array[pg_temp.file('material',201,503,'pdf')]
  and not exists(select 1 from public.materials where id=pg_temp.id(201)) and not exists(select 1 from public.uploads where id=pg_temp.id(503)),
  'excluir o material apaga o registro, o upload e devolve o arquivo');
+set local role service_role;
+select pg_temp.service(1);
+select public.app_admin_delete(pg_temp.id(1),'materials',pg_temp.id(203)) as deleted_forged \gset
+reset role;
+select pg_temp.ok(pg_temp.paths(:'deleted_forged')='{}' and not exists(select 1 from public.materials where id=pg_temp.id(203)),
+ 'material com caminho de outro arquivo é excluído sem apagar aquele arquivo');
+set local role authenticated;
+select pg_temp.login(2);
+select pg_temp.fails(format('select public.app_admin_save(%L,%L,%L)','materials',null,
+ jsonb_build_object('name','Material novo','storage_path',pg_temp.file('ticket-attachment',901,902,'pdf'))),'Campos não permitidos.',
+ 'salvar material com caminho de arquivo é recusado');
+select pg_temp.fails(format('select public.app_admin_save(%L,%L,%L)','lessons',pg_temp.id(113),
+ jsonb_build_object('storage_path',pg_temp.file('avatar',4,900,'png'))),'Campos não permitidos.',
+ 'salvar aula com caminho de arquivo é recusado');
+reset role;
 select pg_temp.ok((select count(*)=5 from public.audit_events where action='delete' and target_id in
  (pg_temp.id(104),pg_temp.id(300),pg_temp.id(102),pg_temp.id(101),pg_temp.id(201)))
  and exists(select 1 from public.rate_limits where actor_id=pg_temp.id(1) and bucket='content_delete'),'cada exclusão entra na auditoria e no limite');

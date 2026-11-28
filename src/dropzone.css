@@ -1,0 +1,49 @@
+/* Área de arraste no modelo da imagem 03-modelo-upload. --ic-border e --ic-surface-muted têm o mesmo cinza no tema
+   claro, e a borda sumiria; os tokens do Stitch das mesmas funções mantêm o tracejado visível nos dois temas. */
+.dropzone-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--stitch-space-sm);
+  padding: var(--stitch-space-xl) var(--stitch-space-md);
+  border: 2px dashed var(--stitch-border-strong);
+  border-radius: var(--ic-radius-card);
+  background: var(--stitch-surface-hover);
+  color: var(--stitch-text-secondary);
+  text-align: center;
+  overflow-wrap: anywhere;
+  transition: border-color var(--ic-motion-fast);
+}
+
+.dropzone-area.is-dragging {
+  border-style: solid;
+  border-color: var(--stitch-action);
+}
+
+.dropzone-area > svg {
+  margin-bottom: var(--stitch-space-sm);
+}
+
+.dropzone-drag {
+  color: var(--stitch-text-heading);
+  font-size: var(--stitch-type-headline-sm-size);
+  line-height: var(--stitch-type-headline-sm-line);
+  font-weight: 600;
+}
+
+.dropzone-file {
+  color: var(--stitch-text-heading);
+  font-weight: 500;
+}
+
+.dropzone-area > button {
+  margin-top: var(--stitch-space-sm);
+}
+
+/* Em tela de toque não dá para arrastar: ficam o botão e a dica. */
+@media (pointer: coarse) {
+  .dropzone-drag,
+  .dropzone-or {
+    display: none;
+  }
+}

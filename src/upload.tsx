@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState, type ComponentProps } from "react";
+import { useEffect, useRef, useState } from "react";
 import { client, edge, errorMessage, uploadStorage } from "./api";
+import { Dropzone } from "./dropzone";
 import { finalLimit, limits, optimizeFile, overLimit } from "./optimize";
 import { Field, Notice, Unsaved } from "./ui";
+
+export type UploadKind = "course-cover" | "material" | "post-image" | "ticket-attachment" | "avatar";
 
 // O recorte reencoda em JPEG, então só aqui dá para conferir o conteúdo real do arquivo escolhido.
 const avatarSignatures: Record<string, number[]> = {
@@ -9,14 +12,74 @@ const avatarSignatures: Record<string, number[]> = {
   "image/png": [137, 80, 78, 71, 13, 10, 26, 10],
 };
 
-function FilePicker({ fileName, ...input }: ComponentProps<"input"> & { fileName: string }) {
-  return (
-    <span className="upload-picker">
-      <span className="button" aria-hidden="true">Escolher arquivo</span>
-      <span>{fileName || "Nenhum arquivo selecionado"}</span>
-      <input {...input} type="file" />
-    </span>
-  );
+const hints: Record<UploadKind, string> = {
+  "course-cover": "PNG, JPG ou WebP · até 500 KB depois de otimizada · ideal 1600\u00a0×\u00a0900\u00a0px",
+  material: "PDF, imagem, ZIP, TXT ou MP3 · PDF até 5 MB e imagem até 500 KB depois de otimizados · ZIP, TXT e MP3 até 500 MB",
+  "post-image": "PNG, JPG ou WebP · até 500 KB depois de otimizada",
+  "ticket-attachment": "Imagem, PDF, ZIP, TXT ou MP3 · imagem até 500 KB e PDF até 5 MB depois de otimizados · demais até 20 MB",
+  avatar: "JPG ou PNG · até 20 MB",
+};
+
+/** Otimiza, envia (reserva e confirmação no material, multipart nos demais) e devolve o arquivo que subiu. */
+export async function sendFile(kind: UploadKind, resourceId: string, file: File, signal: AbortSignal, onState: (text: string) => void): Promise<File> {
+  // Só o arquivo otimizado sobe, e é nele que o limite de 500 KB ou 5 MB é conferido.
+  if (kind !== "avatar") {
+    onState("Otimizando arquivo…");
+    file = await optimizeFile(file);
+    if (signal.aborted) throw new Error("Envio cancelado.");
+    const refused = finalLimit(file);
+    if (refused) throw new Error(refused);
+  }
+  onState("Enviando arquivo…");
+  if (kind === "material") {
+    const reserved = await edge<{
+      upload_id: string;
+      bucket: string;
+      path: string;
+      expires_at: string;
+    }>("upload", {
+      action: "reserve",
+      kind,
+      resource_id: resourceId,
+      file_name: file.name,
+      content_type: file.type,
+      size_bytes: file.size,
+    });
+    if (
+      reserved.bucket !== "icarus-private" ||
+      !reserved.path ||
+      !reserved.upload_id
+    )
+      throw new Error("Reserva de arquivo inválida.");
+    if (signal.aborted) throw new Error("Envio cancelado.");
+    const { error } = await uploadStorage(signal)
+      .from(reserved.bucket)
+      .upload(reserved.path, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+    if (error) throw error;
+    if (signal.aborted) throw new Error("Envio cancelado.");
+    onState("Confirmando o arquivo no servidor…");
+    await edge("upload", {
+      action: "finalize",
+      upload_id: reserved.upload_id,
+    });
+  } else {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("kind", kind);
+    form.append("resource_id", resourceId);
+    form.append("file_name", file.name);
+    form.append("content_type", file.type);
+    form.append("size_bytes", String(file.size));
+    const { error } = await client().functions.invoke("upload", {
+      body: form,
+      signal,
+    });
+    if (error) throw error;
+  }
+  return file;
 }
 
 export function Upload({
@@ -24,12 +87,7 @@ export function Upload({
   resourceId,
   onUploaded,
 }: {
-  kind:
-    | "course-cover"
-    | "material"
-    | "post-image"
-    | "ticket-attachment"
-    | "avatar";
+  kind: UploadKind;
   resourceId: string;
   onUploaded?: (file: File) => void;
 }) {
@@ -42,6 +100,7 @@ export function Upload({
     [preview, setPreview] = useState(""),
     [crop, setCrop] = useState(50),
     cropCanvas = useRef<HTMLCanvasElement>(null),
+    picked = useRef<File>(undefined),
     lock = useRef(false);
   useEffect(() => () => controller.current?.abort(), []);
   useEffect(() => {
@@ -79,29 +138,14 @@ export function Upload({
     },
     [preview],
   );
-  async function upload() {
-    let selected = file.current?.files?.[0];
-    if (!selected || lock.current) return;
+  async function upload(selected: File) {
+    if (lock.current) return;
     lock.current = true;
     setBusy(true);
     setError("");
     controller.current = new AbortController();
     const before = selected.size;
     try {
-      // Só o arquivo otimizado sobe, e é nele que o limite de 500 KB ou 5 MB é conferido.
-      if (kind !== "avatar") {
-        setState("Otimizando arquivo…");
-        selected = await optimizeFile(selected);
-        if (controller.current.signal.aborted) throw new Error("Envio cancelado.");
-        const refused = finalLimit(selected);
-        if (refused) {
-          // Tira o arquivo do campo: clicar de novo repetiria a mesma recusa.
-          if (file.current) file.current.value = "";
-          setFileName("");
-          throw new Error(refused);
-        }
-      }
-      setState("Enviando arquivo…");
       if (kind === "avatar" && cropCanvas.current) {
         const blob = await new Promise<Blob>((resolve, reject) =>
           cropCanvas.current!.toBlob(
@@ -115,56 +159,7 @@ export function Upload({
         );
         selected = new File([blob], "avatar.jpg", { type: "image/jpeg" });
       }
-      if (kind === "material") {
-        const reserved = await edge<{
-          upload_id: string;
-          bucket: string;
-          path: string;
-          expires_at: string;
-        }>("upload", {
-          action: "reserve",
-          kind,
-          resource_id: resourceId,
-          file_name: selected.name,
-          content_type: selected.type,
-          size_bytes: selected.size,
-        });
-        if (
-          reserved.bucket !== "icarus-private" ||
-          !reserved.path ||
-          !reserved.upload_id
-        )
-          throw new Error("Reserva de arquivo inválida.");
-        if (controller.current.signal.aborted)
-          throw new Error("Envio cancelado.");
-        const { error } = await uploadStorage(controller.current.signal)
-          .from(reserved.bucket)
-          .upload(reserved.path, selected, {
-            contentType: selected.type,
-            upsert: false,
-          });
-        if (error) throw error;
-        if (controller.current.signal.aborted)
-          throw new Error("Envio cancelado.");
-        setState("Confirmando o arquivo no servidor…");
-        await edge("upload", {
-          action: "finalize",
-          upload_id: reserved.upload_id,
-        });
-      } else {
-        const form = new FormData();
-        form.append("file", selected);
-        form.append("kind", kind);
-        form.append("resource_id", resourceId);
-        form.append("file_name", selected.name);
-        form.append("content_type", selected.type);
-        form.append("size_bytes", String(selected.size));
-        const { error } = await client().functions.invoke("upload", {
-          body: form,
-          signal: controller.current.signal,
-        });
-        if (error) throw error;
-      }
+      selected = await sendFile(kind, resourceId, selected, controller.current.signal, setState);
       const kb = (bytes: number) => Math.round(bytes / 1024);
       setState(
         kind === "avatar"
@@ -184,66 +179,57 @@ export function Upload({
           ? "Envio cancelado. A confirmação do servidor continua necessária antes de o arquivo ficar disponível."
           : errorMessage(err),
       );
+      // Sem o botão de reenviar, o arquivo sai do campo: escolher o mesmo de novo volta a disparar o envio.
+      if (kind !== "avatar") {
+        if (file.current) file.current.value = "";
+        setFileName("");
+      }
     } finally {
       lock.current = false;
       setBusy(false);
       controller.current = null;
     }
   }
-  const input = (
-    <FilePicker
-      ref={file}
-      fileName={fileName}
-      disabled={busy}
-      accept={
-        kind === "avatar"
-          ? "image/jpeg,image/png"
-          : kind.includes("image") || kind === "course-cover"
-          ? "image/png,image/jpeg,image/webp"
-          : undefined
-      }
-      onChange={async (e) => {
-        const input = e.currentTarget,
-          selected = input.files?.[0];
-        setFileName(selected?.name ?? "");
-        setError("");
-        setState("");
-        const refused = kind !== "avatar" && selected ? overLimit(selected) : null;
-        if (refused) {
-          setError(refused);
-          input.value = "";
-          setFileName("");
-          return;
-        }
-        if (kind !== "avatar") return;
-        setPreview("");
-        if (!selected) return;
-        const head = new Uint8Array(
-          await selected.slice(0, 8).arrayBuffer().catch(() => new ArrayBuffer(0)),
-        );
-        // Outra escolha chegou durante a leitura: ela decide a prévia.
-        if (input.files?.[0] !== selected) return;
-        const tooBig = selected.size > limits.original;
-        if (tooBig || !avatarSignatures[selected.type]?.every((byte, i) => head[i] === byte)) {
-          setError(
-            tooBig
-              ? "Esta foto passa de 20 MB. Escolha uma menor, em JPG ou PNG."
-              : "Escolha uma foto JPG ou PNG de até 20 MB.",
-          );
-          input.value = "";
-          setFileName("");
-          return;
-        }
-        setPreview(URL.createObjectURL(selected));
-        setCrop(50);
-        setState("Foto escolhida, ainda não salva. Ajuste o recorte e clique em Salvar foto.");
-      }}
-    />
-  );
+  async function choose(selected: File | undefined) {
+    picked.current = selected;
+    setFileName(selected?.name ?? "");
+    setError("");
+    setState("");
+    if (kind !== "avatar") {
+      const refused = selected ? overLimit(selected) : null;
+      if (refused) {
+        setError(refused);
+        if (file.current) file.current.value = "";
+        setFileName("");
+      } else if (selected) void upload(selected);
+      return;
+    }
+    setPreview("");
+    if (!selected) return;
+    const head = new Uint8Array(
+      await selected.slice(0, 8).arrayBuffer().catch(() => new ArrayBuffer(0)),
+    );
+    // Outra escolha chegou durante a leitura: ela decide a prévia.
+    if (picked.current !== selected) return;
+    const tooBig = selected.size > limits.original;
+    if (tooBig || !avatarSignatures[selected.type]?.every((byte, i) => head[i] === byte)) {
+      setError(
+        tooBig
+          ? "Esta foto passa de 20 MB. Escolha uma menor, em JPG ou PNG."
+          : "Escolha uma foto JPG ou PNG de até 20 MB.",
+      );
+      if (file.current) file.current.value = "";
+      setFileName("");
+      return;
+    }
+    setPreview(URL.createObjectURL(selected));
+    setCrop(50);
+    setState("Foto escolhida, ainda não salva. Ajuste o recorte e clique em Salvar foto.");
+  }
   return (
     <section className="upload" aria-busy={busy}>
       <Unsaved dirty={!!preview} />
-      <Field
+      <Dropzone
         label={
           kind === "ticket-attachment"
             ? "Anexar arquivo à conversa"
@@ -251,18 +237,19 @@ export function Upload({
               ? "Foto do perfil"
               : "Enviar arquivo"
         }
-        hint={
+        hint={hints[kind]}
+        accept={
           kind === "avatar"
-            ? "JPG ou PNG de até 20 MB."
-            : kind === "material"
-            ? "PDF e imagem de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). ZIP, TXT e MP3 até 500 MiB. Para vídeo, use o Bunny Stream ou o YouTube na aula. O andamento abaixo não estima percentual."
-            : kind === "course-cover"
-            ? "PNG, JPG ou WebP de até 20 MB. Depois de otimizada, a imagem precisa ficar com até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px."
-            : "Imagem e PDF de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 500 KB (imagem) ou 5 MB (PDF). Outros anexos até 20 MiB."
+            ? "image/jpeg,image/png"
+            : kind.includes("image") || kind === "course-cover"
+            ? "image/png,image/jpeg,image/webp"
+            : undefined
         }
-      >
-        {input}
-      </Field>
+        disabled={busy}
+        fileName={fileName}
+        inputRef={file}
+        onFile={(selected) => void choose(selected)}
+      />
       {kind === "avatar" && preview && (
         <div>
           <canvas
@@ -284,14 +271,16 @@ export function Upload({
         </div>
       )}
       <div className="actions">
-        <button
-          type="button"
-          className={kind === "avatar" ? "primary" : undefined}
-          disabled={busy || !fileName || (kind === "avatar" && !preview)}
-          onClick={upload}
-        >
-          {kind === "avatar" ? "Salvar foto" : "Enviar arquivo"}
-        </button>
+        {kind === "avatar" && (
+          <button
+            type="button"
+            className="primary"
+            disabled={busy || !preview}
+            onClick={() => picked.current && void upload(picked.current)}
+          >
+            Salvar foto
+          </button>
+        )}
         {busy && (
           <button type="button" onClick={() => controller.current?.abort()}>
             Cancelar envio

@@ -149,25 +149,6 @@ select {
     background-image: none !important;
   }
 }
-input[type="file"] {
-  max-width: 100%;
-  padding: 8px !important;
-}
-input[type="file"]::file-selector-button {
-  margin-inline-end: 12px;
-  padding: 0 12px;
-  border: 1px solid var(--ic-border-control);
-  border-radius: var(--ic-radius-control);
-  background: var(--ic-surface);
-  color: var(--ic-text);
-  font: inherit;
-  font-weight: 500;
-  line-height: normal;
-  cursor: pointer;
-}
-input[type="file"]:enabled:hover::file-selector-button {
-  background: var(--ic-surface-muted);
-}
 input[type="search"]::-webkit-search-cancel-button {
   filter: grayscale(1);
 }
@@ -1337,29 +1318,6 @@ img.brand-custom[data-brand-shape="compact"] {
 }
 .upload > progress {
   margin-top: 20px;
-}
-
-.upload-picker {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--stitch-space-sm);
-  overflow-wrap: anywhere;
-}
-
-.upload-picker input[type="file"] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.upload-picker:focus-within .button {
-  outline: 2px solid var(--stitch-text-heading);
-  outline-offset: 2px;
 }
 
 .rich-field {

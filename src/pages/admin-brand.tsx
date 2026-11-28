@@ -3,6 +3,7 @@ import { AppWindow, FileText, Globe, ImageUp, Palette } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cache, client, edge, rpc } from "../api";
 import { useAuth, useBootstrap } from "../auth";
+import { Dropzone } from "../dropzone";
 import { acceptOf, BrandImage, BrandLogo, brandAssetUrl, brandRatio, checkImageFile, defaultIcon, defaultLogo, type AssetPreview, type AssetVariant } from "../brand";
 import { Action, Field, Form, Notice, QueryState } from "../ui";
 import "./admin-brand.css";
@@ -11,7 +12,7 @@ type NameDraft = { name: string; revision: number | null };
 type NameSave = { name: string; revision: number; saved: boolean };
 type Variant = "light" | "dark" | "icon";
 
-const logoHint = "SVG, PNG ou WebP, até 500 KB. PNG e WebP precisam de pelo menos 240 × 60 px. Prefira fundo transparente.";
+const logoHint = "SVG, PNG ou WebP · até 500 KB · PNG e WebP com pelo menos 240 × 60 px, de preferência com fundo transparente";
 const assetCopy: Record<AssetVariant, { title: string; noun: string; preview: string; current: string; use: string; empty: string; hint: string; confirm: string; saved: string; removed: string }> = {
   light: {
     title: "Logo colorida", noun: "logo colorida", preview: "Prévia da logo colorida", current: "Logo colorida atual",
@@ -30,14 +31,14 @@ const assetCopy: Record<AssetVariant, { title: string; noun: string; preview: st
   icon: {
     title: "Ícone (favicon)", noun: "ícone", preview: "Prévia do ícone", current: "Ícone atual",
     use: "Aparece na aba do navegador e no atalho da tela inicial do celular, em todas as telas, inclusive antes do login.",
-    empty: "Usando o ícone padrão do Icarus.", hint: "SVG ou PNG quadrado, até 500 KB. PNG precisa de pelo menos 180 × 180 px.",
+    empty: "Usando o ícone padrão do Icarus.", hint: "SVG ou PNG quadrado · até 500 KB · PNG com pelo menos 180 × 180 px",
     confirm: "Remover o ícone? As abas voltam ao ícone padrão do Icarus.",
     saved: "Ícone salvo.", removed: "Ícone removido.",
   },
   signature: {
     title: "Assinatura", noun: "assinatura", preview: "Prévia da assinatura", current: "Assinatura atual",
     use: "Aparece acima do nome do responsável no certificado: na tela, na verificação pública e no PNG e PDF. Certificados já emitidos mantêm a assinatura da emissão. A imagem fica pública: envie uma rubrica feita para certificados, não a assinatura de contratos.",
-    empty: "Nenhuma assinatura enviada.", hint: "PNG com fundo transparente, até 500 KB. Mínimo de 200 × 60 px e máximo de 2000 px de cada lado; recomendado 600 × 200 px.",
+    empty: "Nenhuma assinatura enviada.", hint: "PNG com fundo transparente · até 500 KB · mínimo de 200 × 60 px e máximo de 2000 px de cada lado, recomendado 600 × 200 px",
     confirm: "Remover a assinatura? Os próximos certificados saem sem a imagem; os já emitidos mantêm a deles.",
     saved: "Assinatura salva.", removed: "Assinatura removida.",
   },
@@ -84,6 +85,7 @@ export function AssetCard({ variant, saved, savedRatio, draft: controlled, onDra
   const onDraft = setControlled ?? setOwn;
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
+  const [fileName, setFileName] = useState("");
   const [removed, setRemoved] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
   const input = useRef<HTMLInputElement>(null);
@@ -94,6 +96,7 @@ export function AssetCard({ variant, saved, savedRatio, draft: controlled, onDra
   async function choose(file?: File) {
     // Só a última escolha vale: a validação de um arquivo já trocado é descartada.
     const pick = ++latest.current;
+    setFileName(file?.name ?? "");
     setError("");
     setRemoved(false);
     onDraft(undefined);
@@ -143,9 +146,8 @@ export function AssetCard({ variant, saved, savedRatio, draft: controlled, onDra
           await onChanged();
         }}
       >
-        <Field label={`${saved ? "Trocar" : "Escolher"} ${copy.noun}`} hint={copy.hint}>
-          <input ref={input} name="file" type="file" accept={acceptOf(variant)} onChange={(event) => void choose(event.currentTarget.files?.[0])} />
-        </Field>
+        <Dropzone label={`${saved ? "Trocar" : "Escolher"} ${copy.noun}`} hint={copy.hint} name="file" accept={acceptOf(variant)}
+          inputRef={input} fileName={draft || checking ? fileName : undefined} onFile={(file) => void choose(file)} />
         {error && <Notice error>{error}</Notice>}
       </Form>
       {saved && !draft && !checking && (

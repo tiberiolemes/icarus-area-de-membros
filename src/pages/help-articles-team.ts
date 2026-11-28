@@ -201,8 +201,8 @@ export const teamArticles: HelpArticle[] = [
         intro: "A capa aparece na lista de cursos, na página do curso e no início das aulas que ainda usam vídeo enviado à plataforma. Cada lugar tem um formato, então a mesma imagem é recortada de jeitos diferentes.",
         steps: [
           "Na aba **Curso**, encontre **Capa do curso**.",
-          "Clique em **Escolher arquivo** e selecione uma imagem PNG, JPG ou WebP de até 20 MB. O ideal é uma imagem deitada, de 1600\u00a0×\u00a0900\u00a0px. A plataforma otimiza a imagem no envio, sem perda visível, e guarda só a versão otimizada, que precisa ficar com até 500 KB.",
-          "Clique em **Enviar arquivo** e espere a mensagem **Arquivo enviado e associado ao registro**.",
+          "Arraste a imagem até a área **Arraste o arquivo aqui** ou clique em **Selecionar arquivo**. Vale PNG, JPG ou WebP de até 20 MB, e o ideal é uma imagem deitada, de 1600\u00a0×\u00a0900\u00a0px. A plataforma otimiza a imagem no envio, sem perda visível, e guarda só a versão otimizada, que precisa ficar com até 500 KB.",
+          "O envio começa assim que você escolhe a imagem. Espere a mensagem **Arquivo enviado e associado ao registro**.",
           "Role até **Como a capa aparece** e confira as três prévias. **Lista de cursos e aula** mostra a imagem quase inteira. **Página do curso** corta as laterais. **Página do curso no tablet** corta o topo e a base.",
           "Se uma prévia cortar algo importante, vá até **Foco do corte** e clique na imagem, no ponto que precisa aparecer sempre. As prévias mudam na hora.",
           "Clique em **Salvar foco** e espere a mensagem **Foco salvo**.",
@@ -385,8 +385,8 @@ export const teamArticles: HelpArticle[] = [
           "No painel, clique em **Configurações** e abra a aba **Certificado**.",
           "Preencha **Nome do responsável** e **Cargo do responsável**. São os dados de quem assina.",
           "Clique em **Salvar modelo**.",
-          "No cartão **Assinatura**, clique em **Escolher assinatura**.",
-          "Selecione um PNG com fundo transparente de até 500 KB. O tamanho recomendado é 600 × 200 px.",
+          "No cartão **Assinatura**, arraste a imagem até a área de envio ou clique em **Selecionar arquivo**.",
+          "Use um PNG com fundo transparente de até 500 KB. O tamanho recomendado é 600 × 200 px.",
           "Clique em **Salvar assinatura**.",
         ],
         warn: "A imagem da assinatura fica pública no certificado. Use uma rubrica feita para isso, nunca a assinatura que você usa em contratos.",
@@ -409,7 +409,7 @@ export const teamArticles: HelpArticle[] = [
           "Na aba **Certificado** do curso, marque **Personalizar só este curso**. Os campos chegam preenchidos com o modelo.",
           "Edite **Nome do responsável** e **Cargo do responsável**.",
           "Clique em **Salvar configuração do certificado**.",
-          "Se você for administrador, envie a assinatura do curso no cartão **Assinatura**. Clique em **Escolher assinatura** e depois em **Salvar assinatura**.",
+          "Se você for administrador, envie a assinatura do curso no cartão **Assinatura**. Arraste a imagem até a área de envio ou clique em **Selecionar arquivo**, e depois em **Salvar assinatura**.",
         ],
         note: "Para voltar ao padrão, marque **Usar o modelo global** e salve. A assinatura própria do curso fica guardada e volta se você personalizar de novo.",
       },
@@ -543,7 +543,7 @@ export const teamArticles: HelpArticle[] = [
           "Escolha a **Pasta** e o **Tipo**. Se o arquivo pertence a uma aula específica, escolha a **Aula vinculada**.",
           "Escolha a **Regra de acesso** e deixe o **Estado** em **Rascunho**.",
           "Clique em **Salvar material**.",
-          "Em **Enviar arquivo**, clique em **Escolher arquivo**, selecione o arquivo e clique em **Enviar arquivo**.",
+          "Em **Enviar arquivo**, arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**. O envio começa assim que você escolhe o arquivo.",
           "Espere a mensagem **Arquivo enviado e associado ao registro** e clique em **Fechar editor**.",
         ],
       },
@@ -989,7 +989,7 @@ export const teamArticles: HelpArticle[] = [
         title: "Enviar um arquivo",
         steps: [
           "Na conversa, vá até **Anexar arquivo à conversa**.",
-          "Clique em **Escolher arquivo** e depois em **Enviar arquivo**.",
+          "Arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**. O envio começa assim que você escolhe o arquivo.",
         ],
         list: [
           "PDF, PNG, JPG ou WebP de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem).",
@@ -1069,7 +1069,7 @@ export const teamArticles: HelpArticle[] = [
       {
         title: "Enviar a logo",
         steps: [
-          "Em **Logo da plataforma**, no cartão **Logo colorida**, clique em **Escolher logo colorida** e selecione o arquivo.",
+          "Em **Logo da plataforma**, no cartão **Logo colorida**, arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**.",
           "Confira em **Prévia da identidade** como a logo fica no menu, nas telas públicas, no painel e no certificado, nos dois temas.",
           "Clique em **Salvar logo colorida**.",
           "Repita no cartão **Logo branca**, que aparece no tema escuro.",
@@ -1085,7 +1085,7 @@ export const teamArticles: HelpArticle[] = [
         title: "Enviar o ícone",
         intro: "O ícone aparece na aba do navegador e no atalho da tela inicial do celular.",
         steps: [
-          "Em **Ícone da plataforma**, clique em **Escolher ícone** e selecione um SVG ou um PNG quadrado de pelo menos 180 × 180 px.",
+          "Em **Ícone da plataforma**, arraste o arquivo até a área de envio ou clique em **Selecionar arquivo**. Use um SVG ou um PNG quadrado de pelo menos 180 × 180 px.",
           "Clique em **Salvar ícone**.",
         ],
       },

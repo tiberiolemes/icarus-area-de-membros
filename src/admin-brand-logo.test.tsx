@@ -52,13 +52,13 @@ function mount() {
     </QueryClientProvider>,
   );
 }
-const choose = (label: string, file: File) => fireEvent.change(screen.getByLabelText(label), { target: { files: [file] } });
+const choose = (label: string, file: File) => fireEvent.change(screen.getByLabelText(label, { selector: "input" }), { target: { files: [file] } });
 
 it("mostra formatos, tamanho e dimensões e recusa arquivos inválidos sem chamar o servidor", async () => {
   mount();
-  const input = screen.getByLabelText("Escolher logo colorida");
+  const input = screen.getByLabelText("Escolher logo colorida", { selector: "input" });
   expect(input).toHaveAttribute("accept", "image/png,image/webp,image/svg+xml");
-  expect(screen.getAllByText("SVG, PNG ou WebP, até 500 KB. PNG e WebP precisam de pelo menos 240 × 60 px. Prefira fundo transparente.")).toHaveLength(2);
+  expect(screen.getAllByText("SVG, PNG ou WebP · até 500 KB · PNG e WebP com pelo menos 240 × 60 px, de preferência com fundo transparente")).toHaveLength(2);
   const jpeg = new Uint8Array(64); jpeg.set([255, 216, 255, 224]);
   for (const [file, message, dimensions] of [
     [new File([pngBytes(512001)], "grande.png", { type: "image/png" }), "A logo precisa ter até 500 KB.", size],
@@ -98,7 +98,7 @@ it("cancelar descarta a prévia sem enviar", async () => {
   choose("Escolher logo branca", new File([pngBytes()], "branca.png", { type: "image/png" }));
   fireEvent.click(await screen.findByRole("button", { name: "Cancelar" }));
   expect(screen.getByRole("button", { name: "Salvar logo branca" })).toBeDisabled();
-  expect(screen.getByLabelText("Escolher logo branca")).toHaveValue("");
+  expect(screen.getByLabelText("Escolher logo branca", { selector: "input" })).toHaveValue("");
   expect(edge).not.toHaveBeenCalled();
 });
 
@@ -106,7 +106,7 @@ it("remove a logo branca só depois da confirmação", async () => {
   settings.logo_dark = dark;
   const confirm = vi.spyOn(window, "confirm").mockReturnValueOnce(false).mockReturnValueOnce(true);
   mount();
-  expect(screen.getByLabelText("Trocar logo branca")).toBeInTheDocument();
+  expect(screen.getByLabelText("Trocar logo branca", { selector: "input" })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Remover logo branca" }));
   expect(edge).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Remover logo branca" }));
@@ -138,9 +138,9 @@ it("uma validação atrasada não reabre a prévia de um arquivo trocado", async
 
 it("o ícone recusa WebP e exige PNG quadrado ou SVG", async () => {
   mount();
-  const input = screen.getByLabelText("Escolher ícone");
+  const input = screen.getByLabelText("Escolher ícone", { selector: "input" });
   expect(input).toHaveAttribute("accept", "image/png,image/svg+xml");
-  expect(screen.getByText("SVG ou PNG quadrado, até 500 KB. PNG precisa de pelo menos 180 × 180 px.")).toBeInTheDocument();
+  expect(screen.getByText("SVG ou PNG quadrado · até 500 KB · PNG com pelo menos 180 × 180 px")).toBeInTheDocument();
   choose("Escolher ícone", new File([new Uint8Array(64)], "icone.webp", { type: "image/webp" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("O ícone precisa ser PNG ou SVG.");
   size = { width: 512, height: 500 };
@@ -159,7 +159,7 @@ it("o ícone recusa WebP e exige PNG quadrado ou SVG", async () => {
 it("a assinatura do certificado vai com o curso e remove pela mesma Edge", async () => {
   const onChanged = vi.fn();
   const view = render(<QueryClientProvider client={cache}><AssetCard variant="signature" courseId="curso-1" saved={null} onChanged={onChanged} /></QueryClientProvider>);
-  expect(screen.getByText("PNG com fundo transparente, até 500 KB. Mínimo de 200 × 60 px e máximo de 2000 px de cada lado; recomendado 600 × 200 px.")).toBeInTheDocument();
+  expect(screen.getByText("PNG com fundo transparente · até 500 KB · mínimo de 200 × 60 px e máximo de 2000 px de cada lado, recomendado 600 × 200 px")).toBeInTheDocument();
   size = { width: 2400, height: 300 };
   choose("Escolher assinatura", new File([pngBytes()], "assinatura.png", { type: "image/png" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("A assinatura precisa ter pelo menos 200 × 60 px e no máximo 2000 px de cada lado.");

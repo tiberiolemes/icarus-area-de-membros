@@ -60,7 +60,7 @@ async function openCertificate() {
 
 it("curso sem assinatura, mesmo com a URL antiga vazia, oferece o envio do PNG", async () => {
   await openCertificate();
-  expect(await screen.findByLabelText("Escolher assinatura")).toHaveAttribute("accept", "image/png");
+  expect(await screen.findByLabelText("Escolher assinatura", { selector: "input" })).toHaveAttribute("accept", "image/png");
   expect(screen.getByRole("radio", { name: "Personalizar só este curso" })).toBeChecked();
   expect(screen.queryByRole("img", { name: "Assinatura atual" })).not.toBeInTheDocument();
   expect(screen.queryByLabelText("URL da assinatura (opcional)")).not.toBeInTheDocument();
@@ -73,14 +73,14 @@ it("curso com assinatura mostra a atual e oferece a troca", async () => {
   course.signature_path = signature;
   await openCertificate();
   expect(await screen.findByRole("img", { name: "Assinatura atual" })).toHaveAttribute("src", `http://127.0.0.1:58521/storage/v1/object/public/icarus-brand/${signature}`);
-  expect(screen.getByLabelText("Trocar assinatura")).toBeInTheDocument();
+  expect(screen.getByLabelText("Trocar assinatura", { selector: "input" })).toBeInTheDocument();
 });
 
 it("instrutor vê o aviso e não o envio da assinatura", async () => {
   profile.role = "instructor";
   await openCertificate();
   expect(await screen.findByText("A assinatura do certificado é enviada por um administrador.")).toBeInTheDocument();
-  expect(screen.queryByLabelText("Escolher assinatura")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Escolher assinatura", { selector: "input" })).not.toBeInTheDocument();
 });
 
 it("curso no modelo global mostra o modelo em leitura e salva sem responsável próprio", async () => {
@@ -94,7 +94,7 @@ it("curso no modelo global mostra o modelo em leitura e salva sem responsável p
   expect(screen.getByRole("img", { name: "Assinatura do modelo" })).toHaveAttribute("src", publicUrl(globalSignature));
   expect(screen.getByRole("link", { name: "Alterar o modelo em Configurações" })).toHaveAttribute("href", "/admin/configuracoes?aba=certificado");
   expect(screen.queryByLabelText("Nome do responsável")).not.toBeInTheDocument();
-  expect(screen.queryByLabelText("Trocar assinatura")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Trocar assinatura", { selector: "input" })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Salvar configuração do certificado" }));
   await screen.findByText("Salvo com sucesso.");
   expect(saves).toEqual([expect.objectContaining({ p_data: { certificate_enabled: true, signer_name: null, signer_title: null } })]);
@@ -117,7 +117,7 @@ it("personalizar só este curso parte do modelo e grava o responsável próprio"
   expect(screen.getByLabelText("Nome do responsável")).toHaveValue("Ana Souza");
   fireEvent.change(screen.getByLabelText("Nome do responsável"), { target: { value: "Carla Dias" } });
   fireEvent.change(screen.getByLabelText("Cargo do responsável"), { target: { value: "Tutoria" } });
-  expect(screen.getByLabelText("Escolher assinatura")).toBeInTheDocument();
+  expect(screen.getByLabelText("Escolher assinatura", { selector: "input" })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Salvar configuração do certificado" }));
   await screen.findByText("Salvo com sucesso.");
   expect(saves).toEqual([expect.objectContaining({ p_data: { certificate_enabled: true, signer_name: "Carla Dias", signer_title: "Tutoria" } })]);
@@ -143,7 +143,7 @@ it("Configurações → Certificado salva o modelo global e mostra a assinatura 
   const name = await screen.findByLabelText("Nome do responsável");
   expect(name).toHaveValue("Ana Souza");
   expect(screen.getByRole("img", { name: "Assinatura atual" })).toHaveAttribute("src", publicUrl(globalSignature));
-  expect(screen.getByLabelText("Trocar assinatura")).toHaveAttribute("accept", "image/png");
+  expect(screen.getByLabelText("Trocar assinatura", { selector: "input" })).toHaveAttribute("accept", "image/png");
   fireEvent.change(name, { target: { value: "Bruno Lima" } });
   fireEvent.click(screen.getByRole("button", { name: "Salvar modelo" }));
   await screen.findByText("Modelo de certificado salvo.");

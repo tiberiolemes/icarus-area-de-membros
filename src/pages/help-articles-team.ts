@@ -167,7 +167,7 @@ export const teamArticles: HelpArticle[] = [
     need: [
       "Uma conta de administrador ou instrutor.",
       "O título e a descrição do curso.",
-      "Os vídeos das aulas, em arquivo MP4 ou já enviados ao Bunny Stream.",
+      "Os vídeos das aulas, já enviados ao Bunny Stream ou publicados no YouTube.",
       "Os planos já criados, se o curso for restrito a alguns deles.",
     ],
     sections: [
@@ -198,7 +198,7 @@ export const teamArticles: HelpArticle[] = [
       },
       {
         title: "Enviar a capa e ajustar o corte",
-        intro: "A capa aparece na lista de cursos, na página do curso e no início da aula em vídeo. Cada lugar tem um formato, então a mesma imagem é recortada de jeitos diferentes.",
+        intro: "A capa aparece na lista de cursos, na página do curso e no início das aulas que ainda usam vídeo enviado à plataforma. Cada lugar tem um formato, então a mesma imagem é recortada de jeitos diferentes.",
         steps: [
           "Na aba **Curso**, encontre **Capa do curso**.",
           "Clique em **Escolher arquivo** e selecione uma imagem PNG, JPG ou WebP de até 20 MB. O ideal é uma imagem deitada, de 1600\u00a0×\u00a0900\u00a0px. A plataforma otimiza a imagem no envio, sem perda visível, e guarda só a versão otimizada, que precisa ficar com até 500 KB.",
@@ -286,28 +286,15 @@ export const teamArticles: HelpArticle[] = [
     slug: "video-da-aula",
     category: "conteudo",
     title: "Colocar vídeo em uma aula",
-    summary: "Há três caminhos. Você pode enviar o arquivo direto para a plataforma, hospedar o vídeo no Bunny Stream e informar o código dele, ou colar o link de um vídeo do YouTube.",
+    summary: "Há dois caminhos. Você pode hospedar o vídeo no Bunny Stream e informar o código dele, ou colar o link de um vídeo do YouTube. A plataforma não recebe vídeo.",
     sections: [
       {
         title: "Qual caminho escolher",
         list: [
-          "**Arquivo de vídeo** é o mais simples. Serve para arquivos MP4 de até 500 MB e dispensa qualquer integração. O envio precisa terminar em até 15 minutos, o que pede uma boa conexão para arquivos grandes.",
-          "**Bunny Stream** recebe o código de um vídeo hospedado lá. É o caminho indicado para muitos vídeos ou arquivos grandes, e exige a [integração com o Bunny](/ajuda/integracao-bunny), configurada por um administrador.",
+          "**Bunny Stream** recebe o código de um vídeo hospedado lá. É o caminho indicado para conteúdo pago, e exige a [integração com o Bunny](/ajuda/integracao-bunny), configurada por um administrador.",
           "**YouTube** recebe o link de um vídeo publicado lá. Não precisa de integração. O vídeo toca dentro da aula, mas continua no YouTube.",
         ],
-        warn: "O campo **Vídeo do Bunny ou link do YouTube** tem prioridade. Com qualquer valor nele, a plataforma ignora o arquivo enviado.",
-      },
-      {
-        title: "Enviar um arquivo MP4",
-        steps: [
-          "Em **Cursos e aulas**, abra o curso e a aba **Estrutura e aulas**.",
-          "Clique no lápis da aula. A aula precisa já ter sido salva uma vez.",
-          "Em **Mídia da aula**, deixe o **Tipo de aula** em **Vídeo**.",
-          "Em **Arquivo de vídeo**, clique em **Escolher arquivo** e selecione o MP4.",
-          "Clique em **Enviar arquivo** e não feche o editor nem troque de aba do curso até aparecer **Arquivo enviado e associado ao registro**.",
-          "Preencha a **Duração em segundos** e clique em **Salvar conteúdo**.",
-        ],
-        warn: "O envio precisa terminar em até 15 minutos. Em conexão lenta, um arquivo grande não chega a tempo e aparece o aviso de prazo expirado. Nesse caso, reduza o arquivo ou use o Bunny Stream.",
+        note: "Aulas que já tinham vídeo enviado à plataforma continuam tocando enquanto o campo **Vídeo do Bunny ou link do YouTube** estiver vazio. Com qualquer valor nele, vale o vídeo do campo.",
       },
       {
         title: "Usar um vídeo do Bunny Stream",
@@ -324,7 +311,7 @@ export const teamArticles: HelpArticle[] = [
           "No editor da aula, cole o link em **Vídeo do Bunny ou link do YouTube**.",
           "Preencha a **Duração em segundos** e clique em **Salvar conteúdo**. A plataforma guarda só o código do vídeo e, ao reabrir a aula, mostra o link de novo.",
         ],
-        warn: "A plataforma só mostra o vídeo a quem tem acesso à aula, mas ele continua no YouTube. Um vídeo **Não listado** abre para qualquer pessoa que tenha o link, e um **Privado** não toca dentro da aula. Para conteúdo pago, prefira o Bunny Stream ou o arquivo enviado.",
+        warn: "A plataforma só mostra o vídeo a quem tem acesso à aula, mas ele continua no YouTube. Um vídeo **Não listado** abre para qualquer pessoa que tenha o link, e um **Privado** não toca dentro da aula. Para conteúdo pago, prefira o Bunny Stream.",
       },
       {
         title: "Conferir",
@@ -335,10 +322,8 @@ export const teamArticles: HelpArticle[] = [
       },
     ],
     trouble: [
-      ["O campo de arquivo não aparece", "Ele só surge em aula já salva. Clique em **Salvar conteúdo**, reabra a aula pelo lápis e o campo estará lá."],
-      ["O arquivo foi recusado", "Só MP4 de até 500 MB é aceito. Converta o vídeo ou reduza a qualidade na exportação."],
-      ["Aparece o aviso de prazo do upload expirado", "O envio passou de 15 minutos, e o arquivo não foi associado à aula. Reduza o arquivo ou use o Bunny Stream. Depois, envie de novo."],
-      ["O aluno vê que não foi possível carregar o vídeo", "No caminho do Bunny, confira se o código foi colado inteiro e se a integração está como **Configurado**. O editor não avisa quando o código está errado, então teste sempre pela prévia. No caminho do YouTube, confira se o vídeo está como **Público** ou **Não listado** e se a incorporação está permitida. No caminho do arquivo, confira se **Vídeo do Bunny ou link do YouTube** está vazio."],
+      ["Não acho onde enviar o arquivo do vídeo", "A plataforma não recebe vídeo. Envie o arquivo ao Bunny Stream e cole o código dele na aula, ou publique no YouTube e cole o link."],
+      ["O aluno vê que não foi possível carregar o vídeo", "No caminho do Bunny, confira se o código foi colado inteiro e se a integração está como **Configurado**. O editor não avisa quando o código está errado, então teste sempre pela prévia. No caminho do YouTube, confira se o vídeo está como **Público** ou **Não listado** e se a incorporação está permitida. Numa aula que já tinha vídeo enviado à plataforma, confira se **Vídeo do Bunny ou link do YouTube** está vazio."],
       ["Aparece o aviso para colar um link do YouTube ou o ID do Bunny", "O campo aceita só esses dois formatos. Links de outras plataformas, como Vimeo, não funcionam."],
     ],
     related: ["criar-curso", "integracao-bunny", "apresentacao-da-aula"],
@@ -536,7 +521,7 @@ export const teamArticles: HelpArticle[] = [
     summary: "PDFs, planilhas compactadas, áudios e outros arquivos ficam em pastas, com a mesma regra de acesso dos cursos.",
     need: [
       "Uma conta de administrador ou instrutor.",
-      "O arquivo em PDF, ZIP, TXT, MP4, MP3, PNG ou JPG.",
+      "O arquivo em PDF, ZIP, TXT, MP3, PNG ou JPG.",
     ],
     sections: [
       {
@@ -574,10 +559,11 @@ export const teamArticles: HelpArticle[] = [
         title: "Limites de arquivo",
         list: [
           "PDF, PNG, JPG e WebP de até 20 MB. O envio otimiza o arquivo e guarda só a versão otimizada, que precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). A imagem é guardada em WebP.",
-          "ZIP, TXT, MP4 e MP3 de até 500 MB.",
+          "ZIP, TXT e MP3 de até 500 MB.",
           "A otimização não tem perda visível: a imagem é reduzida só quando passa do necessário e o PDF é comprimido sem perda. A tela mostra quanto o arquivo diminuiu. Um PDF que continue acima de 5 MB depois de otimizado é recusado; nesse caso, exporte de novo com imagens menores.",
           "O envio precisa terminar em até 15 minutos. Em conexão lenta, um arquivo grande não chega a tempo e aparece o aviso de prazo expirado. Nesse caso, reduza o arquivo.",
           "Word, Excel e PowerPoint não são aceitos. Exporte em PDF antes de enviar.",
+          "Vídeo não é aceito. Publique o vídeo no Bunny Stream ou no YouTube e use na aula. Veja [Colocar vídeo em uma aula](/ajuda/video-da-aula).",
         ],
       },
       {
@@ -1007,7 +993,7 @@ export const teamArticles: HelpArticle[] = [
         ],
         list: [
           "PDF, PNG, JPG ou WebP de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem).",
-          "ZIP, TXT, MP4 e MP3 de até 20 MB.",
+          "ZIP, TXT e MP3 de até 20 MB. Vídeo não é aceito.",
         ],
       },
       {

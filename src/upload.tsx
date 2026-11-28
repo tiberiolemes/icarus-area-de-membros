@@ -23,18 +23,15 @@ export function Upload({
   kind,
   resourceId,
   onUploaded,
-  onBusyChange,
 }: {
   kind:
     | "course-cover"
-    | "lesson"
     | "material"
     | "post-image"
     | "ticket-attachment"
     | "avatar";
   resourceId: string;
   onUploaded?: (file: File) => void;
-  onBusyChange?: (busy: boolean) => void;
 }) {
   const [state, setState] = useState(""),
     [error, setError] = useState(""),
@@ -87,13 +84,12 @@ export function Upload({
     if (!selected || lock.current) return;
     lock.current = true;
     setBusy(true);
-    onBusyChange?.(true);
     setError("");
     controller.current = new AbortController();
     const before = selected.size;
     try {
       // Só o arquivo otimizado sobe, e é nele que o limite de 500 KB ou 5 MB é conferido.
-      if (kind !== "avatar" && kind !== "lesson") {
+      if (kind !== "avatar") {
         setState("Otimizando arquivo…");
         selected = await optimizeFile(selected);
         if (controller.current.signal.aborted) throw new Error("Envio cancelado.");
@@ -119,7 +115,7 @@ export function Upload({
         );
         selected = new File([blob], "avatar.jpg", { type: "image/jpeg" });
       }
-      if (kind === "material" || kind === "lesson") {
+      if (kind === "material") {
         const reserved = await edge<{
           upload_id: string;
           bucket: string;
@@ -173,7 +169,7 @@ export function Upload({
       setState(
         kind === "avatar"
           ? "Foto salva."
-          : kind !== "lesson" && kb(selected.size) < kb(before)
+          : kb(selected.size) < kb(before)
             ? `Arquivo otimizado de ${kb(before)} KB para ${kb(selected.size)} KB e enviado.`
             : "Arquivo enviado e associado ao registro.",
       );
@@ -191,7 +187,6 @@ export function Upload({
     } finally {
       lock.current = false;
       setBusy(false);
-      onBusyChange?.(false);
       controller.current = null;
     }
   }
@@ -205,9 +200,7 @@ export function Upload({
           ? "image/jpeg,image/png"
           : kind.includes("image") || kind === "course-cover"
           ? "image/png,image/jpeg,image/webp"
-          : kind === "lesson"
-            ? "video/mp4"
-            : undefined
+          : undefined
       }
       onChange={async (e) => {
         const input = e.currentTarget,
@@ -254,8 +247,6 @@ export function Upload({
         label={
           kind === "ticket-attachment"
             ? "Anexar arquivo à conversa"
-            : kind === "lesson"
-              ? "Arquivo de vídeo"
             : kind === "avatar"
               ? "Foto do perfil"
               : "Enviar arquivo"
@@ -263,10 +254,8 @@ export function Upload({
         hint={
           kind === "avatar"
             ? "JPG ou PNG de até 20 MB."
-            : kind === "lesson"
-            ? "MP4 de até 500 MiB no armazenamento da plataforma."
             : kind === "material"
-            ? "PDF e imagem de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual."
+            ? "PDF e imagem de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). ZIP, TXT e MP3 até 500 MiB. Para vídeo, use o Bunny Stream ou o YouTube na aula. O andamento abaixo não estima percentual."
             : kind === "course-cover"
             ? "PNG, JPG ou WebP de até 20 MB. Depois de otimizada, a imagem precisa ficar com até 500 KB. O ideal é 1600\u00a0×\u00a0900\u00a0px."
             : "Imagem e PDF de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 500 KB (imagem) ou 5 MB (PDF). Outros anexos até 20 MiB."

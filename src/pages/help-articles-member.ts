@@ -892,7 +892,7 @@ export const memberArticles: HelpArticle[] = [
           "Em **Anexar arquivo à conversa**, clique em **Escolher arquivo**.",
           "Clique em **Enviar arquivo**.",
         ],
-        note: "São aceitos PDF, ZIP, TXT, PNG, JPG, WebP, MP4 e MP3. Imagens e PDFs de até 20 MB são otimizados no envio e precisam ficar com até 500 KB (imagem) ou 5 MB (PDF). Os demais arquivos vão até 20 MB.",
+        note: "São aceitos PDF, ZIP, TXT, PNG, JPG, WebP e MP3. Vídeo não é aceito; para mostrar o que aparece na tela, envie um print. Imagens e PDFs de até 20 MB são otimizados no envio e precisam ficar com até 500 KB (imagem) ou 5 MB (PDF). Os demais arquivos vão até 20 MB.",
       },
       {
         title: "Acompanhar e responder",

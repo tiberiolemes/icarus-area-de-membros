@@ -184,7 +184,9 @@ it("foca o editor, preserva entradas após erro e restaura o foco ao fechar", as
   const media = within(panel.getByRole("group", { name: "Mídia da aula" }));
   expect(media.getByLabelText("Tipo de aula")).toHaveValue("video");
   expect(media.getByLabelText("Vídeo do Bunny ou link do YouTube")).toBeInTheDocument();
-  expect(media.getByRole("button", { name: "Enviar arquivo" })).toHaveAttribute("type", "button");
+  // A plataforma não recebe vídeo: a aula só usa o Bunny ou o YouTube.
+  expect(media.queryByRole("button", { name: "Enviar arquivo" })).toBeNull();
+  expect(media.queryByText(/arquivo de vídeo/i)).toBeNull();
   const title = panel.getByLabelText("Título");
   fireEvent.change(title, { target: { value: "Exercício revisado" } });
   fireEvent.click(panel.getByRole("button", { name: "Salvar conteúdo" }));

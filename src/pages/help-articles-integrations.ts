@@ -33,7 +33,7 @@ export const integrationArticles: HelpArticle[] = [
         title: "O que cada uma faz",
         list: [
           "**Gateway Asaas** processa as vendas por Pix e cartão e avisa a plataforma quando o pagamento cai. Sem ele, o checkout, que é a página de pagamento, fica indisponível.",
-          "**Bunny Stream** guarda e transmite os vídeos das aulas, e a plataforma assina cada reprodução. É opcional, porque as aulas também aceitam arquivo MP4 enviado direto.",
+          "**Bunny Stream** guarda e transmite os vídeos das aulas, e a plataforma assina cada reprodução. É opcional para quem usa só vídeos do YouTube. A plataforma não recebe vídeo.",
           "**Cloudflare Turnstile** é a verificação que aparece no login e no checkout para confirmar que há uma pessoa do outro lado.",
         ],
       },
@@ -42,7 +42,7 @@ export const integrationArticles: HelpArticle[] = [
         steps: [
           "Comece pelo [Cloudflare Turnstile](/ajuda/integracao-turnstile). Em uma instalação de produção, o checkout só abre depois que o segredo dele está no servidor.",
           "Configure o [Asaas](/ajuda/integracao-asaas) para receber os pagamentos.",
-          "Deixe o [Bunny Stream](/ajuda/integracao-bunny) para quando quiser hospedar os vídeos fora da plataforma.",
+          "Configure o [Bunny Stream](/ajuda/integracao-bunny) antes de publicar aulas com vídeos hospedados lá. Para vídeos do YouTube, ele não é necessário.",
         ],
         note: "Para saber se a sua instalação é de produção, veja o item **Aplicação** em **Outros serviços da plataforma**, no fim da página de integrações.",
       },

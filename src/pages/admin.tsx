@@ -997,12 +997,10 @@ function StructureForm({
   inModule?: boolean;
   after: () => Promise<void>;
 }) {
-  const [uploading, setUploading] = useState(false);
   return (
     <>
       <Form submitInHeading
         label="Salvar conteúdo"
-        submitDisabled={uploading}
         onSave={async (data) => {
           let fields: Record<string, unknown> = {
             title: value(data, "title"),
@@ -1089,11 +1087,6 @@ function StructureForm({
                   maxLength={100}
                 />
               </Field>
-              {row ? (
-                <div onInput={(event) => event.stopPropagation()}>
-                  <Upload kind="lesson" resourceId={row.id} onBusyChange={setUploading} />
-                </div>
-              ) : <p>Salve a aula para enviar um arquivo de vídeo.</p>}
             </fieldset>
             <RichEditor
               name="body"
@@ -1342,9 +1335,12 @@ export function AdminMaterials() {
                     "application/pdf",
                   )}
                 >
-                  {Object.entries(materialTypes).map(([type, label]) => (
-                    <option key={type} value={type}>{label}</option>
-                  ))}
+                  {/* A plataforma não recebe vídeo: o MP4 só aparece no material antigo que já é MP4, para salvar sem trocar o tipo. */}
+                  {Object.entries(materialTypes)
+                    .filter(([type]) => type !== "video/mp4" || text(editing ?? undefined, "file_type") === type)
+                    .map(([type, label]) => (
+                      <option key={type} value={type}>{label}</option>
+                    ))}
                 </select>
               </Field>
               <StatusField row={editing ?? undefined} />

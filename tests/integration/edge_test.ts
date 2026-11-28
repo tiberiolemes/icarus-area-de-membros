@@ -493,7 +493,7 @@ Deno.test("capa do curso aceita imagem de até 500 KB", async () => {
   const { d, requests } = deps((url) => url.pathname.endsWith("app_upload_access") ? response({ id, bucket: "icarus-private", path: `course-cover/${other}/${id}.jpg` }) : url.pathname.includes("/storage/v1/object/icarus-private/") ? response({ Key: "icarus-private/course-cover" }) : url.pathname.endsWith("app_upload_finalize") ? response({ id, state: "ready" }) : undefined);
   equal((await send(d, file)).status, 200);
   equal(requests.find((r) => r.url.includes("app_upload_access"))?.body, { p_actor_id: id, p_kind: "course-cover", p_resource_id: other, p_file_name: "capa.jpg", p_content_type: "image/jpeg", p_size_bytes: 500 * 1024 });
-  // A reserva em JSON é só de vídeo e material. Por ela a capa escaparia do limite.
+  // A reserva em JSON é só de material. Por ela a capa escaparia do limite.
   const reserve = deps();
   equal((await upload(reserve.d)(request({ action: "reserve", kind: "course-cover", resource_id: other, file_name: "capa.jpg", content_type: "image/jpeg", size_bytes: 500 * 1024 }))).status, 422);
   assert(!reserve.requests.some((r) => r.url.includes("app_upload_access")));
@@ -511,6 +511,31 @@ Deno.test("reserva de material aceita PDF até 5 MB e ZIP até 500 MiB", async (
   const zip = { ...pdf, file_name: "demo.zip", content_type: "application/zip", size_bytes: 500 * 1024 * 1024 };
   equal((await upload(d)(request(zip))).status, 200);
   equal((await upload(d)(request({ ...zip, size_bytes: zip.size_bytes + 1 }))).status, 422);
+});
+Deno.test("reserva de vídeo da aula e MP4 de material são recusados com a frase do vídeo", async () => {
+  const noVideo = { code: "INVALID_FILE", message: "A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube." };
+  const mp4 = { file_name: "aula.mp4", content_type: "video/mp4", size_bytes: 1024 };
+  for (const body of [
+    { action: "reserve", kind: "lesson", resource_id: other, ...mp4 },
+    { action: "reserve", kind: "lesson", resource_id: other, file_name: "roteiro.pdf", content_type: "application/pdf", size_bytes: 1024 },
+    { action: "reserve", kind: "material", resource_id: other, ...mp4 },
+    { action: "reserve", kind: "material", resource_id: other, ...mp4, size_bytes: 2 * 1024 * 1024 * 1024 },
+  ]) {
+    const { d, requests } = deps();
+    const refused = await upload(d)(request(body));
+    equal(refused.status, 422);
+    equal((await refused.json()).error, noVideo);
+    assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")), `${body.kind} ${body.file_name}`);
+  }
+  const video = new Uint8Array(16); video.set(new TextEncoder().encode("ftypisom"), 4);
+  for (const kind of ["lesson", "material", "ticket-attachment"]) {
+    const { d, requests } = deps();
+    const form = new FormData(); form.set("kind", kind); form.set("resource_id", other); form.set("file", new File([video], "tela.mp4", { type: "video/mp4" }));
+    const refused = await upload(d)(new Request("http://localhost/upload", { method: "POST", headers: { authorization: `Bearer ${jwt()}` }, body: form }));
+    equal(refused.status, 422);
+    equal((await refused.json()).error, noVideo);
+    assert(!requests.some((r) => r.url.includes("app_upload_access") || r.url.includes("/storage/")), kind);
+  }
 });
 Deno.test("multipart recusa imagem acima de 500 KB e PDF acima de 5 MB antes da reserva", async () => {
   const send = (d: Dependencies, kind: string, file: File) => {

@@ -119,7 +119,7 @@ it("PDF de material: original acima de 20 MB é recusado na escolha; acima de 5 
   optimize.mockResolvedValue(new File([new Uint8Array(6 * 1024 * 1024)], "apostila.pdf", { type: "application/pdf" }));
   render(<Upload kind="material" resourceId="material-1" />);
   const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
-  expect(input).toHaveAccessibleDescription("PDF e imagem de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). ZIP, TXT, MP4 e MP3 até 500 MiB. O andamento abaixo não estima percentual.");
+  expect(input).toHaveAccessibleDescription("PDF e imagem de até 20 MB. Depois de otimizado, o arquivo precisa ficar com até 5 MB (PDF) ou 500 KB (imagem). ZIP, TXT e MP3 até 500 MiB. Para vídeo, use o Bunny Stream ou o YouTube na aula. O andamento abaixo não estima percentual.");
   fireEvent.change(input, { target: { files: [new File([new Uint8Array(20971521)], "apostila.pdf", { type: "application/pdf" })] } });
   expect(await screen.findByText("O arquivo passa de 20 MB. Escolha um menor.")).toBeInTheDocument();
   expect(input).toHaveValue("");
@@ -182,14 +182,11 @@ it("material reserva e envia o PDF e a imagem já otimizados", async () => {
   expect(edge.mock.calls.at(-2)?.[1]).toMatchObject({ file_name: "mapa.webp", content_type: "image/webp", size_bytes: 2048 });
 });
 
-it("vídeo da aula não passa pela otimização", async () => {
-  render(<Upload kind="lesson" resourceId="aula-1" />);
-  fireEvent.change(screen.getByLabelText("Arquivo de vídeo", { selector: "input" }), {
-    target: { files: [new File([new Uint8Array(1024)], "aula.mp4", { type: "video/mp4" })] },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Enviar arquivo" }));
-  await screen.findByRole("alert");
-  expect(optimize).not.toHaveBeenCalled();
+it("o campo de material não lista MP4 na dica e manda o vídeo para o Bunny ou o YouTube", () => {
+  render(<Upload kind="material" resourceId="material-1" />);
+  const input = screen.getByLabelText("Enviar arquivo", { selector: "input" });
+  expect(input).not.toHaveAccessibleDescription(/MP4/);
+  expect(input).toHaveAccessibleDescription(/Para vídeo, use o Bunny Stream ou o YouTube na aula\./);
 });
 
 it("recusa foto acima de 20 MB dizendo que o problema é o tamanho", async () => {

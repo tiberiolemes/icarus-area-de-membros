@@ -2,6 +2,9 @@ import { actor, defaults, rpc, type Dependencies } from "../_shared/client.ts";
 import { boundedBody, endpoint, HttpError, json, text, uuid } from "../_shared/http.ts";
 import { formats, matchesSignature } from "../_shared/files.ts";
 const tooBig = (mime: string) => mime === "application/pdf" || mime.startsWith("image/") ? "Imagens aceitam até 500 KB e PDFs até 5 MB." : "Tipo ou tamanho de arquivo não permitido.";
+// A aula usa o Bunny Stream ou o YouTube; vídeo nenhum sobe para o Storage.
+const isVideo = (kind: string, mime: unknown) => kind === "lesson" || String(mime).startsWith("video/");
+const noVideo = "A plataforma não recebe vídeo. Use o Bunny Stream ou o YouTube.";
 import { objectExists } from "../_shared/storage.ts";
 import { removeBrandLogo, saveBrandLogo } from "./brand.ts";
 export const createHandler = (d: Dependencies = defaults) => endpoint(async (req) => {
@@ -37,7 +40,8 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
     }
     if (body.action !== "reserve") throw new HttpError(422, "INVALID_INPUT", "Ação de upload inválida.");
     const kind = text(body.kind, 32), name = text(body.file_name, 180), format = formats[name.split(".").pop()!.toLowerCase()];
-    if (!["lesson", "material"].includes(kind) || !format || body.content_type !== format.mime || !Number.isSafeInteger(body.size_bytes) || Number(body.size_bytes) < 1 || (kind === "lesson" && format.mime !== "video/mp4")) throw new HttpError(422, "INVALID_FILE", "Tipo ou tamanho de arquivo não permitido.");
+    if (isVideo(kind, body.content_type)) throw new HttpError(422, "INVALID_FILE", noVideo);
+    if (kind !== "material" || !format || body.content_type !== format.mime || !Number.isSafeInteger(body.size_bytes) || Number(body.size_bytes) < 1) throw new HttpError(422, "INVALID_FILE", "Tipo ou tamanho de arquivo não permitido.");
     if (Number(body.size_bytes) > format.max) throw new HttpError(422, "INVALID_FILE", tooBig(format.mime));
     const gate = await rpc(a.admin, "app_upload_access", { p_actor_id: a.userInfo.id, p_kind: kind, p_resource_id: uuid(body.resource_id), p_file_name: name, p_content_type: format.mime, p_size_bytes: body.size_bytes });
     return { upload_id: gate.id, bucket: gate.bucket, path: gate.path, expires_at: gate.expires_at, method: "storage", max_size_bytes: format.max };
@@ -50,10 +54,11 @@ export const createHandler = (d: Dependencies = defaults) => endpoint(async (req
   if (kind === "brand-asset" || kind === "brand-asset-preview") return await saveBrandLogo(a, form, kind === "brand-asset-preview");
   const resourceId = uuid(form.get("resource_id"));
   const screenshot = kind === "feedback-screenshot";
-  if (!(file instanceof File) || !["course-cover", "lesson", "material", "post-image", "ticket-attachment", "avatar", "feedback-screenshot"].includes(kind)) throw new HttpError(422, "INVALID_INPUT", "Arquivo inválido.");
+  if (file instanceof File && isVideo(kind, file.type)) throw new HttpError(422, "INVALID_FILE", noVideo);
+  if (!(file instanceof File) || !["course-cover", "material", "post-image", "ticket-attachment", "avatar", "feedback-screenshot"].includes(kind)) throw new HttpError(422, "INVALID_INPUT", "Arquivo inválido.");
   const name = text(file.name, 180), format = formats[name.split(".").pop()!.toLowerCase()];
   if (screenshot && !/^.+\.(png|jpe?g|webp)$/i.test(file.name)) throw new HttpError(422, "INVALID_FILE", "O print precisa ter extensão PNG, JPG ou WebP.");
-  if (!format || file.type !== format.mime || file.size === 0 || (["post-image", "course-cover", "avatar", "feedback-screenshot"].includes(kind) && !file.type.startsWith("image/")) || (kind === "lesson" && file.type !== "video/mp4")) throw new HttpError(422, "INVALID_FILE", "Tipo ou tamanho de arquivo não permitido.");
+  if (!format || file.type !== format.mime || file.size === 0 || (["post-image", "course-cover", "avatar", "feedback-screenshot"].includes(kind) && !file.type.startsWith("image/"))) throw new HttpError(422, "INVALID_FILE", "Tipo ou tamanho de arquivo não permitido.");
   if (kind === "avatar" && (!["image/jpeg", "image/png"].includes(file.type) || file.size > 500 * 1024)) throw new HttpError(422, "INVALID_FILE", "A foto precisa ser JPG ou PNG de até 500 KB.");
   if (kind === "course-cover" && file.size > 500 * 1024) throw new HttpError(422, "INVALID_FILE", "A capa precisa ser PNG, JPG ou WebP de até 500 KB.");
   if (file.size > (screenshot ? 5 * 1024 * 1024 : Math.min(format.max, 20 * 1024 * 1024))) throw new HttpError(422, "INVALID_FILE", screenshot ? "O print precisa ter até 5 MB." : tooBig(file.type));

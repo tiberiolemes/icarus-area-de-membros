@@ -836,8 +836,8 @@
 }
 
 .stitch-curriculum-filter:focus-within {
-  outline: 2px solid var(--ic-focus);
-  outline-offset: 3px;
+  outline: var(--stitch-focus-width) solid var(--stitch-focus);
+  outline-offset: var(--stitch-focus-offset);
 }
 
 .stitch-curriculum-field {
@@ -869,18 +869,6 @@
 }
 
 @media (min-width: 1024px) and (pointer: fine) {
-  [data-theme="light"] .stitch-curriculum-field::before {
-    content: "";
-    position: absolute;
-    inset: 4px 0;
-    border: 1px solid #6b7280;
-    pointer-events: none;
-  }
-
-  [data-theme="light"] .lesson-stitch .stitch-curriculum-filter input[type="search"] {
-    padding-inline: 12px;
-  }
-
   [data-theme="dark"] .stitch-curriculum-filter {
     position: relative;
     isolation: isolate;
@@ -1040,7 +1028,6 @@
 
 [data-theme="light"] .stitch-module[data-locked="true"] :is(.stitch-module-index, .stitch-module-restriction) {
   background: #f7f7f8;
-  border-color: #ececee;
 }
 
 [data-theme="dark"] .stitch-module[data-locked="true"] :is(.stitch-module-index, .stitch-module-restriction) {

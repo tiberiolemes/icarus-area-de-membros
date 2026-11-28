@@ -111,6 +111,14 @@ export const memberArticles: HelpArticle[] = [
         note: "O seu menu pode ser mais curto. A equipe escolhe quais recursos ficam ativos em cada plataforma.",
       },
       {
+        title: "Recolher o menu no computador",
+        steps: [
+          "Clique em **Recolher menu**, no topo da barra lateral. Passe o mouse sobre um ícone ou chegue a ele com **Tab** para ver seu nome.",
+          "Clique em **Expandir menu** para voltar a ver todos os nomes. O navegador guarda sua escolha para a área do aluno.",
+        ],
+        note: "**Configurações**, o controle do tema e **Sair** ficam no rodapé do menu, mesmo ao rolar a lista de áreas. Isso também vale no celular.",
+      },
+      {
         title: "O que fica no topo da tela",
         list: [
           "O campo **Busca rápida em aulas e módulos** encontra cursos, módulos e aulas pelo título. Digite pelo menos duas letras.",
@@ -133,14 +141,14 @@ export const memberArticles: HelpArticle[] = [
       {
         title: "Trocar entre tema claro e escuro",
         steps: [
-          "Abra o menu e vá até o fim da lista.",
+          "Abra o menu e procure o controle no rodapé.",
           "Clique no botão do tema, que mostra **Tema claro** ou **Tema escuro**.",
         ],
         note: "A troca vale na hora e fica salva na sua conta, em qualquer aparelho.",
       },
       {
         title: "Sair da conta",
-        steps: ["Abra o menu e clique em **Sair**, no fim da lista."],
+        steps: ["Abra o menu e clique em **Sair**, no rodapé."],
         note: "Sair encerra a sua sessão em todos os aparelhos. Em computador compartilhado, saia sempre que terminar.",
       },
     ],

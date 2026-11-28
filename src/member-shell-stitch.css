@@ -40,15 +40,17 @@
 :is(.stitch-shell > .sidebar, .stitch-shell-drawer) {
   gap: 0;
   padding: 0;
-  overflow-y: auto;
 }
 
-:is(.member-shell-stitch > .sidebar, .member-shell-drawer) .rail-brand {
+:is(.member-shell-stitch > .sidebar, .member-shell-drawer) :is(.rail-head, .rail-brand) {
   display: flex;
   align-items: center;
   flex: 0 0 var(--shell-topbar-height);
-  padding: 0 var(--ic-space-6);
   border-bottom: 1px solid var(--ic-border);
+}
+
+:is(.member-shell-stitch > .sidebar, .member-shell-drawer) .rail-brand {
+  padding: 0 var(--ic-space-6);
 }
 
 :is(.stitch-shell > .sidebar, .stitch-shell-drawer) .rail-brand img,
@@ -73,7 +75,7 @@
 }
 
 :is(.member-shell-stitch > .sidebar, .member-shell-drawer) nav {
-  padding: 0 var(--ic-space-2) var(--ic-space-3);
+  padding: var(--ic-space-2) var(--ic-space-2) var(--ic-space-3);
 }
 
 :is(.app-shell.member-shell-stitch > .sidebar, .member-shell-drawer) :where(nav a, .rail-bottom > a, .rail-bottom > .action button) {
@@ -101,7 +103,6 @@
 }
 
 :is(.member-shell-stitch > .sidebar, .member-shell-drawer) .rail-bottom {
-  border-top: 1px solid var(--ic-border);
   padding: var(--ic-space-2);
 }
 
@@ -211,7 +212,88 @@
   color: var(--member-tertiary);
 }
 
+.rail-hint { display: none; }
+
 @media (min-width: 1024px) {
+  .app-shell.stitch-shell {
+    transition: grid-template-columns 160ms ease;
+  }
+
+  .rail-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: var(--shell-topbar-height);
+    padding-inline-end: var(--ic-space-2);
+  }
+
+  .stitch-shell > .sidebar .rail-head .rail-brand {
+    flex: 1 1 auto;
+    min-height: var(--shell-topbar-height);
+    min-width: 0;
+    border-bottom: 0;
+  }
+
+  .rail-toggle { flex: 0 0 44px; }
+
+  .app-shell.stitch-shell[data-sidebar="collapsed"] {
+    --shell-rail-width: 72px;
+
+    > .sidebar {
+      z-index: 40;
+
+      .rail-head {
+        flex: none;
+        flex-direction: column;
+        padding: 0 var(--ic-space-2) var(--ic-space-2);
+      }
+
+      .rail-head .rail-brand { padding: 0; }
+      .rail-brand img.rail-mark { width: 32px; color-scheme: light; }
+      .rail-brand img.rail-mark-custom { filter: none; }
+      .rail-toggle { width: 44px; }
+
+      :is(.rail-brand .installation-admin > span, .member-rail-label, .admin-nav-group > span, .member-theme-state) {
+        display: none;
+      }
+
+      :is(nav, .rail-bottom) { padding-inline: var(--ic-space-2); }
+
+      :is(nav a, .rail-bottom > a, .rail-bottom > .action button) {
+        justify-content: center;
+        padding-inline: 0;
+      }
+
+      :is(.rail-label, .module-off-badge) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .rail-hint { display: contents; }
+
+      :is(a[data-label]:is(:hover, :focus-visible), button:is(:hover, :focus-visible) > .rail-hint)::after {
+        content: attr(data-label) / "";
+        position: fixed;
+        inset-inline-start: 64px;
+        z-index: 1;
+        padding: var(--ic-space-1) var(--ic-space-2);
+        border-radius: var(--stitch-radius-base);
+        background: var(--ic-action);
+        color: var(--ic-on-action);
+        font: 500 13px / 20px var(--ic-font-family);
+        white-space: nowrap;
+        pointer-events: none;
+      }
+    }
+  }
+
   .app-shell.member-shell-stitch {
     --member-rail-ink: var(--member-tertiary);
     --member-rail-item-leading: 20px;
@@ -219,7 +301,6 @@
     --member-rail-active-ink: var(--stitch-text-on-selection, #fff);
     --member-rail-active-surface: var(--stitch-surface-selection, #000);
     --member-rail-active-radius: var(--stitch-radius-md, 12px);
-    --member-rail-start: -4px;
     --member-rail-active-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
     --member-search-surface: var(--member-control);
     --member-search-ink: #6b6b74;
@@ -238,7 +319,6 @@
 
     .sidebar nav {
       gap: 0;
-      margin-block-start: var(--member-rail-start);
     }
 
     .sidebar :where(nav a, .rail-bottom > a, .rail-bottom > .action button) {
@@ -401,10 +481,6 @@
   .rail-bottom {
     padding: var(--stitch-space-sm, 8px) var(--stitch-space-md, 16px);
     gap: var(--stitch-space-xs, 4px);
-  }
-
-  .rail-bottom {
-    border-top: var(--stitch-border-width, 1px) solid var(--admin-line);
   }
 
   :is(nav[data-tour="navigation"] a, .rail-bottom > a, .rail-bottom > .action button) {
@@ -641,7 +717,7 @@
       white-space: nowrap;
     }
 
-    :is(.mobile-menu, .member-search-field > button, .tour-launch button, [data-tour="send-feedback"], .notification-bell) {
+    :is(.mobile-menu, .tour-launch button, [data-tour="send-feedback"], .notification-bell) {
       flex: 0 0 var(--mobile-target);
       border-color: transparent;
       background: transparent;
@@ -649,7 +725,7 @@
       transition-property: background;
     }
 
-    :is(.mobile-menu, .member-search-field > button, .tour-launch button, [data-tour="send-feedback"], .notification-bell, .account-link):hover {
+    :is(.mobile-menu, .tour-launch button, [data-tour="send-feedback"], .notification-bell, .account-link):hover {
       border-radius: var(--stitch-radius-base);
       background: var(--stitch-surface-hover);
     }

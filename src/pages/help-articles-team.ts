@@ -12,10 +12,18 @@ export const teamArticles: HelpArticle[] = [
         title: "Entrar no painel",
         steps: [
           "Entre na plataforma com a sua conta da equipe.",
-          "Abra o menu e vá até o fim, logo abaixo de **Configurações**. No celular, toque antes no botão de menu no topo.",
+          "Procure o atalho no rodapé do menu, logo abaixo de **Configurações**. No celular, toque antes no botão de menu no topo.",
           "Clique no atalho do seu papel. Ele se chama **Administração** para administradores, **Painel de conteúdo** para instrutores, **Moderação** para moderadores e **Atendimento** para a equipe de suporte.",
         ],
         note: "Para voltar à visão do aluno, clique em **Área do aluno** no rodapé do menu do painel.",
+      },
+      {
+        title: "Recolher o menu no computador",
+        steps: [
+          "Clique em **Recolher menu**, no topo da barra lateral. Passe o mouse sobre um ícone ou chegue a ele com **Tab** para ver seu nome.",
+          "Clique em **Expandir menu** para voltar a ver todos os nomes. O navegador guarda a escolha do painel separadamente da área do aluno.",
+        ],
+        note: "**Área do aluno**, **Central de ajuda** e **Sair** ficam no rodapé do menu enquanto você rola a lista de áreas. Isso também vale no celular.",
       },
       {
         title: "O que há em cada grupo do menu",

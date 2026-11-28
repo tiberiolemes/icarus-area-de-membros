@@ -278,7 +278,7 @@ button.lesson-presentation-chapter:hover span:first-child { text-decoration: und
 
 .lesson-presentation-cta-context > .lesson-presentation-cta-label {
   padding: 2px 8px;
-  border: 1px solid color-mix(in srgb, var(--stitch-status-success) 20%, var(--stitch-status-success-surface));
+  border: 1px solid color-mix(in hsl, var(--stitch-status-success) 20%, var(--stitch-status-success-surface));
   border-radius: 999px;
   background: var(--stitch-status-success-surface);
   color: var(--stitch-status-success);

@@ -152,7 +152,7 @@
   }
 
   .member-shell-stitch .member-search-field > button:hover {
-    background: var(--ic-action-hover, var(--stitch-action-hover));
+    background: var(--stitch-action-hover);
   }
 
   .member-search {

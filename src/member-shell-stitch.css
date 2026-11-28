@@ -718,7 +718,7 @@
       white-space: nowrap;
     }
 
-    :is(.mobile-menu, .member-search-field > button, .tour-launch button, [data-tour="send-feedback"], .notification-bell) {
+    :is(.mobile-menu, .tour-launch button, [data-tour="send-feedback"], .notification-bell) {
       flex: 0 0 var(--mobile-target);
       border-color: transparent;
       background: transparent;
@@ -726,7 +726,7 @@
       transition-property: background;
     }
 
-    :is(.mobile-menu, .member-search-field > button, .tour-launch button, [data-tour="send-feedback"], .notification-bell, .account-link):hover {
+    :is(.mobile-menu, .tour-launch button, [data-tour="send-feedback"], .notification-bell, .account-link):hover {
       border-radius: var(--stitch-radius-base);
       background: var(--stitch-surface-hover);
     }

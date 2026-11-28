@@ -12,7 +12,7 @@
   border-radius: var(--ic-radius-card);
 }
 
-.member-search-field button {
+.member-search-field > button {
   flex: 0 0 var(--ic-accessibility-target-min);
   color: var(--ic-text-secondary);
   border: 0;
@@ -146,6 +146,15 @@
 }
 
 @media (max-width: 639px) {
+  .member-shell-stitch .member-search-field > button {
+    background: var(--ic-action);
+    color: var(--ic-on-action);
+  }
+
+  .member-shell-stitch .member-search-field > button:hover {
+    background: var(--ic-action-hover, var(--stitch-action-hover));
+  }
+
   .member-search {
     position: static;
   }

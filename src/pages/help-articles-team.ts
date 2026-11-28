@@ -365,8 +365,13 @@ export const teamArticles: HelpArticle[] = [
       {
         title: "Abrir o editor",
         steps: [
-          "Na aba **Estrutura e aulas**, clique no lápis de uma aula já salva.",
-          "Clique em **Editar apresentação**.",
+          "Em **Cursos e aulas**, clique em **Editar apresentação** na linha do curso.",
+          "Na janela **Escolha a aula**, as aulas aparecem agrupadas por módulo, na ordem da estrutura. Clique na aula que vai receber a apresentação.",
+        ],
+        list: [
+          "Também dá para abrir pela aula. Na aba **Estrutura e aulas**, clique no lápis de uma aula já salva e depois em **Editar apresentação**.",
+          "Aulas arquivadas não aparecem na janela nem têm o botão no editor da aula.",
+          "Curso sem aulas mostra **Este curso ainda não tem aulas.** com o botão **Estrutura e aulas**, que leva direto para criar a primeira.",
         ],
       },
       {

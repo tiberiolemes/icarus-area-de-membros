@@ -101,6 +101,7 @@ import { LessonLinks, LessonMaterials } from "./admin-material-lessons";
 import { Archive, DangerZone, useDeletedNotice } from "./admin-delete";
 import { BunnyPicker } from "./admin-bunny-picker";
 import { DragOrder, persistOrder, useDragOrder } from "./admin-drag";
+import { PresentationPicker } from "./admin-presentation-picker";
 import { moveItem } from "../reorder";
 import "../admin-content.css";
 
@@ -424,6 +425,7 @@ export function AdminCourses() {
                 <Link className="button" to={editor}>
                   Editar curso
                 </Link>
+                <PresentationPicker course={course} />
                 <Link className="button primary" to={`${editor}?aba=estrutura`}>
                   Estrutura e aulas
                 </Link>

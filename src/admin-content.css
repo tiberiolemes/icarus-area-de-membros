@@ -519,6 +519,65 @@
 .admin-courses-index .admin-row > div:first-child { flex: 1 1 16rem; }
 .admin-courses-index .admin-row .actions { flex-wrap: wrap; gap: var(--stitch-space-sm); }
 
+/* Modal "Escolha a aula" da lista de cursos. Fica no portal, fora de .admin-content. */
+.presentation-picker {
+  display: grid;
+  gap: var(--stitch-space-md);
+  margin-block-start: var(--stitch-space-md);
+}
+
+.presentation-picker h3 {
+  margin: 0 0 var(--stitch-space-xs);
+  color: var(--stitch-text-secondary);
+  font: var(--stitch-type-label-uppercase-weight) var(--stitch-type-label-uppercase-size) /
+    var(--stitch-type-label-uppercase-line) var(--stitch-font-family);
+  letter-spacing: var(--stitch-tracking-wider);
+  text-transform: uppercase;
+}
+
+.presentation-picker ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.presentation-picker li + li {
+  border-top: var(--stitch-border-width) solid var(--stitch-border-subtle);
+}
+
+.presentation-picker li > a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stitch-space-sm);
+  min-block-size: var(--stitch-control-min-size);
+  padding: var(--stitch-space-xs) var(--stitch-space-sm);
+  border-radius: var(--stitch-radius-base);
+  color: var(--stitch-text-primary);
+  font-weight: 500;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.presentation-picker li > a:hover {
+  background: var(--stitch-surface-hover);
+}
+
+.presentation-picker li > a > svg {
+  flex: none;
+  color: var(--stitch-text-secondary);
+}
+
+.presentation-picker > .button {
+  justify-self: start;
+}
+
+/* O vazio padrão tem folga de página; no modal, o atalho fica logo abaixo dele. */
+.presentation-picker > .empty {
+  margin: 0;
+  padding-block: var(--stitch-space-sm) 0;
+}
+
 /* Capa do curso: prévias nas proporções em que ela aparece e ponto de foco do corte. */
 .admin-content .cover-focus {
   display: grid;
